@@ -3,12 +3,12 @@ title: "eduroam Netwerkinstallatie"
 weight: 23
 ---
 
-eduroam werkend krijgen op Linux is pijnlijker dan het zou moeten zijn. Elke "officiële" methode die ik probeerde faalde op Fedora 43 — de verbinding bleef gewoon hangen tijdens de TLS-handshake en verbond nooit. Uiteindelijk heb ik een handmatige setup gevonden die betrouwbaar werkt en daar een script omheen geschreven. Ik deel het hier zodat jij hopelijk niet hetzelfde proces hoeft door te maken.
+eduroam werkend krijgen op Linux is pijnlijker dan het zou moeten zijn. Elke "officiële" methode die ik probeerde faalde — de verbinding bleef gewoon hangen tijdens de TLS-handshake en verbond nooit. Uiteindelijk heb ik een handmatige setup gevonden die betrouwbaar werkt en daar een script omheen geschreven. Ik deel het hier zodat jij hopelijk niet hetzelfde proces hoeft door te maken.
 
 ## Wat niet werkt
 
 {{% details title="cat.eduroam.org installer (officieel)" closed="true" %}}
-De Python-installer van [cat.eduroam.org](https://cat.eduroam.org/) biedt een grafische interface en maakt een verbindingsprofiel aan. Op sommige recente Linux-distributies (zoals Fedora 43) kan de verbinding blijven hangen tijdens de TLS-handshake door wijzigingen in NetworkManager.
+De Python-installer van [cat.eduroam.org](https://cat.eduroam.org/) biedt een grafische interface en maakt een verbindingsprofiel aan. Op sommige recente Linux-distributies kan de verbinding blijven hangen tijdens de TLS-handshake door wijzigingen in NetworkManager.
 
 ![cat.eduroam.org downloadportaal voor Saxion](/images/eduroam-cat-portal.avif)
 {{% /details %}}

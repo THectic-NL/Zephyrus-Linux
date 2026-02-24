@@ -3,9 +3,9 @@ title: "YubiKey 5C NFC"
 weight: 20
 ---
 
-Ik wilde mijn YubiKey gebruiken om de LUKS-schijfversleuteling bij het opstarten te ontgrendelen — inpluggen, aanraken, en het bureaublad laadt. Bleek dat dat momenteel niet goed werkt op Fedora 43. Ik heb er flink wat tijd in gestoken voordat ik ermee gestopt ben. Op deze pagina staat wat ik geprobeerd heb, waarom het niet werkt, en wat er in de tussentijd wél werkt.
+Ik wilde mijn YubiKey gebruiken om de LUKS-schijfversleuteling bij het opstarten te ontgrendelen — inpluggen, aanraken, en het bureaublad laadt. Op deze pagina staat wat ik geprobeerd heb, waarom het aanvankelijk niet werkte, en wat er in de tussentijd wél werkt.
 
-> **Status:** LUKS ontgrendeling met FIDO2 is te onbetrouwbaar op Fedora 43 (systemd 258). Deze pagina documenteert wat geprobeerd is, wat de oorzaak is, en wat je in de tussentijd kunt doen. Mijn advies: opnieuw proberen als Fedora 44 verschijnt met systemd 259+.
+> **Status:** LUKS ontgrendeling met FIDO2 is onbetrouwbaar geweest op systemd 258. Deze pagina documenteert wat geprobeerd is, wat de oorzaak is, en wat je in de tussentijd kunt doen. De situatie kan verbeteren met systemd 259+.
 
 
 ## Wat op dit moment werkt
@@ -89,7 +89,7 @@ sudo dracut --force --regenerate-all
 
 ## Wanneer Opnieuw Proberen
 
-Wachten op **Fedora 44** (verwacht met systemd 259+). Systemd 259 voegt `token-timeout=` toe als crypttab optie, wat een configureerbaar wachtvenster geeft voor de touch prompt. Gecombineerd met een fix voor de fallback regressie zou FIDO2 LUKS ontgrendeling betrouwbaar moeten worden.
+Wachten op **systemd 259+**. Systemd 259 voegt `token-timeout=` toe als crypttab optie, wat een configureerbaar wachtvenster geeft voor de touch prompt. Gecombineerd met een fix voor de fallback regressie zou FIDO2 LUKS ontgrendeling ook op CachyOS betrouwbaar moeten worden.
 
 Bij een nieuwe poging is de enrollment procedure zelf correct — alleen de systemd versie is het obstakel op dit moment.
 

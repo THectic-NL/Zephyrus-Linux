@@ -5,7 +5,7 @@ weight: 21
 
 Ik wilde GPU passthrough proberen met Looking Glass — Windows in een VM draaien maar met de echte NVIDIA GPU toegewezen, zodat je near-native performance hebt. Ik heb er een flink aantal uren aan besteed. Het werkt niet op deze laptop, en de reden is een hardwarebeperking waar Looking Glass niets aan kan doen. Ik documenteer de volledige poging hier zodat anderen die tijd kunnen besparen.
 
-> **Vereiste:** Dit gaat ervan uit dat je al een werkende Windows 11 VM hebt opgezet met virt-manager. Zo niet, volg eerst de [VM Setup Handleiding]({{< relref "/docs/vm-setup" >}}).
+> **Vereiste:** Dit gaat ervan uit dat je al een werkende Windows 11 VM hebt opgezet met virt-manager. Zo niet, volg eerst de [VM Setup Handleiding]({{< relref "/docs/virtualization/vm-setup" >}}).
 
 > **TL;DR:** Looking Glass werkt **niet** op de ASUS ROG Zephyrus G16 GA605WV. De RTX 4060 heeft geen fysieke display-outputs — alle poorten (HDMI, USB-C) lopen via de AMD iGPU. Windows kan daardoor geen "valid output device" vinden voor frame capture, waardoor de host-applicatie direct faalt. Dit document beschrijft alles wat is geprobeerd en waarom het mislukt.
 
@@ -165,15 +165,15 @@ git submodule update --init --recursive
 
 ### Dependencies installeren
 
-De dependencies moesten stuk voor stuk worden uitgezocht. De complete lijst voor Fedora 43:
+De dependencies moesten stuk voor stuk worden uitgezocht. De complete lijst op CachyOS:
 
 ```bash
-sudo dnf install cmake gcc gcc-c++ libglvnd-devel fontconfig-devel \
-  spice-protocol wayland-devel wayland-protocols-devel pipewire-devel \
-  libxkbcommon-devel libsamplerate-devel libudev-devel nettle-devel \
-  desktop-file-utils libXi-devel libXfixes-devel libXScrnSaver-devel \
-  libXinerama-devel libXcursor-devel libXpresent-devel libXrandr-devel \
-  libdecor-devel pulseaudio-libs-devel binutils-devel
+sudo pacman -S cmake gcc libglvnd fontconfig \
+  spice-protocol wayland wayland-protocols pipewire \
+  libxkbcommon libsamplerate systemd nettle \
+  desktop-file-utils libxi libxfixes libxss \
+  libxinerama libxcursor libxpresent libxrandr \
+  libdecor libpulse binutils
 ```
 
 Ontbrekende packages per build-fout:
@@ -408,7 +408,7 @@ VM XML herstellen via `sudo virsh edit win11`: verwijder de twee `<hostdev>` blo
 
 Looking Glass is een indrukwekkend project maar vereist hardware die op de Zephyrus G16 simpelweg niet aanwezig is. Voor Windows applicaties op deze laptop zijn de beste opties:
 
-- **[virt-manager met VirtIO + SPICE GL]({{< relref "/docs/vm-setup" >}})** — goede performance voor office/productiviteit (zie de [VM Setup Handleiding]({{< relref "/docs/vm-setup" >}}) voor configuratiedetails)
+- **[virt-manager met VirtIO + SPICE GL]({{< relref "/docs/virtualization/vm-setup" >}})** — goede performance voor office/productiviteit (zie de [VM Setup Handleiding]({{< relref "/docs/virtualization/vm-setup" >}}) voor configuratiedetails)
 - **Bottles/Wine** — voor compatibele Windows applicaties
 - **Native Linux alternatieven** — wanneer beschikbaar
 

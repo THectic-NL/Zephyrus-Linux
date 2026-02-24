@@ -3,9 +3,9 @@ title: "YubiKey 5C NFC"
 weight: 20
 ---
 
-I wanted to use my YubiKey to unlock the LUKS-encrypted drive at boot — plug it in, touch it, and the desktop loads. Turns out that's not really possible right now on Fedora 43. I spent a fair amount of time on it before giving up for now. This page documents what I tried, why it failed, and what actually works in the meantime.
+I wanted to use my YubiKey to unlock the LUKS-encrypted drive at boot — plug it in, touch it, and the desktop loads. This page documents what I tried, why it failed at first, and what actually works in the meantime.
 
-> **Status:** LUKS unlock with FIDO2 is too unreliable on Fedora 43 (systemd 258). This page documents what was attempted, what the root cause is, and what to do instead. Revisit when Fedora 44 ships with systemd 259+.
+> **Status:** LUKS unlock with FIDO2 has been unreliable on systemd 258. This page documents what was attempted, what the root cause is, and what to do instead. The situation may improve with systemd 259+.
 
 
 ## What Works Today
@@ -89,7 +89,7 @@ sudo dracut --force --regenerate-all
 
 ## When to Retry
 
-Wait for **Fedora 44** (expected to ship systemd 259+). Systemd 259 adds `token-timeout=` as a proper crypttab option, which gives a configurable wait window for the touch prompt. Combined with a fix for the fallback regression, FIDO2 LUKS unlock should become reliable.
+Wait for **systemd 259+** to become available. Systemd 259 adds `token-timeout=` as a proper crypttab option, which gives a configurable wait window for the touch prompt. Combined with a fix for the fallback regression, FIDO2 LUKS unlock should become reliable on CachyOS as well.
 
 When retrying, the enrollment procedure itself is correct — only the systemd version is the blocker.
 

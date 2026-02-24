@@ -3,21 +3,43 @@ title: "NVIDIA Driver Installatie"
 weight: 11
 ---
 
-De G16 heeft een NVIDIA RTX 4060 naast de AMD iGPU. De open-source Nouveau driver werkt niet goed op moderne NVIDIA-hardware, dus proprietary drivers zijn nodig. Ze werkend krijgen op Fedora met Secure Boot ingeschakeld kost een paar stappen — dit is wat bij mij werkte. Ik liep ook tegen meerdere crashes en lockups aan na de installatie die wat tijd kostten om op te sporen, dus die heb ik ook gedocumenteerd.
+De G16 heeft een NVIDIA RTX 4060 naast de AMD iGPU. De open-source Nouveau driver werkt niet goed op moderne NVIDIA-hardware, dus proprietary drivers zijn nodig.
 
 **Driver die ik gebruik:**
-- Versie: 580.119.02
-- Bron: RPM Fusion
-- Installatiemethode: akmod (automatisch kernel module rebuilding)
+- Versie: 590.48.01
+- CUDA-versie: 13.1
+- Bron: CachyOS/Arch repos
+- Installatiemethode: nvidia-dkms (DKMS-gebaseerd automatisch kernel module rebuilding)
 
+
+## CachyOS (Arch)
+
+CachyOS levert NVIDIA drivers standaard mee als onderdeel van de installer. Als je tijdens de installatie voor de NVIDIA-optie hebt gekozen, is de driver al aanwezig en volledig geconfigureerd — handmatige installatie is niet nodig.
+
+Ga naar [Verificatie Na Installatie](#verificatie-na-installatie) om te bevestigen dat alles correct werkt.
+
+
+## Fedora
+
+De volgende stappen behandelen het volledige handmatige installatieproces. Ik liep tijdens de installatie tegen meerdere crashes en lockups aan die wat tijd kostten om op te sporen — die staan gedocumenteerd in het onderdeel [Bekende Problemen](#bekende-problemen).
 
 ## Vereisten
+
+### RPM Fusion inschakelen
+
+RPM Fusion levert de NVIDIA drivers voor Fedora. Schakel beide repositories in voordat je installeert:
+
+```bash
+sudo dnf install \
+  https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
+  https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+```
 
 ### Systeem Verificatie
 
 {{% details title="Check kernel versie" closed="true" %}}
 
-Vereist: Kernel 6.18+ voor Ryzen AI 9 HX 370 ondersteuning.
+Vereist: Kernel 6.19+ voor Ryzen AI 9 HX 370 ondersteuning.
 
 ```bash
 uname -r
@@ -45,27 +67,10 @@ De open-source Nouveau driver heeft slechte prestaties op moderne NVIDIA GPU's. 
 
 {{% steps %}}
 
-### Repository problemen oplossen
-
-Bij checksum errors tijdens `dnf update`, clean de cache:
-
-```bash
-sudo dnf clean all
-sudo dnf makecache
-```
-
-### RPM Fusion repositories toevoegen
-
-RPM Fusion biedt NVIDIA drivers voor Fedora. NVIDIA's officiële CUDA repository ondersteunt Fedora 43 nog niet.
-
-```bash
-sudo dnf install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
-```
-
 ### Systeem updaten
 
 ```bash
-sudo dnf update -y
+sudo dnf upgrade
 ```
 
 Wacht tot update voltooid is.
@@ -78,28 +83,26 @@ Check beschikbare NVIDIA driver versie:
 dnf info akmod-nvidia
 ```
 
-Controleer dat de versie overeenkomt met de huidige release voor Fedora 43.
-
 ### NVIDIA driver installeren
 
 Installeer driver met CUDA ondersteuning:
 
 ```bash
-sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda -y
+sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda xorg-x11-drv-nvidia-libs.i686
 ```
 
 Dit installeert de driver, CUDA libraries en build dependencies (ongeveer 1 GB).
-- `akmod-nvidia` - Automatische kernel module builder
-- `xorg-x11-drv-nvidia` - NVIDIA driver (ondersteunt X11 en Wayland)
-- `xorg-x11-drv-nvidia-cuda` - CUDA libraries
-- Build dependencies (gcc, kernel-devel, etc.)
+- `akmod-nvidia` - NVIDIA driver via akmods voor automatisch kernel module bouwen en signeren
+- `xorg-x11-drv-nvidia-cuda` - CUDA ondersteuning en driver utilities (inclusief Wayland ondersteuning)
+- `xorg-x11-drv-nvidia-libs.i686` - 32-bit NVIDIA libraries (nodig voor Steam/Proton)
 
 ### Kernel modules bouwen
 
-Forceer akmod om NVIDIA kernel modules te bouwen:
+akmods bouwt en signeert kernel modules automatisch bij installatie. Om handmatig te triggeren:
 
 ```bash
 sudo akmods --force
+sudo dracut --force
 ```
 
 Dit proces kan 5-10 minuten duren.
@@ -109,22 +112,20 @@ Dit proces kan 5-10 minuten duren.
 Check dat kernel modules gebouwd zijn:
 
 ```bash
-ls /lib/modules/$(uname -r)/extra/nvidia/
+ls /lib/modules/$(uname -r)/kernel/drivers/video/
 ```
 
-Alle vijf kernel modules moeten aanwezig zijn.
+De NVIDIA modules moeten aanwezig zijn.
 
-### Eerste reboot en GNOME Software checken
+### MOK signing key enrollen
+
+Als Secure Boot is ingeschakeld, importeer de akmods signing key en stel een wachtwoord in:
 
 ```bash
-sudo reboot
+sudo mokutil --import /etc/pki/akmods/certs/public_key.der
 ```
 
-Na reboot, open GNOME Software en noteer de MOK enrollment code. De driver is nog niet actief.
-
 ### MOK enrollment bij volgende boot
-
-Reboot opnieuw:
 
 ```bash
 sudo reboot
@@ -134,18 +135,10 @@ Tijdens boot verschijnt het MOK Management scherm (blauw scherm):
 1. Selecteer "Enroll MOK"
 2. Selecteer "Continue"
 3. Selecteer "Yes"
-4. Voer de MOK enrollment code in van GNOME Software
+4. Voer het wachtwoord in dat je in de vorige stap hebt ingesteld
 5. Reboot
 
 Het systeem boot normaal na MOK enrollment.
-
-### Modules rebuilden na MOK enrollment
-
-Na MOK enrollment, rebuild de kernel modules. Ze worden nu gesigneerd met de enrolled key.
-
-```bash
-sudo akmods --force --rebuild
-```
 
 ### Definitieve reboot
 
@@ -153,7 +146,7 @@ sudo akmods --force --rebuild
 sudo reboot
 ```
 
-De NVIDIA driver laadt nu correct. GNOME Software toont de driver als geïnstalleerd (niet pending).
+De NVIDIA driver laadt nu correct.
 
 ### NVIDIA power management services activeren
 
@@ -194,7 +187,7 @@ sudo systemctl enable --now nvidia-powerd.service
 ```
 
 **Referentie:**
-- [NVIDIA Power Management Documentatie](https://download.nvidia.com/XFree86/Linux-x86_64/580.119.02/README/powermanagement.html)
+- [NVIDIA Power Management Documentatie](https://download.nvidia.com/XFree86/Linux-x86_64/590.48.01/README/powermanagement.html)
 
 {{% /steps %}}
 
@@ -212,14 +205,6 @@ nvidia-smi
 
 Je ziet de NVIDIA driver- en CUDA-versies in de output.
 
-### Verifieer Wayland sessie
-
-Bevestig dat Wayland draait (niet X11):
-
-```bash
-echo $XDG_SESSION_TYPE
-```
-
 ### Check geladen kernel modules
 
 ```bash
@@ -228,134 +213,62 @@ lsmod | grep nvidia
 
 De NVIDIA modules zijn geladen en de driver is functioneel.
 
-### Verifieer in GNOME Software
-
-Open GNOME Software (witte tas icoon):
-- Ga naar "Installed"
-- Zoek "NVIDIA Linux Graphics Driver"
-- Status moet "Installed" zijn (niet "Pending")
-- "Uninstall" knop is zichtbaar
-
-Dit bevestigt dat het systeem de driver erkent als correct geïnstalleerd.
-
 {{% /steps %}}
 
 
-## Performance Optimalisaties
-
-{{% details title="Kernel parameters voor verbeterde performance en stabiliteit" closed="true" %}}
-
-Het toevoegen van bepaalde kernel parameters kan de NVIDIA driver performance verbeteren, vooral voor Wayland sessies en dual-GPU setups.
-
-**Stap 1: Voeg aanbevolen kernel parameters toe**
-
-```bash
-sudo grubby --update-kernel=ALL --args="rd.driver.blacklist=nouveau modprobe.blacklist=nouveau nvidia-drm.modeset=1 nvidia-drm.fbdev=1 nvidia.NVreg_PreserveVideoMemoryAllocations=1"
-```
-
-**Stap 2: Verifieer dat parameters toegevoegd zijn**
-
-```bash
-sudo grubby --info=ALL | grep args
-```
-
-Verwachte output moet de toegevoegde kernel parameters bevatten.
-
-**Stap 3: Reboot om wijzigingen toe te passen**
-
-```bash
-sudo reboot
-```
-
-**Wat deze parameters doen:**
-
-- `rd.driver.blacklist=nouveau` - Voorkomt dat de open-source Nouveau driver laadt tijdens early boot (initramfs)
-- `modprobe.blacklist=nouveau` - Voorkomt dat Nouveau laadt na boot
-- `nvidia-drm.modeset=1` - Schakelt NVIDIA kernel mode setting in voor betere Wayland ondersteuning en performance
-- `nvidia-drm.fbdev=1` - Laat NVIDIA zijn framebuffer via het kernel DRM framework lopen in plaats van een generiek framebuffer. Verbetert de handoff tussen console en Wayland/GNOME en voorkomt race conditions bij suspend/resume op hybrid GPU laptops
-- `nvidia.NVreg_PreserveVideoMemoryAllocations=1` - Behoudt VRAM-allocaties tijdens suspend/resume in plaats van ze vrij te geven en opnieuw op te bouwen. Voorkomt corrupte VRAM na resume, wat soft lockups kan veroorzaken
-
-**Waarom Nouveau blacklisten:**
-- De proprietary NVIDIA driver en Nouveau kunnen niet samen bestaan
-- Blacklisting voorkomt conflicten en zorgt ervoor dat de proprietary driver altijd gebruikt wordt
-- Als de NVIDIA driver faalt, kun je deze parameters verwijderen uit GRUB om terug te vallen op Nouveau
-
-**Voordelen:**
-- Betere Wayland performance en stabiliteit
-- Voorkomt driver conflicten tijdens boot
-- Verbeterde externe monitor ondersteuning
-- Stabielere suspend/resume cycli op hybrid GPU setups
-- Soepelere graphics performance in het algemeen
-
-**Opmerking:** Deze parameters zijn optioneel maar aanbevolen voor optimale performance.
-
-**Grafische boot splash opnieuw inschakelen:**
-
-Fedora gebruikt `rhgb` (Red Hat Graphical Boot) en `quiet` om een Plymouth splash scherm te tonen tijdens het booten in plaats van scrollende kernel tekst. Als je deze hebt verwijderd tijdens het debuggen van NVIDIA- of boot-problemen, voeg ze opnieuw toe:
-
-```bash
-sudo grubby --update-kernel=ALL --args="rhgb quiet"
-```
-
-Het standaard Plymouth-thema (`bgrt`) toont het ASUS/BIOS fabrikantlogo. Om in de toekomst boot-problemen te debuggen, kun je ze tijdelijk verwijderen:
-
-```bash
-sudo grubby --update-kernel=ALL --remove-args="rhgb quiet"
-```
-
-**Referenties:**
-- [NVIDIA Driver Modesetting - Arch Wiki](https://wiki.archlinux.org/title/NVIDIA)
-- [Understanding nvidia-drm.modeset=1 - NVIDIA Developer Forums](https://forums.developer.nvidia.com/t/understanding-nvidia-drm-modeset-1-nvidia-linux-driver-modesetting/204068)
-- [NVIDIA Power Management Documentatie](https://download.nvidia.com/XFree86/Linux-x86_64/580.119.02/README/powermanagement.html)
-
-{{% /details %}}
 
 
 ## ICC Kleurprofielen
 
-{{% details title="ASUS GameVisual kleurprofielen installeren voor Sharp LQ160R1JW02 panel" closed="true" %}}
+{{% details title="ASUS GameVisual kleurprofielen installeren voor GA605WV ingebouwd display" closed="true" %}}
 
-De GA605WV wordt geleverd met een Sharp LQ160R1JW02 16" 2560x1600 240Hz display. ASUS kalibreert elk paneel in de fabriek en levert kleurprofielen via hun ASUS System Control Interface. Op Windows worden deze automatisch toegepast door Armoury Crate/GameVisual. Op Linux moeten we deze handmatig installeren.
+De GA605WV wordt geleverd met een 16" 2560x1600 240Hz ROG Nebula Display. ASUS kalibreert elk paneel in de fabriek en levert kleurprofielen via hun ASUS System Control Interface. Op Windows worden deze automatisch toegepast door Armoury Crate/GameVisual. Op Linux moeten we deze handmatig installeren.
 
-Deze kleurprofielen zijn verkregen door een combinatie van reverse engineering en het uit elkaar trekken van ASUS Windows driver packages. Door de structuur van de ASUS CDN en de inhoud van de driver ZIP-bestanden te analyseren, zijn alle factory-gekalibreerde kleurprofielen voor dit specifieke paneel gevonden. De ICC metadata is vervolgens aangepast zodat de profielen direct met leesbare namen verschijnen in GNOME Color Management.
+De GA605WV werd geleverd met verschillende panelen afhankelijk van het exemplaar. Het standaard model gebruikt een IPS-paneel (ROG Nebula Display); sommige configuraties worden geleverd met een OLED-paneel:
+
+| Panel ID | Fabrikant | Model | Type |
+|---|---|---|---|
+| `104D158E` | Sharp | LQ160R1JW02 | IPS (ROG Nebula Display) |
+| `834C41AE` | Samsung | ATNA60DL04-0 ([LaptopMedia](https://laptopmedia.com/screen/atna60dl04-0-sdc41ae/) · [Linux Hardware](https://linux-hardware.org/?id=eisa:samsung-sdc41ae)) | OLED |
+| `E5090C19` | Onbekend | — (aanwezig in ASUS driver package, nog niet publiek geïdentificeerd) | Onbekend |
+
+Controleer welk paneel jouw exemplaar heeft:
+
+```bash
+cat /sys/class/drm/card*-eDP-*/edid | edid-decode 2>/dev/null | grep -i "manufacturer\|model\|product name"
+```
+
+Deze kleurprofielen zijn verkregen door het reverse engineeren van het ASUS Windows driver package. Door de structuur van de ASUS CDN en de inhoud van de driver ZIP-bestanden te analyseren, zijn alle factory-gekalibreerde profielen voor deze laptop gevonden. De ICC metadata is vervolgens aangepast zodat de profielen direct met leesbare namen verschijnen in GNOME Color Management.
 
 **Installeer de kleurprofielen:**
 
-De ICC kleurprofielen staan in de [`/icc-profiles/`](https://github.com/Stensel8/Zephyrus-Linux/tree/main/static/icc-profiles) map van deze repository. Clone de repository of download de profielen handmatig en kopieer ze naar `~/.local/share/icc`:
+De ICC kleurprofielen staan in de [`/icc-profiles/`](https://github.com/Stensel8/Zephyrus-Linux/tree/main/static/icc-profiles) map van deze repository. Clone de repository of download de profielen handmatig en kopieer ze naar één van deze locaties:
+
+| Locatie | Bereik |
+|---|---|
+| `/usr/share/color/icc/colord/` | Systeem-breed (alle gebruikers, vereist root) |
+| `~/.local/share/icc/` | Alleen huidige gebruiker |
 
 ```bash
+# Systeem-brede installatie:
+sudo cp GA605WV_1002_104D158E_CMDEF.icm /usr/share/color/icc/colord/
+
+# Of per-gebruiker installatie:
 mkdir -p ~/.local/share/icc
-
-# Als je de repository al hebt gecloned:
-cp /icc-profiles/*.icm ~/.local/share/icc/
-
-# Of download de specifieke profielen die je nodig hebt uit de repository
+cp GA605WV_1002_104D158E_CMDEF.icm ~/.local/share/icc/
 ```
 
-**Activeer Native profiel in GNOME:**
+**Activeer je profiel in GNOME:**
 
 1. Open **Instellingen** → **Color Management**
-2. Selecteer **Built-In Screen**
+2. Selecteer je display (bijv. **Built-In Screen**)
 3. Klik **Add Profile**
-4. Selecteer **Native**
+4. Selecteer het profiel dat overeenkomt met jouw display en GPU-combinatie (bijv. **Native** voor AMD iGPU + Sharp LQ160R1JW02)
 5. Klik **Add**
 
 **Opmerking:** Als GNOME Settings de oude technische namen toont (bijv. "ASUS GA605WV 1002 104D158E CMDEF" in plaats van "Native"), sluit Settings af en heropen, of log uit/in om de color cache te verversen.
 
-**Beschikbare kleurprofielen:**
-
-| GNOME Naam | Bestand | Beschrijving |
-|---|---|---|
-| **Native** | `GA605WV_1002_104D158E_CMDEF.icm` | **Aanbevolen** - Factory-gekalibreerd voor Sharp LQ160R1JW02 panel, beste kleurnauwkeurigheid |
-| DCI-P3 | `ASUS_DCIP3.icm` | Verzadigde DCI-P3 kleuren voor gaming/media (Vivid mode) |
-| Display P3 | `ASUS_DisplayP3.icm` | Display P3 colorspace voor Apple-compatibele workflows |
-| sRGB | `ASUS_sRGB.icm` | sRGB standaard voor web/foto werk |
-
-**Aanbeveling:**
-
-Gebruik **Native** voor de beste kleurnauwkeurigheid. Dit profiel bevat factory-kalibratie die specifiek is voor het Sharp LQ160R1JW02 panel in deze laptop. De andere profielen (DCI-P3, Display P3, sRGB) zijn generieke kleurruimten zonder panel-specifieke correcties.
-
-**Opmerking:** Het `_1002_` in de bestandsnaam verwijst naar de AMD iGPU (Vendor ID 0x1002), die het interne eDP display aanstuurt op deze hybrid GPU laptop.
+De bestandsnaam bevat je GPU (`1002` = AMD, `10DE` = NVIDIA) en paneel-ID — match deze aan jouw exemplaar via de paneeltabel hierboven. Alle profielen staan in de [`/icc-profiles/`](https://github.com/Stensel8/Zephyrus-Linux/tree/main/static/icc-profiles) map.
 
 **Achtergrond:**
 
@@ -366,11 +279,43 @@ https://dlcdn-rogboxbu1.asus.com/pub/ASUS/APService/Gaming/SYS/ROGS/{id}-{code}-
 
 Voor de GA605WV is dit: `20016-BWVQPK-01624c1cdd5a3c05252bad472fab1240.zip`
 
-De profielen bevatten factory color corrections die specifiek zijn voor het Sharp LQ160R1JW02 panel (Panel ID: 104D158E) dat in dit model laptop wordt gebruikt.
-
 **Technische Details:**
 
 De profielen in deze repository zijn al voorbewerkt met aangepaste ICC metadata 'desc' tags, zodat ze direct met leesbare namen verschijnen in GNOME Color Management. Voor gebruikers die geïnteresseerd zijn in hoe deze modificaties werken, kun je zelf vergelijkbare ICC 'desc' tag manipulatie implementeren met Python's PIL/ImageCms.
+
+{{% /details %}}
+
+{{% details title="Samsung kleurprofiel installeren voor LS27B800TGUXEN (S80TB) Thunderbolt display" closed="true" %}}
+
+De Samsung ViewFinity S8 Thunderbolt (LS27B800TGUXEN) wordt geleverd met een fabriekskleurprofiel (`SxxB80xT.icm`) dat is opgenomen in het Windows INF driver package. Op Linux moet dit profiel handmatig worden geïnstalleerd.
+
+Het profiel staat in de [`/icc-profiles/LS27B800TGUXEN - S80TB/`](https://github.com/Stensel8/Zephyrus-Linux/tree/main/static/icc-profiles/LS27B800TGUXEN%20-%20S80TB) map van deze repository.
+
+**Installeer het kleurprofiel:**
+
+Linux slaat ICC profielen op in één van twee locaties, afhankelijk van het bereik:
+
+| Locatie | Bereik |
+|---|---|
+| `/usr/share/color/icc/colord/` | Systeem-breed (alle gebruikers, vereist root) |
+| `~/.local/share/icc/` | Alleen huidige gebruiker |
+
+```bash
+# Systeem-brede installatie (aanbevolen):
+sudo cp SxxB80xT.icm /usr/share/color/icc/colord/
+
+# Of per-gebruiker installatie:
+mkdir -p ~/.local/share/icc
+cp SxxB80xT.icm ~/.local/share/icc/
+```
+
+**Activeer in GNOME:**
+
+1. Open **Instellingen** → **Color Management**
+2. Selecteer het **Samsung display** (bijv. "LS27B800TGUXEN")
+3. Klik **Add Profile**
+4. Selecteer `SxxB80xT`
+5. Klik **Add**
 
 {{% /details %}}
 
@@ -391,15 +336,11 @@ amdgpu 0000:66:00.0: amdgpu: GPU reset begin!
 Deze laptop heeft dual GPUs (AMD Radeon 890M integrated + NVIDIA RTX 4060 discrete). De PSR (Panel Self Refresh) feature van de AMD GPU heeft een bug die crashes veroorzaakt met externe Thunderbolt monitoren.
 
 **Oplossing:**
-Disable AMD PSR door een kernel parameter toe te voegen:
+Disable AMD PSR door een kernel parameter toe te voegen. Bewerk `/etc/default/grub` en voeg `amdgpu.dcdebugmask=0x600` toe aan `GRUB_CMDLINE_LINUX_DEFAULT`, daarna regenereer:
 
 ```bash
-sudo grubby --update-kernel=ALL --args="amdgpu.dcdebugmask=0x600"
-```
-
-Verifieer dat het toegevoegd is:
-```bash
-sudo grubby --info=ALL | grep args
+sudo nano /etc/default/grub
+sudo grub2-mkconfig -o /boot/efi/EFI/fedora/grub.cfg
 ```
 
 Reboot:
@@ -545,9 +486,9 @@ sudo systemctl stop nvidia-powerd.service
 sudo systemctl mask nvidia-powerd.service
 ```
 
-2. Voeg kernel parameters toe voor stabielere NVIDIA power management:
-```bash
-sudo grubby --update-kernel=ALL --args="nvidia-drm.fbdev=1 nvidia.NVreg_PreserveVideoMemoryAllocations=1"
+2. Voeg kernel parameters toe voor stabielere NVIDIA power management (bewerk `/etc/default/grub`, voeg toe aan `GRUB_CMDLINE_LINUX_DEFAULT`, daarna `sudo grub-mkconfig -o /boot/grub/grub.cfg`):
+```
+nvidia-drm.fbdev=1 nvidia.NVreg_PreserveVideoMemoryAllocations=1
 ```
 
 3. Reboot:
@@ -580,7 +521,8 @@ sudo journalctl -b | grep nvidia
 
 Rebuild kernel modules:
 ```bash
-sudo akmods --force --rebuild
+sudo akmods --force
+sudo dracut --force
 sudo reboot
 ```
 
@@ -593,7 +535,8 @@ Als je de error krijgt `modprobe: ERROR: could not insert 'nvidia': Key was reje
 Oplossing:
 ```bash
 # Rebuild modules na MOK enrollment
-sudo akmods --force --rebuild
+sudo akmods --force
+sudo dracut --force
 
 # Reboot
 sudo reboot
@@ -608,37 +551,18 @@ Reboot en probeer enrollment opnieuw.
 
 {{% /details %}}
 
-{{% details title="Draait X11 in plaats van Wayland" closed="true" %}}
-
-Check sessie type:
-```bash
-echo $XDG_SESSION_TYPE
-```
-
-Als output `x11` is, zorg dat Wayland ingeschakeld is in GDM:
-```bash
-sudo nano /etc/gdm/custom.conf
-```
-
-Verifieer dat deze regel aanwezig is en niet uitgecommentarieerd:
-```
-WaylandEnable=true
-```
-
-Reboot na wijzigingen.
-
-{{% /details %}}
 
 {{% details title="Kernel module build failures" closed="true" %}}
 
 Zorg dat kernel headers overeenkomen met draaiende kernel:
 ```bash
-sudo dnf install kernel-devel-$(uname -r)
+sudo dnf install kernel-devel
 ```
 
 Forceer rebuild:
 ```bash
 sudo akmods --force
+sudo dracut --force
 ```
 
 {{% /details %}}
@@ -647,18 +571,16 @@ sudo akmods --force
 ## Technische weetjes
 
 ### Package Naming
-De package `xorg-x11-drv-nvidia` is een legacy naam. De driver ondersteunt zowel X11 als Wayland. Fedora 43 gebruikt standaard Wayland met GNOME.
+Het `akmod-nvidia` package is de aanbevolen NVIDIA driver voor Fedora. Het gebruikt het akmods framework om kernel modules automatisch te rebuilden na kernel updates.
 
 ### Secure Boot
-Akmod handelt Secure Boot module signing automatisch af. De akmods systemd service rebuildt kernel modules automatisch na kernel updates.
-
-### GNOME Software
-GNOME Software toont "NVIDIA Linux Graphics Driver" met "Pending" status na initiële installatie. Dit is normaal. Na MOK enrollment en module rebuild wordt de status "Installed".
+akmods rebuildt en signeert kernel modules automatisch na kernel updates. Op Fedora kan `sbctl` ook worden gebruikt voor Secure Boot sleutelbeheer.
 
 
 ## Aanvullende Bronnen
 
-- [RPM Fusion NVIDIA Driver Guide](https://www.if-not-true-then-false.com/2015/fedora-nvidia-guide/)
+- [CachyOS Wiki: NVIDIA](https://wiki.cachyos.org/configuration/nvidia/)
+- [Arch Wiki: NVIDIA](https://wiki.archlinux.org/title/NVIDIA)
 - [Ryzen AI 9 HX 370 Linux Support](https://forums.linuxmint.com/viewtopic.php?t=429052)
 - [NVIDIA vs Nouveau Performance](https://machaddr.substack.com/p/nouveau-vs-nvidia-the-battle-between)
 - [Zephyrus G16 2024 Linux Guide](https://www.ehmiiz.se/blog/linux_asus_g16_2024/)

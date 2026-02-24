@@ -3,79 +3,23 @@ title: "asusctl & ROG Control Center"
 weight: 22
 ---
 
-De Zephyrus G16 heeft veel hardware-functies die op Linux niet zomaar werken — fan curves, performance-profielen, de Slash LED op het deksel, GPU-switching, batterijlaadlimiet. Op deze pagina staat hoe ik dat allemaal werkend heb gekregen met asusctl en de tools van het ASUS Linux-project. De Fedora-specifieke onderdelen staan niet in hun eigen documentatie, dus ik heb ze hier opgeschreven.
+De Zephyrus G16 heeft veel hardware-functies die op Linux niet zomaar werken — fan curves, performance-profielen, de Slash LED op het deksel, GPU-switching, batterijlaadlimiet. Op deze pagina staat hoe ik dat allemaal werkend heb gekregen met asusctl en de tools van het ASUS Linux-project. Op CachyOS zijn deze tools direct beschikbaar vanuit de package repos.
 
 **Package informatie:**
 - `asusctl` 6.3.2 — CLI voor fan curves, profielen, batterijlimiet, RGB, Slash LED
 - `asusctl-rog-gui` 6.3.2 — ROG Control Center GUI
 - `supergfxctl` 5.2.7 — GPU mode switching
-- Bron: [lukenukem COPR](https://copr.fedorainfracloud.org/coprs/lukenukem/asus-linux/) (beheerd door Luke Jones, primaire asusctl developer)
-
-
-## Vereisten
-
-{{% details title="Waarom lukenukem COPR en geen reguliere repo" closed="true" %}}
-
-COPR is Fedora's officiële community-package-hostingplatform (vergelijkbaar met AUR voor Arch). De `lukenukem` COPR wordt beheerd door Luke Jones (flukejones), de primaire developer van asusctl zelf — geen willekeurige derde partij.
-
-De packages zijn GPG-gesigned (`gpgcheck=1`) en dit is de officieel aanbevolen installatiemethode door het asus-linux project.
-
-**Let op:** Als je zoekt naar "lukenukem COPR" op Reddit, vind je mogelijk threads met zorgen. Deze gaan doorgaans over de openSUSE repository die tijdelijk offline was — geen beveiligingsprobleem met de COPR zelf.
-
-{{% /details %}}
-
-{{% details title="Compatibiliteit met tuned (power-profiles-daemon conflict) — Fedora-specifiek" closed="true" %}}
-
-`asusctl` vereist de `power-profiles-daemon` D-Bus API om performance profielen te beheren (Silent/Balanced/Performance). Op Arch Linux installeer je simpelweg `power-profiles-daemon` en het werkt. Op Fedora conflicteert dit echter met `tuned`, dat [sinds Fedora 41 de standaard power management daemon is](https://fedoraproject.org/wiki/Changes/TunedAsTheDefaultPowerProfileManagementDaemon).
-
-De oplossing is `tuned-ppd`, een door Fedora aangeboden compatibiliteitslaag die de `power-profiles-daemon` D-Bus interface beschikbaar stelt terwijl het intern `tuned` gebruikt. Hiermee kan `asusctl` profielen beheren zonder `tuned` te verwijderen.
-
-**Let op:** Het asus-linux project documenteert dit niet omdat het een Fedora-specifiek probleem is. Hun [FAQ](https://asus-linux.org/faq/) en [ArchWiki-pagina](https://wiki.archlinux.org/title/Asusctl) vermelden alleen dat `power-profiles-daemon` moet draaien.
-
-Als je `tuned` hebt geïnstalleerd (Fedora standaard), moet je overstappen naar `tuned-ppd` vóór de installatie van asusctl, anders werkt profielwisseling niet.
-
-**Referenties:**
-- [Fedora Wiki: Tuned as Default Power Profile Daemon (F41)](https://fedoraproject.org/wiki/Changes/TunedAsTheDefaultPowerProfileManagementDaemon)
-- [Phoronix: Fedora 41 Goes Tuned PPD](https://www.phoronix.com/news/Fedora-41-Goes-Tuned-PPD)
-- [asus-linux FAQ](https://asus-linux.org/faq/)
-- [asusctl ArchWiki](https://wiki.archlinux.org/title/Asusctl)
-
-{{% /details %}}
+- Bron: CachyOS/Arch repos (packages beheerd door Luke Jones, primaire asusctl developer)
 
 
 ## Installatie
 
 {{% steps %}}
 
-### lukenukem COPR repository toevoegen
-
-```bash
-sudo dnf copr enable lukenukem/asus-linux
-```
-
-### Van tuned naar tuned-ppd overstappen (Fedora-specifiek)
-
-`asusctl` heeft de `power-profiles-daemon` D-Bus API nodig. Op Fedora 41+ is `tuned` de standaard en conflicteert met `power-profiles-daemon`. Installeer `tuned-ppd` als compatibiliteitslaag:
-
-```bash
-sudo dnf install tuned-ppd
-sudo systemctl disable tuned.service
-sudo systemctl enable --now tuned-ppd.service
-```
-
-`tuned-ppd` stelt de `power-profiles-daemon` D-Bus interface beschikbaar terwijl het intern `tuned`-profielen gebruikt. `asusctl` communiceert met `tuned-ppd` alsof het `power-profiles-daemon` is — geen aanpassingen nodig.
-
-**Verifieer:**
-```bash
-systemctl status tuned-ppd
-```
-
-**Let op:** Op Arch Linux installeer je `power-profiles-daemon` direct. Deze stap is alleen nodig op Fedora.
-
 ### asusctl, ROG Control Center en supergfxctl installeren
 
 ```bash
-sudo dnf install asusctl asusctl-rog-gui supergfxctl
+sudo pacman -S asusctl supergfxctl power-profiles-daemon rog-control-center
 ```
 
 Dit installeert:
@@ -114,7 +58,7 @@ Board name: GA605WV
 Handige tools voor hardware monitoring naast asusctl:
 
 ```bash
-sudo dnf install nvtop powertop s-tui lm_sensors i2c-tools
+sudo pacman -S nvtop powertop s-tui lm_sensors i2c-tools
 ```
 
 | Package | Beschrijving |
@@ -211,7 +155,7 @@ asusctl profile --next
 asusctl profile
 ```
 
-> **Let op:** Profielwisseling vereist dat `tuned-ppd` actief is. Zie de installatiestappen hierboven.
+> **Let op:** Profielwisseling vereist dat `power-profiles-daemon` actief is. Zie de installatiestappen hierboven.
 
 {{% /details %}}
 
@@ -240,7 +184,7 @@ supergfxctl --mode Integrated
 
 > **Let op:** Wisselen tussen Hybrid en Integrated vereist uitloggen/inloggen. Overstappen naar AsusMuxDgpu vereist een herstart.
 
-> **Belangrijk:** `nvidia-powerd.service` moet uitgeschakeld en **gemaskt** blijven op deze laptop. Het conflicteert met AMD ATPX power management en veroorzaakt soft lockups en reboot hangs (zwart scherm, backlights blijven aan). Masken is essentieel omdat `supergfxd` direct `systemctl start nvidia-powerd.service` aanroept tijdens GPU mode switches — `disable` alleen voorkomt dit niet. De mask (symlink naar `/dev/null`) blokkeert zowel `supergfxd` als NVIDIA driver updates. GPU-vermogensbeheer loopt via ATPX (via ACPI). Zie de [NVIDIA Driver Installatie Guide]({{< relref "/docs/nvidia-driver-installation" >}}) voor diagnosedetails en commando's.
+> **Belangrijk:** `nvidia-powerd.service` moet uitgeschakeld en **gemaskt** blijven op deze laptop. Het conflicteert met AMD ATPX power management en veroorzaakt soft lockups en reboot hangs (zwart scherm, backlights blijven aan). Masken is essentieel omdat `supergfxd` direct `systemctl start nvidia-powerd.service` aanroept tijdens GPU mode switches — `disable` alleen voorkomt dit niet. De mask (symlink naar `/dev/null`) blokkeert zowel `supergfxd` als NVIDIA driver updates. GPU-vermogensbeheer loopt via ATPX (via ACPI). Zie de [NVIDIA Driver Installatie Guide]({{< relref "/docs/hardware/nvidia-driver-installation" >}}) voor diagnosedetails en commando's.
 
 {{% /details %}}
 
@@ -331,7 +275,7 @@ sudo journalctl -b -u supergfxd
 ROG Control Center toont een melding dat de `asus-armoury` kernel driver niet geladen is. Geavanceerde functies (PPT vermogensgrenzen, APU geheugenallocatie, MUX switch besturing) zijn niet beschikbaar.
 
 **Oorzaak:**
-De `asus-armoury` driver is samengevoegd in de Linux mainline kernel in versie 6.19. Op kernel 6.18.x (huidige Fedora 43 standaard) bestaat de driver niet.
+De `asus-armoury` driver is samengevoegd in de Linux mainline kernel in versie 6.19. CachyOS levert kernel 6.19.3-2 inclusief deze driver, dus hij zou beschikbaar moeten zijn.
 
 **Wat nog wel werkt zonder de driver:**
 - Fan curves (basis)
@@ -342,9 +286,7 @@ De `asus-armoury` driver is samengevoegd in de Linux mainline kernel in versie 6
 - GPU switching via supergfxctl
 
 **Oplossing:**
-Wacht tot Fedora 43 kernel 6.19 uitbrengt via `dnf update`. Geen handmatige actie vereist.
-
-Na de kernel update, verifieer dat de driver geladen is:
+Verifieer dat de driver geladen is:
 ```bash
 lsmod | grep asus_armoury
 ```
@@ -380,5 +322,5 @@ Als hij laadt, heropen ROG Control Center — de melding zou verdwenen moeten zi
 
 - [asus-linux.org](https://asus-linux.org/) — Officiële projectsite
 - [asusctl GitLab](https://gitlab.com/asus-linux/asusctl) — Broncode en issue tracker
-- [lukenukem COPR](https://copr.fedorainfracloud.org/coprs/lukenukem/asus-linux/) — Fedora package repository
-- [NVIDIA Driver Installatie Guide]({{< relref "/docs/nvidia-driver-installation" >}}) — NVIDIA driver setup en bekende problemen
+- [CachyOS Wiki: ASUS](https://wiki.cachyos.org/) — CachyOS-specifieke documentatie
+- [NVIDIA Driver Installatie Guide]({{< relref "/docs/hardware/nvidia-driver-installation" >}}) — NVIDIA driver setup en bekende problemen

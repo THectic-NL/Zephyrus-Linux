@@ -5,7 +5,7 @@ weight: 14
 
 Sommige dingen draaien gewoon niet op Linux — Microsoft 365 is het meest voor de hand liggende voorbeeld. Daarvoor heb ik een Windows 11 VM opgezet met KVM/QEMU via virt-manager. Met VirtIO-drivers en SPICE GL-acceleratie via de AMD iGPU is de performance goed genoeg voor dagelijks kantoorwerk.
 
-> **GPU passthrough gewenst?** Als je near-native GPU performance wilt in je VM, zie de [Looking Glass Poging]({{< relref "/docs/looking-glass-attempt" >}}). Spoiler: het werkt niet op deze laptop door hardwarebeperkingen, maar de documentatie kan nuttig zijn voor andere hardware.
+> **GPU passthrough gewenst?** Als je near-native GPU performance wilt in je VM, zie de [Looking Glass Poging]({{< relref "/docs/virtualization/looking-glass-attempt" >}}). Spoiler: het werkt niet op deze laptop door hardwarebeperkingen, maar de documentatie kan nuttig zijn voor andere hardware.
 
 
 ## Windows 11 Enterprise ISO
@@ -47,10 +47,10 @@ Gebruik de officiële Windows 11 Media Creation Tool met een activatiemethode:
 
 **1. Packages installeren:**
 ```bash
-sudo dnf install @virtualization swtpm swtpm-tools edk2-ovmf
+sudo pacman -S virt-manager qemu-full swtpm edk2-ovmf dnsmasq
 ```
 
-**Let op:** Het `virtio-win` pakket is niet beschikbaar in de standaard Fedora repositories. We downloaden de ISO direct in een latere stap.
+**Let op:** Het `virtio-win` pakket is beschikbaar vanuit de AUR (`yay -S virtio-win`) of je kunt de ISO direct downloaden in een latere stap.
 
 **2. Gebruiker toevoegen aan libvirt groep:**
 ```bash
