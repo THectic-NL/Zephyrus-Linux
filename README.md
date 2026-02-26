@@ -24,36 +24,36 @@ I am not affiliated with, endorsed by, or acting on behalf of ASUS, NVIDIA, Micr
 | **CPU** | AMD Ryzen AI 9 HX 370 |
 | **iGPU** | AMD Radeon 890M |
 | **dGPU** | NVIDIA GeForce RTX 4060 Laptop (Max-Q) |
-| **OS** | CachyOS |
-| **Kernel** | 6.19.3-2-cachyos |
-| **Desktop** | GNOME 49 / Wayland |
+| **OS** | CachyOS (Arch) |
+| **Kernel** | 6.19.3-2 |
+| **Display Server** | Wayland (GNOME 49) |
+| **CPU Scheduler** | scx_lavd (sched_ext) |
 | **Secure Boot** | Enabled |
+
+![System information overview](static/images/system-info.avif)
 
 
 ## Building the site locally
 
-This documentation site is built with [Hugo](https://gohugo.io/) using the [Hextra](https://imfing.github.io/hextra/) theme. The theme is included as a git submodule.
+This documentation site is built with [Hugo](https://gohugo.io/) using the [Hextra](https://imfing.github.io/hextra/) theme. The theme is managed as a Hugo module (via Go modules — no git submodules).
 
 **Prerequisites:**
 - [Hugo extended](https://gohugo.io/installation/) v0.156.0 (built with this version)
+- [Go](https://go.dev/dl/) (required for Hugo modules)
 - Git
-- Visual Studio Code
 
 On Arch Linux / CachyOS:
 ```bash
-sudo pacman -S hugo
+sudo pacman -S hugo go
 ```
 
-**Clone with submodules:**
+**Clone the repository:**
 ```bash
-git clone --recurse-submodules https://github.com/Stensel8/Zephyrus-Linux.git
+git clone https://github.com/Stensel8/Zephyrus-Linux.git
 cd Zephyrus-Linux
 ```
 
-If you already cloned without `--recurse-submodules`:
-```bash
-git submodule update --init --recursive
-```
+Hugo automatically downloads the theme module on first run.
 
 **Run the development server:**
 ```bash

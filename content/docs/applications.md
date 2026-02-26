@@ -363,13 +363,13 @@ Go to **Settings → Keyboard → Custom Shortcuts** and add:
 
 ### Solaar for Logitech devices
 
-[Solaar](https://github.com/pwr-Solaar/Solaar) manages Logitech keyboards, mice, and other peripherals. Version 1.1.19 or newer.
+[Solaar](https://github.com/pwr-Solaar/Solaar) manages Logitech keyboards, mice, and other peripherals. Available in the [CachyOS extra repository](https://packages.cachyos.org/package/extra/any/solaar).
 
 ```bash
 sudo pacman -S solaar
 ```
 
-![Solaar in GNOME Software](/images/solaar-flathub.avif)
+![Solaar package page in the CachyOS repository](/images/solaar-docs.avif)
 
 Runs in the system tray with battery notifications. You can also configure DPI, polling rate, and buttons from there.
 

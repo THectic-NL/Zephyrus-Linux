@@ -363,13 +363,13 @@ Ga naar **Instellingen → Toetsenbord → Aangepaste sneltoetsen** en voeg toe:
 
 ### Solaar voor Logitech-apparaten
 
-[Solaar](https://github.com/pwr-Solaar/Solaar) beheert Logitech-toetsenborden, muizen en andere randapparatuur. Versie 1.1.19 of nieuwer.
+[Solaar](https://github.com/pwr-Solaar/Solaar) beheert Logitech-toetsenborden, muizen en andere randapparatuur. Beschikbaar in de [CachyOS extra-repository](https://packages.cachyos.org/package/extra/any/solaar).
 
 ```bash
 sudo pacman -S solaar
 ```
 
-![Solaar in GNOME Software](/images/solaar-flathub.avif)
+![Solaar-pakketpagina in de CachyOS-repository](/images/solaar-docs.avif)
 
 Draait in het systray met batterijnotificaties. Je kunt er ook DPI, polling rate en knoppen mee configureren.
 
