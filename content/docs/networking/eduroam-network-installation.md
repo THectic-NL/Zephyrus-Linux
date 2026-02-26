@@ -1,9 +1,11 @@
 ---
 title: "eduroam Network Installation"
-weight: 23
+weight: 1
+prev: docs/applications
+next: docs/virtualization/vm-setup
 ---
 
-Getting eduroam to work on Linux is more painful than it should be. Every "official" method I tried failed — the connection would just hang during the TLS handshake and never connect. I eventually figured out a manual setup that works reliably and wrote a script around it. Sharing it here so you hopefully don't have to go through the same process.
+Getting eduroam to work on Linux is more painful than it should be. Every "official" method I tried failed; the connection would just hang during the TLS handshake and never connect. I eventually figured out a manual setup that works reliably and wrote a script around it. Sharing it here so you hopefully don't have to go through the same process.
 
 ## What doesn't work
 
@@ -28,7 +30,7 @@ The guide at [linux.datanose.nl](https://linux.datanose.nl/linux/eduroam/) (UvA/
 
 ## What does work
 
-PEAP/MSCHAPv2 with CA validation via the system trust store and `domain-suffix-match` — the modern replacement for the deprecated `altsubject-matches`.
+PEAP/MSCHAPv2 with CA validation via the system trust store and `domain-suffix-match` (the modern replacement for the deprecated `altsubject-matches`).
 
 **Requirements:**
 - Python 3.10+
@@ -57,7 +59,7 @@ curl -LO https://zephyrus-linux.stensel.nl/scripts/saxion-eduroam.py
 python3 saxion-eduroam.py
 ```
 
-The script removes any existing eduroam profile, prompts for your **username** via a GUI dialog (zenity, kdialog, or yad) or terminal fallback, and activates the connection. Your password is never asked by the script — it is requested by your GNOME Keyring at connection time and stored securely, never in plaintext.
+The script removes any existing eduroam profile, prompts for your **username** via a GUI dialog (zenity, kdialog, or yad) or terminal fallback, and activates the connection. Your password is never asked by the script; it is requested by your GNOME Keyring at connection time and stored securely, never in plaintext.
 
 {{< callout type="warning" >}}
 You are downloading and running a script from the internet. If you want to be extra safe, verify the script source (or its checksum) before running it.

@@ -25,7 +25,7 @@ toc: false
 <div class="hx-mt-6"></div>
 
 {{< callout type="info" >}}
-**Personal documentation.** I'm not a developer or Linux expert — just someone who switched to Linux on this laptop and figured things out along the way. I share what worked for me so others don't have to start from scratch. Everything here is at your own risk. Feel free to reach out if something doesn't work; I'm happy to think along. Running kernel 6.19.3-2 on CachyOS (Arch).
+**Personal documentation.** I'm not a developer or Linux expert, just someone who switched to Linux on this laptop and figured things out along the way. I share what worked for me so others don't have to start from scratch. Everything here is at your own risk. Feel free to reach out if something doesn't work; I'm happy to think along. Running kernel 6.19.3-2 on CachyOS (Arch).
 {{< /callout >}}
 
 ## Current System Configuration
@@ -66,7 +66,7 @@ toc: false
   >}}
   {{< hextra/feature-card
     title="Secure Boot"
-    subtitle="Custom signing keys with sbctl, HSI:3 to HSI:4"
+    subtitle="Custom signing keys with sbctl, UEFI Secure Boot enabled"
     icon="shield-check"
     link="docs/hardware/secure-boot"
   >}}

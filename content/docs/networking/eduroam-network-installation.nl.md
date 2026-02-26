@@ -1,9 +1,11 @@
 ---
 title: "eduroam Netwerkinstallatie"
-weight: 23
+weight: 1
+prev: docs/applications
+next: docs/virtualization/vm-setup
 ---
 
-eduroam werkend krijgen op Linux is pijnlijker dan het zou moeten zijn. Elke "officiële" methode die ik probeerde faalde — de verbinding bleef gewoon hangen tijdens de TLS-handshake en verbond nooit. Uiteindelijk heb ik een handmatige setup gevonden die betrouwbaar werkt en daar een script omheen geschreven. Ik deel het hier zodat jij hopelijk niet hetzelfde proces hoeft door te maken.
+eduroam werkend krijgen op Linux is pijnlijker dan het zou moeten zijn. Elke "officiële" methode die ik probeerde faalde; de verbinding bleef gewoon hangen tijdens de TLS-handshake en verbond nooit. Uiteindelijk heb ik een handmatige setup gevonden die betrouwbaar werkt en daar een script omheen geschreven. Ik deel het hier zodat jij hopelijk niet hetzelfde proces hoeft door te maken.
 
 ## Wat niet werkt
 
@@ -28,7 +30,7 @@ De handleiding op [linux.datanose.nl](https://linux.datanose.nl/linux/eduroam/) 
 
 ## Wat wel werkt
 
-PEAP/MSCHAPv2 met CA-validatie via de systeem-truststore en `domain-suffix-match` — de moderne vervanging voor het verouderde `altsubject-matches`.
+PEAP/MSCHAPv2 met CA-validatie via de systeem-truststore en `domain-suffix-match` (de moderne vervanging voor het verouderde `altsubject-matches`).
 
 **Vereisten:**
 - Python 3.10+
@@ -57,7 +59,7 @@ curl -LO https://zephyrus-linux.stensel.nl/scripts/saxion-eduroam.py
 python3 saxion-eduroam.py
 ```
 
-Het script verwijdert een eventueel bestaand eduroam-profiel, vraagt je **gebruikersnaam** via een GUI-dialoog (zenity, kdialog of yad) of terminal-fallback, en activeert de verbinding. Je wachtwoord wordt nooit door het script gevraagd — dat wordt bij het verbinden opgevraagd door je GNOME Keyring en veilig opgeslagen, nooit in platte tekst.
+Het script verwijdert een eventueel bestaand eduroam-profiel, vraagt je **gebruikersnaam** via een GUI-dialoog (zenity, kdialog of yad) of terminal-fallback, en activeert de verbinding. Je wachtwoord wordt nooit door het script gevraagd; dat wordt bij het verbinden opgevraagd door je GNOME Keyring en veilig opgeslagen, nooit in platte tekst.
 
 {{< callout type="warning" >}}
 Je downloadt en voert een script uit vanaf het internet. Wil je extra veilig zijn, verifieer dan de bron (of checksum) voordat je het uitvoert.

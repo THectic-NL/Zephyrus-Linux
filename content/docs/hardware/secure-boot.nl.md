@@ -1,13 +1,13 @@
 ---
 title: "Secure Boot"
-weight: 12
+weight: 2
 ---
 
-Om CachyOS te installeren moet Secure Boot eerst uit. Anders dan Ubuntu of Fedora gebruikt CachyOS geen shim — een door Microsoft ondertekende bootloader waarmee distributies van derden kunnen opstarten onder Secure Boot. Zonder shim blokkeert Secure Boot de CachyOS-bootloader bij het opstarten, waardoor het voor de installatie uitgeschakeld moet worden ([CachyOS installatiedocumentatie](https://wiki.cachyos.org/installation/installation_on_root/)).
+Om CachyOS te installeren moet Secure Boot eerst uit. Anders dan Ubuntu of Fedora gebruikt CachyOS geen shim, een door Microsoft ondertekende bootloader waarmee distributies van derden kunnen opstarten onder Secure Boot. Zonder shim blokkeert Secure Boot de CachyOS-bootloader bij het opstarten, waardoor het voor de installatie uitgeschakeld moet worden ([CachyOS installatiedocumentatie](https://wiki.cachyos.org/installation/installation_on_root/)).
 
 Na de installatie kan Secure Boot opnieuw worden ingeschakeld met je eigen ondertekeningssleutels. Dit is hoe ik dat heb gedaan met `sbctl`.
 
-> **Resultaat:** UEFI Secure Boot gaat van **Fail** naar **Pass** na het voltooien van deze handleiding. De algehele HSI-score blijft **HSI:3!** — de Encrypted RAM-check op HSI-4 wordt niet ondersteund op deze hardware, waardoor HSI:4 niet haalbaar is.
+> **Resultaat:** UEFI Secure Boot gaat van **Fail** naar **Pass** na het voltooien van deze handleiding. De algehele HSI-score blijft **HSI:3!** (de Encrypted RAM-check op HSI-4 wordt niet ondersteund op deze hardware, waardoor HSI:4 niet haalbaar is).
 
 
 ## Context van het beveiligingsrapport
@@ -17,9 +17,9 @@ Het uitvoeren van `fwupdmgr security` toont wat slaagt en wat niet. Na het insch
 | Test | Na deze handleiding | Reden |
 |---|---|---|
 | UEFI Secure Boot | ✓ Pass | Opgelost door deze handleiding |
-| Encrypted RAM (HSI-4) | ✗ Not Supported | Hardwarebeperking — Ryzen AI 9 HX 370 implementeert AMD SME/TME niet |
-| Linux Kernel Verification | ✗ Tainted | Proprietary NVIDIA-driver vervuilt de kernel permanent — verwacht gedrag |
-| Linux Kernel Lockdown | ✗ Not Enabled | Vereist kernel lockdown-modus — niet behandeld hier, conflicteert met proprietary modules |
+| Encrypted RAM (HSI-4) | ✗ Not Supported | Hardwarebeperking: Ryzen AI 9 HX 370 implementeert AMD SME/TME niet |
+| Linux Kernel Verification | ✗ Tainted | Proprietary NVIDIA-driver vervuilt de kernel permanent (verwacht gedrag) |
+| Linux Kernel Lockdown | ✗ Not Enabled | Vereist kernel lockdown-modus, niet behandeld hier; conflicteert met proprietary modules |
 
 ![fwupdmgr security uitvoer met HSI:3 en UEFI Secure Boot uitgeschakeld](/images/secure-boot-hsi-report.avif)
 
@@ -28,7 +28,7 @@ Het uitvoeren van `fwupdmgr security` toont wat slaagt en wat niet. Na het insch
 
 In plaats van de shim → MOK → kernel-keten die veel distributies gebruiken, schrijft `sbctl` aangepaste Secure Boot-sleutels rechtstreeks in de UEFI-firmware in. De bootloader en het kernel EFI-image worden daarna ondertekend met die sleutels. Geen shim of MOK Manager nodig.
 
-`sbctl` wordt ook geleverd met een pacman-hook die alle geregistreerde EFI-binaries automatisch opnieuw ondertekent na kernel- of bootloader-updates — iets wat je na de initiële setup niet meer handmatig hoeft te doen.
+`sbctl` wordt ook geleverd met een pacman-hook die alle geregistreerde EFI-binaries automatisch opnieuw ondertekent na kernel- of bootloader-updates, iets wat je na de initiële setup niet meer handmatig hoeft te doen.
 
 
 ## Installatie
@@ -38,7 +38,7 @@ sudo pacman -S sbctl
 ```
 
 
-## Stap 1 — UEFI Setup Mode activeren
+## Stap 1: UEFI Setup Mode activeren
 
 Setup Mode is een UEFI-toestand waarbij er nog geen Secure Boot-sleutels zijn ingeschreven, waardoor nieuwe sleutels kunnen worden toegevoegd. Je moet eerst in deze toestand komen voordat je sleutels aanmaakt.
 
@@ -73,32 +73,32 @@ Secure Boot:  ✗ Disabled
 Vendor Keys:  none
 ```
 
-`Setup Mode` met de waarde `Enabled` bevestigt dat de UEFI klaar is voor sleutelinschrijving. De `✗`-symbolen zijn hier geen fouten — ze geven alleen aan dat de sleutels nog niet zijn aangemaakt, wat precies de bedoeling is op dit punt.
+`Setup Mode` met de waarde `Enabled` bevestigt dat de UEFI klaar is voor sleutelinschrijving. De `✗`-symbolen zijn hier geen fouten; ze geven alleen aan dat de sleutels nog niet zijn aangemaakt, wat precies de bedoeling is op dit punt.
 
 
-## Stap 2 — Sleutels aanmaken
+## Stap 2: Sleutels aanmaken
 
 ```bash
 sudo sbctl create-keys
 ```
 
 
-## Stap 3 — Sleutels inschrijven
+## Stap 3: Sleutels inschrijven
 
-Dit schrijft de aangepaste sleutels in de firmware in, inclusief de UEFI CA-certificaten van Microsoft. De `--microsoft`-vlag is vereist op ASUS-hardware — zonder die certificaten weigeren option ROMs (GPU-firmware) en andere UEFI-drivers van Microsoft te laden. Ik aarzelde een beetje om de sleutels van Microsoft mee te nemen, maar zonder die vlag start het systeem niet goed op.
+Dit schrijft de aangepaste sleutels in de firmware in, inclusief de UEFI CA-certificaten van Microsoft. De `--microsoft`-vlag is vereist op ASUS-hardware; zonder die certificaten weigeren option ROMs (GPU-firmware) en andere UEFI-drivers van Microsoft te laden. Ik aarzelde een beetje om de sleutels van Microsoft mee te nemen, maar zonder die vlag start het systeem niet goed op.
 
 ```bash
 sudo sbctl enroll-keys --microsoft
 ```
 
 
-## Stap 4 — EFI-binaries ondertekenen
+## Stap 4: EFI-binaries ondertekenen
 
 Het ondertekeningsproces verschilt iets per bootloader.
 
 ### systemd-boot
 
-Onderteken alle EFI-binaries en registreer ze in de sbctl-database. De `-s`-vlag is belangrijk — die zorgt ervoor dat bestanden automatisch opnieuw worden ondertekend na toekomstige updates:
+Onderteken alle EFI-binaries en registreer ze in de sbctl-database. De `-s`-vlag is belangrijk; die zorgt ervoor dat bestanden automatisch opnieuw worden ondertekend na toekomstige updates:
 
 ```bash
 sudo sbctl verify
@@ -129,7 +129,7 @@ sudo limine-update
 ```
 
 
-## Stap 5 — Secure Boot inschakelen
+## Stap 5: Secure Boot inschakelen
 
 Herstart opnieuw naar de ASUS UEFI:
 
@@ -165,9 +165,9 @@ Vendor Keys:  microsoft
 fwupdmgr security
 ```
 
-De regel **UEFI Secure Boot** onder HSI-1 moet nu **Enabled** tonen. De algehele score blijft **HSI:3!** — Encrypted RAM op HSI-4 wordt niet ondersteund op deze hardware en staat los van deze handleiding.
+De regel **UEFI Secure Boot** onder HSI-1 moet nu **Enabled** tonen. De algehele score blijft **HSI:3!** (Encrypted RAM op HSI-4 wordt niet ondersteund op deze hardware, wat los staat van deze handleiding).
 
-![fwupdmgr security uitvoer na het inschakelen van Secure Boot — HSI:3! met UEFI Secure Boot nu geslaagd onder HSI-1](/images/secure-boot-fwupdmgr-after.avif)
+![fwupdmgr security uitvoer na het inschakelen van Secure Boot - HSI:3 met UEFI Secure Boot nu geslaagd onder HSI-1](/images/secure-boot-fwupdmgr-after.avif)
 
 GNOME Instellingen → Privacy & Beveiliging → Apparaatbeveiliging bevestigt ook het resultaat:
 
@@ -186,7 +186,7 @@ Na een kernelupdate activeert pacman beide:
 
 Na updates is geen handmatige actie nodig.
 
-> **Kernelvervuiling:** De proprietary NVIDIA-driver zal de kernel blijven vervuilen. Dit verschijnt als `Linux Kernel Verification: Tainted` in het HSI-rapport. Dit is verwacht — het betekent dat niet-open-source code is geladen, niet dat het systeem is aangetast.
+> **Kernelvervuiling:** De proprietary NVIDIA-driver zal de kernel blijven vervuilen. Dit verschijnt als `Linux Kernel Verification: Tainted` in het HSI-rapport. Dit is verwacht; het betekent dat niet-open-source code is geladen, niet dat het systeem is aangetast.
 
 
 ## Overgebleven HSI-fouten uitgelegd
@@ -197,7 +197,7 @@ Na updates is geen handmatige actie nodig.
 
 ### Linux Kernel Lockdown
 
-Kernel lockdown kan worden ingeschakeld door `lockdown=integrity` toe te voegen aan de kernelparameters. Lockdown beperkt echter niet-ondertekende kernelmodules en bepaalde bevoorrechte bewerkingen — de proprietary NVIDIA-driver zou niet werken onder lockdown-modus. Niet iets wat ik zou aanraden voor dagelijks gebruik op deze hardware.
+Kernel lockdown kan worden ingeschakeld door `lockdown=integrity` toe te voegen aan de kernelparameters. Lockdown beperkt echter niet-ondertekende kernelmodules en bepaalde bevoorrechte bewerkingen, en de proprietary NVIDIA-driver zou niet werken onder lockdown-modus. Niet iets wat ik zou aanraden voor dagelijks gebruik op deze hardware.
 
 ### Linux Kernel Verification (Tainted)
 

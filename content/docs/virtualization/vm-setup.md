@@ -1,9 +1,10 @@
 ---
 title: "Windows 11 VM Setup"
-weight: 14
+weight: 1
+prev: docs/networking/eduroam-network-installation
 ---
 
-Some things simply don't run on Linux — Microsoft 365 being the obvious example. For those cases I set up a Windows 11 VM using KVM/QEMU with virt-manager. With VirtIO drivers and SPICE GL acceleration via the AMD iGPU, performance is good enough for everyday office work.
+Some things simply don't run on Linux, Microsoft 365 being the obvious example. For those cases I set up a Windows 11 VM using KVM/QEMU with virt-manager. With VirtIO drivers and SPICE GL acceleration via the AMD iGPU, performance is good enough for everyday office work.
 
 > **Want GPU passthrough?** If you want near-native GPU performance in your VM, see the [Looking Glass Attempt]({{< relref "/docs/virtualization/looking-glass-attempt" >}}). Spoiler: it doesn't work on this laptop due to hardware limitations, but the documentation may be useful for other hardware.
 
@@ -33,7 +34,7 @@ Use the official Windows 11 Media Creation Tool with an activation method:
 
 **Option 3: AtlasOS (Optimized for Performance)**
 
-[AtlasOS](https://atlasos.net/) creates a minified Windows 11 ISO with bloatware removed and unnecessary services disabled—resulting in significantly better performance in a VM.
+[AtlasOS](https://atlasos.net/) creates a minified Windows 11 ISO with bloatware removed and unnecessary services disabled, resulting in significantly better performance in a VM.
 
 **Creating an AtlasOS ISO:**
 
@@ -187,13 +188,13 @@ After Windows is installed and the guest tools are in place, you can fine-tune t
 
 | Setting | What it does |
 |---------|-------------|
-| **Disk: `cache="writeback"` `io="threads"`** | Write-back caching with threaded I/O — significantly faster disk performance than the default. Safe for non-critical VMs |
-| **Disk: `discard="unmap"`** | Passes TRIM/discard commands to the host — keeps the qcow2 file from growing unnecessarily |
+| **Disk: `cache="writeback"` `io="threads"`** | Write-back caching with threaded I/O, significantly faster disk performance than the default. Safe for non-critical VMs |
+| **Disk: `discard="unmap"`** | Passes TRIM/discard commands to the host, keeping the qcow2 file from growing unnecessarily |
 | **Hyper-V enlightenments** | Windows-specific paravirtualization features (`vapic`, `synic`, `stimer`, `tlbflush`, `ipi`, `avic`, etc.) that dramatically improve guest performance |
-| **CPU: `host-passthrough`** | Exposes the real CPU model to the guest — best performance, required for some applications |
+| **CPU: `host-passthrough`** | Exposes the real CPU model to the guest: best performance, required for some applications |
 | **CPU topology: 8 cores, 1 thread** | Presents 8 physical cores to Windows. Matches the actual allocation without SMT overhead |
-| **SPICE with GL acceleration** | Uses `gl enable="yes"` with `rendernode` pointing to the AMD iGPU — hardware-accelerated display output |
-| **VirtIO inputs** | VirtIO keyboard and tablet instead of PS/2 — lower latency input |
+| **SPICE with GL acceleration** | Uses `gl enable="yes"` with `rendernode` pointing to the AMD iGPU for hardware-accelerated display output |
+| **VirtIO inputs** | VirtIO keyboard and tablet instead of PS/2 for lower latency input |
 | **QEMU Guest Agent** | The `org.qemu.guest_agent.0` channel enables communication between host and guest (graceful shutdown, filesystem freeze for snapshots) |
 | **USB redirection** | SPICE USB redirection devices allow passing USB devices from host to guest on-the-fly |
 | **Watchdog (iTCO)** | Automatically resets the VM if the guest hangs |
@@ -317,7 +318,7 @@ After Windows is installed and the guest tools are in place, you can fine-tune t
 </domain>
 ```
 
-> This is a cleaned-up version without auto-generated PCI addresses and controller definitions — libvirt adds those automatically. You can export your own XML with `virsh dumpxml win11`.
+> This is a cleaned-up version without auto-generated PCI addresses and controller definitions; libvirt adds those automatically. You can export your own XML with `virsh dumpxml win11`.
 
 {{% /details %}}
 

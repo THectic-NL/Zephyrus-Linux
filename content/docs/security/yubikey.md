@@ -1,9 +1,10 @@
 ---
 title: "YubiKey 5C NFC"
-weight: 20
+weight: 2
+next: docs/applications
 ---
 
-I wanted to use my YubiKey to unlock the LUKS-encrypted drive at boot — plug it in, touch it, and the desktop loads. This page documents what I tried, why it failed at first, and what actually works in the meantime.
+I wanted to use my YubiKey to unlock the LUKS-encrypted drive at boot: plug it in, touch it, and the desktop loads. This page documents what I tried, why it failed at first, and what actually works in the meantime.
 
 > **Status:** LUKS unlock with FIDO2 has been unreliable on systemd 258. This page documents what was attempted, what the root cause is, and what to do instead. The situation may improve with systemd 259+.
 
@@ -12,10 +13,10 @@ I wanted to use my YubiKey to unlock the LUKS-encrypted drive at boot — plug i
 
 The YubiKey works reliably for everything **outside** of early boot:
 
-- **OATH/TOTP** — Yubico Authenticator Flatpak 7.3.0 works perfectly for 2FA codes
-- **SSH** — FIDO2-backed SSH keys
-- **Bitwarden** — hardware-backed authentication
-- **pam-u2f** — YubiKey touch for `sudo` and GDM screen unlock (see below)
+- **OATH/TOTP**: Yubico Authenticator Flatpak 7.3.0 works perfectly for 2FA codes
+- **SSH**: FIDO2-backed SSH keys
+- **Bitwarden**: hardware-backed authentication
+- **pam-u2f**: YubiKey touch for `sudo` and GDM screen unlock (see below)
 
 
 ## What Was Attempted: FIDO2 LUKS Unlock
@@ -57,13 +58,13 @@ add_dracutmodules+=" fido2 "
 
 ### What failed
 
-1. **Touch window is ~1-2 seconds** — not enough time to react. There is no configurable `token-timeout=` in crypttab until systemd 259.
+1. **Touch window is ~1-2 seconds**: not enough time to react. There is no configurable `token-timeout=` in crypttab until systemd 259.
 
-2. **No password fallback** — when FIDO2 fails, the system does not fall back to asking for a LUKS password. It drops into a dracut emergency shell with a locked root account. This is a confirmed regression introduced in **systemd 257** (issue [#35393](https://github.com/systemd/systemd/issues/35393)).
+2. **No password fallback**: when FIDO2 fails, the system does not fall back to asking for a LUKS password. It drops into a dracut emergency shell with a locked root account. This is a confirmed regression introduced in **systemd 257** (issue [#35393](https://github.com/systemd/systemd/issues/35393)).
 
-3. **dracut initqueue races the YubiKey** — the USB HID device is not ready within the 5-second dracut initqueue window on this hardware, so `systemd-cryptsetup` fails before it can even show the touch prompt.
+3. **dracut initqueue races the YubiKey**: the USB HID device is not ready within the 5-second dracut initqueue window on this hardware, so `systemd-cryptsetup` fails before it can even show the touch prompt.
 
-4. **rhgb/plymouth swallows prompts** — even with verbose boot, the touch prompt is hidden behind Plymouth.
+4. **rhgb/plymouth swallows prompts**: even with verbose boot, the touch prompt is hidden behind Plymouth.
 
 ### Root cause
 
@@ -91,7 +92,7 @@ sudo dracut --force --regenerate-all
 
 Wait for **systemd 259+** to become available. Systemd 259 adds `token-timeout=` as a proper crypttab option, which gives a configurable wait window for the touch prompt. Combined with a fix for the fallback regression, FIDO2 LUKS unlock should become reliable on CachyOS as well.
 
-When retrying, the enrollment procedure itself is correct — only the systemd version is the blocker.
+When retrying, the enrollment procedure itself is correct; only the systemd version is the blocker.
 
 
 ## Using the YubiKey for sudo and Screen Unlock (pam-u2f)

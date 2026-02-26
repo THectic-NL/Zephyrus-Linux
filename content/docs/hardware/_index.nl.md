@@ -1,6 +1,6 @@
 ---
 title: "Hardware & Drivers"
-weight: 10
+weight: 2
 toc: false
 ---
 

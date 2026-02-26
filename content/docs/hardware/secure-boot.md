@@ -1,13 +1,13 @@
 ---
 title: "Secure Boot"
-weight: 12
+weight: 2
 ---
 
-To install CachyOS, Secure Boot has to be off first. Unlike Ubuntu or Fedora, CachyOS doesn't use shim — a Microsoft-signed bootloader that lets third-party systems boot under Secure Boot. Without it, Secure Boot blocks the CachyOS bootloader before it even starts, so it has to be disabled for installation ([CachyOS installation docs](https://wiki.cachyos.org/installation/installation_on_root/)).
+To install CachyOS, Secure Boot has to be off first. Unlike Ubuntu or Fedora, CachyOS doesn't use shim, a Microsoft-signed bootloader that lets third-party systems boot under Secure Boot. Without it, Secure Boot blocks the CachyOS bootloader before it even starts, so it has to be disabled for installation ([CachyOS installation docs](https://wiki.cachyos.org/installation/installation_on_root/)).
 
 After installation, it's possible to re-enable it with your own signing keys. This is how I did that using `sbctl`.
 
-> **Result:** UEFI Secure Boot goes from **Fail** to **Pass** after completing this guide. The overall HSI score remains **HSI:3!** — the Encrypted RAM check at HSI-4 is not supported on this hardware, which prevents reaching HSI:4.
+> **Result:** UEFI Secure Boot goes from **Fail** to **Pass** after completing this guide. The overall HSI score remains **HSI:3!** (the Encrypted RAM check at HSI-4 is not supported on this hardware, which prevents reaching HSI:4).
 
 
 ## Security Report Context
@@ -17,9 +17,9 @@ Running `fwupdmgr security` shows what passes and what doesn't. After enabling S
 | Test | After this guide | Reason |
 |---|---|---|
 | UEFI Secure Boot | ✓ Pass | Fixed by this guide |
-| Encrypted RAM (HSI-4) | ✗ Not Supported | Hardware limitation — Ryzen AI 9 HX 370 does not implement AMD SME/TME |
-| Linux Kernel Verification | ✗ Tainted | Proprietary NVIDIA driver permanently taints the kernel — expected |
-| Linux Kernel Lockdown | ✗ Not Enabled | Requires kernel lockdown mode — not covered here, conflicts with proprietary modules |
+| Encrypted RAM (HSI-4) | ✗ Not Supported | Hardware limitation: Ryzen AI 9 HX 370 does not implement AMD SME/TME |
+| Linux Kernel Verification | ✗ Tainted | Proprietary NVIDIA driver permanently taints the kernel (expected) |
+| Linux Kernel Lockdown | ✗ Not Enabled | Requires kernel lockdown mode, not covered here; conflicts with proprietary modules |
 
 ![fwupdmgr security output showing HSI:3 with UEFI Secure Boot disabled](/images/secure-boot-hsi-report.avif)
 
@@ -28,7 +28,7 @@ Running `fwupdmgr security` shows what passes and what doesn't. After enabling S
 
 Instead of the shim → MOK → kernel chain that many distributions use, `sbctl` enrolls custom Secure Boot keys directly into the UEFI firmware. The bootloader and kernel EFI images are then signed with those keys. No shim or MOK Manager needed.
 
-`sbctl` also ships with a pacman hook that automatically re-signs all registered EFI binaries after kernel or bootloader updates — so it's not something you have to think about after the initial setup.
+`sbctl` also ships with a pacman hook that automatically re-signs all registered EFI binaries after kernel or bootloader updates, so it's not something you have to think about after the initial setup.
 
 
 ## Installation
@@ -38,7 +38,7 @@ sudo pacman -S sbctl
 ```
 
 
-## Step 1 — Enter UEFI Setup Mode
+## Step 1: Enter UEFI Setup Mode
 
 Setup Mode is a UEFI state where no Secure Boot keys are enrolled yet, which allows new ones to be added. You need to get into this state before creating keys.
 
@@ -73,32 +73,32 @@ Secure Boot:  ✗ Disabled
 Vendor Keys:  none
 ```
 
-`Setup Mode` showing `Enabled` confirms the UEFI is ready for key enrollment. The `✗` symbols aren't errors here — they just mean the keys haven't been set up yet, which is exactly where we want to be at this point.
+`Setup Mode` showing `Enabled` confirms the UEFI is ready for key enrollment. The `✗` symbols aren't errors here; they just mean the keys haven't been set up yet, which is exactly where we want to be at this point.
 
 
-## Step 2 — Create Keys
+## Step 2: Create Keys
 
 ```bash
 sudo sbctl create-keys
 ```
 
 
-## Step 3 — Enroll Keys
+## Step 3: Enroll Keys
 
-This enrolls the custom keys into the firmware, including Microsoft's UEFI CA certificates. The `--microsoft` flag is required on ASUS hardware — without it, option ROMs (GPU firmware) and other UEFI drivers signed by Microsoft refuse to load. I was a bit hesitant about including Microsoft's certificates here, but without them the system won't boot properly.
+This enrolls the custom keys into the firmware, including Microsoft's UEFI CA certificates. The `--microsoft` flag is required on ASUS hardware; without it, option ROMs (GPU firmware) and other UEFI drivers signed by Microsoft refuse to load. I was a bit hesitant about including Microsoft's certificates here, but without them the system won't boot properly.
 
 ```bash
 sudo sbctl enroll-keys --microsoft
 ```
 
 
-## Step 4 — Sign EFI Binaries
+## Step 4: Sign EFI Binaries
 
 The signing process differs slightly depending on your bootloader.
 
 ### systemd-boot
 
-Sign all EFI binaries and register them in sbctl's database. The `-s` flag is important — it ensures files are automatically re-signed after future updates:
+Sign all EFI binaries and register them in sbctl's database. The `-s` flag is important; it ensures files are automatically re-signed after future updates:
 
 ```bash
 sudo sbctl verify
@@ -129,7 +129,7 @@ sudo limine-update
 ```
 
 
-## Step 5 — Enable Secure Boot
+## Step 5: Enable Secure Boot
 
 Reboot into the ASUS UEFI again:
 
@@ -165,9 +165,9 @@ Vendor Keys:  microsoft
 fwupdmgr security
 ```
 
-The **UEFI Secure Boot** line under HSI-1 should now show **Enabled**. The overall score remains **HSI:3!** — Encrypted RAM at HSI-4 is not supported on this hardware, which is a hardware limitation unrelated to this guide.
+The **UEFI Secure Boot** line under HSI-1 should now show **Enabled**. The overall score remains **HSI:3!** (Encrypted RAM at HSI-4 is not supported on this hardware, a hardware limitation unrelated to this guide).
 
-![fwupdmgr security output after enabling Secure Boot — HSI:3! with UEFI Secure Boot now passing under HSI-1](/images/secure-boot-fwupdmgr-after.avif)
+![fwupdmgr security output after enabling Secure Boot - HSI:3 with UEFI Secure Boot now passing under HSI-1](/images/secure-boot-fwupdmgr-after.avif)
 
 GNOME Settings → Privacy & Security → Device Security also confirms it:
 
@@ -186,7 +186,7 @@ After a kernel update, pacman triggers both:
 
 No manual intervention needed after updates.
 
-> **Kernel taint:** The proprietary NVIDIA driver will continue to taint the kernel. This shows as `Linux Kernel Verification: Tainted` in the HSI report. This is expected — it means non-open-source code is loaded, not that the system is compromised.
+> **Kernel taint:** The proprietary NVIDIA driver will continue to taint the kernel. This shows as `Linux Kernel Verification: Tainted` in the HSI report. This is expected; it means non-open-source code is loaded, not that the system is compromised.
 
 
 ## Remaining HSI Failures Explained
@@ -197,7 +197,7 @@ No manual intervention needed after updates.
 
 ### Linux Kernel Lockdown
 
-Kernel lockdown can be enabled by adding `lockdown=integrity` to kernel parameters. However, lockdown restricts unsigned kernel modules and certain privileged operations — the proprietary NVIDIA driver would break under lockdown mode. Not something I'd recommend for day-to-day use on this hardware.
+Kernel lockdown can be enabled by adding `lockdown=integrity` to kernel parameters. However, lockdown restricts unsigned kernel modules and certain privileged operations, and the proprietary NVIDIA driver would break under lockdown mode. Not something I'd recommend for day-to-day use on this hardware.
 
 ### Linux Kernel Verification (Tainted)
 

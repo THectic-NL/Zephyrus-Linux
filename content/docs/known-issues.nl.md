@@ -1,13 +1,14 @@
 ---
 title: "Bekende Problemen"
-weight: 99
+weight: 7
+prev: docs/virtualization/looking-glass-attempt
 ---
 
 Centrale referentie voor hardware- en softwareproblemen op de ASUS ROG Zephyrus G16 GA605WV. Actieve problemen staan bovenaan. Opgeloste problemen staan onderaan als naslagwerk.
 
 ## Actieve Problemen
 
-### Brave Browser — touchpad scrollt te snel op Wayland
+### Brave Browser: touchpad scrollt te snel op Wayland
 
 **Wat er gebeurt:**
 Scrollen met het touchpad in Brave voelt aanzienlijk sneller aan dan in Firefox of native GTK-apps. Een korte veegbeweging stuurt de pagina al ver naar beneden. Dit treft alle Chromium-gebaseerde browsers op Wayland.
@@ -19,11 +20,11 @@ Upstream Chromium-probleem. Chromium ontvangt hoge-precisie scroll-events van li
 Open. Geen fix in Brave tot begin 2026. Het probleem wordt al gemeld sinds minimaal 2022.
 
 **Geprobeerde workaround (afgebroken):**
-Het verlagen van de globale `scroll-factor` in [libinput-config]({{< relref "/docs/applications#touchpad-scroll-speed--no-native-gnome-setting-yet" >}}) vermindert de scrollsnelheid in Brave, maar het is een systeembrede instelling — het beïnvloedt elke applicatie, inclusief apps waar scrollen al prima werkte. Na ongeveer een week verwijderd. Het Brave-specifieke probleem rechtvaardigt niet dat alles trager scrollt.
+Het verlagen van de globale `scroll-factor` in [libinput-config]({{< relref "/docs/applications#touchpad-scroll-speed-no-native-gnome-setting-yet" >}}) vermindert de scrollsnelheid in Brave, maar het is een systeembrede instelling die elke applicatie beïnvloedt, inclusief apps waar scrollen al prima werkte. Na ongeveer een week verwijderd. Het Brave-specifieke probleem rechtvaardigt niet dat alles trager scrollt.
 
 **Bronnen:**
-- [brave-browser #36569 — native touchpad scrolling op Linux Wayland](https://github.com/brave/brave-browser/issues/36569)
-- [Brave Community — hoge-resolutie touchpad scrolling op Linux Wayland](https://community.brave.app/t/scrolling-speed-is-way-too-fast/649357)
+- [brave-browser #36569: native touchpad scrolling op Linux Wayland](https://github.com/brave/brave-browser/issues/36569)
+- [Brave Community: hoge-resolutie touchpad scrolling op Linux Wayland](https://community.brave.app/t/scrolling-speed-is-way-too-fast/649357)
 
 ---
 
@@ -80,7 +81,7 @@ Als er geen `amdgpu: [drm] *ERROR*`-berichten verschijnen, werkt de fix.
 
 {{% /details %}}
 
-{{% details title="Systeem bevriest tijdens gebruik van VS Code (AMD GPU page fault — Kernel 6.18.x)" closed="true" %}}
+{{% details title="Systeem bevriest tijdens gebruik van VS Code (AMD GPU page fault, Kernel 6.18.x)" closed="true" %}}
 
 **Wat speelt er:**
 Systeem bevriest volledig tijdens het gebruik van VS Code. Kernel 6.18.x/6.19.x hebben kritieke amdgpu-driverbugs. VS Code hardware-acceleratie triggert een AMD Radeon 890M page fault → volledige bevriezing.
@@ -101,7 +102,7 @@ Herstart VS Code. Systeem blijft nu stabiel, VS Code iets langzamer maar prima b
 
 {{% /details %}}
 
-{{% details title="Systeem bevriest tijdens gebruik van Brave Browser (AMD GPU page fault — Kernel 6.18.x)" closed="true" %}}
+{{% details title="Systeem bevriest tijdens gebruik van Brave Browser (AMD GPU page fault, Kernel 6.18.x)" closed="true" %}}
 
 **Wat speelt er:**
 Systeem bevriest of crasht tijdens het gebruik van Brave Browser, zelfs bij minimale workload (enkele tabs). Chromium-gebaseerde applicaties met hardware-acceleratie triggeren AMD Radeon 890M page faults op kernel 6.18.x/6.19.x.
@@ -155,7 +156,7 @@ Dit kan optreden door een combinatie van factoren op hybrid GPU-laptops:
 
 **Extra symptoom: Reboot hangt (zwart scherm, verlichting blijft aan)**
 
-Het systeem lijkt af te sluiten maar voltooit de hardware-reset niet — het scherm wordt zwart maar toetsenbord- en schermverlichting blijven aan. Dit gebeurt wanneer `nvidia-powerd` interfereert met ACPI power state-overgangen tijdens afsluiten/herstarten.
+Het systeem lijkt af te sluiten maar voltooit de hardware-reset niet; het scherm wordt zwart maar toetsenbord- en schermverlichting blijven aan. Dit gebeurt wanneer `nvidia-powerd` interfereert met ACPI power state-overgangen tijdens afsluiten/herstarten.
 
 **Oorzaak: `supergfxd` start `nvidia-powerd` achter je rug om**
 
@@ -184,7 +185,7 @@ watchdog: watchdog0: watchdog did not stop!
 
 **Fix:**
 
-1. Disable én **mask** `nvidia-powerd` (masken is essentieel — `disable` alleen is niet genoeg omdat `supergfxd` het omzeilt):
+1. Disable én **mask** `nvidia-powerd` (masken is essentieel, `disable` alleen is niet genoeg omdat `supergfxd` het omzeilt):
 ```bash
 sudo systemctl disable nvidia-powerd.service
 sudo systemctl stop nvidia-powerd.service
@@ -209,7 +210,7 @@ Op laptops met AMD iGPU + NVIDIA dGPU regelt het ATPX-framework (via ACPI) welke
 
 ## NVIDIA Driver
 
-> Deze onderdelen gelden voornamelijk voor de Fedora-installatieroute. CachyOS-gebruikers worden hier niet door getroffen — de driver is tijdens de installatie al vooraf geconfigureerd.
+> Deze onderdelen gelden voornamelijk voor de Fedora-installatieroute. CachyOS-gebruikers worden hier niet door getroffen; de driver is tijdens de installatie al vooraf geconfigureerd.
 
 {{% details title="nvidia-smi: command not found of mislukt" closed="true" %}}
 
@@ -299,7 +300,7 @@ sed -i \
   ~/.local/share/applications/brave-browser.desktop
 ```
 
-Verifieer — je zou exact drie `Exec=`-regels moeten zien met de flag toegevoegd:
+Verifieer dit: je zou exact drie `Exec=`-regels moeten zien met de flag toegevoegd:
 ```bash
 grep "^Exec" ~/.local/share/applications/brave-browser.desktop
 ```
@@ -318,12 +319,12 @@ Ga naar `brave://flags` en schakel uit:
 
 - **Hardware-accelerated video decode** → `Disabled`
 
-![brave://flags — Hardware-accelerated video decode uitgeschakeld](/images/brave-flags.avif)
+![brave://flags - Hardware-accelerated video decode uitgeschakeld](/images/brave-flags.avif)
 
 Daarna toont `brave://gpu`:
 - `Video Decode: Software only. Hardware acceleration disabled`
 
-![brave://gpu — Video Decode uitgeschakeld, software only](/images/brave-gpu-config.avif)
+![brave://gpu - Video Decode uitgeschakeld, software only](/images/brave-gpu-config.avif)
 
 Brave is iets langzamer op video-intensieve pagina's maar stabiel. Hardware video decode is nog niet stabiel op de AMD Radeon 890M met GNOME Wayland.
 
@@ -331,12 +332,16 @@ Brave is iets langzamer op video-intensieve pagina's maar stabiel. Hardware vide
 
 {{% details title="Steam wil niet starten" closed="true" %}}
 
-Start Steam met een extra omgevingsvariabele:
+**Wat er speelde:**
+Steam startte op sommige systemen niet op, zonder zichtbare foutmelding.
+
+**Workaround (niet meer nodig):**
 ```bash
 __GL_CONSTANT_FRAME_RATE_HINT=3 steam
 ```
 
-Als dit werkt, kun je deze flag permanent toevoegen via de Steam desktop-entry of een wrapper-script.
+**Oplossing:**
+Dit probleem heeft zichzelf opgelost. Steam start nu gewoon op; de `__GL_CONSTANT_FRAME_RATE_HINT` workaround is niet meer nodig. Installeer Steam vanuit de [CachyOS-repository](https://packages.cachyos.org/package/cachyos/x86_64/steam) via `sudo pacman -S steam`.
 
 {{% /details %}}
 
@@ -357,7 +362,7 @@ Verifieer dat de driver is geladen:
 lsmod | grep asus_armoury
 ```
 
-Als hij laadt, heropen ROG Control Center — de melding zou verdwenen moeten zijn en geavanceerde functies zijn beschikbaar.
+Als hij laadt, heropen ROG Control Center; de melding zou verdwenen moeten zijn en geavanceerde functies zijn beschikbaar.
 
 {{% /details %}}
 

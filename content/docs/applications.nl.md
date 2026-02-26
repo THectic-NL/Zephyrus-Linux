@@ -1,6 +1,8 @@
 ---
 title: "Applicaties"
-weight: 25
+weight: 4
+prev: docs/security/yubikey
+next: docs/networking/eduroam-network-installation
 ---
 
 Alles wat ik heb geïnstalleerd na de initiële CachyOS-setup. Losjes georganiseerd per categorie. De meeste keuzes zijn persoonlijk, maar de secties over Brave en libinput-config bevatten niet-voor-de-hand-liggende workarounds die nergens anders gedocumenteerd staan.
@@ -9,23 +11,23 @@ Alles wat ik heb geïnstalleerd na de initiële CachyOS-setup. Losjes georganise
 
 Op CachyOS zijn er drie plekken om software vandaan te halen. Zoek ze in deze volgorde:
 
-1. **[CachyOS packages](https://packages.cachyos.org/)** — de eigen repository van CachyOS, gebouwd bovenop Arch. Packages hier zijn geoptimaliseerd voor moderne CPU's (x86-64-v3/v4) en bevatten CachyOS-specifieke patches. Installeren met `sudo pacman -S <package>`.
+1. **[CachyOS packages](https://packages.cachyos.org/)**: de eigen repository van CachyOS, gebouwd bovenop Arch. Packages hier zijn geoptimaliseerd voor moderne CPU's (x86-64-v3/v4) en bevatten CachyOS-specifieke patches. Installeren met `sudo pacman -S <package>`.
 
-2. **[AUR](https://aur.archlinux.org/)** (Arch User Repository) — community-beheerde buildscripts voor software die niet in de officiële repos staat. Installeren met een AUR-helper zoals `paru -S <package>`. Kwaliteit verschilt per package, maar de AUR dekt vrijwel alles.
+2. **[AUR](https://aur.archlinux.org/)** (Arch User Repository): community-beheerde buildscripts voor software die niet in de officiële repos staat. Installeren met een AUR-helper zoals `paru -S <package>`. Kwaliteit verschilt per package, maar de AUR dekt vrijwel alles.
 
-3. **[Flathub](https://flathub.org/)** — Flatpak-packages die hun eigen dependencies meebrengen. Installeren met `flatpak install flathub <app-id>`, starten met `flatpak run <app-id>`.
+3. **[Flathub](https://flathub.org/)**: Flatpak-packages die hun eigen dependencies meebrengen. Installeren met `flatpak install flathub <app-id>`, starten met `flatpak run <app-id>`.
 
-**Native (pacman/paru) vs Flatpak — wat kies je?**
+**Native (pacman/paru) vs Flatpak: wat kies je?**
 
 | | Native (pacman/paru) | Flatpak |
 |---|---|---|
-| **Performance** | Beter — gebruikt gedeelde systeembibliotheken | Iets minder — bundelt eigen bibliotheken |
-| **Integratie** | Nauw — volledige systeemtoegang | Sandbox — meer geïsoleerd |
+| **Performance** | Beter (gebruikt gedeelde systeembibliotheken) | Iets minder (bundelt eigen bibliotheken) |
+| **Integratie** | Nauw (volledige systeemtoegang) | Sandbox (meer geïsoleerd) |
 | **Grootte** | Kleiner | Groter |
 | **Compatibiliteit** | Afhankelijk van de distro | Consistent op alle distro's |
 | **Veiligheid** | Standaard | Betere sandboxing |
 
-Native packages bieden betere performance en systeemintegratie. Flatpaks ruilen wat efficiëntie in voor compatibiliteit en sandboxing. De keuze is per applicatie aan jou — beide werken prima op CachyOS.
+Native packages bieden betere performance en systeemintegratie. Flatpaks ruilen wat efficiëntie in voor compatibiliteit en sandboxing. De keuze is per applicatie aan jou; beide werken prima op CachyOS.
 
 ## Initiële systeeminstellingen
 
@@ -35,7 +37,7 @@ Gewoon de hostname instellen via Systeeminstellingen zodat de machine een fatsoe
 
 ![Hostname instellen](/images/system-info.avif)
 
-### GNOME-vensterknoppen — minimize en maximize terug
+### GNOME-vensterknoppen: minimize en maximize terug
 
 Standaard toont GNOME 49 alleen de sluitknop. Eén commando lost het op:
 
@@ -45,7 +47,7 @@ gsettings set org.gnome.desktop.wm.preferences button-layout 'appmenu:minimize,m
 
 ![Voorbeeld van hoe de nieuwe GNOME-vensters eruitzien](/images/window-controls.avif)
 
-### GNOME-sneltoetsen — meer als Windows
+### GNOME-sneltoetsen: meer als Windows
 
 Als je vanuit Windows komt, voelt een paar dingen meteen anders zonder de juiste sneltoetsen. Dit zijn de sneltoetsen die ik heb ingesteld.
 
@@ -65,9 +67,9 @@ Als je vanuit Windows komt, voelt een paar dingen meteen anders zonder de juiste
 | 5 | Bestandsbeheer openen | `nautilus` | `Super+E` |
 | 6 | Emoji-picker | `flatpak run it.mijorus.smile` | Copilot-toets |
 
-GNOME heeft standaard geen sneltoetsen voor de bestandsbeheerder of een emoji-picker — die moet je handmatig aanmaken. Zie [Smile](#smile--emoji-picker) voor hoe de Copilot-toets wordt gebruikt.
+GNOME heeft standaard geen sneltoetsen voor de bestandsbeheerder of een emoji-picker, die moet je handmatig aanmaken. Zie [Smile](#smile-emoji-picker) voor hoe de Copilot-toets wordt gebruikt.
 
-### GNOME-vensterfocus — apps die op de achtergrond openen
+### GNOME-vensterfocus: apps die op de achtergrond openen
 
 Apps zoals Signal en Discord openen soms op de achtergrond, met een melding "Your app is ready" in plaats van het venster naar voren te brengen. Dit los je op met:
 
@@ -75,9 +77,9 @@ Apps zoals Signal en Discord openen soms op de achtergrond, met een melding "You
 gsettings set org.gnome.desktop.wm.preferences focus-new-windows 'smart'
 ```
 
-De standaard `strict`-modus brengt nieuwe vensters nooit automatisch naar voren. `smart` laat GNOME zelf beslissen — in de praktijk betekent dit dat nieuw geopende apps gewoon op de voorgrond verschijnen.
+De standaard `strict`-modus brengt nieuwe vensters nooit automatisch naar voren. `smart` laat GNOME zelf beslissen; in de praktijk betekent dit dat nieuw geopende apps gewoon op de voorgrond verschijnen.
 
-### Touchpad-scrollsnelheid — geen native GNOME-instelling (nog niet)
+### Touchpad-scrollsnelheid: geen native GNOME-instelling (nog niet)
 
 GNOME 49 heeft simpelweg **geen instelling** voor touchpad-scrollsnelheid. KDE Plasma heeft dat al jaren. Er zijn merge requests open in [mutter](https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1840) en [GNOME Control Center](https://gitlab.gnome.org/GNOME/gnome-control-center/-/merge_requests/991), maar die staan al jaren open. Zie de [GNOME Discourse-discussie](https://discourse.gnome.org/t/adding-scroll-speed-setting-in-gnome/25893) voor meer context.
 
@@ -135,14 +137,14 @@ sudo rm /etc/libinput.conf
 
 ### Brave
 
-Brave is mijn standaardbrowser. Ik begon met de Flatpak-versie maar ben overgestapt naar het native pakket — dat beter integreert met het systeem en betere prestaties biedt.
+Brave is mijn standaardbrowser. Ik begon met de Flatpak-versie maar ben overgestapt naar het native pakket, dat beter integreert met het systeem en betere prestaties biedt.
 
 - **Native (pacman):** Betere integratie, betere prestaties. Dit gebruik ik.
 - **Flatpak:** Kan in sommige situaties beter werken, maar voelt wat geïsoleerder.
 
 **Installatie**
 
-[brave-bin in CachyOS packages](https://packages.cachyos.org/package/cachyos/x86_64/brave-bin) — direct beschikbaar in de CachyOS-repo, geen AUR-helper nodig.
+[brave-bin in CachyOS packages](https://packages.cachyos.org/package/cachyos/x86_64/brave-bin): direct beschikbaar in de CachyOS-repo, geen AUR-helper nodig.
 
 ```bash
 sudo pacman -S brave-bin
@@ -150,7 +152,7 @@ sudo pacman -S brave-bin
 
 ![Officiële Brave Linux installatie-instructies](/images/brave-linux-install.avif)
 
-Hardware acceleration werkt prima met huidige Brave- en kernelversies. De crashbugs die Brave 1.82–1.86 troffen zijn opgelost — zie [Bekende Problemen]({{< relref "/docs/known-issues" >}}) voor de achtergrond.
+Hardware acceleration werkt prima met huidige Brave- en kernelversies. De crashbugs die Brave 1.82–1.86 troffen zijn opgelost. Zie [Bekende Problemen]({{< relref "/docs/known-issues" >}}) voor de achtergrond.
 
 **Flatpak-alternatief**
 
@@ -173,15 +175,81 @@ Wachtwoordbeheerder. Beschikbaar via Flathub en werkt goed.
 
 ### Signal Messenger
 
-Signal is mijn belangrijkste berichtenapp. Officieel alleen ondersteund op Debian/Ubuntu, maar de Flatpak-versie werkt prima op CachyOS.
+Signal is mijn belangrijkste berichtenapp. De [CachyOS extra-repository](https://packages.cachyos.org/package/extra/x86_64/signal-desktop) levert een native pakket, wat ik gebruik en het werkt beter dan de Flatpak.
+
+**CachyOS / Arch (aanbevolen):**
+
+```bash
+sudo pacman -S signal-desktop
+```
+
+**Flatpak (alternatief):**
+
+```bash
+flatpak install flathub org.signal.Signal
+```
 
 ![Signal Messenger app in Flathub](/images/signal-flathub.avif)
 
 ### Proton Mail
 
-De Proton Mail desktop-app is een wrapper rondom de webapp, geen native client. Werkt gewoon en staat in de app launcher zoals elke andere app.
+De Proton Mail desktop-app is een wrapper rondom de webapp, geen native client. De [CachyOS-repository](https://packages.cachyos.org/package/cachyos/any/proton-mail-bin) levert `proton-mail-bin`, dat natiever integreert in het bureaublad dan de Flatpak: beter systeemvak-gedrag, systeemnotificaties en geen Flatpak-sandboxoverhead.
+
+**CachyOS / Arch (aanbevolen):**
+
+```bash
+sudo pacman -S proton-mail-bin
+```
+
+**Flatpak (alternatief):**
+
+```bash
+flatpak install flathub me.proton.Mail
+```
 
 ![Proton Mail app in Flathub](/images/protonmail-flathub.avif)
+
+### Kantoorpakketten
+
+Er bestaat geen officiële Microsoft 365-client voor Linux. Twee goede alternatieven dekken de meeste use cases.
+
+#### OnlyOffice
+
+[OnlyOffice](https://packages.cachyos.org/package/cachyos/x86_64/onlyoffice-bin) lijkt het meest op Microsoft 365. De interface is bijna identiek, met Word-, Excel- en PowerPoint-equivalenten die er uitzien en werken als de Microsoft-originals. Goede compatibiliteit met `.docx`-, `.xlsx`- en `.pptx`-bestanden.
+
+```bash
+sudo pacman -S onlyoffice-bin
+```
+
+![OnlyOffice draaiend op GNOME](/images/only-office.avif)
+
+**Ontbrekend: APA-stijl verwijzingen**
+
+Een opvallend gemis voor academisch werk: OnlyOffice heeft geen ingebouwde citatiebeheerder of APA-referentiestijl standaard.
+
+![OnlyOffice - referenties-functie ontbreekt](/images/only-office-missing_references.avif)
+
+Er zijn workarounds via plugins. Het [OnlyOffice helpcenter documenteert referentiebeheer](https://helpcenter.onlyoffice.com/docs/userguides/plugins/InsertReferences.aspx) via integraties zoals Zotero of Mendeley, beide citatiebeheerders die in de editor kunnen worden gekoppeld. Ik heb dit zelf nog niet opgezet, dus ik kan niet goed beoordelen hoe goed dit in de praktijk werkt.
+
+#### LibreOffice
+
+[LibreOffice Fresh](https://packages.cachyos.org/package/cachyos-extra-znver4/x86_64_v4/libreoffice-fresh) is de meest actief ontwikkelde open-source kantoorapplicatie en de meest Linux-native optie. Er gaat meer ontwikkelinspanning in dan in welk alternatief dan ook.
+
+```bash
+sudo pacman -S libreoffice-fresh
+```
+
+**APA-verwijzingen: ingebouwd**
+
+Anders dan OnlyOffice heeft LibreOffice een ingebouwde bibliografiedatabase en referentie-invoeg functie. Je kunt je bronnen beheren en citaten in APA-stijl invoegen direct vanuit de menu's:
+
+![LibreOffice bibliografiebeheerder](/images/libreoffice-bibliograpy.avif)
+
+![LibreOffice - verwijzingen invoegen](/images/libreoffice-inserting_references.avif)
+
+**Kanttekening: Microsoft-formaatcompatibiliteit**
+
+LibreOffice kan `.docx`/`.xlsx`/`.pptx`-bestanden openen en opslaan, maar er zijn bekende renderingsverschillen met documenten die in Microsoft Word zijn gemaakt. Dit komt doordat Microsoft en LibreOffice de OpenXML-standaard niet altijd identiek hebben geïmplementeerd, wat tot renderingsverschillen leidt. Voor documenten die binnen LibreOffice's eigen ODF-formaat blijven, zijn er geen problemen.
 
 ---
 
@@ -195,19 +263,23 @@ sudo pacman -S git github-cli
 
 ### Visual Studio Code
 
+Er zijn twee builds beschikbaar. De **Microsoft-build** bevat de volledige Microsoft extension marketplace en proprietary extensies zoals GitHub Copilot. De **open-source build** (`code`) heeft geen Microsoft-telemetrie of branding, maar proprietary extensies zijn niet beschikbaar.
+
+**Microsoft-build (aanbevolen, volledige extensie-ondersteuning):**
+
+```bash
+paru -S visual-studio-code-bin
+```
+
+Beschikbaar in de [AUR](https://aur.archlinux.org/packages/visual-studio-code-bin).
+
+**Open-source build (geen Microsoft-telemetrie):**
+
 ```bash
 sudo pacman -S code
 ```
 
-{{< callout type="warning" >}}
-Op kernel 6.18.x/6.19.x kan hardware acceleration in VS Code een amdgpu page fault veroorzaken waardoor het systeem bevriest. Zet hardware acceleration uit door dit toe te voegen aan `~/.config/Code/User/settings.json`:
-```json
-{
-    "disable-hardware-acceleration": true
-}
-```
-Zie [Bekende Problemen]({{< relref "/docs/known-issues" >}}) voor details.
-{{< /callout >}}
+Beschikbaar in de [CachyOS extra-repository](https://packages.cachyos.org/package/cachyos-extra-znver4/x86_64_v4/code).
 
 ### Kleopatra & GPG commit signing
 
@@ -232,13 +304,13 @@ Gebruik de ID van de `sec` regel (bijv. `rsa4096/JOUW_GPG_KEY_ID`).
 
 ### Archi (ArchiMate-modelleertool)
 
-[Archi](https://www.archimatetool.com/) is een gratis ArchiMate-modelleertool. Het Linux-pakket is een portable archief — geen installer. Om het netjes in GNOME te laten verschijnen met een icoon, moet je de bestanden zelf plaatsen en een desktop entry handmatig aanmaken.
+[Archi](https://www.archimatetool.com/) is een gratis ArchiMate-modelleertool. Het Linux-pakket is een portable archief zonder installer. Om het netjes in GNOME te laten verschijnen met een icoon, moet je de bestanden zelf plaatsen en een desktop entry handmatig aanmaken.
 
 {{< callout type="info" >}}
 De downloadpagina van Archi waarschuwt voor mogelijke UI-problemen op Wayland. In mijn ervaring werkt hij prima op GNOME 49 Wayland.
 {{< /callout >}}
 
-![Archi downloadpagina — Linux versie met Wayland-opmerking](/images/archi-download.avif)
+![Archi downloadpagina - Linux versie met Wayland-opmerking](/images/archi-download.avif)
 
 ```bash
 # Download en extraheer
@@ -286,26 +358,33 @@ Na het opslaan verschijnt Archi in de GNOME-app launcher:
 
 ### Steam
 
-Op CachyOS is Steam beschikbaar vanuit de `multilib` repository — geen extra repos nodig.
+Op CachyOS is Steam beschikbaar vanuit de [CachyOS-repository](https://packages.cachyos.org/package/cachyos/x86_64/steam), geen extra repos nodig.
 
 ```bash
 sudo pacman -S steam
 ```
 
-![Steam in GNOME Software](/images/steam-gnome-software.avif)
+![Steam in GNOME Software](/images/steam-website.avif)
 
 Herstart na installatie. Steam bevat Proton standaard voor het draaien van Windows-games op Linux.
 
-{{< callout type="info" >}}
-Als Steam niet wil starten, probeer het dan vanuit de terminal:
+### Tidal
+
+Er is geen officiële Tidal-client voor Linux. Er zijn twee community-alternatieven.
+
+#### High Tide (aanbevolen)
+
+[High Tide](https://aur.archlinux.org/packages/high-tide) is een native GTK4-frontend voor Tidal, geen Electron-wrapper, maar een echte applicatie gebouwd met een proper Linux-toolkit. Ziet er strak uit, integreert goed met GNOME en ondersteunt Hi-Fi kwaliteit.
+
 ```bash
-__GL_CONSTANT_FRAME_RATE_HINT=3 steam
+paru -S high-tide
 ```
-{{< /callout >}}
 
-### Tidal Hi-Fi
+![High Tide draaiend op GNOME](/images/high-tide.avif)
 
-Er is geen officiële Tidal-client voor Linux. [Tidal Hi-Fi](https://github.com/Mastermindzh/tidal-hifi) van Rick van Lieshout is een community-Electron-wrapper rondom de Tidal-webapp, met Hi-Fi en Max kwaliteitsondersteuning.
+#### Tidal Hi-Fi
+
+[Tidal Hi-Fi](https://github.com/Mastermindzh/tidal-hifi) van Rick van Lieshout is een Electron-wrapper rondom de Tidal-webapp. Werkt prima, maar het is in feite de webapp verpakt als desktopapp.
 
 ![Tidal Hi-Fi in de Flathub store](/images/tidal-hifi-flathub.avif)
 
@@ -313,17 +392,21 @@ Er is geen officiële Tidal-client voor Linux. [Tidal Hi-Fi](https://github.com/
 
 ## Hulpprogramma's
 
-### Bottles — Windows-software draaien
+### Bottles: Windows-software draaien
 
-[Bottles](https://usebottles.com/) laat je Windows-software draaien via Wine. Installeer via Flathub — versie 61 of nieuwer.
+[Bottles](https://usebottles.com/) laat je Windows-software draaien via Wine. Bottles wordt **uitsluitend officieel via Flatpak geleverd**; negeer eventuele andere versies in de AUR of elders, want die zijn niet officieel en worden niet ondersteund door de Bottles-ontwikkelaars.
 
-- Open GNOME Software Center, zoek naar "Bottles", selecteer de **Flathub** bron
+```bash
+flatpak install flathub com.usebottles.bottles
+```
 
-Voor wat niet werkt onder Wine — zoals Microsoft 365 — gebruik ik een Windows VM. Zie [Windows 11 VM Setup]({{< relref "/docs/virtualization/vm-setup" >}}).
+Je kunt ook GNOME Software Center openen, zoeken naar "Bottles" en er zeker van zijn dat je de **Flathub** bron selecteert.
+
+Voor wat niet werkt onder Wine (zoals Microsoft 365), gebruik ik een Windows VM. Zie [Windows 11 VM Setup]({{< relref "/docs/virtualization/vm-setup" >}}).
 
 ![Bottles in de Flathub store](/images/bottles-flathub.avif)
 
-### Smile — emoji-picker
+### Smile: emoji-picker
 
 [Smile](https://mijorus.it/projects/smile) van Lorenzo Paderi is een eenvoudige emoji-picker voor Linux met ondersteuning voor aangepaste tags. Beschikbaar via Flathub.
 
@@ -335,9 +418,9 @@ flatpak install flathub it.mijorus.smile
 
 **Instellingen**
 
-Zet "Run in the background" en "Minimize on exit" aan in de Smile-instellingen — zo opent de picker direct en verdwijnt hij netjes na het kiezen van een emoji:
+Zet "Run in the background" en "Minimize on exit" aan in de Smile-instellingen. Zo opent de picker direct en verdwijnt hij netjes na het kiezen van een emoji:
 
-![Smile-instellingen — run in background, minimize on exit](/images/smile-settings.avif)
+![Smile-instellingen - run in background, minimize on exit](/images/smile-settings.avif)
 
 **GNOME-extensie**
 
@@ -347,7 +430,7 @@ Installeer de [Smile complementary extension](https://extensions.gnome.org/exten
 Zorg er na het installeren van de extensie voor dat de extensie-toggle in de Smile-instellingen onder "Paste emojis automatically" is ingeschakeld.
 {{< /callout >}}
 
-**Sneltoets — de Copilot-toets hergebruiken**
+**Sneltoets: de Copilot-toets hergebruiken**
 
 De Copilot-toets op de Zephyrus G16 doet op Linux standaard niets nuttigs. GNOME registreert hem als `Shift+Super+TouchpadOff`. Hergebruik hem als sneltoets voor de emoji-picker:
 
@@ -359,7 +442,7 @@ Ga naar **Instellingen → Toetsenbord → Aangepaste sneltoetsen** en voeg toe:
 
 ![Overzicht aangepaste sneltoetsen met Emoji picker](/images/smile-custom-shortcuts.avif)
 
-![Dialoog voor aangepaste sneltoets voor Smile — Copilot-toets](/images/smile-shortcut-dialog.avif)
+![Dialoog voor aangepaste sneltoets voor Smile - Copilot-toets](/images/smile-shortcut-dialog.avif)
 
 ### Solaar voor Logitech-apparaten
 
@@ -373,4 +456,4 @@ sudo pacman -S solaar
 
 Draait in het systray met batterijnotificaties. Je kunt er ook DPI, polling rate en knoppen mee configureren.
 
-![Solaar about screen — version 1.1.19](/images/solaar-about.avif)
+![Solaar about screen - version 1.1.19](/images/solaar-about.avif)
