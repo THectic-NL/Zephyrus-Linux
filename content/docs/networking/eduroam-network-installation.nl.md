@@ -55,18 +55,26 @@ PEAP/MSCHAPv2 met CA-validatie via de systeem-truststore en `domain-suffix-match
 Een Python-script automatiseert de volledige `nmcli`-verbindingsconfiguratie voor Saxion:
 
 ```bash
+# 1. Download
 curl -LO https://zephyrus-linux.stensel.nl/scripts/saxion-eduroam.py
+
+# 2. Controleer de checksum
+echo "7f1b43666da272455ad6e0300ea3f64bc1a75a0c84c76d761d4a6cd4476c850e  saxion-eduroam.py" | sha256sum -c
+
+# 3. Uitvoeren
 python3 saxion-eduroam.py
 ```
 
-Het script verwijdert een eventueel bestaand eduroam-profiel, vraagt je **gebruikersnaam** via een GUI-dialoog (zenity, kdialog of yad) of terminal-fallback, en activeert de verbinding. Je wachtwoord wordt nooit door het script gevraagd; dat wordt bij het verbinden opgevraagd door je GNOME Keyring en veilig opgeslagen, nooit in platte tekst.
+**SHA256:** `7f1b43666da272455ad6e0300ea3f64bc1a75a0c84c76d761d4a6cd4476c850e`
 
-{{< callout type="warning" >}}
-Je downloadt en voert een script uit vanaf het internet. Wil je extra veilig zijn, verifieer dan de bron (of checksum) voordat je het uitvoert.
-{{< /callout >}}
+Het script verwijdert een eventueel bestaand eduroam-profiel, vraagt je **gebruikersnaam** via een GUI-dialoog (zenity, kdialog of yad) of terminal-fallback, en activeert de verbinding. Je wachtwoord wordt nooit door het script gevraagd; dat wordt bij het verbinden opgevraagd door je GNOME Keyring en veilig opgeslagen, nooit in platte tekst.
 
 {{< callout type="info" >}}
 Dit script is **Saxion-specifiek** en valideert tegen de Saxion RADIUS-server (`ise.infra.saxion.net`). Voor andere instellingen: gebruik het officiële CAT-script van [cat.eduroam.org](https://cat.eduroam.org/) als startpunt.
+{{< /callout >}}
+
+{{< callout type="warning" >}}
+Dit is een persoonlijke, reverse-engineered herschrijving op basis van de officiële [cat.eduroam.org](https://cat.eduroam.org/) installer, die verouderd was en bij mij niet werkte. Ik beheer het eduroam-netwerk noch de Saxion-infrastructuur. Ik geef geen garanties over de werking, het onderhoud of de correctheid van dit script als Saxion iets aan hun configuratie wijzigt. Gebruik op eigen risico.
 {{< /callout >}}
 
 Als alles goed gaat, zie je zoiets als dit:

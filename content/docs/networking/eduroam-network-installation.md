@@ -55,18 +55,26 @@ PEAP/MSCHAPv2 with CA validation via the system trust store and `domain-suffix-m
 A Python script automates the full `nmcli` connection setup for Saxion:
 
 ```bash
+# 1. Download
 curl -LO https://zephyrus-linux.stensel.nl/scripts/saxion-eduroam.py
+
+# 2. Verify checksum
+echo "7f1b43666da272455ad6e0300ea3f64bc1a75a0c84c76d761d4a6cd4476c850e  saxion-eduroam.py" | sha256sum -c
+
+# 3. Run
 python3 saxion-eduroam.py
 ```
 
-The script removes any existing eduroam profile, prompts for your **username** via a GUI dialog (zenity, kdialog, or yad) or terminal fallback, and activates the connection. Your password is never asked by the script; it is requested by your GNOME Keyring at connection time and stored securely, never in plaintext.
+**SHA256:** `7f1b43666da272455ad6e0300ea3f64bc1a75a0c84c76d761d4a6cd4476c850e`
 
-{{< callout type="warning" >}}
-You are downloading and running a script from the internet. If you want to be extra safe, verify the script source (or its checksum) before running it.
-{{< /callout >}}
+The script removes any existing eduroam profile, prompts for your **username** via a GUI dialog (zenity, kdialog, or yad) or terminal fallback, and activates the connection. Your password is never asked by the script; it is requested by your GNOME Keyring at connection time and stored securely, never in plaintext.
 
 {{< callout type="info" >}}
 This script is **Saxion-specific** and validates against Saxion's RADIUS server (`ise.infra.saxion.net`). For other institutions, use the official CAT script from [cat.eduroam.org](https://cat.eduroam.org/) as a starting point.
+{{< /callout >}}
+
+{{< callout type="warning" >}}
+This is a personal reverse-engineered rewrite based on the official [cat.eduroam.org](https://cat.eduroam.org/) installer, which was outdated and didn't work on my system. I don't manage the eduroam network or the Saxion infrastructure. I make no guarantees about this script working, being kept up to date, or remaining correct if Saxion changes their setup. Use it at your own risk.
 {{< /callout >}}
 
 If everything goes well, you should see something like this:
