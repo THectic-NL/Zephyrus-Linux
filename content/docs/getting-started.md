@@ -20,6 +20,8 @@ If something here helps you, great. If you run into something I haven't covered,
 | **Display Server** | Wayland (GNOME 49) |
 | **Secure Boot** | Enabled |
 
+![System information overview](/images/system-info.avif)
+
 ## Why CachyOS?
 
 After testing multiple distributions, I settled on CachyOS (Arch) as my daily driver. CachyOS is an Arch-based distribution with hardware-specific optimizations that make it stand out for the Zephyrus G16:

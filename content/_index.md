@@ -42,6 +42,8 @@ toc: false
 | **CPU Scheduler** | scx_lavd (sched_ext) |
 | **Secure Boot** | Enabled |
 
+![System information overview](/images/system-info.avif)
+
 ## Getting Started
 
 {{< hextra/feature-grid >}}

@@ -42,6 +42,8 @@ toc: false
 | **CPU Scheduler** | scx_lavd (sched_ext) |
 | **Secure Boot** | Ingeschakeld |
 
+![Systeeminformatie-overzicht](/images/system-info.avif)
+
 ## Aan de slag
 
 {{< hextra/feature-grid >}}

@@ -351,14 +351,6 @@ ROG Control Center toont een melding dat de `asus-armoury` kerneldriver niet is 
 **Oorzaak:**
 De `asus-armoury`-driver is samengevoegd in de Linux mainline-kernel in versie 6.19. CachyOS levert kernel 6.19.3-2 inclusief deze driver, dus hij zou beschikbaar moeten zijn.
 
-**Wat nog wel werkt zonder de driver:**
-- Fan curves (basis)
-- Performance-profielen (Silent / Balanced / Performance)
-- Batterijlaadlimiet
-- Slash LED
-- Toetsenbord Aura / RGB
-- GPU-switching via asusctl armoury (vereist kernel 6.19+)
-
 **Fix:**
 Verifieer dat de driver is geladen:
 ```bash
@@ -366,8 +358,6 @@ lsmod | grep asus_armoury
 ```
 
 Als hij laadt, heropen ROG Control Center — de melding zou verdwenen moeten zijn en geavanceerde functies zijn beschikbaar.
-
-> **Let op voor GA605WV-ondersteuning:** De initiële 6.19-release vermeldt GA403-serie modellen expliciet. Als de GA605WV nog niet in de DMI-tabel staat, zijn sommige model-specifieke functies (PPT-afstemming, APU-geheugen) mogelijk nog niet beschikbaar, ook niet op 6.19. Dit wordt verwacht opgelost te worden via follow-up kernelpatches.
 
 {{% /details %}}
 
@@ -406,19 +396,6 @@ sudo sbctl sign -s /pad/naar/bestand.efi
 sudo sbctl-batch-sign
 ```
 6. Herstart en schakel Secure Boot opnieuw in
-
-{{% /details %}}
-
-{{% details title="fwupdmgr toont HSI:3 in plaats van HSI:4 na het inschakelen van Secure Boot" closed="true" %}}
-
-De fwupd-daemon slaat resultaten op in cache. Ververs het rapport:
-
-```bash
-fwupdmgr refresh
-fwupdmgr security --force
-```
-
-Als Secure Boot Pass toont maar de score nog steeds HSI:3 is, controleer dan of andere HSI-4-tests falen. Encrypted RAM is een hardwarebeperking op dit platform en telt hier niet mee voor de score.
 
 {{% /details %}}
 
