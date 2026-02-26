@@ -351,14 +351,6 @@ ROG Control Center shows a warning that the `asus-armoury` kernel driver is not 
 **Cause:**
 The `asus-armoury` driver was merged into the Linux mainline kernel in version 6.19. CachyOS ships kernel 6.19.3-2 which includes this driver, so it should be available.
 
-**What still works without the driver:**
-- Fan curves (basic)
-- Performance profiles (Silent / Balanced / Performance)
-- Battery charge limit
-- Slash LED
-- Keyboard Aura / RGB
-- GPU switching via asusctl armoury (requires kernel 6.19+)
-
 **Fix:**
 Verify the driver is loaded:
 ```bash
@@ -366,8 +358,6 @@ lsmod | grep asus_armoury
 ```
 
 If it loads, reopen ROG Control Center — the warning should be gone and advanced features will be available.
-
-> **Note on GA605WV support:** The initial 6.19 release lists GA403-series models explicitly. If the GA605WV is not yet in the DMI table, some model-specific features (PPT tuning, APU memory) may still not appear even on 6.19. This is expected to be resolved via follow-up kernel patches.
 
 {{% /details %}}
 
@@ -406,19 +396,6 @@ sudo sbctl sign -s /path/to/file.efi
 sudo sbctl-batch-sign
 ```
 6. Reboot and re-enable Secure Boot
-
-{{% /details %}}
-
-{{% details title="fwupdmgr shows HSI:3 instead of HSI:4 after enabling Secure Boot" closed="true" %}}
-
-The fwupd daemon caches results. Refresh the report:
-
-```bash
-fwupdmgr refresh
-fwupdmgr security --force
-```
-
-If Secure Boot shows Pass but the score is still HSI:3, check whether any other HSI-4 tests are failing. Encrypted RAM is a hardware limitation on this platform and does not count towards the score here.
 
 {{% /details %}}
 

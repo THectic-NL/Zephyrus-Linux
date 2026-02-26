@@ -160,7 +160,6 @@ Als het native pakket problemen geeft:
 flatpak install flathub com.brave.Browser
 ```
 
-![Brave Flatpak in Flathub](/images/brave-flathub.avif)
 
 ---
 
