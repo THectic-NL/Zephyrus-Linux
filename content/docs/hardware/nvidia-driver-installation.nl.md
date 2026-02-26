@@ -8,8 +8,6 @@ De G16 heeft een NVIDIA RTX 4060 naast de AMD iGPU. De open-source Nouveau drive
 **Driver die ik gebruik:**
 - Versie: 590.48.01
 - CUDA-versie: 13.1
-- Bron: CachyOS/Arch repos
-- Installatiemethode: nvidia-dkms (DKMS-gebaseerd automatisch kernel module rebuilding)
 
 
 ## CachyOS (Arch)
@@ -21,7 +19,7 @@ Ga naar [Verificatie Na Installatie](#verificatie-na-installatie) om te bevestig
 
 ## Fedora
 
-De volgende stappen behandelen het volledige handmatige installatieproces. Ik liep tijdens de installatie tegen meerdere crashes en lockups aan die wat tijd kostten om op te sporen — die staan gedocumenteerd in het onderdeel [Bekende Problemen](#bekende-problemen).
+De volgende stappen behandelen het volledige handmatige installatieproces. Ik liep tijdens de installatie tegen meerdere crashes en lockups aan die wat tijd kostten om op te sporen — die staan gedocumenteerd op de pagina [Bekende Problemen]({{< relref "/docs/known-issues" >}}).
 
 ## Vereisten
 
@@ -37,7 +35,7 @@ sudo dnf install \
 
 ### Systeem Verificatie
 
-{{% details title="Check kernel versie" closed="true" %}}
+{{% details title="Controleer kernelversie" closed="true" %}}
 
 Vereist: Kernel 6.19+ voor Ryzen AI 9 HX 370 ondersteuning.
 
@@ -47,7 +45,7 @@ uname -r
 
 {{% /details %}}
 
-{{% details title="Check Secure Boot status" closed="true" %}}
+{{% details title="Controleer Secure Boot-status" closed="true" %}}
 
 ```bash
 mokutil --sb-state
@@ -60,7 +58,7 @@ mokutil --sb-state
 De open-source Nouveau driver heeft slechte prestaties op moderne NVIDIA GPU's. De proprietary driver is vereist voor:
 - Gaming en graphics-intensieve applicaties
 - CUDA workloads
-- Goede Wayland ondersteuning (beschikbaar sinds driver 555+)
+- Goede Wayland-ondersteuning (beschikbaar sinds driver 555+)
 
 
 ## Installatiestappen
@@ -73,11 +71,11 @@ De open-source Nouveau driver heeft slechte prestaties op moderne NVIDIA GPU's. 
 sudo dnf upgrade
 ```
 
-Wacht tot update voltooid is.
+Wacht tot de update voltooid is.
 
 ### Driver versie verifiëren
 
-Check beschikbare NVIDIA driver versie:
+Controleer de beschikbare NVIDIA-driverversie:
 
 ```bash
 dnf info akmod-nvidia
@@ -85,7 +83,7 @@ dnf info akmod-nvidia
 
 ### NVIDIA driver installeren
 
-Installeer driver met CUDA ondersteuning:
+Installeer de driver met CUDA-ondersteuning:
 
 ```bash
 sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda xorg-x11-drv-nvidia-libs.i686
@@ -93,12 +91,12 @@ sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda xorg-x11-drv-nvidia-libs.
 
 Dit installeert de driver, CUDA libraries en build dependencies (ongeveer 1 GB).
 - `akmod-nvidia` - NVIDIA driver via akmods voor automatisch kernel module bouwen en signeren
-- `xorg-x11-drv-nvidia-cuda` - CUDA ondersteuning en driver utilities (inclusief Wayland ondersteuning)
+- `xorg-x11-drv-nvidia-cuda` - CUDA-ondersteuning en driverutilities (inclusief Wayland ondersteuning)
 - `xorg-x11-drv-nvidia-libs.i686` - 32-bit NVIDIA libraries (nodig voor Steam/Proton)
 
 ### Kernel modules bouwen
 
-akmods bouwt en signeert kernel modules automatisch bij installatie. Om handmatig te triggeren:
+akmods bouwt en ondertekent kernelmodules automatisch tijdens installatie. Om handmatig te triggeren:
 
 ```bash
 sudo akmods --force
@@ -109,7 +107,7 @@ Dit proces kan 5-10 minuten duren.
 
 ### Kernel modules verifiëren
 
-Check dat kernel modules gebouwd zijn:
+Controleer of de kernelmodules gebouwd zijn:
 
 ```bash
 ls /lib/modules/$(uname -r)/kernel/drivers/video/
@@ -150,7 +148,7 @@ De NVIDIA driver laadt nu correct.
 
 ### NVIDIA power management services activeren
 
-Activeer NVIDIA power services voor beter suspend/resume gedrag:
+Activeer NVIDIA power services voor beter suspend/resume-gedrag:
 
 ```bash
 sudo systemctl enable nvidia-hibernate.service nvidia-suspend.service nvidia-resume.service
@@ -205,7 +203,7 @@ nvidia-smi
 
 Je ziet de NVIDIA driver- en CUDA-versies in de output.
 
-### Check geladen kernel modules
+### Controleer geladen kernelmodules
 
 ```bash
 lsmod | grep nvidia
@@ -320,261 +318,18 @@ cp SxxB80xT.icm ~/.local/share/icc/
 {{% /details %}}
 
 
-## Bekende Problemen
-
-{{% details title="Systeem crasht met externe monitoren (AMD GPU PSR bug)" closed="true" %}}
-
-**Probleem:**
-Systeem bevriest of crasht bij gebruik van externe monitoren via Thunderbolt/USB-C, vooral bij het (ont)koppelen van displays. Logs tonen AMD GPU errors:
-```
-amdgpu 0000:66:00.0: amdgpu: MES failed to respond to msg=RESET
-amdgpu 0000:66:00.0: amdgpu: Ring gfx_0.0.0 reset failed
-amdgpu 0000:66:00.0: amdgpu: GPU reset begin!
-```
-
-**Oorzaak:**
-Deze laptop heeft dual GPUs (AMD Radeon 890M integrated + NVIDIA RTX 4060 discrete). De PSR (Panel Self Refresh) feature van de AMD GPU heeft een bug die crashes veroorzaakt met externe Thunderbolt monitoren.
-
-**Oplossing:**
-Disable AMD PSR door een kernel parameter toe te voegen. Bewerk `/etc/default/grub` en voeg `amdgpu.dcdebugmask=0x600` toe aan `GRUB_CMDLINE_LINUX_DEFAULT`, daarna regenereer:
-
-```bash
-sudo nano /etc/default/grub
-sudo grub2-mkconfig -o /boot/efi/EFI/fedora/grub.cfg
-```
-
-Reboot:
-```bash
-sudo reboot
-```
-
-**Wat dit doet:**
-- `amdgpu.dcdebugmask=0x600` schakelt PSR (Panel Self Refresh) uit op de AMD GPU
-- PSR is een power-saving feature waarbij het display zichzelf refresht zonder GPU betrokkenheid
-- De PSR implementatie heeft bugs met Thunderbolt/USB-C externe monitoren
-
-**Trade-offs:**
-- Pro: Stabiel systeem met externe monitoren
-- Con: Iets hoger stroomverbruik (PSR uitgeschakeld)
-
-**Verificatie:**
-Monitor voor AMD GPU errors tijdens gebruik van externe displays:
-```bash
-sudo journalctl -f -k | grep -i amdgpu
-```
-
-Als er geen `amdgpu: [drm] *ERROR*` berichten verschijnen, werkt de fix.
-
-**Referentie:**
-- [Fedora Discussion: Zephyrus G16 External Monitor Crashes](https://discussion.fedoraproject.org/t/asus-zephyrus-g16-with-nvidia-and-external-monitor-crashes-every-few-minutes/147175)
-
-{{% /details %}}
-
-{{% details title="VS Code crasht systeem (AMD GPU page fault - Kernel 6.18.x bug)" closed="true" %}}
-
-**Wat speelt er:**
-Systeem bevriest volledig tijdens VS Code gebruik. Kernel 6.18.x/6.19.x hebben kritieke amdgpu driver bugs. VS Code hardware acceleratie triggert AMD Radeon 890M page fault → volledige freeze.
-
-**Fix:**
-Voeg toe aan `~/.config/Code/User/settings.json`:
-```json
-{
-    "disable-hardware-acceleration": true
-}
-```
-
-**Vervolg:**
-Herstart VS Code. Systeem blijft nu stabiel, VS Code iets langzamer maar prima bruikbaar.
-
-**Bronnen:**
-- [VS Code Issue #238088](https://github.com/microsoft/vscode/issues/238088)
-- [Framework: Critical amdgpu bugs kernel 6.18.x](https://community.frame.work/t/attn-critical-bugs-in-amdgpu-driver-included-with-kernel-6-18-x-6-19-x/79221)
-
-{{% /details %}}
-
-{{% details title="Brave Browser crasht systeem (AMD GPU page fault - Kernel 6.18.x bug)" closed="true" %}}
-
-**Wat speelt er:**
-Systeem bevriest of crasht tijdens Brave Browser gebruik, zelfs bij minimale workload (enkele tabs). Dit is hetzelfde onderliggende probleem als de VS Code crash: Chromium-gebaseerde applicaties met hardware acceleratie triggeren AMD Radeon 890M page faults op kernel 6.18.x/6.19.x.
-
-Typische crash sequence in logs:
-```
-amdgpu: [gfxhub] page fault (src_id:0 ring:24 vmid:2)
-amdgpu: Faulty UTCL2 client ID: SQC (data)
-amdgpu: ring gfx_0.0.0 timeout, signaled seq=302899, emitted seq=302901
-amdgpu: GPU reset begin!
-```
-
-Na GPU reset crasht gnome-shell (Signal 6 ABRT) omdat het een context reset detecteert.
-
-**Fix:**
-Open Brave Browser en ga naar `brave://settings/system`. Zet **"Use hardware acceleration when available"** uit.
-
-Alternatief via terminal:
-```bash
-sed -i 's/"hardware_acceleration_mode_previous":true/"hardware_acceleration_mode_previous":false/' ~/.config/BraveSoftware/Brave-Browser/Local\ State
-```
-
-Of start Brave met de `--disable-gpu` flag:
-```bash
-brave-browser-stable --disable-gpu
-```
-
-**Vervolg:**
-Herstart Brave. Verifieer via `brave://gpu` dat GPU acceleration uitgeschakeld is. Systeem blijft nu stabiel, Brave is iets langzamer bij zware pagina's maar prima bruikbaar.
-
-**Achtergrond:**
-Brave, VS Code, en andere Chromium-gebaseerde applicaties (Chrome, Edge, Electron apps) gebruiken GPU shader compilatie via Mesa. Op kernel 6.18.x heeft de amdgpu driver een bug in de Shader Queue Controller (SQC) memory access, waardoor page faults ontstaan die een volledige GPU reset triggeren. De fix is hardware acceleratie uitschakelen per applicatie totdat een kernel/Mesa update het probleem verhelpt.
-
-**Bronnen:**
-- [Framework: Critical amdgpu bugs kernel 6.18.x](https://community.frame.work/t/attn-critical-bugs-in-amdgpu-driver-included-with-kernel-6-18-x-6-19-x/79221)
-
-{{% /details %}}
-
-{{% details title="NVIDIA soft lockup bij minimale GPU load (hybrid GPU power management)" closed="true" %}}
-
-**Wat speelt er:**
-Systeem bevriest met een NVIDIA soft lockup, zelfs zonder actief GPU gebruik. Kernel logs tonen:
-```
-watchdog: BUG: soft lockup - CPU#23 stuck for 62s!
-NVRM: Xid (PCI:0000:65:00): 79, pid=<...>, GPU has fallen off the bus
-```
-
-Dit kan optreden door een combinatie van factoren op hybrid GPU laptops:
-- `nvidia-powerd` conflicteert met AMD ATPX power management
-- NVIDIA dGPU power state transitions falen
-- Corrupte VRAM na suspend/resume cycli
-
-**Extra symptoom: Reboot hangt (zwart scherm, backlights blijven aan)**
-
-Het systeem lijkt af te sluiten maar voltooit de hardware reset niet — het scherm wordt zwart maar toetsenbord- en schermverlichting blijven aan. Dit gebeurt wanneer `nvidia-powerd` interfereert met ACPI power state transitions tijdens shutdown/reboot.
-
-**Oorzaak: `supergfxd` start `nvidia-powerd` achter je rug om**
-
-Zelfs wanneer `nvidia-powerd` is uitgeschakeld via `systemctl disable`, roept `supergfxd` (de GPU switching daemon van asusctl) direct `systemctl start nvidia-powerd.service` aan tijdens GPU mode switches. Dit omzeilt de disabled status en activeert het conflict met ATPX opnieuw.
-
-**Hoe dit is gediagnosticeerd:**
-
-De logs van de vastgelopen boot tonen dat `supergfxd` nvidia-powerd opstartte:
-```bash
-journalctl -b -1 --no-pager | grep -iE "nvidia.*powerd|supergfxd"
-```
-
-Bewijsmateriaal:
-```
-supergfxd: [DEBUG supergfxctl] Did CommandArgs { inner: ["start", "nvidia-powerd.service"] }
-nvidia-powerd: ERROR! Client (presumably SBIOS) has requested to disable Dynamic Boost DC controller
-```
-
-De SBIOS-fout bevestigt dat de firmware Dynamic Boost weigerde, maar `nvidia-powerd` draaide al en interfereerde met power state management. De shutdown-sequentie controleren:
-
-```bash
-journalctl -b -1 --reverse | head -20
-```
-
-Toont dat de hardware watchdog niet kon stoppen, wat bevestigt dat de ACPI reboot nooit voltooid is:
-```
-watchdog: watchdog0: watchdog did not stop!
-```
-
-**Fix:**
-
-1. Disable en **mask** `nvidia-powerd` (masken is essentieel — `disable` alleen is niet genoeg omdat `supergfxd` het omzeilt):
-```bash
-sudo systemctl disable nvidia-powerd.service
-sudo systemctl stop nvidia-powerd.service
-sudo systemctl mask nvidia-powerd.service
-```
-
-2. Voeg kernel parameters toe voor stabielere NVIDIA power management (bewerk `/etc/default/grub`, voeg toe aan `GRUB_CMDLINE_LINUX_DEFAULT`, daarna `sudo grub-mkconfig -o /boot/grub/grub.cfg`):
-```
-nvidia-drm.fbdev=1 nvidia.NVreg_PreserveVideoMemoryAllocations=1
-```
-
-3. Reboot:
-```bash
-sudo reboot
-```
-
-**Vervolg:**
-Systeem is stabieler na deze wijzigingen. De NVIDIA dGPU wordt nog steeds correct beheerd via ATPX (AMD-gestuurde power switching) zonder dat `nvidia-powerd` interfereert. De mask maakt een symlink naar `/dev/null`, waardoor geen enkel proces — inclusief `supergfxd` en NVIDIA driver updates — de service opnieuw kan activeren.
-
-**Achtergrond:**
-Op laptops met AMD iGPU + NVIDIA dGPU regelt het ATPX framework (via ACPI) welke GPU actief is. `nvidia-powerd` probeert zelfstandig power decisions te maken, wat conflicteert met ATPX. De `NVreg_PreserveVideoMemoryAllocations=1` parameter voorkomt dat VRAM verloren gaat tijdens power transitions, en `nvidia-drm.fbdev=1` zorgt voor een schonere framebuffer handoff.
-
-{{% /details %}}
-
-
-## Probleemoplossing
-
-{{% details title="nvidia-smi command not found of faalt" closed="true" %}}
-
-Check of NVIDIA modules geladen zijn:
-```bash
-lsmod | grep nvidia
-```
-
-Check system logs voor errors:
-```bash
-sudo journalctl -b | grep nvidia
-```
-
-Rebuild kernel modules:
-```bash
-sudo akmods --force
-sudo dracut --force
-sudo reboot
-```
-
-{{% /details %}}
-
-{{% details title="MOK enrollment problemen of \"Key was rejected by service\" error" closed="true" %}}
-
-Als je de error krijgt `modprobe: ERROR: could not insert 'nvidia': Key was rejected by service`, zijn de kernel modules gebouwd voordat MOK enrollment voltooid was.
-
-Oplossing:
-```bash
-# Rebuild modules na MOK enrollment
-sudo akmods --force
-sudo dracut --force
-
-# Reboot
-sudo reboot
-```
-
-Om MOK te resetten indien nodig:
-```bash
-sudo mokutil --reset
-```
-
-Reboot en probeer enrollment opnieuw.
-
-{{% /details %}}
-
-
-{{% details title="Kernel module build failures" closed="true" %}}
-
-Zorg dat kernel headers overeenkomen met draaiende kernel:
-```bash
-sudo dnf install kernel-devel
-```
-
-Forceer rebuild:
-```bash
-sudo akmods --force
-sudo dracut --force
-```
-
-{{% /details %}}
+{{< callout type="info" >}}
+Bekende problemen en probleemoplossing voor NVIDIA driver-installatie staan op de pagina [Bekende Problemen]({{< relref "/docs/known-issues" >}}).
+{{< /callout >}}
 
 
 ## Technische weetjes
 
 ### Package Naming
-Het `akmod-nvidia` package is de aanbevolen NVIDIA driver voor Fedora. Het gebruikt het akmods framework om kernel modules automatisch te rebuilden na kernel updates.
+Het `akmod-nvidia` package is de aanbevolen NVIDIA driver voor Fedora. Het gebruikt het akmods framework om kernelmodules automatisch opnieuw te bouwen na kernelupdates.
 
 ### Secure Boot
-akmods rebuildt en signeert kernel modules automatisch na kernel updates. Op Fedora kan `sbctl` ook worden gebruikt voor Secure Boot sleutelbeheer.
+akmods rebuildt en signeert kernelmodules automatisch na kernelupdates. Op Fedora kan `sbctl` ook worden gebruikt voor Secure Boot sleutelbeheer.
 
 
 ## Aanvullende Bronnen

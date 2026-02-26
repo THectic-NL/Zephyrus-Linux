@@ -98,17 +98,6 @@ Alles wat ik heb opgeschreven tijdens het draaien van CachyOS op de ROG Zephyrus
   >}}
 {{< /hextra/feature-grid >}}
 
-## Nieuws
-
-{{< hextra/feature-grid >}}
-  {{< hextra/feature-card
-    title="Nieuws"
-    subtitle="CachyOS updates, kernel releases en hardware-relevante wijzigingen"
-    icon="rss"
-    link="news"
-  >}}
-{{< /hextra/feature-grid >}}
-
 ## Bekende Problemen
 
 {{< hextra/feature-grid >}}

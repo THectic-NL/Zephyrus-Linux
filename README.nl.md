@@ -4,7 +4,7 @@ Nederlands | [English](README.md)
 
 CachyOS op de ASUS ROG Zephyrus G16 GA605WV (2024). Mijn persoonlijke setup-log — wat werkte, wat niet, en hoe ik het heb opgelost.
 
-**Bekijk de volledige documentatiesite: [zephyrus-linux.stentijhuis.nl](https://zephyrus-linux.stentijhuis.nl/nl/)**
+**Bekijk de volledige documentatiesite: [zephyrus-linux.stensel.nl](https://zephyrus-linux.stensel.nl/nl/)**
 
 
 ## Over dit project
@@ -67,6 +67,27 @@ hugo --gc --minify
 ```
 
 De output wordt geschreven naar `./public/`. Bij een push naar `main` bouwt GitHub Actions de site automatisch en deployt naar GitHub Pages.
+
+
+## Afbeeldingen
+
+Alle afbeeldingen in deze repository gebruiken het [AVIF](https://nl.wikipedia.org/wiki/AVIF)-formaat — open, royaltyvrij en efficiënter dan PNG of JPEG bij vergelijkbare kwaliteit. AVIF is de moderne standaard voor webafbeeldingen.
+
+Installeer `avifenc` uit het `libavif`-pakket om PNG-screenshots om te zetten naar AVIF:
+
+```bash
+sudo pacman -S libavif
+```
+
+Batch-conversie van alle PNGs in `static/images/` (converteert en verwijdert de originelen):
+
+```bash
+cd static/images
+for f in *.png; do avifenc -q 80 -s 6 "$f" "${f%.png}.avif" && rm "$f"; done
+```
+
+- `-q 80` — 80% kwaliteit (schaal 0–100, 100 = verliesvrij)
+- `-s 6` — encodersnelheid (0 = beste compressie, 10 = snelst)
 
 
 ## Credits & bronnen

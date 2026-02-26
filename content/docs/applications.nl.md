@@ -5,6 +5,28 @@ weight: 25
 
 Alles wat ik heb geïnstalleerd na de initiële CachyOS-setup. Losjes georganiseerd per categorie. De meeste keuzes zijn persoonlijk, maar de secties over Brave en libinput-config bevatten niet-voor-de-hand-liggende workarounds die nergens anders gedocumenteerd staan.
 
+## Packagebronnen
+
+Op CachyOS zijn er drie plekken om software vandaan te halen. Zoek ze in deze volgorde:
+
+1. **[CachyOS packages](https://packages.cachyos.org/)** — de eigen repository van CachyOS, gebouwd bovenop Arch. Packages hier zijn geoptimaliseerd voor moderne CPU's (x86-64-v3/v4) en bevatten CachyOS-specifieke patches. Installeren met `sudo pacman -S <package>`.
+
+2. **[AUR](https://aur.archlinux.org/)** (Arch User Repository) — community-beheerde buildscripts voor software die niet in de officiële repos staat. Installeren met een AUR-helper zoals `paru -S <package>`. Kwaliteit verschilt per package, maar de AUR dekt vrijwel alles.
+
+3. **[Flathub](https://flathub.org/)** — Flatpak-packages die hun eigen dependencies meebrengen. Installeren met `flatpak install flathub <app-id>`, starten met `flatpak run <app-id>`.
+
+**Native (pacman/paru) vs Flatpak — wat kies je?**
+
+| | Native (pacman/paru) | Flatpak |
+|---|---|---|
+| **Performance** | Beter — gebruikt gedeelde systeembibliotheken | Iets minder — bundelt eigen bibliotheken |
+| **Integratie** | Nauw — volledige systeemtoegang | Sandbox — meer geïsoleerd |
+| **Grootte** | Kleiner | Groter |
+| **Compatibiliteit** | Afhankelijk van de distro | Consistent op alle distro's |
+| **Veiligheid** | Standaard | Betere sandboxing |
+
+Native packages bieden betere performance en systeemintegratie. Flatpaks ruilen wat efficiëntie in voor compatibiliteit en sandboxing. De keuze is per applicatie aan jou — beide werken prima op CachyOS.
+
 ## Initiële systeeminstellingen
 
 ### Hostname instellen
@@ -41,8 +63,19 @@ Als je vanuit Windows komt, voelt een paar dingen meteen anders zonder de juiste
 | # | Actie | Commando | Sneltoets |
 |---|-------|----------|-----------|
 | 5 | Bestandsbeheer openen | `nautilus` | `Super+E` |
+| 6 | Emoji-picker | `flatpak run it.mijorus.smile` | Copilot-toets |
 
-GNOME heeft standaard geen sneltoets voor de bestandsbeheerder, dus die moet je handmatig aanmaken.
+GNOME heeft standaard geen sneltoetsen voor de bestandsbeheerder of een emoji-picker — die moet je handmatig aanmaken. Zie [Smile](#smile-emoji-picker) voor hoe de Copilot-toets wordt gebruikt.
+
+### GNOME-vensterfocus — apps die op de achtergrond openen
+
+Apps zoals Signal en Discord openen soms op de achtergrond, met een melding "Your app is ready" in plaats van het venster naar voren te brengen. Dit los je op met:
+
+```bash
+gsettings set org.gnome.desktop.wm.preferences focus-new-windows 'smart'
+```
+
+De standaard `strict`-modus brengt nieuwe vensters nooit automatisch naar voren. `smart` laat GNOME zelf beslissen — in de praktijk betekent dit dat nieuw geopende apps gewoon op de voorgrond verschijnen.
 
 ### Touchpad-scrollsnelheid — geen native GNOME-instelling (nog niet)
 
@@ -102,78 +135,26 @@ sudo rm /etc/libinput.conf
 
 ### Brave
 
-Brave is mijn standaardbrowser. Ik begon met de Flatpak-versie maar ben overgestapt naar het native pakket — dat voelt nativer en biedt betere prestaties. Er is alleen een addertje: Brave 1.82+ heeft twee crashbugs op GNOME Wayland waarvoor workarounds nodig zijn.
+Brave is mijn standaardbrowser. Ik begon met de Flatpak-versie maar ben overgestapt naar het native pakket — dat beter integreert met het systeem en betere prestaties biedt.
 
-- **Native (pacman):** Nativer gevoel, betere prestaties. Dit gebruik ik.
+- **Native (pacman):** Betere integratie, betere prestaties. Dit gebruik ik.
 - **Flatpak:** Kan in sommige situaties beter werken, maar voelt wat geïsoleerder.
 
 **Installatie**
 
-{{< callout type="warning" >}}
-Op CachyOS/Arch met GNOME + Wayland heeft Brave 1.82+ twee bekende crashbugs waarvoor workarounds nodig zijn. De eerste wordt via de desktop entry toegepast; de tweede vereist een instelling in `brave://flags`.
-{{< /callout >}}
+[brave-bin in CachyOS packages](https://packages.cachyos.org/package/cachyos/x86_64/brave-bin) — direct beschikbaar in de CachyOS-repo, geen AUR-helper nodig.
 
 ```bash
 sudo pacman -S brave-bin
 ```
 
-![Brave installatie-instructies](/images/brave-install.avif)
+![Officiële Brave Linux installatie-instructies](/images/brave-linux-install.avif)
 
-**Workaround 1: de desktop entry patchen**
+Hardware acceleration werkt prima met huidige Brave- en kernelversies. De crashbugs die Brave 1.82–1.86 troffen zijn opgelost — zie [Bekende Problemen]({{< relref "/docs/known-issues" >}}) voor de achtergrond.
 
-Kopieer de systeem-desktop entry naar je gebruikersmap zodat hij niet wordt overschreven bij updates:
-```bash
-sudo cp /usr/share/applications/brave-browser.desktop ~/.local/share/applications/
-```
+**Flatpak-alternatief**
 
-Patch alle drie de `Exec=` regels met de flag:
-```bash
-sed -i \
-  's|Exec=/usr/bin/brave-browser-stable %U|Exec=/usr/bin/brave-browser-stable --disable-features=WaylandWpColorManagerV1 %U|' \
-  ~/.local/share/applications/brave-browser.desktop
-
-sed -i \
-  's|Exec=/usr/bin/brave-browser-stable$|Exec=/usr/bin/brave-browser-stable --disable-features=WaylandWpColorManagerV1|' \
-  ~/.local/share/applications/brave-browser.desktop
-
-sed -i \
-  's|Exec=/usr/bin/brave-browser-stable --incognito$|Exec=/usr/bin/brave-browser-stable --incognito --disable-features=WaylandWpColorManagerV1|' \
-  ~/.local/share/applications/brave-browser.desktop
-```
-
-Controleer of het gelukt is — je zou exact drie `Exec=` regels moeten zien:
-```bash
-grep "^Exec" ~/.local/share/applications/brave-browser.desktop
-```
-
-**Wat deze flag doet:**
-
-`--disable-features=WaylandWpColorManagerV1` — Brave 1.82+ introduceerde een Wayland color management extensie die conflicteert met de AMD amdgpu-driver op GNOME Wayland. Zonder deze flag veroorzaakt Brave GPU ring timeouts die de volledige GNOME Shell-sessie neerhalen.
-
-**Een noot over `--ozone-platform=x11`:** Geprobeerd als workaround voor een crash bij Bitwarden-bijlagen. Bleek een erger probleem te veroorzaken: gnome-shell met `SIGABRT` bij Picture-in-Picture video — zie [gnome-mutter issue #4625](https://gitlab.gnome.org/GNOME/mutter/-/issues/4625). De flag is weg. Brave draait nu op native Wayland. De Bitwarden-bijlage-crash bestaat nog, maar een Brave-crash is te verkiezen boven het verliezen van de hele sessie.
-
-**Workaround 2: hardware video decode uitschakelen in `brave://flags`**
-
-{{< callout type="warning" >}}
-Hardware video decode veroorzaakt nog steeds crashes, ook met de flag hierboven. Zolang de AMD VCN decoder actief is, crasht GNOME Shell met SIGABRT bij Picture-in-Picture video. Zie [gnome-mutter issue #4625](https://gitlab.gnome.org/GNOME/mutter/-/issues/4625). Hardware video decode is **nog niet stabiel** op de AMD Radeon 890M met GNOME Wayland.
-{{< /callout >}}
-
-Ga naar `brave://flags` en schakel uit:
-
-- **Hardware-accelerated video decode** → `Disabled`
-
-![Brave flags — hardware video decode uitgeschakeld](/images/brave-flags.avif)
-
-Video wordt nu via software gedecodeerd. In `brave://gpu` staat daarna:
-
-- `Video Decode: Software only. Hardware acceleration disabled`
-- `Video Encode: Software only. Hardware acceleration disabled`
-
-![Brave hardware acceleration config](/images/brave-gpu-config.avif)
-
-**Flatpak alternatief**
-
-Geeft het native pakket problemen:
+Als het native pakket problemen geeft:
 
 ```bash
 flatpak install flathub com.brave.Browser
@@ -226,7 +207,7 @@ Op kernel 6.18.x/6.19.x kan hardware acceleration in VS Code een amdgpu page fau
     "disable-hardware-acceleration": true
 }
 ```
-Zie de [NVIDIA Driver Installatie]({{< relref "/docs/hardware/nvidia-driver-installation" >}}) sectie Bekende Problemen voor details.
+Zie [Bekende Problemen]({{< relref "/docs/known-issues" >}}) voor details.
 {{< /callout >}}
 
 ### Kleopatra & GPG commit signing
@@ -342,6 +323,44 @@ Er is geen officiële Tidal-client voor Linux. [Tidal Hi-Fi](https://github.com/
 Voor wat niet werkt onder Wine — zoals Microsoft 365 — gebruik ik een Windows VM. Zie [Windows 11 VM Setup]({{< relref "/docs/virtualization/vm-setup" >}}).
 
 ![Bottles in de Flathub store](/images/bottles-flathub.avif)
+
+### Smile — emoji-picker
+
+[Smile](https://mijorus.it/projects/smile) van Lorenzo Paderi is een eenvoudige emoji-picker voor Linux met ondersteuning voor aangepaste tags. Beschikbaar via Flathub.
+
+```bash
+flatpak install flathub it.mijorus.smile
+```
+
+![Smile emoji-picker in Flathub](/images/smile-flathub.avif)
+
+**Instellingen**
+
+Zet "Run in the background" en "Minimize on exit" aan in de Smile-instellingen — zo opent de picker direct en verdwijnt hij netjes na het kiezen van een emoji:
+
+![Smile-instellingen — run in background, minimize on exit](/images/smile-settings.avif)
+
+**GNOME-extensie**
+
+Installeer de [Smile complementary extension](https://extensions.gnome.org/extension/6096/smile-complementary-extension/) om automatisch plakken van emoji's op Wayland mogelijk te maken. Zonder deze extensie kan Smile alleen naar het klembord kopiëren.
+
+{{< callout type="warning" >}}
+Zorg er na het installeren van de extensie voor dat de extensie-toggle in de Smile-instellingen onder "Paste emojis automatically" is ingeschakeld.
+{{< /callout >}}
+
+**Sneltoets — de Copilot-toets hergebruiken**
+
+De Copilot-toets op de Zephyrus G16 doet op Linux standaard niets nuttigs. GNOME registreert hem als `Shift+Super+TouchpadOff`. Hergebruik hem als sneltoets voor de emoji-picker:
+
+Ga naar **Instellingen → Toetsenbord → Aangepaste sneltoetsen** en voeg toe:
+
+- **Naam:** Emoji picker
+- **Commando:** `flatpak run it.mijorus.smile`
+- **Sneltoets:** druk op de Copilot-toets
+
+![Overzicht aangepaste sneltoetsen met Emoji picker](/images/smile-custom-shortcuts.avif)
+
+![Dialoog voor aangepaste sneltoets voor Smile — Copilot-toets](/images/smile-shortcut-dialog.avif)
 
 ### Solaar voor Logitech-apparaten
 

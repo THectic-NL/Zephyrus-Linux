@@ -98,17 +98,6 @@ Everything I've documented while running CachyOS on the ROG Zephyrus G16. Start 
   >}}
 {{< /hextra/feature-grid >}}
 
-## News
-
-{{< hextra/feature-grid >}}
-  {{< hextra/feature-card
-    title="News"
-    subtitle="CachyOS updates, kernel releases, and hardware-relevant changes"
-    icon="rss"
-    link="news"
-  >}}
-{{< /hextra/feature-grid >}}
-
 ## Known Issues
 
 {{< hextra/feature-grid >}}

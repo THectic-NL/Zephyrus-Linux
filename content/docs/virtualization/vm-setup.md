@@ -354,56 +354,6 @@ qemu-img snapshot -a snapshot-name /mnt/vmstore/win11.qcow2
 ```
 
 
-## Troubleshooting
-
-**"Could not detect a default hypervisor" error in virt-manager:**
-
-```bash
-# 1. Start libvirtd
-sudo systemctl start libvirtd
-
-# 2. Check group membership
-groups  # Must contain "libvirt"
-
-# If "libvirt" is missing:
-sudo usermod --append --groups libvirt $(whoami)
-# Then log out and log back in
-```
-
-**Manually add connection in virt-manager:**
-1. Open virt-manager
-2. File → Add Connection
-3. Hypervisor: **QEMU/KVM**
-4. Connect to local hypervisor
-5. Leave all other fields empty
-6. Click **Connect**
-
-**VirtIO ISO download is incomplete:**
-
-The ISO must be exactly ~753 MB. If smaller:
-```bash
-# Remove incomplete download
-sudo rm /var/lib/libvirt/images/virtio-win.iso
-
-# Download again (don't cancel with Ctrl+C!)
-sudo curl -L -o /var/lib/libvirt/images/virtio-win.iso \
-  https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
-
-# Verify size
-ls -lh /var/lib/libvirt/images/virtio-win.iso
-```
-
-**Permission denied when starting VM:**
-```bash
-sudo restorecon -Rv /var/lib/libvirt/images/
-sudo restorecon -Rv /mnt/vmstore/
-```
-
-**Black screen:**
-- Check that Video model is set to Virtio (not QXL)
-- Install VirtIO guest tools from the VirtIO ISO
-- Install SPICE Guest Tools
-
-**Clipboard doesn't work:**
-- SPICE Guest Tools installed?
-
+{{< callout type="info" >}}
+Troubleshooting for VM setup is documented on the [Known Issues]({{< relref "/docs/known-issues" >}}) page.
+{{< /callout >}}

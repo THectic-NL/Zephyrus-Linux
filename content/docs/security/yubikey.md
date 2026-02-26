@@ -101,28 +101,6 @@ A reliable alternative that works today: require a YubiKey touch for `sudo` and/
 > **To be documented after testing.**
 
 
-## Troubleshooting
-
-{{% details title="System stuck in boot loop after FIDO2 enrollment" closed="true" %}}
-
-If you enrolled FIDO2 and cannot boot, spam-tap the YubiKey immediately after the BIOS screen. The touch window is very short.
-
-Once in the system, revert immediately:
-```bash
-sudo systemd-cryptenroll --wipe-slot=fido2 /dev/nvme1n1p3
-sudo nano /etc/crypttab  # remove fido2-device=auto
-sudo rm /etc/dracut.conf.d/fido2.conf
-sudo dracut --force --regenerate-all
-```
-
-{{% /details %}}
-
-{{% details title="Verify LUKS keyslots" closed="true" %}}
-
-```bash
-sudo cryptsetup luksDump /dev/nvme1n1p3 | grep -E "^\s+[0-9]+:"
-```
-
-Should show only `0: luks2` after reverting. If slot 1 is still present, FIDO2 is still enrolled.
-
-{{% /details %}}
+{{< callout type="info" >}}
+Troubleshooting for YubiKey and LUKS is documented on the [Known Issues]({{< relref "/docs/known-issues" >}}) page.
+{{< /callout >}}

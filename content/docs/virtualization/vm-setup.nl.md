@@ -52,7 +52,7 @@ sudo pacman -S virt-manager qemu-full swtpm edk2-ovmf dnsmasq
 
 **Let op:** Het `virtio-win` pakket is beschikbaar vanuit de AUR (`yay -S virtio-win`) of je kunt de ISO direct downloaden in een latere stap.
 
-**2. Gebruiker toevoegen aan libvirt groep:**
+**2. Gebruiker toevoegen aan libvirt-groep:**
 ```bash
 sudo usermod --append --groups libvirt $(whoami)
 ```
@@ -354,56 +354,6 @@ qemu-img snapshot -a snapshot-naam /mnt/vmstore/win11.qcow2
 ```
 
 
-## Troubleshooting
-
-**"Could not detect a default hypervisor" error in virt-manager:**
-
-```bash
-# 1. Start libvirtd
-sudo systemctl start libvirtd
-
-# 2. Controleer groepslidmaatschap
-groups  # Moet "libvirt" bevatten
-
-# Als "libvirt" ontbreekt:
-sudo usermod --append --groups libvirt $(whoami)
-# Dan uitloggen en opnieuw inloggen
-```
-
-**Handmatig connectie toevoegen in virt-manager:**
-1. Open virt-manager
-2. File → Add Connection
-3. Hypervisor: **QEMU/KVM**
-4. Connect to local hypervisor
-5. Laat alle andere velden leeg
-6. Klik **Connect**
-
-**VirtIO ISO download is incompleet:**
-
-De ISO moet exact ~753 MB zijn. Als deze kleiner is:
-```bash
-# Verwijder incomplete download
-sudo rm /var/lib/libvirt/images/virtio-win.iso
-
-# Download opnieuw (annuleer niet met Ctrl+C!)
-sudo curl -L -o /var/lib/libvirt/images/virtio-win.iso \
-  https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
-
-# Controleer grootte
-ls -lh /var/lib/libvirt/images/virtio-win.iso
-```
-
-**Permission denied bij VM start:**
-```bash
-sudo restorecon -Rv /var/lib/libvirt/images/
-sudo restorecon -Rv /mnt/vmstore/
-```
-
-**Zwart scherm:**
-- Controleer dat Video model op Virtio staat (niet QXL)
-- Installeer VirtIO guest tools van de VirtIO ISO
-- Installeer SPICE Guest Tools
-
-**Klembord werkt niet:**
-- SPICE Guest Tools geïnstalleerd?
-
+{{< callout type="info" >}}
+Probleemoplossing voor VM-setup staat op de pagina [Bekende Problemen]({{< relref "/docs/known-issues" >}}).
+{{< /callout >}}

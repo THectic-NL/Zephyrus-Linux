@@ -25,16 +25,8 @@ toc: false
 <div class="hx-mt-6"></div>
 
 {{< callout type="info" >}}
-**Persoonlijke documentatie.** Ik ben geen developer of Linux-expert — gewoon iemand die overgestapt is naar Linux op deze laptop en dingen uitzoekende onderweg. Ik deel wat werkte zodat anderen niet helemaal opnieuw hoeven te beginnen. Alles is op eigen risico. Kom je ergens niet uit, laat het gerust weten — ik denk graag mee. Draait kernel 6.19.3-2 op CachyOS (Arch).
+**Persoonlijke documentatie.** Ik ben geen developer of Linux-expert — gewoon iemand die overgestapt is naar Linux op deze laptop en dingen uitzoekend onderweg. Ik deel wat werkte zodat anderen niet helemaal opnieuw hoeven te beginnen. Alles is op eigen risico. Kom je ergens niet uit, laat het gerust weten — ik denk graag mee. Draait kernel 6.19.3-2 op CachyOS (Arch).
 {{< /callout >}}
-
-## Nieuws
-
-- **Overgestapt naar CachyOS** — dagelijkse driver na het testen van meerdere distro's; beste hardware-ondersteuning voor de G16
-- **Kernel 7.0** — ASUS laptop quirks en AMDGPU-ondersteuning voor RDNA 3.5; Radeon 890M verwacht ~20% sneller
-- **Kernel 6.19** — `asus-armoury` driver gemerged in mainline Linux; CachyOS 6.19.3-2 bevat het al
-
-[Bekijk al het nieuws →](/nl/docs/news)
 
 ## Huidige Systeemconfiguratie
 
@@ -47,6 +39,7 @@ toc: false
 | **OS** | CachyOS (Arch) |
 | **Kernel** | 6.19.3-2 |
 | **Display Server** | Wayland (GNOME 49) |
+| **CPU Scheduler** | scx_lavd (sched_ext) |
 | **Secure Boot** | Ingeschakeld |
 
 ## Aan de slag
@@ -88,13 +81,13 @@ toc: false
 {{< hextra/feature-grid >}}
   {{< hextra/feature-card
     title="YubiKey 5C NFC"
-    subtitle="FIDO2 LUKS poging en wat vandaag werkt"
+    subtitle="FIDO2 LUKS-poging en wat vandaag werkt"
     icon="key"
     link="docs/security/yubikey"
   >}}
   {{< hextra/feature-card
     title="GDM Autologin"
-    subtitle="GDM inlogscherm overslaan na LUKS ontgrendeling"
+    subtitle="GDM-inlogscherm overslaan na LUKS-ontgrendeling"
     icon="lock-open"
     link="docs/security/autologin"
   >}}

@@ -6,9 +6,8 @@ weight: 22
 The Zephyrus G16 has a lot of hardware features that don't work out of the box on Linux — fan curves, performance profiles, the Slash LED on the lid, GPU switching, battery charge limiting. This page documents how I got all of it working using asusctl and the ASUS Linux project tools. On CachyOS, these tools are available directly from the package repos.
 
 **Package Information:**
-- `asusctl` 6.3.2-1 — CLI for fan curves, profiles, battery limit, RGB, Slash LED
+- `asusctl` 6.3.2-1 — CLI for fan curves, profiles, battery limit, RGB, Slash LED, GPU switching
 - `asusctl-rog-gui` 6.3.2 — ROG Control Center GUI
-- `supergfxctl` 5.2.7-8 — GPU mode switching
 - Source: CachyOS/Arch repos (packages maintained by Luke Jones, primary asusctl developer)
 
 
@@ -16,22 +15,22 @@ The Zephyrus G16 has a lot of hardware features that don't work out of the box o
 
 {{% steps %}}
 
-### Install asusctl, ROG Control Center, and supergfxctl
+### Install asusctl and ROG Control Center
 
 ```bash
-sudo pacman -S asusctl supergfxctl power-profiles-daemon rog-control-center
+sudo pacman -S asusctl rog-control-center
 ```
 
 This installs:
 - `asusctl` — main CLI daemon and client
 - `asusctl-rog-gui` — ROG Control Center GUI
-- `supergfxctl` — GPU mode switching daemon
+
+On CachyOS this is all you need — both packages are available directly from the repos and everything works out of the box. No kernel patching or deep system configuration required.
 
 ### Enable services
 
 ```bash
 sudo systemctl enable --now asusd.service
-sudo systemctl enable supergfxd.service
 ```
 
 Reboot to ensure all services start correctly:
@@ -159,32 +158,37 @@ asusctl profile
 
 {{% /details %}}
 
-{{% details title="GPU mode switching (supergfxctl)" closed="true" %}}
+{{% details title="GPU mode switching (asusctl armoury)" closed="true" %}}
 
 The GA605WV has a hybrid GPU setup: the AMD Radeon 890M (iGPU) drives the internal display, and the NVIDIA RTX 4060 (dGPU) handles GPU workloads.
 
-`supergfxctl` manages which GPU mode is active:
+GPU switching is managed via `asusctl armoury`, which interfaces directly with the `asus-armoury` kernel driver (available since kernel 6.19).
+
+> **Note:** `supergfxctl` was previously used for GPU switching but is now deprecated. Use `asusctl armoury` instead.
 
 | Mode | Description |
 |------|-------------|
-| `Hybrid` | Both GPUs active. NVIDIA handles GPU workloads, AMD drives the display. Best for gaming. |
-| `Integrated` | Only AMD iGPU. Lower power consumption, no NVIDIA. Good for battery. |
-| `AsusMuxDgpu` | NVIDIA directly drives the display via hardware MUX switch. Lowest latency for gaming. Requires reboot. |
+| Hybrid (`dgpu_disable 0`) | Both GPUs active. NVIDIA handles GPU workloads, AMD drives the display. Best for gaming. |
+| Integrated (`dgpu_disable 1`) | Only AMD iGPU. Lower power consumption, no NVIDIA. Good for battery. |
 
-**Check current mode:**
+**Check current dGPU state:**
 ```bash
-supergfxctl --mode
+asusctl armoury get dgpu_disable
 ```
 
-**Switch mode:**
+**Switch to iGPU-only (disable dGPU):**
 ```bash
-supergfxctl --mode Hybrid
-supergfxctl --mode Integrated
+asusctl armoury set dgpu_disable 1
 ```
 
-> **Note:** Switching between Hybrid and Integrated requires a logout/login. Switching to AsusMuxDgpu requires a reboot.
+**Switch to Hybrid (enable dGPU):**
+```bash
+asusctl armoury set dgpu_disable 0
+```
 
-> **Important:** `nvidia-powerd.service` must remain disabled and **masked** on this laptop. It conflicts with AMD ATPX power management and causes soft lockups and reboot hangs (black screen, backlights stay on). Masking is essential because `supergfxd` directly calls `systemctl start nvidia-powerd.service` during GPU mode switches — `disable` alone does not prevent this. The mask (symlink to `/dev/null`) blocks both `supergfxd` and NVIDIA driver updates from re-enabling it. GPU power is managed via ATPX (via ACPI). See [NVIDIA Driver Installation Guide]({{< relref "/docs/hardware/nvidia-driver-installation" >}}) for diagnosis details and commands.
+> **Note:** A reboot or logout/login may be required after switching modes.
+
+> **Important:** `nvidia-powerd.service` must remain disabled and **masked** on this laptop. It conflicts with AMD ATPX power management and causes soft lockups and reboot hangs (black screen, backlights stay on). GPU power is managed via ATPX (via ACPI). See [NVIDIA Driver Installation Guide]({{< relref "/docs/hardware/nvidia-driver-installation" >}}) for diagnosis details and commands.
 
 {{% /details %}}
 
@@ -225,7 +229,7 @@ asusctl fan-curve -m Balanced
 asusctl fan-curve -m Balanced -D 30:0,40:10,50:30,60:50,70:70,80:85,90:100,100:100
 ```
 
-> **Note:** Fan curve customization requires the `asus-armoury` kernel driver. On kernel < 6.19, the driver is not available and curves set in the GUI may not persist as expected. See the Known Issues section below.
+> **Note:** Fan curve customization requires the `asus-armoury` kernel driver. On kernel < 6.19, the driver is not available and curves set in the GUI may not persist as expected. See the [Known Issues]({{< relref "/docs/known-issues" >}}) page for details.
 
 {{% /details %}}
 
@@ -259,43 +263,12 @@ sensors
 sudo journalctl -b -u asusd
 ```
 
-**Check supergfxd service logs:**
-```bash
-sudo journalctl -b -u supergfxd
-```
-
 {{% /details %}}
 
 
-## Known Issues
-
-{{% details title="ROG Control Center warning: \"The asus-armoury driver is not loaded\"" closed="true" %}}
-
-**Problem:**
-ROG Control Center shows a warning that the `asus-armoury` kernel driver is not loaded. Some advanced features (PPT power limits, APU memory allocation, MUX switch control) are unavailable.
-
-**Cause:**
-The `asus-armoury` driver was merged into the Linux mainline kernel in version 6.19. CachyOS ships kernel 6.19.3-2 which includes this driver, so it should be available.
-
-**What still works without the driver:**
-- Fan curves (basic)
-- Performance profiles (Silent / Balanced / Performance)
-- Battery charge limit
-- Slash LED
-- Keyboard Aura / RGB
-- GPU switching via supergfxctl
-
-**Solution:**
-Verify the driver is loaded:
-```bash
-lsmod | grep asus_armoury
-```
-
-If it loads, reopen ROG Control Center — the warning should be gone and advanced features will be available.
-
-> **Note on GA605WV support:** The initial 6.19 release lists GA403-series models explicitly. If the GA605WV is not yet in the DMI table, some model-specific features (PPT tuning, APU memory) may still not appear even on 6.19. This is expected to be resolved via follow-up kernel patches.
-
-{{% /details %}}
+{{< callout type="info" >}}
+Known issues and troubleshooting for asusctl & ROG Control Center are documented on the [Known Issues]({{< relref "/docs/known-issues" >}}) page.
+{{< /callout >}}
 
 
 ## CLI Quick Reference
@@ -312,10 +285,33 @@ If it loads, reopen ROG Control Center — the warning should be gone and advanc
 | `asusctl slash --enable -b false -s false` | Enable Slash LED, off on battery and sleep |
 | `asusctl slash --mode Spectrum` | Set Slash LED animation |
 | `asusctl slash -l 128` | Set Slash LED brightness (0–255) |
-| `supergfxctl --mode` | Show current GPU mode |
-| `supergfxctl --mode Hybrid` | Switch to Hybrid GPU mode |
-| `supergfxctl --mode Integrated` | Switch to integrated GPU only |
+| `asusctl armoury get dgpu_disable` | Show current dGPU state (0=enabled, 1=disabled) |
+| `asusctl armoury set dgpu_disable 1` | Switch to iGPU-only (disable dGPU) |
+| `asusctl armoury set dgpu_disable 0` | Switch to Hybrid mode (enable dGPU) |
 | `rog-control-center` | Open ROG Control Center GUI |
+
+
+## Kernel Updates
+
+### Kernel 6.19: asus-armoury driver lands in mainline
+
+The `asus-armoury` driver has been [merged into Linux 6.19](https://www.phoronix.com/news/ASUS-Armoury-Driver-Linux-6.19). This new `platform/x86` driver replaces parts of the older `asus-wmi` with a cleaner sysfs-based API, enabling panel mode switching, APU memory allocation, PPT tuning, and more directly from the kernel. The driver is entirely community-developed by [Luke Jones](https://asus-linux.org/) (ASUS Linux project), with no involvement from ASUS themselves. CachyOS ships kernel 6.19.3-2 which includes this driver and additional ASUS-specific patches.
+
+**Before** — basic asusctl controls without Armoury settings:
+
+![ROG Control before asus-armoury in mainline](/images/rog-control-armoury.avif)
+
+**After** — full Armoury settings exposed, including PPT/power limit tuning:
+
+![ROG Control System Control with Armoury settings and power limit tuning](/images/rog-control-system-control.avif)
+
+**Sources:** [Phoronix article](https://www.phoronix.com/news/ASUS-Armoury-Driver-Linux-6.19) · [Community discussion](https://www.phoronix.com/forums/forum/software/linux-gaming/1593500-asus-armoury-driver-set-to-be-introduced-in-linux-6-19) · [Patch series (lore.kernel.org)](https://lore.kernel.org/all/20251102215319.3126879-1-denis.benato@linux.dev/)
+
+### Kernel 7.0: ASUS laptop quirks + newer AMDGPU enablement
+
+Linus confirmed the next kernel will be 7.0, with the merge window now open and a stable release expected mid-April 2026. For this ASUS ROG G16, the headline is better graphics driver coverage: the DRM updates bring AMDGPU enablement for newer RDNA 3.5-class IP blocks (GFX11.5.4) plus ongoing NVIDIA Nova/Nouveau work, which should translate into better handling of both the iGPU and dGPU. Early expectations are that the Radeon 890M could see around a 20% uplift. CachyOS will pick this up as it ships.
+
+**Sources:** [Linus confirms Linux 7.0](https://www.phoronix.com/news/Linux-7.0-Is-Next) · [HID laptop quirks for ASUS ROG models](https://www.phoronix.com/news/Linux-7.0-HID) · [Linux 7.0 DRM/AMDGPU updates](https://www.phoronix.com/news/Linux-7.0-Graphics-Drivers)
 
 
 ## Additional Resources

@@ -73,30 +73,9 @@ AutomaticLogin=sten
 - If you have a second user account on the system, only the configured user gets autologin. Other accounts always get a GDM prompt.
 
 
-## Troubleshooting
-
-
-{{% details title="Autologin not working after config change" closed="true" %}}
-
-Verify the config file is correct:
-
-```bash
-sudo cat /etc/gdm/custom.conf
-```
-
-Ensure `AutomaticLoginEnable=True` is under `[daemon]` and the username matches exactly:
-
-```bash
-whoami
-```
-
-Also check that GDM is the active display manager:
-
-```bash
-systemctl status gdm
-```
-
-{{% /details %}}
+{{< callout type="info" >}}
+For troubleshooting autologin issues, see the [Known Issues]({{< relref "/docs/known-issues" >}}) page.
+{{< /callout >}}
 
 {{% details title="Disable autologin" closed="true" %}}
 

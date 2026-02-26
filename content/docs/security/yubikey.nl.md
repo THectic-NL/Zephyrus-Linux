@@ -10,17 +10,17 @@ Ik wilde mijn YubiKey gebruiken om de LUKS-schijfversleuteling bij het opstarten
 
 ## Wat op dit moment werkt
 
-De YubiKey werkt betrouwbaar voor alles **buiten** de vroege boot processen:
+De YubiKey werkt betrouwbaar voor alles **buiten** de vroege bootprocessen:
 
 - **OATH/TOTP** — Yubico Authenticator Flatpak 7.3.0 werkt uitstekend voor 2FA codes
 - **SSH** — FIDO2-backed SSH sleutels
 - **Bitwarden** — hardware-backed authenticatie
-- **pam-u2f** — YubiKey touch voor `sudo` en GDM schermvergrendeling (zie hieronder)
+- **pam-u2f** — YubiKey touch voor `sudo` en GDM-schermvergrendeling (zie hieronder)
 
 
 ## Wat Geprobeerd Is: FIDO2 LUKS Ontgrendeling
 
-Het doel was: YubiKey inpluggen → aanraken bij boot → LUKS ontgrendelt → bureaublad. Geen LUKS wachtwoord nodig dus.
+Het doel was: YubiKey inpluggen → aanraken bij boot → LUKS ontgrendelt → bureaublad. Geen LUKS-wachtwoord nodig dus.
 
 ### Wat gedaan is
 
@@ -59,7 +59,7 @@ add_dracutmodules+=" fido2 "
 
 1. **Touch venster is ~1-2 seconden** — niet genoeg tijd om te reageren. Er is geen configureerbare `token-timeout=` in crypttab tot systemd 259 uit is.
 
-2. **Geen wachtwoord fallback** — als FIDO2 mislukt, vraagt het systeem niet om een LUKS wachtwoord. Het valt terug in een dracut emergency shell met een vergrendeld root account. Dit is een bevestigde regressie geïntroduceerd in **systemd 257** (issue [#35393](https://github.com/systemd/systemd/issues/35393)). Dit wil je niet.
+2. **Geen wachtwoord fallback** — als FIDO2 mislukt, vraagt het systeem niet om een LUKS-wachtwoord. Het valt terug in een dracut emergency shell met een vergrendeld root account. Dit is een bevestigde regressie geïntroduceerd in **systemd 257** (issue [#35393](https://github.com/systemd/systemd/issues/35393)). Dit wil je niet.
 
 3. **dracut initqueue race met de YubiKey** — het USB HID apparaat is niet gereed binnen het 5-seconden dracut initqueue venster op deze hardware, waardoor `systemd-cryptsetup` mislukt voordat het de touch prompt kan tonen.
 
@@ -95,34 +95,12 @@ Bij een nieuwe poging is de enrollment procedure zelf correct — alleen de syst
 
 ## YubiKey Gebruiken voor sudo en Schermvergrendeling (pam-u2f)
 
-Een betrouwbaar alternatief dat wel werkt: vereist een YubiKey touch voor `sudo` en/of het GDM vergrendelscherm.
+Een betrouwbaar alternatief dat wel werkt: vereist een YubiKey touch voor `sudo` en/of het GDM-vergrendelscherm.
 
 > **Nog te documenteren na testen.**
 
 ---
 
-## Probleemoplossing
-
-{{% details title="Systeem vast in boot loop na FIDO2 enrollment" closed="true" %}}
-
-Als je FIDO2 hebt ingericht en niet kunt booten, tik snel op de YubiKey direct na het BIOS scherm. Het touch venster is erg kort en je zult dus op het juiste moment moeten spammen. Als je geluk hebt, boot je succesvol en kun je de FIDO2 enrollment ongedaan maken (zie hieronder).
-
-Eenmaal in het systeem, direct terugdraaien:
-```bash
-sudo systemd-cryptenroll --wipe-slot=fido2 /dev/nvme1n1p3
-sudo nano /etc/crypttab  # verwijder fido2-device=auto
-sudo rm /etc/dracut.conf.d/fido2.conf
-sudo dracut --force --regenerate-all
-```
-
-{{% /details %}}
-
-{{% details title="LUKS keyslots verifiëren" closed="true" %}}
-
-```bash
-sudo cryptsetup luksDump /dev/nvme1n1p3 | grep -E "^\s+[0-9]+:"
-```
-
-Moet alleen `0: luks2` tonen na terugdraaien. Als slot 1 nog aanwezig is, is FIDO2 nog steeds ingeschreven.
-
-{{% /details %}}
+{{< callout type="info" >}}
+Probleemoplossing voor YubiKey en LUKS staat op de pagina [Bekende Problemen]({{< relref "/docs/known-issues" >}}).
+{{< /callout >}}

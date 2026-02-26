@@ -23,7 +23,7 @@ Ik wilde GPU passthrough proberen met Looking Glass — Windows in een VM draaie
 
 ## Fase 1 — IOMMU en VFIO instellen
 
-### IOMMU-groepen checken
+### IOMMU-groepen controleren
 
 ```bash
 for d in /sys/kernel/iommu_groups/*/devices/*; do
@@ -289,7 +289,7 @@ sudo virsh start win11
 
 ## Fase 6 — Client verbinden
 
-### Shared memory permissions checken
+### Shared memory-permissies controleren
 
 ```bash
 ls -la /dev/kvmfr0

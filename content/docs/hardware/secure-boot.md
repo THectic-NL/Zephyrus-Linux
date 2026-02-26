@@ -21,7 +21,7 @@ Running `fwupdmgr security` shows what passes and what doesn't. After enabling S
 | Linux Kernel Verification | ✗ Tainted | Proprietary NVIDIA driver permanently taints the kernel — expected |
 | Linux Kernel Lockdown | ✗ Not Enabled | Requires kernel lockdown mode — not covered here, conflicts with proprietary modules |
 
-![fwupdmgr security output showing HSI:3 with UEFI Secure Boot disabled](/images/secure-boot-hsi-report.png)
+![fwupdmgr security output showing HSI:3 with UEFI Secure Boot disabled](/images/secure-boot-hsi-report.avif)
 
 
 ## How It Works
@@ -159,7 +159,7 @@ Secure Boot:  ✓ Enabled
 Vendor Keys:  microsoft
 ```
 
-![sbctl status confirming Secure Boot is enabled and Setup Mode is disabled](/images/secure-boot-sbctl-status.png)
+![sbctl status confirming Secure Boot is enabled and Setup Mode is disabled](/images/secure-boot-sbctl-status.avif)
 
 ```bash
 fwupdmgr security
@@ -167,11 +167,11 @@ fwupdmgr security
 
 The **UEFI Secure Boot** line under HSI-1 should now show **Enabled**. The overall score remains **HSI:3!** — Encrypted RAM at HSI-4 is not supported on this hardware, which is a hardware limitation unrelated to this guide.
 
-![fwupdmgr security output after enabling Secure Boot — HSI:3! with UEFI Secure Boot now passing under HSI-1](/images/secure-boot-fwupdmgr-after.png)
+![fwupdmgr security output after enabling Secure Boot — HSI:3! with UEFI Secure Boot now passing under HSI-1](/images/secure-boot-fwupdmgr-after.avif)
 
 GNOME Settings → Privacy & Security → Device Security also confirms it:
 
-![GNOME Device Security showing Protected and Secure Boot is Active](/images/secure-boot-gnome-after.png)
+![GNOME Device Security showing Protected and Secure Boot is Active](/images/secure-boot-gnome-after.avif)
 
 
 ## NVIDIA and Kernel Updates
@@ -204,55 +204,9 @@ Kernel lockdown can be enabled by adding `lockdown=integrity` to kernel paramete
 Caused by the proprietary NVIDIA driver. Can't be resolved while using proprietary NVIDIA drivers. Not a security vulnerability.
 
 
-## Troubleshooting
-
-{{% details title="sbctl status still shows 'Setup Mode: Disabled' after clearing keys" closed="true" %}}
-
-Some ASUS UEFI versions require the platform key (PK) to be explicitly deleted before Setup Mode activates.
-
-In the ASUS UEFI:
-1. Go to **Security** → **Secure Boot** → **Key Management**
-2. Select **Platform Key (PK)** → **Delete**
-3. Save & Exit and reboot
-
-After rebooting, `sudo sbctl status` should show Setup Mode: Enabled.
-
-{{% /details %}}
-
-{{% details title="System does not boot after enabling Secure Boot" closed="true" %}}
-
-If the system doesn't boot after enabling Secure Boot, one or more EFI files weren't signed.
-
-1. Reboot into the ASUS UEFI and temporarily disable Secure Boot
-2. Boot into CachyOS
-3. Check which files are unsigned:
-```bash
-sudo sbctl verify
-```
-4. Sign any missing files:
-```bash
-sudo sbctl sign -s /path/to/file.efi
-```
-5. Or re-run the batch sign:
-```bash
-sudo sbctl-batch-sign
-```
-6. Reboot and re-enable Secure Boot
-
-{{% /details %}}
-
-{{% details title="fwupdmgr shows HSI:3 instead of HSI:4 after enabling Secure Boot" closed="true" %}}
-
-The fwupd daemon caches results. Refresh the report:
-
-```bash
-fwupdmgr refresh
-fwupdmgr security --force
-```
-
-If Secure Boot shows Pass but the score is still HSI:3, check whether any other HSI-4 tests are failing. Encrypted RAM is a hardware limitation on this platform and does not count towards the score here.
-
-{{% /details %}}
+{{< callout type="info" >}}
+Troubleshooting for Secure Boot setup is documented on the [Known Issues]({{< relref "/docs/known-issues" >}}) page.
+{{< /callout >}}
 
 
 ## References

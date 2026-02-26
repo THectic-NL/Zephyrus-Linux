@@ -21,7 +21,7 @@ Het uitvoeren van `fwupdmgr security` toont wat slaagt en wat niet. Na het insch
 | Linux Kernel Verification | ✗ Tainted | Proprietary NVIDIA-driver vervuilt de kernel permanent — verwacht gedrag |
 | Linux Kernel Lockdown | ✗ Not Enabled | Vereist kernel lockdown-modus — niet behandeld hier, conflicteert met proprietary modules |
 
-![fwupdmgr security uitvoer met HSI:3 en UEFI Secure Boot uitgeschakeld](/images/secure-boot-hsi-report.png)
+![fwupdmgr security uitvoer met HSI:3 en UEFI Secure Boot uitgeschakeld](/images/secure-boot-hsi-report.avif)
 
 
 ## Hoe het werkt
@@ -159,7 +159,7 @@ Secure Boot:  ✓ Enabled
 Vendor Keys:  microsoft
 ```
 
-![sbctl status bevestigt dat Secure Boot ingeschakeld is en Setup Mode uitgeschakeld is](/images/secure-boot-sbctl-status.png)
+![sbctl status bevestigt dat Secure Boot ingeschakeld is en Setup Mode uitgeschakeld is](/images/secure-boot-sbctl-status.avif)
 
 ```bash
 fwupdmgr security
@@ -167,11 +167,11 @@ fwupdmgr security
 
 De regel **UEFI Secure Boot** onder HSI-1 moet nu **Enabled** tonen. De algehele score blijft **HSI:3!** — Encrypted RAM op HSI-4 wordt niet ondersteund op deze hardware en staat los van deze handleiding.
 
-![fwupdmgr security uitvoer na het inschakelen van Secure Boot — HSI:3! met UEFI Secure Boot nu geslaagd onder HSI-1](/images/secure-boot-fwupdmgr-after.png)
+![fwupdmgr security uitvoer na het inschakelen van Secure Boot — HSI:3! met UEFI Secure Boot nu geslaagd onder HSI-1](/images/secure-boot-fwupdmgr-after.avif)
 
 GNOME Instellingen → Privacy & Beveiliging → Apparaatbeveiliging bevestigt ook het resultaat:
 
-![GNOME Apparaatbeveiliging met Protected en Secure Boot is Active](/images/secure-boot-gnome-after.png)
+![GNOME Apparaatbeveiliging met Protected en Secure Boot is Active](/images/secure-boot-gnome-after.avif)
 
 
 ## NVIDIA en kernelupdates
@@ -204,55 +204,9 @@ Kernel lockdown kan worden ingeschakeld door `lockdown=integrity` toe te voegen 
 Veroorzaakt door de proprietary NVIDIA-driver. Kan niet worden opgelost zolang proprietary NVIDIA-drivers worden gebruikt. Dit is geen beveiligingslek.
 
 
-## Probleemoplossing
-
-{{% details title="sbctl status toont nog steeds 'Setup Mode: Disabled' na het wissen van sleutels" closed="true" %}}
-
-Sommige ASUS UEFI-versies vereisen dat de platformsleutel (PK) expliciet wordt verwijderd voordat Setup Mode wordt geactiveerd.
-
-In de ASUS UEFI:
-1. Ga naar **Security** → **Secure Boot** → **Key Management**
-2. Selecteer **Platform Key (PK)** → **Delete**
-3. Save & Exit en herstart
-
-Na het herstarten moet `sudo sbctl status` Setup Mode: Enabled tonen.
-
-{{% /details %}}
-
-{{% details title="Systeem start niet op na het inschakelen van Secure Boot" closed="true" %}}
-
-Als het systeem niet opstart na het inschakelen van Secure Boot, zijn een of meer EFI-bestanden niet ondertekend.
-
-1. Herstart naar de ASUS UEFI en schakel Secure Boot tijdelijk uit
-2. Start op in CachyOS
-3. Controleer welke bestanden niet zijn ondertekend:
-```bash
-sudo sbctl verify
-```
-4. Onderteken ontbrekende bestanden:
-```bash
-sudo sbctl sign -s /pad/naar/bestand.efi
-```
-5. Of voer de batch-ondertekening opnieuw uit:
-```bash
-sudo sbctl-batch-sign
-```
-6. Herstart en schakel Secure Boot opnieuw in
-
-{{% /details %}}
-
-{{% details title="fwupdmgr toont HSI:3 in plaats van HSI:4 na het inschakelen van Secure Boot" closed="true" %}}
-
-De fwupd-daemon slaat resultaten op in cache. Ververs het rapport:
-
-```bash
-fwupdmgr refresh
-fwupdmgr security --force
-```
-
-Als Secure Boot Pass toont maar de score nog steeds HSI:3 is, controleer dan of andere HSI-4-tests falen. Encrypted RAM is een hardwarebeperking op dit platform en telt hier niet mee voor de score.
-
-{{% /details %}}
+{{< callout type="info" >}}
+Probleemoplossing voor Secure Boot staat op de pagina [Bekende Problemen]({{< relref "/docs/known-issues" >}}).
+{{< /callout >}}
 
 
 ## Referenties

@@ -53,7 +53,7 @@ PEAP/MSCHAPv2 met CA-validatie via de systeem-truststore en `domain-suffix-match
 Een Python-script automatiseert de volledige `nmcli`-verbindingsconfiguratie voor Saxion:
 
 ```bash
-curl -LO https://zephyrus-linux.stentijhuis.nl/scripts/saxion-eduroam.py
+curl -LO https://zephyrus-linux.stensel.nl/scripts/saxion-eduroam.py
 python3 saxion-eduroam.py
 ```
 

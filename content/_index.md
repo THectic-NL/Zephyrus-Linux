@@ -28,14 +28,6 @@ toc: false
 **Personal documentation.** I'm not a developer or Linux expert — just someone who switched to Linux on this laptop and figured things out along the way. I share what worked for me so others don't have to start from scratch. Everything here is at your own risk. Feel free to reach out if something doesn't work; I'm happy to think along. Running kernel 6.19.3-2 on CachyOS (Arch).
 {{< /callout >}}
 
-## News
-
-- **Moved to CachyOS** — settled on CachyOS as daily driver after testing multiple distros; best hardware support for the G16
-- **Kernel 7.0** — ASUS laptop quirks and AMDGPU enablement for RDNA 3.5; Radeon 890M expected ~20% uplift
-- **Kernel 6.19** — `asus-armoury` driver merged into mainline Linux; CachyOS 6.19.3-2 includes it
-
-[Read all news →](/docs/news)
-
 ## Current System Configuration
 
 | Component | Specification |
@@ -47,6 +39,7 @@ toc: false
 | **OS** | CachyOS (Arch) |
 | **Kernel** | 6.19.3-2 |
 | **Display Server** | Wayland (GNOME 49) |
+| **CPU Scheduler** | scx_lavd (sched_ext) |
 | **Secure Boot** | Enabled |
 
 ## Getting Started
