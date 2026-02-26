@@ -65,7 +65,7 @@ Coming from Windows, some things feel off without the right shortcuts. These are
 | 5 | Open file manager | `nautilus` | `Super+E` |
 | 6 | Emoji picker | `flatpak run it.mijorus.smile` | Copilot key |
 
-GNOME doesn't have built-in shortcuts for the file manager or an emoji picker, so these need to be created manually. See [Smile](#smile-emoji-picker) for how the Copilot key is used.
+GNOME doesn't have built-in shortcuts for the file manager or an emoji picker, so these need to be created manually. See [Smile](#smile--emoji-picker) for how the Copilot key is used.
 
 ### GNOME window focus — apps opening in the background
 

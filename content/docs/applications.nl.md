@@ -65,7 +65,7 @@ Als je vanuit Windows komt, voelt een paar dingen meteen anders zonder de juiste
 | 5 | Bestandsbeheer openen | `nautilus` | `Super+E` |
 | 6 | Emoji-picker | `flatpak run it.mijorus.smile` | Copilot-toets |
 
-GNOME heeft standaard geen sneltoetsen voor de bestandsbeheerder of een emoji-picker — die moet je handmatig aanmaken. Zie [Smile](#smile-emoji-picker) voor hoe de Copilot-toets wordt gebruikt.
+GNOME heeft standaard geen sneltoetsen voor de bestandsbeheerder of een emoji-picker — die moet je handmatig aanmaken. Zie [Smile](#smile--emoji-picker) voor hoe de Copilot-toets wordt gebruikt.
 
 ### GNOME-vensterfocus — apps die op de achtergrond openen
 
