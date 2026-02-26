@@ -1,14 +1,16 @@
 ---
 title: "asusctl & ROG Control Center"
-weight: 22
+weight: 3
+next: docs/security/autologin
 ---
 
-The Zephyrus G16 has a lot of hardware features that don't work out of the box on Linux — fan curves, performance profiles, the Slash LED on the lid, GPU switching, battery charge limiting. This page documents how I got all of it working using asusctl and the ASUS Linux project tools. On CachyOS, these tools are available directly from the package repos.
+The Zephyrus G16 has a lot of hardware features that don't work out of the box on Linux: fan curves, performance profiles, the Slash LED on the lid, GPU switching, battery charge limiting. This page documents how I got all of it working using asusctl and the ASUS Linux project tools. On CachyOS, these tools are available directly from the package repos.
 
 **Package Information:**
-- `asusctl` 6.3.2-1 — CLI for fan curves, profiles, battery limit, RGB, Slash LED, GPU switching
-- `asusctl-rog-gui` 6.3.2 — ROG Control Center GUI
-- Source: CachyOS/Arch repos (packages maintained by Luke Jones, primary asusctl developer)
+- `asusd` 6.3.4: background daemon (backend) that manages all hardware features
+- `asusctl` 6.3.4: CLI frontend for fan curves, profiles, battery limit, RGB, Slash LED, GPU switching
+- `rog-control-center` 6.3.4: graphical frontend, part of the asusctl/asusd suite
+- Source: [asus-linux releases](https://gitlab.com/asus-linux/asusctl/-/releases) · available in CachyOS/Arch repos
 
 
 ## Installation
@@ -22,10 +24,11 @@ sudo pacman -S asusctl rog-control-center
 ```
 
 This installs:
-- `asusctl` — main CLI daemon and client
-- `asusctl-rog-gui` — ROG Control Center GUI
+- `asusd`: the backend daemon that manages all ASUS hardware features
+- `asusctl`: CLI frontend that communicates with asusd
+- `rog-control-center`: graphical frontend that communicates with asusd
 
-On CachyOS this is all you need — both packages are available directly from the repos and everything works out of the box. No kernel patching or deep system configuration required.
+On CachyOS this is all you need; both packages are available directly from the repos and everything works out of the box. No kernel patching or deep system configuration required.
 
 ### Enable services
 
@@ -111,9 +114,9 @@ asusctl slash --enable -b false -s false
 ```
 
 **What these flags do:**
-- `--enable` — turn on the Slash LED
-- `-b false` — disable on battery power
-- `-s false` — disable during sleep
+- `--enable`: turn on the Slash LED
+- `-b false`: disable on battery power
+- `-s false`: disable during sleep
 
 **Set animation:**
 ```bash
@@ -295,13 +298,13 @@ Known issues and troubleshooting for asusctl & ROG Control Center are documented
 
 ### Kernel 6.19: asus-armoury driver lands in mainline
 
-The `asus-armoury` driver has been [merged into Linux 6.19](https://www.phoronix.com/news/ASUS-Armoury-Driver-Linux-6.19). This new `platform/x86` driver replaces parts of the older `asus-wmi` with a cleaner sysfs-based API, enabling panel mode switching, APU memory allocation, PPT tuning, and more directly from the kernel. The driver is entirely community-developed by [Luke Jones](https://asus-linux.org/) (ASUS Linux project), with no involvement from ASUS themselves. CachyOS ships kernel 6.19.3-2 which includes this driver and additional ASUS-specific patches.
+The `asus-armoury` driver has been [merged into Linux 6.19](https://www.phoronix.com/news/ASUS-Armoury-Driver-Linux-6.19). This new `platform/x86` driver replaces parts of the older `asus-wmi` with a cleaner sysfs-based API, enabling panel mode switching, APU memory allocation, PPT tuning, and more directly from the kernel. The driver is entirely community-developed by the [asus-linux team](https://asus-linux.org/), with no involvement from ASUS themselves. CachyOS ships kernel 6.19.3-2 which includes this driver and additional ASUS-specific patches.
 
-**Before** — basic asusctl controls without Armoury settings:
+**Before**: basic asusctl controls without Armoury settings:
 
 ![ROG Control before asus-armoury in mainline](/images/rog-control-armoury.avif)
 
-**After** — full Armoury settings exposed, including PPT/power limit tuning:
+**After**: full Armoury settings exposed, including PPT/power limit tuning:
 
 ![ROG Control System Control with Armoury settings and power limit tuning](/images/rog-control-system-control.avif)
 
@@ -316,7 +319,7 @@ Linus confirmed the next kernel will be 7.0, with the merge window now open and 
 
 ## Additional Resources
 
-- [asus-linux.org](https://asus-linux.org/) — Official project site
-- [asusctl GitLab](https://gitlab.com/asus-linux/asusctl) — Source code and issue tracker
-- [CachyOS Wiki: ASUS](https://wiki.cachyos.org/) — CachyOS-specific documentation
-- [NVIDIA Driver Installation Guide]({{< relref "/docs/hardware/nvidia-driver-installation" >}}) — NVIDIA driver setup and known issues
+- [asus-linux.org](https://asus-linux.org/): official project site
+- [asusctl GitLab](https://gitlab.com/asus-linux/asusctl): source code and issue tracker
+- [CachyOS Wiki: ASUS](https://wiki.cachyos.org/): CachyOS-specific documentation
+- [NVIDIA Driver Installation Guide]({{< relref "/docs/hardware/nvidia-driver-installation" >}}): NVIDIA driver setup and known issues

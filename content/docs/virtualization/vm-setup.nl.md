@@ -1,9 +1,10 @@
 ---
 title: "Windows 11 VM Setup"
-weight: 14
+weight: 1
+prev: docs/networking/eduroam-network-installation
 ---
 
-Sommige dingen draaien gewoon niet op Linux — Microsoft 365 is het meest voor de hand liggende voorbeeld. Daarvoor heb ik een Windows 11 VM opgezet met KVM/QEMU via virt-manager. Met VirtIO-drivers en SPICE GL-acceleratie via de AMD iGPU is de performance goed genoeg voor dagelijks kantoorwerk.
+Sommige dingen draaien gewoon niet op Linux, Microsoft 365 is het meest voor de hand liggende voorbeeld. Daarvoor heb ik een Windows 11 VM opgezet met KVM/QEMU via virt-manager. Met VirtIO-drivers en SPICE GL-acceleratie via de AMD iGPU is de performance goed genoeg voor dagelijks kantoorwerk.
 
 > **GPU passthrough gewenst?** Als je near-native GPU performance wilt in je VM, zie de [Looking Glass Poging]({{< relref "/docs/virtualization/looking-glass-attempt" >}}). Spoiler: het werkt niet op deze laptop door hardwarebeperkingen, maar de documentatie kan nuttig zijn voor andere hardware.
 
@@ -33,7 +34,7 @@ Gebruik de officiële Windows 11 Media Creation Tool met een activatiemethode:
 
 **Optie 3: AtlasOS (Geoptimaliseerd voor prestatie)**
 
-[AtlasOS](https://atlasos.net/) creëert een uitgeklede Windows 11 ISO met bloatware verwijderd en onnodige services uitgeschakeld — wat zorgt voor aanzienlijk betere prestaties in een VM.
+[AtlasOS](https://atlasos.net/) creëert een uitgeklede Windows 11 ISO met bloatware verwijderd en onnodige services uitgeschakeld, wat zorgt voor aanzienlijk betere prestaties in een VM.
 
 **Een AtlasOS ISO aanmaken:**
 
@@ -187,13 +188,13 @@ Nadat Windows is geïnstalleerd en de guest tools aanwezig zijn, kun je de VM-co
 
 | Instelling | Wat het doet |
 |------------|-------------|
-| **Disk: `cache="writeback"` `io="threads"`** | Write-back caching met threaded I/O — significant snellere diskprestaties dan de standaard. Veilig voor niet-kritieke VM's |
-| **Disk: `discard="unmap"`** | Geeft TRIM/discard commando's door aan de host — voorkomt dat het qcow2-bestand onnodig groeit |
+| **Disk: `cache="writeback"` `io="threads"`** | Write-back caching met threaded I/O, wat zorgt voor significant snellere diskprestaties dan de standaard. Veilig voor niet-kritieke VM's |
+| **Disk: `discard="unmap"`** | Geeft TRIM/discard commando's door aan de host, waardoor het qcow2-bestand niet onnodig groeit |
 | **Hyper-V enlightenments** | Windows-specifieke paravirtualisatie-features (`vapic`, `synic`, `stimer`, `tlbflush`, `ipi`, `avic`, etc.) die de guest-prestaties aanzienlijk verbeteren |
-| **CPU: `host-passthrough`** | Toont het echte CPU-model aan de guest — beste prestaties, vereist voor sommige applicaties |
+| **CPU: `host-passthrough`** | Toont het echte CPU-model aan de guest: beste prestaties, vereist voor sommige applicaties |
 | **CPU topologie: 8 cores, 1 thread** | Presenteert 8 fysieke cores aan Windows. Komt overeen met de werkelijke toewijzing zonder SMT-overhead |
-| **SPICE met GL-acceleratie** | Gebruikt `gl enable="yes"` met `rendernode` naar de AMD iGPU — hardware-versnelde display-output |
-| **VirtIO inputs** | VirtIO toetsenbord en tablet in plaats van PS/2 — lagere input-latentie |
+| **SPICE met GL-acceleratie** | Gebruikt `gl enable="yes"` met `rendernode` naar de AMD iGPU voor hardware-versnelde display-output |
+| **VirtIO inputs** | VirtIO toetsenbord en tablet in plaats van PS/2 voor lagere input-latentie |
 | **QEMU Guest Agent** | Het `org.qemu.guest_agent.0` kanaal maakt communicatie mogelijk tussen host en guest (graceful shutdown, filesystem freeze voor snapshots) |
 | **USB redirection** | SPICE USB-omleidingsapparaten maken het mogelijk om USB-apparaten on-the-fly van host naar guest door te geven |
 | **Watchdog (iTCO)** | Reset de VM automatisch als de guest vastloopt |
@@ -317,7 +318,7 @@ Nadat Windows is geïnstalleerd en de guest tools aanwezig zijn, kun je de VM-co
 </domain>
 ```
 
-> Dit is een opgeschoonde versie zonder automatisch gegenereerde PCI-adressen en controller-definities — libvirt voegt die zelf toe. Je kunt je eigen XML exporteren met `virsh dumpxml win11`.
+> Dit is een opgeschoonde versie zonder automatisch gegenereerde PCI-adressen en controller-definities; libvirt voegt die zelf toe. Je kunt je eigen XML exporteren met `virsh dumpxml win11`.
 
 {{% /details %}}
 

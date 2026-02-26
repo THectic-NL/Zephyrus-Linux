@@ -30,7 +30,7 @@ Alles wat ik heb opgeschreven tijdens het draaien van CachyOS op de ROG Zephyrus
   >}}
   {{< hextra/feature-card
     title="Secure Boot"
-    subtitle="Aangepaste ondertekeningssleutels met sbctl, HSI:3 naar HSI:4"
+    subtitle="Aangepaste ondertekeningssleutels met sbctl, UEFI Secure Boot ingeschakeld"
     icon="shield-check"
     link="hardware/secure-boot"
   >}}

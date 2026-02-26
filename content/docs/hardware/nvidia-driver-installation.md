@@ -1,6 +1,7 @@
 ---
 title: "NVIDIA Driver Installation"
-weight: 11
+weight: 1
+prev: docs/getting-started
 ---
 
 The G16 has an NVIDIA RTX 4060 alongside the AMD iGPU. The open-source Nouveau driver doesn't perform well on modern NVIDIA hardware, so proprietary drivers are necessary.
@@ -12,14 +13,14 @@ The G16 has an NVIDIA RTX 4060 alongside the AMD iGPU. The open-source Nouveau d
 
 ## CachyOS (Arch)
 
-CachyOS ships with NVIDIA drivers pre-installed as part of the installer. If you selected the NVIDIA option during setup, no manual driver installation is needed — the driver is already active and fully configured.
+CachyOS automatically detects your hardware during installation and sets up the NVIDIA driver without any manual steps. No selection required; by the time the installer finishes, the driver is already active and fully configured.
 
 See [Post-Installation Verification](#post-installation-verification) to confirm everything is working correctly.
 
 
 ## Fedora
 
-The following covers the full manual installation process. I ran into several crashes and lockups during setup that took some time to track down — those are documented on the [Known Issues]({{< relref "/docs/known-issues" >}}) page.
+The following covers the full manual installation process. I ran into several crashes and lockups during setup that took some time to track down; those are documented on the [Known Issues]({{< relref "/docs/known-issues" >}}) page.
 
 ## Prerequisites
 
@@ -161,13 +162,13 @@ sudo systemctl enable nvidia-hibernate.service nvidia-suspend.service nvidia-res
 
 These services prevent GPU state issues after suspend/resume cycles.
 
-**Important: Do NOT enable `nvidia-powerd` — mask it permanently**
+**Important: Do NOT enable `nvidia-powerd`; mask it permanently**
 
 The `nvidia-powerd.service` manages NVIDIA Dynamic Boost, which shifts extra wattage (~5-15W) from the CPU to the GPU during heavy GPU loads. While useful on Intel-based laptops, it conflicts with AMD ATPX power management on the Zephyrus G16 and causes soft lockups and "GPU has fallen off the bus" errors.
 
 On this laptop, GPU power is managed via ATPX (AMD-driven via ACPI). The NVIDIA suspend/hibernate/resume services and `supergfxctl` handle power states correctly without `nvidia-powerd`.
 
-**What you lose by disabling it:** Minimal — a few FPS less during heavy GPU workloads. The ~5-15W Dynamic Boost is not worth the instability on AMD ATPX hardware.
+**What you lose by disabling it:** Minimal. A few FPS less during heavy GPU workloads. The ~5-15W Dynamic Boost is not worth the instability on AMD ATPX hardware.
 
 **Disable and mask permanently:**
 ```bash
@@ -176,7 +177,7 @@ sudo systemctl stop nvidia-powerd.service
 sudo systemctl mask nvidia-powerd.service
 ```
 
-Masking creates a symlink to `/dev/null`, preventing any process — including NVIDIA driver updates via `dnf` — from re-enabling the service.
+Masking creates a symlink to `/dev/null`, preventing any process (including NVIDIA driver updates via `dnf`) from re-enabling the service.
 
 **If you want to try re-enabling it later** (e.g., after a kernel or driver update that may fix the ATPX conflict):
 ```bash
@@ -267,7 +268,7 @@ cp GA605WV_1002_104D158E_CMDEF.icm ~/.local/share/icc/
 
 **Note:** If GNOME Settings shows old technical names (e.g., "ASUS GA605WV 1002 104D158E CMDEF" instead of "Native"), close Settings and reopen, or log out/in to refresh the color cache.
 
-The filename encodes your GPU (`1002` = AMD, `10DE` = NVIDIA) and panel ID — match these to your unit using the panel table above. All profiles are in the [`/icc-profiles/`](https://github.com/Stensel8/Zephyrus-Linux/tree/main/static/icc-profiles) directory.
+The filename encodes your GPU (`1002` = AMD, `10DE` = NVIDIA) and panel ID. Match these to your unit using the panel table above. All profiles are in the [`/icc-profiles/`](https://github.com/Stensel8/Zephyrus-Linux/tree/main/static/icc-profiles) directory.
 
 **Background:**
 

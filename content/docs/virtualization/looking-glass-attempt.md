@@ -1,13 +1,14 @@
 ---
-title: "Looking Glass B7 — GPU Passthrough Attempt"
-weight: 21
+title: "Looking Glass B7: GPU Passthrough Attempt"
+weight: 2
+next: docs/known-issues
 ---
 
-I wanted to try GPU passthrough with Looking Glass — running Windows in a VM but with the real NVIDIA GPU assigned to it, getting near-native performance. Spent a good few hours on it. It doesn't work on this laptop, and the reason is a hardware limitation that Looking Glass can't work around. I'm documenting the full attempt here so others can save themselves the time.
+I wanted to try GPU passthrough with Looking Glass: running Windows in a VM but with the real NVIDIA GPU assigned to it, getting near-native performance. Spent a good few hours on it. It doesn't work on this laptop, and the reason is a hardware limitation that Looking Glass can't work around. I'm documenting the full attempt here so others can save themselves the time.
 
 > **Prerequisite:** This assumes you already have a working Windows 11 VM set up with virt-manager. If not, follow the [VM Setup Guide]({{< relref "/docs/virtualization/vm-setup" >}}) first.
 
-> **TL;DR:** Looking Glass does **not** work on the ASUS ROG Zephyrus G16 GA605WV. The RTX 4060 has no physical display outputs — all ports (HDMI, USB-C) are routed through the AMD iGPU. Windows can't find a "valid output device" for frame capture, so the host application fails immediately. This document describes everything that was tried and why it failed.
+> **TL;DR:** Looking Glass does **not** work on the ASUS ROG Zephyrus G16 GA605WV. The RTX 4060 has no physical display outputs; all ports (HDMI, USB-C) are routed through the AMD iGPU. Windows can't find a "valid output device" for frame capture, so the host application fails immediately. This document describes everything that was tried and why it failed.
 
 
 ## What is Looking Glass?
@@ -15,13 +16,13 @@ I wanted to try GPU passthrough with Looking Glass — running Windows in a VM b
 [Looking Glass](https://looking-glass.io) is an open-source project that allows you to use a GPU-passthrough Windows VM **without a physical monitor** attached to the dGPU. The Windows VM gets the real GPU assigned and the rendered image is streamed to the Linux host via shared memory (IVSHMEM). The result is near-native GPU performance in a VM, visible in a window on your Linux desktop.
 
 **Requirements for operation:**
-- dGPU with direct display output (DisplayPort, HDMI) — or a virtual display dongle
+- dGPU with direct display output (DisplayPort, HDMI), or a virtual display dongle
 - IOMMU isolation of the dGPU from the rest of the system
 - KVMFR kernel module on the host
 - Looking Glass host application in the Windows VM
 
 
-## Phase 1 — Setting up IOMMU and VFIO
+## Phase 1: Setting up IOMMU and VFIO
 
 ### Checking IOMMU groups
 
@@ -98,7 +99,7 @@ nvidia-smi
 ```
 
 
-## Phase 2 — Installing KVMFR kernel module
+## Phase 2: Installing KVMFR kernel module
 
 The KVMFR module provides the `/dev/kvmfr0` interface for the IVSHMEM shared memory buffer.
 
@@ -151,7 +152,7 @@ sudo chmod 660 /dev/kvmfr0
 ```
 
 
-## Phase 3 — Building the Looking Glass client
+## Phase 3: Building the Looking Glass client
 
 ### Downloading the source
 
@@ -208,11 +209,11 @@ looking-glass-client --version
 ```
 
 
-## Phase 4 — Modifying the VM XML
+## Phase 4: Modifying the VM XML
 
 Changes via `sudo virsh edit win11`:
 
-**SPICE — Disable GL (input/clipboard only):**
+**SPICE: Disable GL (input/clipboard only):**
 ```xml
 <graphics type="spice">
   <listen type="none"/>
@@ -222,7 +223,7 @@ Changes via `sudo virsh edit win11`:
 </graphics>
 ```
 
-**Video — Looking Glass replaces the display:**
+**Video: Looking Glass replaces the display:**
 ```xml
 <video>
   <model type="none"/>
@@ -254,7 +255,7 @@ Changes via `sudo virsh edit win11`:
 ```
 
 
-## Phase 5 — Installing the Looking Glass host in Windows
+## Phase 5: Installing the Looking Glass host in Windows
 
 ### Temporarily restoring VGA access
 
@@ -287,7 +288,7 @@ sudo virsh start win11
 ```
 
 
-## Phase 6 — Connecting the client
+## Phase 6: Connecting the client
 
 ### Checking shared memory permissions
 
@@ -305,7 +306,7 @@ sudo chown sten:kvm /dev/shm/looking-glass  # if permissions are incorrect
 looking-glass-client -s
 ```
 
-Result: **"Host Application Not Running"** — shared memory works, but the host is not sending frames.
+Result: **"Host Application Not Running"**; shared memory works, but the host is not sending frames.
 
 
 ## Why it failed
@@ -334,7 +335,7 @@ Get-PnpDevice | Where-Object {
 # Microsoft Basic Display Adapter     OK  Display
 ```
 
-The RTX 4060 was recognized and the driver was installed — but the host could not use it because there is no display output.
+The RTX 4060 was recognized and the driver was installed, but the host could not use it because there is no display output.
 
 ### The fundamental hardware limitation
 
@@ -347,7 +348,7 @@ card1-DP-1 to DP-8  ← NVIDIA virtual outputs (no physical connectors)
 card1-eDP-1         ← internal display via NVIDIA (dGPU MUX mode)
 ```
 
-**All physical ports on this laptop are on the AMD iGPU.** The RTX 4060 has no physical display connectors whatsoever. DirectX 12 and DXGI require an active display output for frame capture — this is physically impossible on this laptop.
+**All physical ports on this laptop are on the AMD iGPU.** The RTX 4060 has no physical display connectors whatsoever. DirectX 12 and DXGI require an active display output for frame capture, which is physically impossible on this laptop.
 
 
 ## Additional findings
@@ -408,16 +409,16 @@ Restore VM XML via `sudo virsh edit win11`: remove the two `<hostdev>` blocks an
 
 Looking Glass is an impressive project but requires hardware that is simply not present on the Zephyrus G16. For Windows applications on this laptop, the best options are:
 
-- **[virt-manager with VirtIO + SPICE GL]({{< relref "/docs/virtualization/vm-setup" >}})** — good performance for office/productivity (see the [VM Setup Guide]({{< relref "/docs/virtualization/vm-setup" >}}) for configuration details)
-- **Bottles/Wine** — for compatible Windows applications
-- **Native Linux alternatives** — when available
+- **[virt-manager with VirtIO + SPICE GL]({{< relref "/docs/virtualization/vm-setup" >}})**: good performance for office/productivity (see the [VM Setup Guide]({{< relref "/docs/virtualization/vm-setup" >}}) for configuration details)
+- **Bottles/Wine**: for compatible Windows applications
+- **Native Linux alternatives**: when available
 
 
 ## References
 
 - [Looking Glass official documentation B7](https://looking-glass.io/docs/B7/)
 - [Looking Glass GitHub](https://github.com/gnif/LookingGlass)
-- [VFIO GPU Passthrough Guide — Arch Wiki](https://wiki.archlinux.org/title/PCI_passthrough_via_OVMF)
-- [GA605WV display routing — Arch Linux Forums](https://bbs.archlinux.org/viewtopic.php?id=299932)
+- [VFIO GPU Passthrough Guide - Arch Wiki](https://wiki.archlinux.org/title/PCI_passthrough_via_OVMF)
+- [GA605WV display routing - Arch Linux Forums](https://bbs.archlinux.org/viewtopic.php?id=299932)
 
 

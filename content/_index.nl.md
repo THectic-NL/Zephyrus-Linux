@@ -25,7 +25,7 @@ toc: false
 <div class="hx-mt-6"></div>
 
 {{< callout type="info" >}}
-**Persoonlijke documentatie.** Ik ben geen developer of Linux-expert — gewoon iemand die overgestapt is naar Linux op deze laptop en dingen uitzoekend onderweg. Ik deel wat werkte zodat anderen niet helemaal opnieuw hoeven te beginnen. Alles is op eigen risico. Kom je ergens niet uit, laat het gerust weten — ik denk graag mee. Draait kernel 6.19.3-2 op CachyOS (Arch).
+**Persoonlijke documentatie.** Ik ben geen developer of Linux-expert, gewoon iemand die overgestapt is naar Linux op deze laptop en dingen uitzoekend onderweg. Ik deel wat werkte zodat anderen niet helemaal opnieuw hoeven te beginnen. Alles is op eigen risico. Kom je ergens niet uit, laat het gerust weten; ik denk graag mee. Draait kernel 6.19.3-2 op CachyOS (Arch).
 {{< /callout >}}
 
 ## Huidige Systeemconfiguratie
@@ -66,7 +66,7 @@ toc: false
   >}}
   {{< hextra/feature-card
     title="Secure Boot"
-    subtitle="Aangepaste ondertekeningssleutels met sbctl, HSI:3 naar HSI:4"
+    subtitle="Aangepaste ondertekeningssleutels met sbctl, UEFI Secure Boot ingeschakeld"
     icon="shield-check"
     link="docs/hardware/secure-boot"
   >}}

@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-Saxion Eduroam Configuration Script (GUI Version)
------------------------------------------------
-Configures eduroam on Linux using NetworkManager (nmcli).
-Securely uses system CA certificates and domain validation.
+Saxion Eduroam Installer (Linux)
+-------------------------------
+Configures eduroam Wi-Fi for Saxion University using NetworkManager (nmcli).
+Uses secure PEAP/MSCHAPv2 with system CA certificates and domain validation.
 
-Rewritten by: Stensel8
-Based on the official work from: https://cat.eduroam.org/
+Authors: Stensel8, GitHub Copilot
+This rewrite is based on: https://cat.eduroam.org/
+The original script was incompatible with Linux 6.19+ and outdated (last updated: 2024-01-31).
 """
 
 from __future__ import annotations

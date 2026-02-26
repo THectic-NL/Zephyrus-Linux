@@ -1,6 +1,6 @@
 ---
 title: "Netwerk"
-weight: 30
+weight: 5
 toc: false
 ---
 

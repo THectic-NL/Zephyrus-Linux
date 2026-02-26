@@ -30,7 +30,7 @@ Everything I've documented while running CachyOS on the ROG Zephyrus G16. Start 
   >}}
   {{< hextra/feature-card
     title="Secure Boot"
-    subtitle="Custom signing keys with sbctl, HSI:3 to HSI:4"
+    subtitle="Custom signing keys with sbctl, UEFI Secure Boot enabled"
     icon="shield-check"
     link="hardware/secure-boot"
   >}}

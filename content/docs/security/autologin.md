@@ -1,9 +1,10 @@
 ---
 title: "GDM Autologin"
-weight: 19
+weight: 1
+prev: docs/hardware/asusctl-rog-control
 ---
 
-After unlocking the disk with LUKS at boot, I didn't want to type a second password to log in to the desktop. This skips the GDM login screen entirely — you enter your disk password once, and the desktop loads straight away. The screen lock still requires your password as normal.
+After unlocking the disk with LUKS at boot, I didn't want to type a second password to log in to the desktop. This skips the GDM login screen entirely: you enter your disk password once, and the desktop loads straight away. The screen lock still requires your password as normal.
 
 **Boot behavior:**
 - Power on → LUKS password prompt → desktop (no second login)

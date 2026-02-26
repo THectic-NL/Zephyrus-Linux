@@ -1,6 +1,6 @@
 ---
 title: "Beveiliging & Privacy"
-weight: 20
+weight: 3
 toc: false
 ---
 

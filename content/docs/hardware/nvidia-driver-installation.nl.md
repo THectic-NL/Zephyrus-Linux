@@ -1,6 +1,7 @@
 ---
 title: "NVIDIA Driver Installatie"
-weight: 11
+weight: 1
+prev: docs/getting-started
 ---
 
 De G16 heeft een NVIDIA RTX 4060 naast de AMD iGPU. De open-source Nouveau driver werkt niet goed op moderne NVIDIA-hardware, dus proprietary drivers zijn nodig.
@@ -12,14 +13,14 @@ De G16 heeft een NVIDIA RTX 4060 naast de AMD iGPU. De open-source Nouveau drive
 
 ## CachyOS (Arch)
 
-CachyOS levert NVIDIA drivers standaard mee als onderdeel van de installer. Als je tijdens de installatie voor de NVIDIA-optie hebt gekozen, is de driver al aanwezig en volledig geconfigureerd — handmatige installatie is niet nodig.
+CachyOS detecteert je hardware automatisch tijdens de installatie en installeert de NVIDIA-driver zonder handmatige stappen. Je hoeft zelf niets te selecteren; als de installer klaar is, is de driver al actief en volledig geconfigureerd.
 
 Ga naar [Verificatie Na Installatie](#verificatie-na-installatie) om te bevestigen dat alles correct werkt.
 
 
 ## Fedora
 
-De volgende stappen behandelen het volledige handmatige installatieproces. Ik liep tijdens de installatie tegen meerdere crashes en lockups aan die wat tijd kostten om op te sporen — die staan gedocumenteerd op de pagina [Bekende Problemen]({{< relref "/docs/known-issues" >}}).
+De volgende stappen behandelen het volledige handmatige installatieproces. Ik liep tijdens de installatie tegen meerdere crashes en lockups aan die wat tijd kostten om op te sporen; die staan gedocumenteerd op de pagina [Bekende Problemen]({{< relref "/docs/known-issues" >}}).
 
 ## Vereisten
 
@@ -161,13 +162,13 @@ sudo systemctl enable nvidia-hibernate.service nvidia-suspend.service nvidia-res
 
 Deze services voorkomen GPU state problemen na suspend/resume cycli.
 
-**Belangrijk: `nvidia-powerd` niet activeren — permanent masken**
+**Belangrijk: `nvidia-powerd` niet activeren; permanent masken**
 
 De `nvidia-powerd.service` beheert NVIDIA Dynamic Boost, waarmee extra wattage (~5-15W) van de CPU naar de GPU geschoven wordt tijdens zware GPU-belasting. Hoewel nuttig op Intel-gebaseerde laptops, conflicteert het met AMD ATPX power management op de Zephyrus G16 en veroorzaakt soft lockups en "GPU has fallen off the bus" fouten.
 
 Op deze laptop wordt GPU-vermogensbeheer geregeld via ATPX (AMD-gestuurd via ACPI). De NVIDIA suspend/hibernate/resume services en `supergfxctl` beheren power states correct zonder `nvidia-powerd`.
 
-**Wat je verliest door het uit te zetten:** Minimaal — een paar FPS minder bij zware GPU workloads. De ~5-15W Dynamic Boost is de instabiliteit niet waard op AMD ATPX hardware.
+**Wat je verliest door het uit te zetten:** Minimaal. Een paar FPS minder bij zware GPU workloads. De ~5-15W Dynamic Boost is de instabiliteit niet waard op AMD ATPX hardware.
 
 **Uitschakelen en permanent masken:**
 ```bash
@@ -176,7 +177,7 @@ sudo systemctl stop nvidia-powerd.service
 sudo systemctl mask nvidia-powerd.service
 ```
 
-Masken maakt een symlink naar `/dev/null`, waardoor geen enkel proces — ook geen NVIDIA driver updates via `dnf` — de service opnieuw kan activeren.
+Masken maakt een symlink naar `/dev/null`, waardoor geen enkel proces (ook geen NVIDIA driver updates via `dnf`) de service opnieuw kan activeren.
 
 **Als je het later opnieuw wilt proberen** (bijv. na een kernel- of driver-update die het ATPX-conflict mogelijk verhelpt):
 ```bash
@@ -266,7 +267,7 @@ cp GA605WV_1002_104D158E_CMDEF.icm ~/.local/share/icc/
 
 **Opmerking:** Als GNOME Settings de oude technische namen toont (bijv. "ASUS GA605WV 1002 104D158E CMDEF" in plaats van "Native"), sluit Settings af en heropen, of log uit/in om de color cache te verversen.
 
-De bestandsnaam bevat je GPU (`1002` = AMD, `10DE` = NVIDIA) en paneel-ID — match deze aan jouw exemplaar via de paneeltabel hierboven. Alle profielen staan in de [`/icc-profiles/`](https://github.com/Stensel8/Zephyrus-Linux/tree/main/static/icc-profiles) map.
+De bestandsnaam bevat je GPU (`1002` = AMD, `10DE` = NVIDIA) en paneel-ID. Match deze aan jouw exemplaar via de paneeltabel hierboven. Alle profielen staan in de [`/icc-profiles/`](https://github.com/Stensel8/Zephyrus-Linux/tree/main/static/icc-profiles) map.
 
 **Achtergrond:**
 
