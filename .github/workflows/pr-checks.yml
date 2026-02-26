@@ -133,5 +133,6 @@ jobs:
           args: >-
             --offline
             --include-fragments
+            --root-dir ./public
             public/**/*.html
           fail: true

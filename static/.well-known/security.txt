@@ -1,4 +1,4 @@
 Contact: https://github.com/Stensel8/Zephyrus-Linux/issues
-Canonical: https://zephyrus-linux.stentijhuis.nl/.well-known/security.txt
+Canonical: https://zephyrus-linux.stensel.nl/.well-known/security.txt
 Expires: 2027-02-18T00:00:00.000Z
 Preferred-Languages: en, nl

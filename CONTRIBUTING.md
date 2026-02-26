@@ -1,5 +1,9 @@
 # Contributing
 
+Also own a ROG Zephyrus device and are running Linux? And want to contribute or give opinions and/or tips? Issues and Pull Requests are welcome!
+
+---
+
 ## Commit messages
 
 This project uses [Conventional Commits](https://www.conventionalcommits.org/).

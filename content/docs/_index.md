@@ -6,62 +6,105 @@ toc: false
 
 # My Setup Notes
 
-Everything I've documented while running Fedora Linux on the ROG Zephyrus G16. Start with Getting Started if you're setting up from scratch, or jump to whichever guide is relevant to your situation.
+Everything I've documented while running CachyOS on the ROG Zephyrus G16. Start with Getting Started if you're setting up from scratch, or jump to whichever section is relevant to your situation.
 
 ## Getting Started
 
 {{< hextra/feature-grid >}}
   {{< hextra/feature-card
     title="Getting Started"
-    subtitle="From fresh Fedora install to fully configured system"
+    subtitle="From fresh CachyOS install to fully configured system"
     icon="play"
     link="getting-started"
   >}}
 {{< /hextra/feature-grid >}}
 
-## Reference Guides
+## Hardware & Drivers
 
 {{< hextra/feature-grid >}}
   {{< hextra/feature-card
     title="NVIDIA Driver Installation"
-    subtitle="Proprietary NVIDIA drivers with Secure Boot on Fedora 43"
+    subtitle="Proprietary NVIDIA drivers with Secure Boot on CachyOS"
     icon="chip"
-    link="nvidia-driver-installation"
+    link="hardware/nvidia-driver-installation"
   >}}
   {{< hextra/feature-card
-    title="Windows 11 VM Setup"
-    subtitle="KVM/QEMU VM with VirtIO and SPICE GL"
-    icon="desktop-computer"
-    link="vm-setup"
-  >}}
-  {{< hextra/feature-card
-    title="GDM Autologin"
-    subtitle="Skip GDM login after LUKS unlock"
-    icon="lock-open"
-    link="autologin"
-  >}}
-  {{< hextra/feature-card
-    title="YubiKey 5C NFC"
-    subtitle="FIDO2 LUKS unlock and what currently works"
-    icon="key"
-    link="yubikey"
-  >}}
-  {{< hextra/feature-card
-    title="Looking Glass Attempt"
-    subtitle="GPU passthrough attempt, not working on this hardware"
-    icon="eye"
-    link="looking-glass-attempt"
+    title="Secure Boot"
+    subtitle="Custom signing keys with sbctl, HSI:3 to HSI:4"
+    icon="shield-check"
+    link="hardware/secure-boot"
   >}}
   {{< hextra/feature-card
     title="asusctl & ROG Control Center"
     subtitle="Fan curves, performance profiles, GPU switching, Slash LED"
     icon="adjustments"
-    link="asusctl-rog-control"
+    link="hardware/asusctl-rog-control"
   >}}
+{{< /hextra/feature-grid >}}
+
+## Security & Privacy
+
+{{< hextra/feature-grid >}}
+  {{< hextra/feature-card
+    title="YubiKey 5C NFC"
+    subtitle="FIDO2 LUKS unlock and what currently works"
+    icon="key"
+    link="security/yubikey"
+  >}}
+  {{< hextra/feature-card
+    title="GDM Autologin"
+    subtitle="Skip GDM login after LUKS unlock"
+    icon="lock-open"
+    link="security/autologin"
+  >}}
+{{< /hextra/feature-grid >}}
+
+## Applications
+
+{{< hextra/feature-grid >}}
+  {{< hextra/feature-card
+    title="Applications"
+    subtitle="Browser, communication, development tools, and system configuration"
+    icon="collection"
+    link="applications"
+  >}}
+{{< /hextra/feature-grid >}}
+
+## Networking
+
+{{< hextra/feature-grid >}}
   {{< hextra/feature-card
     title="eduroam Network Installation"
     subtitle="PEAP/MSCHAPv2 setup that actually works on Linux"
     icon="wifi"
-    link="eduroam-network-installation"
+    link="networking/eduroam-network-installation"
+  >}}
+{{< /hextra/feature-grid >}}
+
+## Virtualization
+
+{{< hextra/feature-grid >}}
+  {{< hextra/feature-card
+    title="Windows 11 VM Setup"
+    subtitle="KVM/QEMU VM with VirtIO and SPICE GL"
+    icon="desktop-computer"
+    link="virtualization/vm-setup"
+  >}}
+  {{< hextra/feature-card
+    title="Looking Glass Attempt"
+    subtitle="GPU passthrough attempt, not working on this hardware"
+    icon="eye"
+    link="virtualization/looking-glass-attempt"
+  >}}
+{{< /hextra/feature-grid >}}
+
+## Known Issues
+
+{{< hextra/feature-grid >}}
+  {{< hextra/feature-card
+    title="Known Issues"
+    subtitle="Issues without a solution yet"
+    icon="exclamation-circle"
+    link="known-issues"
   >}}
 {{< /hextra/feature-grid >}}
