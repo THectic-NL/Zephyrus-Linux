@@ -132,6 +132,12 @@ toc: false
     icon="eye"
     link="docs/virtualization/looking-glass-attempt"
   >}}
+  {{< hextra/feature-card
+    title="WinBoat"
+    subtitle="Windows-apps op Linux via Podman container, vroege beta"
+    icon="beaker"
+    link="docs/virtualization/winboat"
+  >}}
 {{< /hextra/feature-grid >}}
 
 ---
