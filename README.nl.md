@@ -25,7 +25,7 @@ Ik ben niet gelieerd aan, goedgekeurd door, of handelend namens ASUS, NVIDIA, Mi
 | **iGPU** | AMD Radeon 890M |
 | **dGPU** | NVIDIA GeForce RTX 4060 Laptop (Max-Q) |
 | **OS** | CachyOS (Arch) |
-| **Kernel** | 6.19.3-2 |
+| **Kernel** | 6.19.4-2 |
 | **Displayserver** | Wayland (GNOME 49) |
 | **CPU-scheduler** | scx_lavd (sched_ext) |
 | **Secure Boot** | Ingeschakeld |
@@ -38,7 +38,7 @@ Ik ben niet gelieerd aan, goedgekeurd door, of handelend namens ASUS, NVIDIA, Mi
 Deze documentatiesite is gebouwd met [Hugo](https://gohugo.io/) en het [Hextra](https://imfing.github.io/hextra/)-thema. Het thema is opgenomen als Hugo module (via Go modules — geen git submodules).
 
 **Vereisten:**
-- [Hugo extended](https://gohugo.io/installation/) v0.156.0 (gebouwd met deze versie)
+- [Hugo extended](https://gohugo.io/installation/) v0.157.0 (gebouwd met deze versie)
 - [Go](https://go.dev/dl/) (vereist voor Hugo modules)
 - Git
 

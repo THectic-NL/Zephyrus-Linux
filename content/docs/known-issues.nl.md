@@ -354,7 +354,7 @@ Dit probleem heeft zichzelf opgelost. Steam start nu gewoon op; de `__GL_CONSTAN
 ROG Control Center toont een melding dat de `asus-armoury` kerneldriver niet is geladen. Geavanceerde functies (PPT-vermogensgrenzen, APU-geheugenallocatie, MUX-switchbesturing) zijn niet beschikbaar.
 
 **Oorzaak:**
-De `asus-armoury`-driver is samengevoegd in de Linux mainline-kernel in versie 6.19. CachyOS levert kernel 6.19.3-2 inclusief deze driver, dus hij zou beschikbaar moeten zijn.
+De `asus-armoury`-driver is samengevoegd in de Linux mainline-kernel in versie 6.19. CachyOS levert kernel 6.19.4-2 inclusief deze driver, dus hij zou beschikbaar moeten zijn.
 
 **Fix:**
 Verifieer dat de driver is geladen:

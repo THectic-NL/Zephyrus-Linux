@@ -17,7 +17,7 @@ If something here helps you, great. If you run into something I haven't covered,
 | **iGPU** | AMD Radeon 890M |
 | **dGPU** | NVIDIA GeForce RTX 4060 Laptop (Max-Q) |
 | **OS** | CachyOS (Arch) |
-| **Kernel** | 6.19.3-2 |
+| **Kernel** | 6.19.4-2 |
 | **Display Server** | Wayland (GNOME 49) |
 | **Secure Boot** | Enabled |
 
