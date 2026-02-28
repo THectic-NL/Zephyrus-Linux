@@ -1,7 +1,7 @@
 ---
 title: "Looking Glass B7: GPU Passthrough Attempt"
 weight: 2
-next: docs/known-issues
+next: docs/virtualization/winboat
 ---
 
 I wanted to try GPU passthrough with Looking Glass: running Windows in a VM but with the real NVIDIA GPU assigned to it, getting near-native performance. Spent a good few hours on it. It doesn't work on this laptop, and the reason is a hardware limitation that Looking Glass can't work around. I'm documenting the full attempt here so others can save themselves the time.

@@ -18,6 +18,6 @@
 
 - [ ] PR title follows the commit convention (e.g. `fix: correct nmcli command in eduroam guide`)
 - [ ] Both EN and NL versions updated (if applicable)
-- [ ] Images are in AVIF format (not PNG/JPG)
+- [ ] Media is in AVIF format (not PNG/JPG)
 - [ ] No broken image references (`/images/*.avif` all exist in `static/images/`)
 - [ ] Tested locally with `hugo server`

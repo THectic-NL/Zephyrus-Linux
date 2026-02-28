@@ -1,12 +1,38 @@
 ---
 title: "Bekende Problemen"
 weight: 7
-prev: docs/virtualization/looking-glass-attempt
+prev: docs/virtualization/winboat
 ---
 
 Centrale referentie voor hardware- en softwareproblemen op de ASUS ROG Zephyrus G16 GA605WV. Actieve problemen staan bovenaan. Opgeloste problemen staan onderaan als naslagwerk.
 
 ## Actieve Problemen
+
+### WinBoat: container start niet op
+
+**Wat er gebeurt:**
+WinBoat raakt regelmatig verstrikt in een eindeloze opstartronde. De Podman-container blijft proberen op te starten maar slaagt daar nooit in — ook niet na eindeloos wachten. De UI toont "WinBoat Guest API - Offline" en "Container - Exited". Dit is niet beperkt tot de eerste installatie — het treedt ook op bij latere starts.
+
+**Workaround:**
+WinBoat resetten en de initiële configuratie opnieuw doorlopen zorgt dat het weer werkt. Dit is geen duurzame oplossing.
+
+**Status:**
+Open. WinBoat is in beta en het project erkent de instabiliteit. Zie de [WinBoat-pagina]({{< relref "/docs/virtualization/winboat" >}}) voor meer context.
+
+---
+
+### WinBoat: applicatievensters verschuiven en krimpen willekeurig
+
+**Wat er gebeurt:**
+Wanneer WinBoat wel succesvol start en een Windows-applicatie (zoals Microsoft Word) wordt geopend, gedraagt het venster zich grillig: het schuift naar rechts over het scherm, schaalt willekeurig kleiner, en wordt steeds kleiner totdat het nauwelijks nog zichtbaar is. Dit maakt WinBoat in de praktijk onbruikbaar voor productiviteitsapplicaties.
+
+**Workaround:**
+Geen gevonden. De applicatie of WinBoat herstarten lost het niet betrouwbaar op.
+
+**Status:**
+Open. Beta-beperking.
+
+---
 
 ### Brave Browser: touchpad scrollt te snel op Wayland
 
@@ -354,7 +380,7 @@ Dit probleem heeft zichzelf opgelost. Steam start nu gewoon op; de `__GL_CONSTAN
 ROG Control Center toont een melding dat de `asus-armoury` kerneldriver niet is geladen. Geavanceerde functies (PPT-vermogensgrenzen, APU-geheugenallocatie, MUX-switchbesturing) zijn niet beschikbaar.
 
 **Oorzaak:**
-De `asus-armoury`-driver is samengevoegd in de Linux mainline-kernel in versie 6.19. CachyOS levert kernel 6.19.3-2 inclusief deze driver, dus hij zou beschikbaar moeten zijn.
+De `asus-armoury`-driver is samengevoegd in de Linux mainline-kernel in versie 6.19. CachyOS levert kernel 6.19.4-2 inclusief deze driver, dus hij zou beschikbaar moeten zijn.
 
 **Fix:**
 Verifieer dat de driver is geladen:

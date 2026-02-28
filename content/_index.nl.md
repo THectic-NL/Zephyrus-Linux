@@ -25,7 +25,7 @@ toc: false
 <div class="hx-mt-6"></div>
 
 {{< callout type="info" >}}
-**Persoonlijke documentatie.** Ik ben geen developer of Linux-expert, gewoon iemand die overgestapt is naar Linux op deze laptop en dingen uitzoekend onderweg. Ik deel wat werkte zodat anderen niet helemaal opnieuw hoeven te beginnen. Alles is op eigen risico. Kom je ergens niet uit, laat het gerust weten; ik denk graag mee. Draait kernel 6.19.3-2 op CachyOS (Arch).
+**Persoonlijke documentatie.** Ik ben geen developer of Linux-expert, gewoon iemand die overgestapt is naar Linux op deze laptop en dingen uitzoekend onderweg. Ik deel wat werkte zodat anderen niet helemaal opnieuw hoeven te beginnen. Alles is op eigen risico. Kom je ergens niet uit, laat het gerust weten; ik denk graag mee. Draait kernel 6.19.4-2 op CachyOS (Arch).
 {{< /callout >}}
 
 ## Huidige Systeemconfiguratie
@@ -37,7 +37,7 @@ toc: false
 | **iGPU** | AMD Radeon 890M |
 | **dGPU** | NVIDIA GeForce RTX 4060 Laptop (Max-Q) |
 | **OS** | CachyOS (Arch) |
-| **Kernel** | 6.19.3-2 |
+| **Kernel** | 6.19.4-2 |
 | **Display Server** | Wayland (GNOME 49) |
 | **CPU Scheduler** | scx_lavd (sched_ext) |
 | **Secure Boot** | Ingeschakeld |
@@ -131,6 +131,12 @@ toc: false
     subtitle="GPU passthrough poging (werkt niet op deze hardware)"
     icon="eye"
     link="docs/virtualization/looking-glass-attempt"
+  >}}
+  {{< hextra/feature-card
+    title="WinBoat"
+    subtitle="Windows-apps op Linux via Podman container, vroege beta"
+    icon="beaker"
+    link="docs/virtualization/winboat"
   >}}
 {{< /hextra/feature-grid >}}
 

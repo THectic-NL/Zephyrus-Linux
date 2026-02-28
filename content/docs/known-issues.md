@@ -1,12 +1,38 @@
 ---
 title: "Known Issues"
 weight: 7
-prev: docs/virtualization/looking-glass-attempt
+prev: docs/virtualization/winboat
 ---
 
 Central reference for hardware and software issues on the ASUS ROG Zephyrus G16 GA605WV. Active issues are listed first. Resolved issues are kept as reference at the bottom.
 
 ## Active Issues
+
+### WinBoat: container fails to start
+
+**What's happening:**
+WinBoat regularly gets stuck in an endless startup loop. The Podman container keeps trying to start but never succeeds — even after waiting indefinitely. The UI shows "WinBoat Guest API - Offline" and "Container - Exited". This is not limited to the first install — it happens on subsequent starts as well.
+
+**Workaround:**
+Resetting WinBoat and going through the initial configuration again gets it running again. This is not a sustainable fix.
+
+**Status:**
+Open. WinBoat is in beta and the project acknowledges instability. See the [WinBoat page]({{< relref "/docs/virtualization/winboat" >}}) for more context.
+
+---
+
+### WinBoat: application windows drift and shrink randomly
+
+**What's happening:**
+When WinBoat does start successfully and a Windows application (such as Microsoft Word) is opened, the window behaves erratically: it drifts to the right across the screen, scales down randomly, and keeps getting smaller until it is barely visible. This makes WinBoat effectively unusable for productivity applications.
+
+**Workaround:**
+None found. Restarting the application or WinBoat does not reliably fix it.
+
+**Status:**
+Open. Beta limitation.
+
+---
 
 ### Brave Browser: touchpad scrolling too fast on Wayland
 
@@ -354,7 +380,7 @@ This issue has since resolved itself. Steam now launches normally; the `__GL_CON
 ROG Control Center shows a warning that the `asus-armoury` kernel driver is not loaded. Some advanced features (PPT power limits, APU memory allocation, MUX switch control) are unavailable.
 
 **Cause:**
-The `asus-armoury` driver was merged into the Linux mainline kernel in version 6.19. CachyOS ships kernel 6.19.3-2 which includes this driver, so it should be available.
+The `asus-armoury` driver was merged into the Linux mainline kernel in version 6.19. CachyOS ships kernel 6.19.4-2 which includes this driver, so it should be available.
 
 **Fix:**
 Verify the driver is loaded:
