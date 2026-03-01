@@ -20,7 +20,7 @@ jobs:
           ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Install avifenc
-        run: sudo apt-get install -y libavif-apps
+        run: sudo apt-get update -y && sudo apt-get install -y libavif-apps
 
       - name: Convert and update references
         id: convert
