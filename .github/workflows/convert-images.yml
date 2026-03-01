@@ -24,6 +24,7 @@ jobs:
         id: convert
         run: |
           changed=false
+          sed_script="$(mktemp)"
 
           while IFS= read -r -d '' f; do
             [ -f "$f" ] || continue
@@ -38,14 +39,20 @@ jobs:
               rel_dst="${outfile#static}"
               # Escape regex metacharacters (. [ \ * ^ $) in the source path
               esc_src="$(printf '%s\n' "$rel_src" | sed 's/[.[\*^$]/\\&/g')"
-              find content -name "*.md" \
-                -exec sed -i "s|${esc_src}|${rel_dst}|gI" {} +
+              # Accumulate substitutions; apply in one pass after the loop
+              printf 's|%s|%s|gI\n' "$esc_src" "$rel_dst" >> "$sed_script"
               changed=true
               echo "Converted: $f"
             else
               echo "Failed to convert: $f, skipping." >&2
             fi
           done < <(find static/images -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" \) -print0)
+
+          # Single pass over all markdown files with all substitutions at once
+          if [ "$changed" = "true" ]; then
+            find content -name "*.md" -exec sed -i -f "$sed_script" {} +
+          fi
+          rm -f "$sed_script"
 
           echo "changed=$changed" >> "$GITHUB_OUTPUT"
 
