@@ -13,7 +13,7 @@ Centrale referentie voor hardware- en softwareproblemen op de ASUS ROG Zephyrus 
 {{% details title="WinBoat: container start niet op" closed="true" %}}
 
 **Wat er gebeurt:**
-WinBoat raakt regelmatig verstrikt in een eindeloze opstartronde. De Podman-container blijft proberen op te starten maar slaagt daar nooit in, ook niet na eindeloos wachten. De UI toont "WinBoat Guest API - Offline" en "Container - Exited". Dit is niet beperkt tot de eerste installatie — het treedt ook op bij latere starts.
+WinBoat raakt regelmatig verstrikt in een eindeloze opstartronde. De Podman-container blijft proberen op te starten maar slaagt daar nooit in, ook niet na eindeloos wachten. De UI toont "WinBoat Guest API - Offline" en "Container - Exited". Dit is niet beperkt tot de eerste installatie; het treedt ook op bij latere starts.
 
 **Workaround:**
 WinBoat resetten en de initiële configuratie opnieuw doorlopen zorgt dat het weer werkt. Dit is geen duurzame oplossing.

@@ -71,13 +71,23 @@ GNOME doesn't have built-in shortcuts for the file manager or an emoji picker, s
 
 ### GNOME window focus: apps opening in the background
 
-Apps like Signal and Discord sometimes open in the background, showing a "Your app is ready" notification instead of bringing the window to the front. Fix this with:
+By default, GNOME won't bring a newly opened window to the front. Instead, it queues it in the background and shows a notification saying the app is ready. The reasoning is fair: don't interrupt what you're already doing. In practice it's mostly just annoying.
+
+There is a `gsettings` key that's supposed to control this:
 
 ```bash
 gsettings set org.gnome.desktop.wm.preferences focus-new-windows 'smart'
 ```
 
-The default `strict` mode never focuses new windows automatically. `smart` lets GNOME decide; in practice this means newly launched apps come to the foreground as expected.
+The default is `strict` (never auto-focus new windows). `smart` is supposed to let GNOME decide and bring new windows to the front. In practice, **this alone is not reliable**. Windows still end up minimized in the background in many cases, because the underlying issue is that apps need to implement the [XDG Activation protocol](https://wayland.app/protocols/xdg-activation-v1) to properly request focus, and many don't. The GNOME Shell dev blog has [a thorough write-up](https://blogs.gnome.org/shell-dev/2024/09/20/understanding-gnome-shells-focus-stealing-prevention/) on why this is fundamentally broken for a large part of the app ecosystem.
+
+The fix that actually works is applying **both** settings together: the `gsettings` key above, plus enabling **Window Demands Attention Focus** in the [Just Perfection](https://gitlab.gnome.org/jrahmatzadeh/just-perfection) GNOME Shell extension. In its **Behavior** tab:
+
+![Just Perfection extension settings panel, Behavior tab](/images/just-perfection-panel.avif)
+
+![Just Perfection: Window Demands Attention Focus setting enabled](/images/just-perfection-window-raise.avif)
+
+Using Just Perfection alone without the `gsettings` change may still leave edge cases. Using only `gsettings` is not enough for apps that don't implement the activation protocol. Both together covers the vast majority of cases.
 
 ### Touchpad scroll speed: no native GNOME setting (yet)
 
@@ -208,6 +218,26 @@ flatpak install flathub me.proton.Mail
 ```
 
 ![Proton Mail app in Flathub](/images/protonmail-flathub.avif)
+
+### Standard Notes
+
+Standard Notes is part of the Proton ecosystem, with the same privacy-first philosophy as Proton Mail and end-to-end encrypted notes that sync across all your devices. It was [acquired by Proton in 2022](https://proton.me/blog/proton-standard-notes-join-forces).
+
+The feel is somewhere between a minimal text editor and OneNote: clean sidebar, quick note switching, tags, no bloat. Everything is encrypted before it leaves your device. The sync to Android (Samsung S24 in my case) is seamless and instant.
+
+What makes it stand out is exactly what's _not_ there. No unnecessary UI chrome, no subscription upsell banners everywhere, no slow startup. It's just fast.
+
+```bash
+paru -S standardnotes-bin
+```
+
+Available on the [AUR](https://aur.archlinux.org/packages/standardnotes-bin) (`standardnotes-bin`). No native CachyOS/Arch package exists yet.
+
+![Standard Notes running on the desktop](/images/standard-notes-desktop.avif)
+
+![Standard Notes editor view](/images/standard-notes-editor.avif)
+
+![Standard Notes on Android (Samsung S24)](/images/standard-notes-android.avif)
 
 ### Office suites
 
@@ -362,7 +392,7 @@ All three packages are available in the CachyOS repositories: [podman](https://p
 sudo pacman -S podman podman-docker podman-desktop
 ```
 
-For the full setup — including registry configuration and connecting Docker Hub and GitHub — see [Podman & Podman Desktop]({{< relref "/docs/virtualization/podman" >}}) in the Virtualization section.
+For the full setup (including registry configuration and connecting Docker Hub and GitHub), see [Podman & Podman Desktop]({{< relref "/docs/virtualization/podman" >}}) in the Virtualization section.
 
 ---
 
