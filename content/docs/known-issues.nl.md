@@ -10,10 +10,10 @@ Centrale referentie voor hardware- en softwareproblemen op de ASUS ROG Zephyrus 
 
 > Dit zijn problemen waar ik persoonlijk nog steeds tegenaan loop. In sommige gevallen is het mogelijk een echte bug; in andere gevallen doe ik misschien zelf iets fout of heb ik iets over het hoofd gezien. Ik deel wat ik heb waargenomen, niet wat ik definitief heb vastgesteld.
 
-### WinBoat: container start niet op
+{{% details title="WinBoat: container start niet op" closed="true" %}}
 
 **Wat er gebeurt:**
-WinBoat raakt regelmatig verstrikt in een eindeloze opstartronde. De Podman-container blijft proberen op te starten maar slaagt daar nooit in — ook niet na eindeloos wachten. De UI toont "WinBoat Guest API - Offline" en "Container - Exited". Dit is niet beperkt tot de eerste installatie — het treedt ook op bij latere starts.
+WinBoat raakt regelmatig verstrikt in een eindeloze opstartronde. De Podman-container blijft proberen op te starten maar slaagt daar nooit in, ook niet na eindeloos wachten. De UI toont "WinBoat Guest API - Offline" en "Container - Exited". Dit is niet beperkt tot de eerste installatie — het treedt ook op bij latere starts.
 
 **Workaround:**
 WinBoat resetten en de initiële configuratie opnieuw doorlopen zorgt dat het weer werkt. Dit is geen duurzame oplossing.
@@ -21,9 +21,9 @@ WinBoat resetten en de initiële configuratie opnieuw doorlopen zorgt dat het we
 **Status:**
 Open. WinBoat is in beta en het project erkent de instabiliteit. Zie de [WinBoat-pagina]({{< relref "/docs/virtualization/winboat" >}}) voor meer context.
 
----
+{{% /details %}}
 
-### WinBoat: applicatievensters verschuiven en krimpen willekeurig
+{{% details title="WinBoat: applicatievensters verschuiven en krimpen willekeurig" closed="true" %}}
 
 **Wat er gebeurt:**
 Wanneer WinBoat wel succesvol start en een Windows-applicatie (zoals Microsoft Word) wordt geopend, gedraagt het venster zich grillig: het schuift naar rechts over het scherm, schaalt willekeurig kleiner, en wordt steeds kleiner totdat het nauwelijks nog zichtbaar is. Dit maakt WinBoat in de praktijk onbruikbaar voor productiviteitsapplicaties.
@@ -34,9 +34,9 @@ Geen gevonden. De applicatie of WinBoat herstarten lost het niet betrouwbaar op.
 **Status:**
 Open. Beta-beperking.
 
----
+{{% /details %}}
 
-### Brave Browser: touchpad scrollt te snel op Wayland
+{{% details title="Brave Browser: touchpad scrollt te snel op Wayland" closed="true" %}}
 
 **Wat er gebeurt:**
 Scrollen met het touchpad in Brave voelt aanzienlijk sneller aan dan in Firefox of native GTK-apps. Een korte veegbeweging stuurt de pagina al ver naar beneden. Dit treft alle Chromium-gebaseerde browsers op Wayland.
@@ -54,9 +54,9 @@ Het verlagen van de globale `scroll-factor` in [libinput-config]({{< relref "/do
 - [brave-browser #36569: native touchpad scrolling op Linux Wayland](https://github.com/brave/brave-browser/issues/36569)
 - [Brave Community: hoge-resolutie touchpad scrolling op Linux Wayland](https://community.brave.app/t/scrolling-speed-is-way-too-fast/649357)
 
----
+{{% /details %}}
 
-### YubiKey FIDO2 LUKS ontgrendeling: USB timing race
+{{% details title="YubiKey FIDO2 LUKS ontgrendeling: USB timing race" closed="true" %}}
 
 **Wat er gebeurt:**
 Het inschrijven van de YubiKey als FIDO2 LUKS-ontgrendelsleutel lukt, maar bij het opstarten geeft `systemd-cryptsetup` `FIDO_ERR_RX` terug. De key is fysiek aanwezig maar lijkt nog niet geïnitialiseerd te zijn door de USB HID-stack op het moment van de query. Dit lijkt met name op te treden bij warme reboots.
@@ -68,7 +68,7 @@ Nog steeds onopgelost. Onduidelijk of dit een echt hardware/firmware timingprobl
 
 Zie de [YubiKey-pagina]({{< relref "/docs/security/yubikey" >}}) voor de volledige beschrijving van wat geprobeerd is en wat teruggedraaid is.
 
----
+{{% /details %}}
 
 ## Opgeloste Problemen
 

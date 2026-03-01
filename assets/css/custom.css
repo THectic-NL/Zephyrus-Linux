@@ -103,9 +103,27 @@
   margin-top: 3.5rem !important;
 }
 
-/* Reduce hero badge prominence */
+/* Terminal screenshots are transparent — give them a dark background in light mode
+   so anti-aliased text renders correctly regardless of theme */
+html:not(.dark) .content img[src*="system-info"] {
+  background-color: #1c1b20;
+  border-radius: 6px;
+}
+
+/* Language/theme controls live in the navbar — hide sidebar and footer duplicates */
+.hextra-sidebar-container > [data-toggle-animation="show"] {
+  display: none !important;
+}
+.hextra-footer .hextra-language-switcher,
+.hextra-footer .hextra-theme-toggle,
+.hextra-footer hr {
+  display: none !important;
+}
+
+/* Hero badge sizing */
 .hx-hero-badge {
   opacity: 0.9;
-  padding: 0.625rem 1.25rem !important;
-  font-size: 1rem !important;
+  padding: 1rem 2.25rem !important;
+  font-size: 1.25rem !important;
+  font-weight: 500 !important;
 }

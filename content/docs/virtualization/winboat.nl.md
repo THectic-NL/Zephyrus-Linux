@@ -19,7 +19,7 @@ WinBoat staat in de CachyOS-packagerepository:
 sudo pacman -S winboat
 ```
 
-Packagebron: [packages.cachyos.org — winboat](https://packages.cachyos.org/package/cachyos/x86_64/winboat)
+Packagebron: [packages.cachyos.org/winboat](https://packages.cachyos.org/package/cachyos/x86_64/winboat)
 
 Op de WinBoat-website staat ook een AUR-package (`winboat-bin`) voor andere Arch-gebaseerde distro's. Op CachyOS is het gewoon via de repo.
 
@@ -49,7 +49,7 @@ Het probleem zit hem in het opnieuw opstarten daarna, zonder steeds de hele setu
 
 Na het installeren start je WinBoat vanuit het app-menu of de terminal. Bij de eerste keer installeert het automatisch Windows 11 via Podman.
 
-![WinBoat app — startscherm met containerstatus](/images/winboat-app.avif)
+![WinBoat app: startscherm met containerstatus](/images/winboat-app.avif)
 
 Wat ik het vaakst zag: **WinBoat Guest API - Offline** en **Container - Exited**. Windows 11 Pro staat in de interface, maar de container start nooit echt op.
 
@@ -84,7 +84,7 @@ Maar zo ver zijn we nog niet. Voor nu is de [KVM/QEMU VM-setup]({{< relref "/doc
 
 ## Referenties
 
-- [WinBoat — Officiële website](https://winboat.app)
-- [WinBoat — GitHub (TibixDev/winboat)](https://github.com/TibixDev/winboat)
-- [WinBoat — CachyOS package](https://packages.cachyos.org/package/cachyos/x86_64/winboat)
-- [WinBoat — AUR package (winboat-bin)](https://aur.archlinux.org/packages/winboat-bin)
+- [WinBoat: officiële website](https://winboat.app)
+- [WinBoat: GitHub (TibixDev/winboat)](https://github.com/TibixDev/winboat)
+- [WinBoat: CachyOS package](https://packages.cachyos.org/package/cachyos/x86_64/winboat)
+- [WinBoat: AUR package (winboat-bin)](https://aur.archlinux.org/packages/winboat-bin)
