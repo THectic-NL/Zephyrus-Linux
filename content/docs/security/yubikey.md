@@ -4,19 +4,19 @@ weight: 2
 next: docs/applications
 ---
 
-I wanted to use my YubiKey to unlock the LUKS-encrypted drive at boot: plug it in, touch it, and the desktop loads. This page documents what I tried, why it failed at first, and what actually works in the meantime.
+I wanted to use my YubiKey to unlock the LUKS-encrypted drive at boot: plug it in, touch it, and the desktop loads. This page documents what I tried, why it didn't work out, and what I'm actually using instead.
 
-> **Status:** LUKS unlock with FIDO2 has been unreliable on systemd 258. This page documents what was attempted, what the root cause is, and what to do instead. The situation may improve with systemd 259+.
+> **Status:** LUKS unlock with FIDO2 has been abandoned for now. Not because of the systemd fallback regression (fixed in systemd 259, which I'm running), but because of a persistent USB timing race condition on this hardware. The YubiKey is used instead for `sudo` and the GNOME lock screen via `pam-u2f`, which works reliably.
 
 
 ## What Works Today
 
 The YubiKey works reliably for everything **outside** of early boot:
 
-- **OATH/TOTP**: Yubico Authenticator Flatpak 7.3.0 works perfectly for 2FA codes
+- **OATH/TOTP**: Yubico Authenticator 7.3.1 works perfectly for 2FA codes
 - **SSH**: FIDO2-backed SSH keys
 - **Bitwarden**: hardware-backed authentication
-- **pam-u2f**: YubiKey touch for `sudo` and GDM screen unlock (see below)
+- **pam-u2f**: YubiKey touch for `sudo` and GNOME screen unlock
 
 
 ## What Was Attempted: FIDO2 LUKS Unlock
@@ -27,7 +27,7 @@ The goal was: plug in YubiKey → touch at boot → LUKS unlocks → desktop. No
 
 **Packages installed:**
 ```bash
-sudo dnf install libfido2 fido2-tools cryptsetup
+sudo pacman -S libfido2
 ```
 
 **FIDO2 enrollment:**
@@ -37,69 +37,150 @@ sudo systemd-cryptenroll \
   --fido2-with-client-pin=no \
   --fido2-with-user-presence=yes \
   --fido2-with-user-verification=no \
-  /dev/nvme1n1p3
+  /dev/nvme1n1p2
 ```
 
 **crypttab:**
 ```
-luks-680fec4e-... UUID=680fec4e-... none discard,fido2-device=auto
+luks-aaf424ea-... UUID=aaf424ea-... none fido2-device=auto,discard,token-timeout=30
 ```
 
-**dracut config** (`/etc/dracut.conf.d/fido2.conf`):
+**`/etc/sdboot-manage.conf`:**
 ```
-add_dracutmodules+=" fido2 "
+LINUX_OPTIONS="... rd.luks.options=aaf424ea-...=fido2-device=auto,token-timeout=30 rd.udev.settle-timeout=10"
 ```
 
 ### What worked
 
-- Enrollment succeeded (keyslot 1, touch-only, `fido2-clientPin-required: false`)
-- FIDO2 libraries confirmed present in initramfs (`lsinitrd | grep fido`)
-- Occasional successful boots when spamming the YubiKey touch at exactly the right moment
+- Enrollment succeeded (keyslot 1, touch-only)
+- FIDO2 libraries confirmed present in initramfs
+- systemd 259 confirmed: `+FIDO2` support present, `token-timeout=` available as a crypttab option
+- Password fallback regression from systemd 257/258 is fixed in 259
 
 ### What failed
 
-1. **Touch window is ~1-2 seconds**: not enough time to react. There is no configurable `token-timeout=` in crypttab until systemd 259.
+Despite running systemd 259, the USB timing race condition remained:
 
-2. **No password fallback**: when FIDO2 fails, the system does not fall back to asking for a LUKS password. It drops into a dracut emergency shell with a locked root account. This is a confirmed regression introduced in **systemd 257** (issue [#35393](https://github.com/systemd/systemd/issues/35393)).
+```
+systemd-cryptsetup: Failed to ask token for assertion: FIDO_ERR_RX
+```
 
-3. **dracut initqueue races the YubiKey**: the USB HID device is not ready within the 5-second dracut initqueue window on this hardware, so `systemd-cryptsetup` fails before it can even show the touch prompt.
+`FIDO_ERR_RX` means the YubiKey is physically present but not fully initialized by the USB HID stack when `systemd-cryptsetup` queries it. This seems to affect warm reboots especially. No config-based fix seems to exist; this looks like a hardware/firmware timing issue.
 
-4. **rhgb/plymouth swallows prompts**: even with verbose boot, the touch prompt is hidden behind Plymouth.
+Attempted workarounds:
+- `token-timeout=30` in crypttab
+- `rd.udev.settle-timeout=10` kernel parameter
 
-### Root cause
-
-systemd 257/258 has a regression where FIDO2 authentication failure does not fall back to password. Combined with the short dracut initqueue window on this laptop's USB stack, the result is an unrecoverable boot loop when FIDO2 does not succeed on the first attempt.
+Neither was reliable enough.
 
 ### What was reverted
 
 ```bash
 # Remove FIDO2 from LUKS
-sudo systemd-cryptenroll --wipe-slot=fido2 /dev/nvme1n1p3
+sudo systemd-cryptenroll --wipe-slot=fido2 /dev/nvme1n1p2
 
 # Restore crypttab to passphrase-only
 # discard only, no fido2-device=auto
 
-# Remove dracut config
-sudo rm /etc/dracut.conf.d/fido2.conf
-sudo rm -r /etc/systemd/system/systemd-cryptsetup@.service.d/
-
-# Rebuild initramfs
-sudo dracut --force --regenerate-all
+# Restore /etc/sdboot-manage.conf to original LINUX_OPTIONS
+sudo sdboot-manage gen
 ```
 
 
-## When to Retry
+## Current Approach: pam-u2f
 
-Wait for **systemd 259+** to become available. Systemd 259 adds `token-timeout=` as a proper crypttab option, which gives a configurable wait window for the touch prompt. Combined with a fix for the fallback regression, FIDO2 LUKS unlock should become reliable on CachyOS as well.
+A reliable alternative: require a YubiKey touch for `sudo` and the GNOME lock screen. No initramfs involvement, no boot-time timing issues.
 
-When retrying, the enrollment procedure itself is correct; only the systemd version is the blocker.
+### Install
+
+```bash
+sudo pacman -S pam-u2f
+```
+
+### Register the YubiKey
+
+```bash
+mkdir -p ~/.config/Yubico
+pamu2fcfg > ~/.config/Yubico/u2f_keys
+```
+
+Touch the YubiKey when it blinks. To enroll a second key as backup, plug in the second YubiKey and run:
+
+```bash
+pamu2fcfg -n >> ~/.config/Yubico/u2f_keys
+```
+
+Touch it when it blinks. Both keys are now in the same file. Since both `sudo` and the GNOME lock screen read from `~/.config/Yubico/u2f_keys`, no extra configuration is needed: the backup key works for both immediately.
+
+### Configure sudo
+
+Edit `/etc/pam.d/sudo`:
+
+```
+#%PAM-1.0
+auth       sufficient   pam_u2f.so cue
+auth       include      system-auth
+account    include      system-auth
+session    include      system-auth
+```
+
+![nano editing /etc/pam.d/sudo with pam_u2f.so configured](/images/yubikey-sudo-config.png)
+
+Test without closing the current terminal first:
+
+```bash
+sudo echo test
+# "Please touch the FIDO authenticator." → touch → done
+```
+
+![sudo echo test output showing the YubiKey touch prompt](/images/yubikey-sudo-test.png)
+
+Without the YubiKey plugged in, it falls through to password as normal.
+
+### Configure GNOME lock screen
+
+Edit `/etc/pam.d/gdm-password`:
+
+```
+#%PAM-1.0
+auth       sufficient   pam_u2f.so cue
+auth       include                     system-local-login
+auth       optional                    pam_gnome_keyring.so
+account    include                     system-local-login
+password   include                     system-local-login
+password   optional                    pam_gnome_keyring.so use_authtok
+session    include                     system-local-login
+session    optional                    pam_gnome_keyring.so auto_start
+```
+
+![nano editing /etc/pam.d/gdm-password with pam_u2f.so configured](/images/yubikey-gdm-password-config.png)
+
+Lock the screen with `Super+L` and touch the YubiKey to unlock.
+
+![GNOME lock screen showing "Please touch the FIDO authenticator."](/images/yubikey-lockscreen.png)
+
+### How it works
+
+| Situation | Behavior |
+|---|---|
+| YubiKey plugged in | Touch required to unlock |
+| YubiKey absent | Falls back to password |
+| Boot / autologin | Unaffected (LUKS password, then straight to desktop, see [GDM autologin]({{< relref "/docs/security/autologin" >}})) |
+
+`sufficient` means: if the YubiKey succeeds, skip remaining auth steps. If absent or touch times out, PAM continues to the next method (password).
+
+`cue` prints "Please touch the FIDO authenticator." as a visual hint.
 
 
-## Using the YubiKey for sudo and Screen Unlock (pam-u2f)
+## Boot Flow
 
-A reliable alternative that works today: require a YubiKey touch for `sudo` and/or the GDM lock screen.
+```
+Power on → LUKS password → autologin → desktop
+                                           ↓
+                              Super+L → YubiKey touch (or password)
+```
 
-> **To be documented after testing.**
+LUKS stays password-only. The YubiKey only comes into play after the desktop is running.
 
 
 {{< callout type="info" >}}
