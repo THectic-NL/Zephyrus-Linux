@@ -8,21 +8,6 @@ Dit is mijn persoonlijke setup-documentatie voor de ROG Zephyrus G16 op CachyOS 
 
 Als iets hier je helpt: mooi. Loop je ergens tegenaan wat ik niet behandeld heb, laat het gerust weten; ik denk graag mee.
 
-## Hardware
-
-| Onderdeel | Specificatie |
-|-----------|--------------|
-| **Model** | ASUS ROG Zephyrus G16 GA605WV (2024) |
-| **CPU** | AMD Ryzen AI 9 HX 370 |
-| **iGPU** | AMD Radeon 890M |
-| **dGPU** | NVIDIA GeForce RTX 4060 Laptop (Max-Q) |
-| **OS** | CachyOS (Arch) |
-| **Kernel** | 6.19.4-2 |
-| **Display Server** | Wayland (GNOME 49) |
-| **Secure Boot** | Ingeschakeld |
-
-![Systeeminformatie-overzicht](/images/system-info.avif)
-
 ## Waarom CachyOS?
 
 Na het testen van meerdere distributies ben ik overgestapt op CachyOS (Arch) als mijn dagelijkse driver. CachyOS is een op Arch gebaseerde distributie met hardware-specifieke optimalisaties die het onderscheiden voor de Zephyrus G16:

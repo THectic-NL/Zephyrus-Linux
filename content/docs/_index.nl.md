@@ -6,14 +6,14 @@ toc: false
 
 # Mijn setup-notities
 
-Alles wat ik heb opgeschreven tijdens het draaien van CachyOS op de ROG Zephyrus G16. Begin bij Aan de slag als je vanaf nul instelt, of ga direct naar de handleiding die je nodig hebt.
+Mijn setup-notities voor CachyOS op de ROG Zephyrus G16. Begin bij Aan de slag als je van nul begint, of ga direct naar wat je nodig hebt.
 
 ## Aan de slag
 
 {{< hextra/feature-grid >}}
   {{< hextra/feature-card
     title="Aan de slag"
-    subtitle="Van schone CachyOS-installatie tot volledig geconfigureerd systeem"
+    subtitle="Van schone installatie tot volledig geconfigureerd systeem"
     icon="play"
     link="getting-started"
   >}}
@@ -30,7 +30,7 @@ Alles wat ik heb opgeschreven tijdens het draaien van CachyOS op de ROG Zephyrus
   >}}
   {{< hextra/feature-card
     title="Secure Boot"
-    subtitle="Aangepaste ondertekeningssleutels met sbctl, UEFI Secure Boot ingeschakeld"
+    subtitle="Eigen sleutels met sbctl, Secure Boot ingeschakeld"
     icon="shield-check"
     link="hardware/secure-boot"
   >}}
@@ -47,13 +47,13 @@ Alles wat ik heb opgeschreven tijdens het draaien van CachyOS op de ROG Zephyrus
 {{< hextra/feature-grid >}}
   {{< hextra/feature-card
     title="YubiKey 5C NFC"
-    subtitle="FIDO2 LUKS poging en wat vandaag werkt"
+    subtitle="FIDO2, sudo en schermvergrendeling"
     icon="key"
     link="security/yubikey"
   >}}
   {{< hextra/feature-card
     title="GDM Autologin"
-    subtitle="GDM inlogscherm overslaan na LUKS ontgrendeling"
+    subtitle="Automatisch inloggen na LUKS-ontgrendeling"
     icon="lock-open"
     link="security/autologin"
   >}}
@@ -75,7 +75,7 @@ Alles wat ik heb opgeschreven tijdens het draaien van CachyOS op de ROG Zephyrus
 {{< hextra/feature-grid >}}
   {{< hextra/feature-card
     title="eduroam Setup"
-    subtitle="PEAP/MSCHAPv2 configuratie die daadwerkelijk werkt op Linux"
+    subtitle="Handmatige PEAP/MSCHAPv2-configuratie via nmcli"
     icon="wifi"
     link="networking/eduroam-network-installation"
   >}}
@@ -92,13 +92,13 @@ Alles wat ik heb opgeschreven tijdens het draaien van CachyOS op de ROG Zephyrus
   >}}
   {{< hextra/feature-card
     title="Looking Glass B7"
-    subtitle="GPU passthrough via Looking Glass, werkt niet op deze hardware"
+    subtitle="GPU passthrough via Looking Glass, niet werkend op deze hardware"
     icon="eye"
     link="virtualization/looking-glass-attempt"
   >}}
   {{< hextra/feature-card
     title="Podman & Podman Desktop"
-    subtitle="Docker-vervanging met rootless containers en een desktop GUI"
+    subtitle="Rootless containers met een desktop-interface"
     icon="server"
     link="virtualization/podman"
   >}}
@@ -109,7 +109,7 @@ Alles wat ik heb opgeschreven tijdens het draaien van CachyOS op de ROG Zephyrus
 {{< hextra/feature-grid >}}
   {{< hextra/feature-card
     title="Bekende Problemen"
-    subtitle="Problemen waarvoor nog geen oplossing is"
+    subtitle="Actieve bugs en opgeloste problemen"
     icon="exclamation-circle"
     link="known-issues"
   >}}

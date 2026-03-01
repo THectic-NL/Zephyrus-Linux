@@ -362,7 +362,7 @@ Alle drie de pakketten zijn beschikbaar in de CachyOS-repositories: [podman](htt
 sudo pacman -S podman podman-docker podman-desktop
 ```
 
-Voor de volledige setup — inclusief registryconfiguratie en het koppelen van Docker Hub en GitHub — zie [Podman & Podman Desktop]({{< relref "/docs/virtualization/podman" >}}) in de Virtualisatie-sectie.
+Voor de volledige setup, inclusief registryconfiguratie en het koppelen van Docker Hub en GitHub, zie [Podman & Podman Desktop]({{< relref "/docs/virtualization/podman" >}}) in de Virtualisatie-sectie.
 
 ---
 

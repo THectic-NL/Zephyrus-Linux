@@ -17,15 +17,15 @@ toc: false
 
 <div class="hx-mb-6">
 {{< hextra/hero-badge link="/nl/docs/" >}}
-  <span>Bekijk de handleidingen</span>
-  {{< icon name="arrow-circle-right" attributes="height=14" >}}
+  <span>Zie hoe ik het heb gedaan</span>
+  {{< icon name="arrow-circle-right" attributes="height=20" >}}
 {{< /hextra/hero-badge >}}
 </div>
 
 <div class="hx-mt-6"></div>
 
 {{< callout type="info" >}}
-**Persoonlijke documentatie.** Ik ben geen developer of Linux-expert, gewoon iemand die overgestapt is naar Linux op deze laptop en dingen uitzoekend onderweg. Ik deel wat werkte zodat anderen niet helemaal opnieuw hoeven te beginnen. Alles is op eigen risico. Kom je ergens niet uit, laat het gerust weten; ik denk graag mee. Draait kernel 6.19.4-2 op CachyOS (Arch).
+**Persoonlijke documentatie.** Ik ben geen developer en mijn kennis van low-level Linux-zaken is beperkt, maar ik leer gaandeweg steeds meer. Het ene heb ik uitgezocht via guides van anderen, het andere door gewoon te proberen en te kijken wat er gebeurt. Ik deel wat werkte zodat anderen niet helemaal opnieuw hoeven te beginnen. Alles is op eigen risico. Kom je ergens niet uit, laat het gerust weten; ik denk graag mee.
 {{< /callout >}}
 
 ## Huidige Systeemconfiguratie
@@ -34,6 +34,7 @@ toc: false
 |-----------|--------------|
 | **Model** | ASUS ROG Zephyrus G16 GA605WV (2024) |
 | **CPU** | AMD Ryzen AI 9 HX 370 |
+| **RAM** | 32 GB LPDDR5 |
 | **iGPU** | AMD Radeon 890M |
 | **dGPU** | NVIDIA GeForce RTX 4060 Laptop (Max-Q) |
 | **OS** | CachyOS (Arch) |
@@ -43,3 +44,5 @@ toc: false
 | **Secure Boot** | Ingeschakeld |
 
 ![Systeeminformatie-overzicht](/images/system-info.avif)
+
+<small style="opacity: 0.45;">Een deel van de documentatie op deze site is geschreven of verbeterd met hulp van GitHub Copilot.</small>

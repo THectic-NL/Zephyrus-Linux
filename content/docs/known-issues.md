@@ -10,7 +10,7 @@ Central reference for hardware and software issues on the ASUS ROG Zephyrus G16 
 
 > These are issues I'm personally still running into. In some cases it might be a real bug; in others it might just be something I'm missing or doing wrong. I'm sharing what I observed, not what I've definitively diagnosed.
 
-### WinBoat: container fails to start
+{{% details title="WinBoat: container fails to start" closed="true" %}}
 
 **What's happening:**
 WinBoat regularly gets stuck in an endless startup loop. The Podman container keeps trying to start but never succeeds — even after waiting indefinitely. The UI shows "WinBoat Guest API - Offline" and "Container - Exited". This is not limited to the first install — it happens on subsequent starts as well.
@@ -21,9 +21,9 @@ Resetting WinBoat and going through the initial configuration again gets it runn
 **Status:**
 Open. WinBoat is in beta and the project acknowledges instability. See the [WinBoat page]({{< relref "/docs/virtualization/winboat" >}}) for more context.
 
----
+{{% /details %}}
 
-### WinBoat: application windows drift and shrink randomly
+{{% details title="WinBoat: application windows drift and shrink randomly" closed="true" %}}
 
 **What's happening:**
 When WinBoat does start successfully and a Windows application (such as Microsoft Word) is opened, the window behaves erratically: it drifts to the right across the screen, scales down randomly, and keeps getting smaller until it is barely visible. This makes WinBoat effectively unusable for productivity applications.
@@ -34,9 +34,9 @@ None found. Restarting the application or WinBoat does not reliably fix it.
 **Status:**
 Open. Beta limitation.
 
----
+{{% /details %}}
 
-### Brave Browser: touchpad scrolling too fast on Wayland
+{{% details title="Brave Browser: touchpad scrolling too fast on Wayland" closed="true" %}}
 
 **What's happening:**
 Touchpad scrolling in Brave feels significantly faster than in Firefox or native GTK apps. A short swipe sends the page flying. This affects all Chromium-based browsers on Wayland.
@@ -54,9 +54,9 @@ Lowering the global `scroll-factor` in [libinput-config]({{< relref "/docs/appli
 - [brave-browser #36569: native touchpad scrolling on Linux Wayland](https://github.com/brave/brave-browser/issues/36569)
 - [Brave Community: high-resolution touchpad scrolling on Linux Wayland](https://community.brave.app/t/scrolling-speed-is-way-too-fast/649357)
 
----
+{{% /details %}}
 
-### YubiKey FIDO2 LUKS unlock: USB timing race
+{{% details title="YubiKey FIDO2 LUKS unlock: USB timing race" closed="true" %}}
 
 **What's happening:**
 Enrolling the YubiKey as a FIDO2 LUKS unlock key succeeds, but at boot `systemd-cryptsetup` fails with `FIDO_ERR_RX`. The key is physically present but seemingly not yet initialized by the USB HID stack when the query comes in. This seems to hit especially on warm reboots.
@@ -68,7 +68,7 @@ Still unresolved. Not sure if this is a real hardware/firmware timing issue, som
 
 See the [YubiKey page]({{< relref "/docs/security/yubikey" >}}) for the full attempted setup and what was reverted.
 
----
+{{% /details %}}
 
 ## Resolved Issues
 

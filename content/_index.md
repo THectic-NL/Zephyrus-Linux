@@ -17,15 +17,15 @@ toc: false
 
 <div class="hx-mb-6">
 {{< hextra/hero-badge link="/docs/" >}}
-  <span>Browse the Guides</span>
-  {{< icon name="arrow-circle-right" attributes="height=14" >}}
+  <span>See how I did it</span>
+  {{< icon name="arrow-circle-right" attributes="height=20" >}}
 {{< /hextra/hero-badge >}}
 </div>
 
 <div class="hx-mt-6"></div>
 
 {{< callout type="info" >}}
-**Personal documentation.** I'm not a developer or Linux expert, just someone who switched to Linux on this laptop and figured things out along the way. I share what worked for me so others don't have to start from scratch. Everything here is at your own risk. Feel free to reach out if something doesn't work; I'm happy to think along. Running kernel 6.19.4-2 on CachyOS (Arch).
+**Personal documentation.** I'm not a developer and my low-level Linux knowledge is limited, but I'm learning more with every step. Some things I figured out through guides, others by just trying and seeing what happens. I share what worked for me so others don't have to start from scratch. Everything here is at your own risk. Feel free to reach out if something doesn't work; I'm happy to think along.
 {{< /callout >}}
 
 ## Current System Configuration
@@ -34,6 +34,7 @@ toc: false
 |-----------|---------------|
 | **Model** | ASUS ROG Zephyrus G16 GA605WV (2024) |
 | **CPU** | AMD Ryzen AI 9 HX 370 |
+| **RAM** | 32 GB LPDDR5 |
 | **iGPU** | AMD Radeon 890M |
 | **dGPU** | NVIDIA GeForce RTX 4060 Laptop (Max-Q) |
 | **OS** | CachyOS (Arch) |
@@ -43,3 +44,5 @@ toc: false
 | **Secure Boot** | Enabled |
 
 ![System information overview](/images/system-info.avif)
+
+<small style="opacity: 0.45;">Some documentation on this site has been written or improved with assistance from GitHub Copilot.</small>

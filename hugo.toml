@@ -32,6 +32,16 @@ enableGitInfo = true
     url = 'https://github.com/Stensel8/Zephyrus-Linux'
     [menu.main.params]
       icon = 'github'
+  [[menu.main]]
+    name = 'Language'
+    weight = 4
+    [menu.main.params]
+      type = 'language-switch'
+  [[menu.main]]
+    name = 'Theme'
+    weight = 5
+    [menu.main.params]
+      type = 'theme-toggle'
 
 [params]
   description = 'Linux setup documentation for the ASUS ROG Zephyrus G16 GA605WV — NVIDIA drivers, Secure Boot, VM setup, YubiKey, and more.'
@@ -43,7 +53,7 @@ enableGitInfo = true
 
   [params.theme]
     default = 'system'
-    displayToggle = true
+    displayToggle = false
 
   [params.footer]
     enable = true
