@@ -19,6 +19,20 @@ The YubiKey works reliably for everything **outside** of early boot:
 - **pam-u2f**: YubiKey touch for `sudo` and GNOME screen unlock
 
 
+## Yubico Authenticator (OATH/TOTP)
+
+Yubico Authenticator stores TOTP secrets on the YubiKey itself rather than on the device. It requires a smartcard daemon to communicate with the key.
+
+### Install
+
+```bash
+sudo pacman -S ccid pcsclite
+sudo systemctl enable --now pcscd.socket
+```
+
+Then install Yubico Authenticator from Flathub or the CachyOS repository and plug in the YubiKey. The app reads the TOTP credentials directly from the key.
+
+
 ## What Was Attempted: FIDO2 LUKS Unlock
 
 The goal was: plug in YubiKey → touch at boot → LUKS unlocks → desktop. No LUKS password needed.
@@ -124,7 +138,7 @@ account    include      system-auth
 session    include      system-auth
 ```
 
-![nano editing /etc/pam.d/sudo with pam_u2f.so configured](/images/yubikey-sudo-config.png)
+![nano editing /etc/pam.d/sudo with pam_u2f.so configured](/images/yubikey-sudo-config.avif)
 
 Test without closing the current terminal first:
 
@@ -133,9 +147,27 @@ sudo echo test
 # "Please touch the FIDO authenticator." → touch → done
 ```
 
-![sudo echo test output showing the YubiKey touch prompt](/images/yubikey-sudo-test.png)
+![sudo echo test output showing the YubiKey touch prompt](/images/yubikey-sudo-test.avif)
 
 Without the YubiKey plugged in, it falls through to password as normal.
+
+### Configure graphical sudo (polkit)
+
+GNOME's graphical authentication dialog (shown when changing system settings, printer config, etc.) uses a separate PAM service: `polkit-1`. This file doesn't exist by default on CachyOS, so polkit falls back to password-only.
+
+Create `/etc/pam.d/polkit-1`:
+
+```
+#%PAM-1.0
+auth       sufficient   pam_u2f.so cue
+auth       include      system-auth
+account    include      system-auth
+session    include      system-auth
+```
+
+The `cue` text prompt does appear in the graphical dialog as well. Touching the YubiKey authenticates without needing to type a password. Without the key plugged in, it falls back to password as usual.
+
+![GNOME polkit dialog showing "Please touch the FIDO authenticator."](/images/yubikey-polkit.avif)
 
 ### Configure GNOME lock screen
 
@@ -153,11 +185,11 @@ session    include                     system-local-login
 session    optional                    pam_gnome_keyring.so auto_start
 ```
 
-![nano editing /etc/pam.d/gdm-password with pam_u2f.so configured](/images/yubikey-gdm-password-config.png)
+![nano editing /etc/pam.d/gdm-password with pam_u2f.so configured](/images/yubikey-gdm-password-config.avif)
 
 Lock the screen with `Super+L` and touch the YubiKey to unlock.
 
-![GNOME lock screen showing "Please touch the FIDO authenticator."](/images/yubikey-lockscreen.png)
+![GNOME lock screen showing "Please touch the FIDO authenticator."](/images/yubikey-lockscreen.avif)
 
 ### How it works
 

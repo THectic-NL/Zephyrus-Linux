@@ -19,6 +19,20 @@ De YubiKey werkt betrouwbaar voor alles **buiten** de vroege bootprocessen:
 - **pam-u2f**: YubiKey touch voor `sudo` en GNOME-schermvergrendeling
 
 
+## Yubico Authenticator (OATH/TOTP)
+
+Yubico Authenticator slaat TOTP-geheimen op de YubiKey zelf op in plaats van op het apparaat. Hiervoor is een smartcard-daemon nodig om met de key te communiceren.
+
+### Installatie
+
+```bash
+sudo pacman -S ccid pcsclite
+sudo systemctl enable --now pcscd.socket
+```
+
+Installeer vervolgens Yubico Authenticator via Flathub of de CachyOS-repository en sluit de YubiKey aan. De app leest de TOTP-credentials rechtstreeks van de key.
+
+
 ## Wat Geprobeerd Is: FIDO2 LUKS Ontgrendeling
 
 Het doel was: YubiKey inpluggen → aanraken bij boot → LUKS ontgrendelt → bureaublad. Geen LUKS-wachtwoord nodig.
@@ -124,7 +138,7 @@ account    include      system-auth
 session    include      system-auth
 ```
 
-![nano met /etc/pam.d/sudo geconfigureerd voor pam_u2f.so](/images/yubikey-sudo-config.png)
+![nano met /etc/pam.d/sudo geconfigureerd voor pam_u2f.so](/images/yubikey-sudo-config.avif)
 
 Test eerst zonder de huidige terminal te sluiten:
 
@@ -133,9 +147,27 @@ sudo echo test
 # "Please touch the FIDO authenticator." → aanraken → klaar
 ```
 
-![sudo echo test output met de YubiKey touch-prompt](/images/yubikey-sudo-test.png)
+![sudo echo test output met de YubiKey touch-prompt](/images/yubikey-sudo-test.avif)
 
 Zonder YubiKey ingeplugd valt het terug op wachtwoord.
+
+### Grafische sudo configureren (polkit)
+
+De grafische authenticatiedialoog van GNOME (verschijnt bij het wijzigen van systeeminstellingen, printerinstellingen, etc.) gebruikt een aparte PAM-service: `polkit-1`. Dit bestand bestaat standaard niet op CachyOS, waardoor polkit terugvalt op wachtwoord-only.
+
+Maak `/etc/pam.d/polkit-1` aan:
+
+```
+#%PAM-1.0
+auth       sufficient   pam_u2f.so cue
+auth       include      system-auth
+account    include      system-auth
+session    include      system-auth
+```
+
+De `cue` tekstprompt verschijnt ook in de grafische dialoog. De YubiKey aanraken authenticeert zonder wachtwoord te hoeven typen. Zonder YubiKey ingeplugd valt hij terug op wachtwoord.
+
+![GNOME polkit-dialoog met "Please touch the FIDO authenticator."](/images/yubikey-polkit.avif)
 
 ### GNOME-schermvergrendeling configureren
 
@@ -153,11 +185,11 @@ session    include                     system-local-login
 session    optional                    pam_gnome_keyring.so auto_start
 ```
 
-![nano met /etc/pam.d/gdm-password geconfigureerd voor pam_u2f.so](/images/yubikey-gdm-password-config.png)
+![nano met /etc/pam.d/gdm-password geconfigureerd voor pam_u2f.so](/images/yubikey-gdm-password-config.avif)
 
 Vergrendel het scherm met `Super+L` en raak de YubiKey aan om te ontgrendelen.
 
-![GNOME-vergrendelscherm met "Please touch the FIDO authenticator."](/images/yubikey-lockscreen.png)
+![GNOME-vergrendelscherm met "Please touch the FIDO authenticator."](/images/yubikey-lockscreen.avif)
 
 ### Hoe het werkt
 
