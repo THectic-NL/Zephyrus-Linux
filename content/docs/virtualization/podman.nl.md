@@ -151,4 +151,4 @@ De Images-weergave toont alle lokaal gepulde images met hun registry, grootte en
 
 ![Podman Desktop Images-weergave - ghcr.io images in de lijst](/images/podman-desktop-images.avif)
 
-Podman Desktop bevat ook standaard Kubernetes-ondersteuning via de kubectl-extensie, en ondersteunt Docker Compose-bestanden natively via `podman compose`.
+Podman Desktop bevat ook standaard Kubernetes-ondersteuning via de kubectl-extensie, en ondersteunt Docker Compose-bestanden native via `podman compose`.
