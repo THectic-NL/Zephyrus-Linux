@@ -22,6 +22,7 @@ I am not affiliated with, endorsed by, or acting on behalf of ASUS, NVIDIA, Micr
 |-----------|---------------|
 | **Model** | ASUS ROG Zephyrus G16 GA605WV (2024) |
 | **CPU** | AMD Ryzen AI 9 HX 370 |
+| **RAM** | 32 GB LPDDR5 |
 | **iGPU** | AMD Radeon 890M |
 | **dGPU** | NVIDIA GeForce RTX 4060 Laptop (Max-Q) |
 | **OS** | CachyOS (Arch) |

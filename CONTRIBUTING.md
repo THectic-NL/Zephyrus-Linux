@@ -57,13 +57,23 @@ style: fix Dutch translation typos
 
 ## Images
 
-Convert images to AVIF before adding them:
+All images must be in AVIF format. Install `avifenc` from the `libavif` package:
 
 ```bash
-avifenc --speed 6 input.png output.avif
+sudo pacman -S libavif
 ```
 
-Place them in `static/images/` and reference them as `/images/filename.avif` in markdown.
+Batch convert all PNGs in `static/images/` (converts and removes originals):
+
+```bash
+cd static/images
+for f in *.png; do avifenc -q 80 -s 6 "$f" "${f%.png}.avif" && rm "$f"; done
+```
+
+- `-q 80` — 80% quality (0–100 scale, 100 = lossless)
+- `-s 6` — encoder speed (0 = best compression, 10 = fastest)
+
+Place converted images in `static/images/` and reference them as `/images/filename.avif` in markdown.
 
 ---
 
