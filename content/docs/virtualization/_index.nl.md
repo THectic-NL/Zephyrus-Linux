@@ -4,4 +4,4 @@ weight: 6
 toc: false
 ---
 
-Windows draaien via een VM en GPU passthrough-experimenten op de Zephyrus G16.
+Windows draaien via een VM, GPU passthrough-experimenten en container workloads op de Zephyrus G16.

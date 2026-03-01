@@ -91,10 +91,16 @@ Everything I've documented while running CachyOS on the ROG Zephyrus G16. Start 
     link="virtualization/vm-setup"
   >}}
   {{< hextra/feature-card
-    title="Looking Glass Attempt"
-    subtitle="GPU passthrough attempt, not working on this hardware"
+    title="Looking Glass B7"
+    subtitle="GPU passthrough via Looking Glass, not working on this hardware"
     icon="eye"
     link="virtualization/looking-glass-attempt"
+  >}}
+  {{< hextra/feature-card
+    title="Podman & Podman Desktop"
+    subtitle="Docker replacement with rootless containers and a desktop GUI"
+    icon="server"
+    link="virtualization/podman"
   >}}
 {{< /hextra/feature-grid >}}
 

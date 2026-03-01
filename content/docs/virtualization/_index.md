@@ -4,4 +4,4 @@ weight: 6
 toc: false
 ---
 
-Running Windows workloads and GPU passthrough experiments on the Zephyrus G16.
+Running Windows workloads, GPU passthrough experiments, and container workloads on the Zephyrus G16.
