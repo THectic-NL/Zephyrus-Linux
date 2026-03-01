@@ -4,6 +4,10 @@ on:
   pull_request:
     branches: [main, development]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
 
   # ── 1. PR title follows conventional commits ────────────────────────────────
