@@ -1,0 +1,53 @@
+name: Convert images to AVIF
+
+on:
+  push:
+    branches-ignore:
+      - main
+    paths:
+      - "static/images/**"
+
+permissions:
+  contents: write
+
+jobs:
+  convert:
+    name: PNG/JPG to AVIF
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Install avifenc
+        run: sudo apt-get install -y libavif-apps
+
+      - name: Convert and update references
+        id: convert
+        run: |
+          changed=false
+
+          for f in static/images/*.png static/images/*.jpg static/images/*.jpeg \
+                    static/images/*.PNG static/images/*.JPG static/images/*.JPEG; do
+            [ -f "$f" ] || continue
+            name="$(basename "${f%.*}")"
+            ext="${f##*.}"
+            avifenc -q 80 -s 6 "$f" "static/images/${name}.avif"
+            rm "$f"
+            # Update all markdown references from old extension to .avif
+            find content -name "*.md" \
+              -exec sed -i "s|/images/${name}\.${ext}|/images/${name}.avif|gI" {} +
+            changed=true
+            echo "Converted: $f"
+          done
+
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+
+      - name: Commit converted images
+        if: steps.convert.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add static/images/ content/
+          git commit -m "chore: auto-convert images to AVIF"
+          git push

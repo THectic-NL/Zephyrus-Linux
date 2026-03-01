@@ -1,7 +1,7 @@
 ---
 title: "WinBoat: Windows via Podman Container"
 weight: 3
-next: docs/known-issues
+next: docs/virtualization/podman
 ---
 
 WinBoat is een open-source project dat Windows draait in een Podman-container op Linux. Het idee: Windows-apps gewoon als losse vensters op je Linux-desktop, zonder dat je een volledige VM nodig hebt. Ik heb het getest met Podman.

@@ -352,6 +352,18 @@ Na het opslaan verschijnt Archi in de GNOME-app launcher:
 
 ![Archi draaiend op Wayland met GNOME 49](/images/archi-running.avif)
 
+### Podman & Podman Desktop
+
+Voor container workloads gebruik ik Podman in plaats van Docker. Podman heeft geen daemon, draait containers standaard rootless en levert een Docker-compatibele CLI zodat bestaande workflows gewoon blijven werken. `podman-docker` vervangt het `docker`-pakket volledig.
+
+Alle drie de pakketten zijn beschikbaar in de CachyOS-repositories: [podman](https://packages.cachyos.org/package/cachyos-extra-znver4/x86_64_v4/podman), [podman-docker](https://packages.cachyos.org/package/cachyos-extra-znver4/x86_64_v4/podman-docker), [podman-desktop](https://packages.cachyos.org/package/extra/x86_64/podman-desktop).
+
+```bash
+sudo pacman -S podman podman-docker podman-desktop
+```
+
+Voor de volledige setup — inclusief registryconfiguratie en het koppelen van Docker Hub en GitHub — zie [Podman & Podman Desktop]({{< relref "/docs/virtualization/podman" >}}) in de Virtualisatie-sectie.
+
 ---
 
 ## Games & Media

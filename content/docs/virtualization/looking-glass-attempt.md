@@ -1,5 +1,5 @@
 ---
-title: "Looking Glass B7: GPU Passthrough Attempt"
+title: "Looking Glass B7"
 weight: 2
 next: docs/virtualization/winboat
 ---
