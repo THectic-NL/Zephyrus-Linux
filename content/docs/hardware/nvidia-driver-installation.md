@@ -230,7 +230,7 @@ The GA605WV was shipped with different panels depending on the unit. The standar
 |---|---|---|---|
 | `104D158E` | Sharp | LQ160R1JW02 | IPS (ROG Nebula Display) |
 | `834C41AE` | Samsung | ATNA60DL04-0 ([LaptopMedia](https://laptopmedia.com/screen/atna60dl04-0-sdc41ae/) · [Linux Hardware](https://linux-hardware.org/?id=eisa:samsung-sdc41ae)) | OLED |
-| `E5090C19` | Unknown | — (present in ASUS driver package, not yet publicly identified) | Unknown |
+| `E5090C19` | Unknown | (present in ASUS driver package, not yet publicly identified) | Unknown |
 
 To check which panel your unit has:
 

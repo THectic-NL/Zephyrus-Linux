@@ -19,7 +19,7 @@ I got WinBoat from the CachyOS package repository:
 sudo pacman -S winboat
 ```
 
-Package source: [packages.cachyos.org — winboat](https://packages.cachyos.org/package/cachyos/x86_64/winboat)
+Package source: [packages.cachyos.org: winboat](https://packages.cachyos.org/package/cachyos/x86_64/winboat)
 
 The WinBoat website also lists an AUR package (`winboat-bin`) for other Arch-based distros. On CachyOS, the repo package is simpler.
 
@@ -39,7 +39,7 @@ docker port WinBoat | grep "8006" | awk '{print "http://" $3}'
 
 The demo below covers a full session: wizard, installation in progress, WinBoat coming up with Windows actually running, and then my attempts to open Notepad and File Explorer.
 
-![WinBoat setup and first session — from wizard to Windows running, then the startup loop](/images/winboat-demo.avif)
+![WinBoat setup and first session, from wizard to Windows running, then the startup loop](/images/winboat-demo.avif)
 
 After a clean setup, WinBoat does start. **WinBoat Guest API - Online** and **Container - Running** showed up in the interface, the Windows apps screen loaded, and a Windows 11 login screen appeared in the browser via FreeRDP. That part worked.
 
@@ -49,7 +49,7 @@ The problem is getting back to that state reliably without going through the ful
 
 After installing, you can start WinBoat from the app menu or terminal. On first run it sets up a Windows 11 install through Podman automatically.
 
-![WinBoat app — home screen with container status](/images/winboat-app.avif)
+![WinBoat app: home screen with container status](/images/winboat-app.avif)
 
 What I ran into most often: **WinBoat Guest API - Offline** and **Container - Exited**. Windows 11 Pro shows up in the interface but the container never reaches a running state.
 
@@ -60,7 +60,7 @@ The main issue: WinBoat gets stuck in a startup loop. The Podman container keeps
 
 Resetting WinBoat and going through the full setup again does get it running, but having to wipe and redo the setup every time is not a workable solution.
 
-![WinBoat stuck in an endless startup loop — never reaches a running state](/images/winboat-startup-failure.avif)
+![WinBoat stuck in an endless startup loop, never reaching a running state](/images/winboat-startup-failure.avif)
 
 Other things I ran into:
 
@@ -84,7 +84,7 @@ But we're not there yet. For now the [KVM/QEMU VM setup]({{< relref "/docs/virtu
 
 ## References
 
-- [WinBoat — Official website](https://winboat.app)
-- [WinBoat — GitHub (TibixDev/winboat)](https://github.com/TibixDev/winboat)
-- [WinBoat — CachyOS package](https://packages.cachyos.org/package/cachyos/x86_64/winboat)
-- [WinBoat — AUR package (winboat-bin)](https://aur.archlinux.org/packages/winboat-bin)
+- [WinBoat: Official website](https://winboat.app)
+- [WinBoat: GitHub (TibixDev/winboat)](https://github.com/TibixDev/winboat)
+- [WinBoat: CachyOS package](https://packages.cachyos.org/package/cachyos/x86_64/winboat)
+- [WinBoat: AUR package (winboat-bin)](https://aur.archlinux.org/packages/winboat-bin)

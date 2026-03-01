@@ -71,13 +71,23 @@ GNOME heeft standaard geen sneltoetsen voor de bestandsbeheerder of een emoji-pi
 
 ### GNOME-vensterfocus: apps die op de achtergrond openen
 
-Apps zoals Signal en Discord openen soms op de achtergrond, met een melding "Your app is ready" in plaats van het venster naar voren te brengen. Dit los je op met:
+Standaard brengt GNOME een nieuw venster niet naar voren. In plaats daarvan zet hij het op de achtergrond klaar en toont een melding dat de app klaar is. De gedachte erachter is logisch: niet onderbreken wat je aan het doen bent. In de praktijk is het voornamelijk gewoon irritant.
+
+Er is een `gsettings`-sleutel die dit zou moeten regelen:
 
 ```bash
 gsettings set org.gnome.desktop.wm.preferences focus-new-windows 'smart'
 ```
 
-De standaard `strict`-modus brengt nieuwe vensters nooit automatisch naar voren. `smart` laat GNOME zelf beslissen; in de praktijk betekent dit dat nieuw geopende apps gewoon op de voorgrond verschijnen.
+De standaard is `strict` (nieuwe vensters nooit automatisch focussen). `smart` laat GNOME zelf beslissen en zou nieuwe vensters naar voren moeten brengen. In de praktijk **is dit alleen niet betrouwbaar**. Vensters belanden alsnog geminimaliseerd op de achtergrond in veel gevallen, omdat het onderliggende probleem is dat apps het [XDG Activation-protocol](https://wayland.app/protocols/xdg-activation-v1) moeten implementeren om focus correct aan te vragen, en veel doen dat niet. De GNOME Shell dev-blog heeft [een uitgebreide uitleg](https://blogs.gnome.org/shell-dev/2024/09/20/understanding-gnome-shells-focus-stealing-prevention/) over waarom dit voor een groot deel van het app-ecosysteem fundamenteel kapot is.
+
+De oplossing die wel werkt is het toepassen van **beide** instellingen tegelijk: de `gsettings`-sleutel hierboven, plus **Window Demands Attention Focus** inschakelen in de [Just Perfection](https://gitlab.gnome.org/jrahmatzadeh/just-perfection) GNOME Shell-extensie. In het tabblad **Behavior**:
+
+![Just Perfection extensie-instellingen, tabblad Behavior](/images/just-perfection-panel.avif)
+
+![Just Perfection: Window Demands Attention Focus ingeschakeld](/images/just-perfection-window-raise.avif)
+
+Alleen Just Perfection gebruiken zonder de `gsettings`-wijziging kan nog steeds randgevallen opleveren. Alleen `gsettings` is niet voldoende voor apps die het activatieprotocol niet implementeren. Beide samen dekt de grote meerderheid van de gevallen.
 
 ### Touchpad-scrollsnelheid: geen native GNOME-instelling (nog niet)
 
@@ -208,6 +218,26 @@ flatpak install flathub me.proton.Mail
 ```
 
 ![Proton Mail app in Flathub](/images/protonmail-flathub.avif)
+
+### Standard Notes
+
+Standard Notes maakt deel uit van het Proton-ecosysteem, met dezelfde privacy-first filosofie als Proton Mail en end-to-end versleutelde notities die synchroniseren over al je apparaten. Het werd in 2022 [overgenomen door Proton](https://proton.me/blog/proton-standard-notes-join-forces).
+
+De feel zit ergens tussen een minimale teksteditor en OneNote in: een opgeruimde zijbalk, snelle notitie-navigatie, tags, geen rommel. Alles wordt versleuteld voordat het je apparaat verlaat. De sync met Android (Samsung S24 in mijn geval) werkt vlekkeloos en meteen.
+
+Wat het onderscheidt is precies wat er _niet_ in zit. Geen onnodige UI-opsmuk, geen opdringerige abonnementsbanners, geen trage opstarttijd. Gewoon snel.
+
+```bash
+paru -S standardnotes-bin
+```
+
+Beschikbaar via de [AUR](https://aur.archlinux.org/packages/standardnotes-bin) (`standardnotes-bin`). Er bestaat nog geen native CachyOS/Arch-pakket.
+
+![Standard Notes op de desktop](/images/standard-notes-desktop.avif)
+
+![Standard Notes editor-weergave](/images/standard-notes-editor.avif)
+
+![Standard Notes op Android (Samsung S24)](/images/standard-notes-android.avif)
 
 ### Kantoorpakketten
 
