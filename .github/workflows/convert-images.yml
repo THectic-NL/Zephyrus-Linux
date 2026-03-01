@@ -29,7 +29,6 @@ jobs:
             [ -f "$f" ] || continue
             dir="$(dirname "$f")"
             name="$(basename "${f%.*}")"
-            ext="${f##*.}"
             outfile="${dir}/${name}.avif"
 
             if avifenc -q 80 -s 6 "$f" "$outfile"; then
