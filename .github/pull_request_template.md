@@ -14,6 +14,8 @@
 - [ ] `refactor` — restructuring without content changes
 - [ ] `style` — formatting, whitespace, typos
 
+> [PR title and commit types must follow these standards — view the contributing guide](https://github.com/Stensel8/Zephyrus-Linux/blob/main/CONTRIBUTING.md#commit-messages)
+
 ## Checklist
 
 - [ ] PR title follows the commit convention (e.g. `fix: correct nmcli command in eduroam guide`)

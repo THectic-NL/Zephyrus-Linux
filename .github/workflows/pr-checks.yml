@@ -4,6 +4,10 @@ on:
   pull_request:
     branches: [main, development]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
 
   # ── 1. PR title follows conventional commits ────────────────────────────────
@@ -54,15 +58,70 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Check for non-AVIF images
+
+      - name: Find non-AVIF images
+        id: check
         run: |
-          bad=$(find static/images -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" \))
-          if [ -n "$bad" ]; then
-            echo "::error::Non-AVIF images found — convert them with avifenc before submitting:"
-            echo "$bad"
-            exit 1
+          {
+            echo "files<<EOF"
+            find static/images -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" \) | sort
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          count=$(find static/images -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" \) | wc -l)
+          if [ "$count" -gt 0 ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "All images are AVIF."
           fi
-          echo "All images are AVIF."
+
+      - name: Post PR comment
+        if: steps.check.outputs.found == 'true'
+        uses: actions/github-script@v7
+        env:
+          FILES: ${{ steps.check.outputs.files }}
+          ACTOR: ${{ github.event.pull_request.user.login }}
+        with:
+          script: |
+            const files = process.env.FILES.trim().split('\n').map(f => `- \`${f}\``).join('\n');
+            const actor = process.env.ACTOR;
+            const body = [
+              `Hey @${actor}, looks like you forgot something!`,
+              '',
+              'The following images in `static/images/` are not in AVIF format:',
+              files,
+              '',
+              'Please convert them before merging. Install `avifenc` first:',
+              '```bash',
+              'sudo pacman -S libavif',
+              '```',
+              '',
+              'Then batch-convert all images in `static/images/`:',
+              '```bash',
+              'cd static/images',
+              'for f in *.png *.jpg *.jpeg; do',
+              '  [ -f "$f" ] && avifenc -q 80 -s 6 "$f" "${f%.*}.avif" && rm "$f"',
+              'done',
+              '```',
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body,
+            });
+
+      - name: Annotate and fail
+        if: steps.check.outputs.found == 'true'
+        env:
+          FILES: ${{ steps.check.outputs.files }}
+        run: |
+          while IFS= read -r f; do
+            echo "::error file=$f::Convert to AVIF before merging (see README → Image assets)"
+          done <<< "$FILES"
+          exit 1
 
   # ── 5. Both EN and NL files present ─────────────────────────────────────────
   bilingual:
@@ -136,3 +195,54 @@ jobs:
             --root-dir ./public
             public/**/*.html
           fail: true
+
+  # ── 8. Auto-tick PR checklist ────────────────────────────────────────────────
+  update-checklist:
+    name: Update PR checklist
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [pr-title, bilingual, image-format, hugo-build, link-check]
+    steps:
+      - uses: actions/github-script@v7
+        env:
+          RESULT_PR_TITLE:    ${{ needs.pr-title.result }}
+          RESULT_BILINGUAL:   ${{ needs.bilingual.result }}
+          RESULT_IMAGE_FORMAT: ${{ needs.image-format.result }}
+          RESULT_HUGO_BUILD:  ${{ needs.hugo-build.result }}
+          RESULT_LINK_CHECK:  ${{ needs.link-check.result }}
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+
+            let body = pr.body || '';
+
+            // ── Tick checklist items based on CI results ──────────────────────
+            const setCheck = (keyword, passed) => {
+              body = body.replace(
+                new RegExp(`- \\[[ xX]\\] (.*${keyword}.*)`, 'i'),
+                `- [${passed ? 'x' : ' '}] $1`
+              );
+            };
+
+            setCheck('PR title follows',  process.env.RESULT_PR_TITLE     === 'success');
+            setCheck('Both EN and NL',    process.env.RESULT_BILINGUAL     === 'success');
+            setCheck('Media is in AVIF',  process.env.RESULT_IMAGE_FORMAT  === 'success');
+            setCheck('No broken image',   process.env.RESULT_LINK_CHECK    === 'success');
+            setCheck('Tested locally',    process.env.RESULT_HUGO_BUILD    === 'success');
+
+            // ── Remove unchecked "Type of change" options ─────────────────────
+            body = body.replace(/^- \[ \] `\w+` —[^\n]*\n?/gm, '');
+
+            // ── Collapse leftover blank lines ─────────────────────────────────
+            body = body.replace(/\n{3,}/g, '\n\n');
+
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              body,
+            });

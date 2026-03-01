@@ -8,6 +8,8 @@ Central reference for hardware and software issues on the ASUS ROG Zephyrus G16 
 
 ## Active Issues
 
+> These are issues I'm personally still running into. In some cases it might be a real bug; in others it might just be something I'm missing or doing wrong. I'm sharing what I observed, not what I've definitively diagnosed.
+
 ### WinBoat: container fails to start
 
 **What's happening:**
@@ -51,6 +53,20 @@ Lowering the global `scroll-factor` in [libinput-config]({{< relref "/docs/appli
 **Sources:**
 - [brave-browser #36569: native touchpad scrolling on Linux Wayland](https://github.com/brave/brave-browser/issues/36569)
 - [Brave Community: high-resolution touchpad scrolling on Linux Wayland](https://community.brave.app/t/scrolling-speed-is-way-too-fast/649357)
+
+---
+
+### YubiKey FIDO2 LUKS unlock: USB timing race
+
+**What's happening:**
+Enrolling the YubiKey as a FIDO2 LUKS unlock key succeeds, but at boot `systemd-cryptsetup` fails with `FIDO_ERR_RX`. The key is physically present but seemingly not yet initialized by the USB HID stack when the query comes in. This seems to hit especially on warm reboots.
+
+Tried with `token-timeout=30` in crypttab and `rd.udev.settle-timeout=10` as a kernel parameter, both on systemd 259. Neither helped.
+
+**Status:**
+Still unresolved. Not sure if this is a real hardware/firmware timing issue, something specific to this machine, or a misconfiguration on my end. Possibly revisiting later. For now, the YubiKey is used for `sudo` and the GNOME lock screen instead.
+
+See the [YubiKey page]({{< relref "/docs/security/yubikey" >}}) for the full attempted setup and what was reverted.
 
 ---
 

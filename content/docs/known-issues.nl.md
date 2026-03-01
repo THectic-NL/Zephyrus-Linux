@@ -8,6 +8,8 @@ Centrale referentie voor hardware- en softwareproblemen op de ASUS ROG Zephyrus 
 
 ## Actieve Problemen
 
+> Dit zijn problemen waar ik persoonlijk nog steeds tegenaan loop. In sommige gevallen is het mogelijk een echte bug; in andere gevallen doe ik misschien zelf iets fout of heb ik iets over het hoofd gezien. Ik deel wat ik heb waargenomen, niet wat ik definitief heb vastgesteld.
+
 ### WinBoat: container start niet op
 
 **Wat er gebeurt:**
@@ -51,6 +53,20 @@ Het verlagen van de globale `scroll-factor` in [libinput-config]({{< relref "/do
 **Bronnen:**
 - [brave-browser #36569: native touchpad scrolling op Linux Wayland](https://github.com/brave/brave-browser/issues/36569)
 - [Brave Community: hoge-resolutie touchpad scrolling op Linux Wayland](https://community.brave.app/t/scrolling-speed-is-way-too-fast/649357)
+
+---
+
+### YubiKey FIDO2 LUKS ontgrendeling: USB timing race
+
+**Wat er gebeurt:**
+Het inschrijven van de YubiKey als FIDO2 LUKS-ontgrendelsleutel lukt, maar bij het opstarten geeft `systemd-cryptsetup` `FIDO_ERR_RX` terug. De key is fysiek aanwezig maar lijkt nog niet geïnitialiseerd te zijn door de USB HID-stack op het moment van de query. Dit lijkt met name op te treden bij warme reboots.
+
+Geprobeerd met `token-timeout=30` in crypttab en `rd.udev.settle-timeout=10` als kernelparameter, beide op systemd 259. Geen van beide hielp.
+
+**Status:**
+Nog steeds onopgelost. Onduidelijk of dit een echt hardware/firmware timingprobleem is, iets specifiek voor dit apparaat, of een configuratiefout van mijn kant. Mogelijk later nog een keer opgepakt. Voorlopig gebruik ik de YubiKey voor `sudo` en de GNOME-schermvergrendeling.
+
+Zie de [YubiKey-pagina]({{< relref "/docs/security/yubikey" >}}) voor de volledige beschrijving van wat geprobeerd is en wat teruggedraaid is.
 
 ---
 

@@ -45,6 +45,11 @@ MD022: false
 # h1/h2 are rendered by the theme template, not the content file
 MD001: false
 
+# Duplicate headings — only flag duplicates within the same section, not across
+# different top-level sections (e.g. two separate "### Install" blocks are fine)
+MD024:
+  siblings_only: true
+
 # Table column style (pipe spacing/alignment) — overly pedantic, tables render
 # correctly regardless of exact pipe spacing
 MD060: false
