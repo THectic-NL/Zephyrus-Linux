@@ -201,14 +201,15 @@ jobs:
     name: Update PR checklist
     runs-on: ubuntu-latest
     if: always()
-    needs: [pr-title, bilingual, image-format, link-check]
+    needs: [pr-title, bilingual, image-format, hugo-build, link-check]
     steps:
       - uses: actions/github-script@v7
         env:
-          RESULT_PR_TITLE: ${{ needs.pr-title.result }}
-          RESULT_BILINGUAL: ${{ needs.bilingual.result }}
+          RESULT_PR_TITLE:    ${{ needs.pr-title.result }}
+          RESULT_BILINGUAL:   ${{ needs.bilingual.result }}
           RESULT_IMAGE_FORMAT: ${{ needs.image-format.result }}
-          RESULT_LINK_CHECK: ${{ needs.link-check.result }}
+          RESULT_HUGO_BUILD:  ${{ needs.hugo-build.result }}
+          RESULT_LINK_CHECK:  ${{ needs.link-check.result }}
         with:
           script: |
             const { data: pr } = await github.rest.pulls.get({
@@ -219,6 +220,7 @@ jobs:
 
             let body = pr.body || '';
 
+            // ── Tick checklist items based on CI results ──────────────────────
             const setCheck = (keyword, passed) => {
               body = body.replace(
                 new RegExp(`- \\[[ xX]\\] (.*${keyword}.*)`, 'i'),
@@ -226,10 +228,17 @@ jobs:
               );
             };
 
-            setCheck('PR title follows',   process.env.RESULT_PR_TITLE    === 'success');
-            setCheck('Both EN and NL',     process.env.RESULT_BILINGUAL    === 'success');
-            setCheck('Media is in AVIF',   process.env.RESULT_IMAGE_FORMAT === 'success');
-            setCheck('No broken image',    process.env.RESULT_LINK_CHECK   === 'success');
+            setCheck('PR title follows',  process.env.RESULT_PR_TITLE     === 'success');
+            setCheck('Both EN and NL',    process.env.RESULT_BILINGUAL     === 'success');
+            setCheck('Media is in AVIF',  process.env.RESULT_IMAGE_FORMAT  === 'success');
+            setCheck('No broken image',   process.env.RESULT_LINK_CHECK    === 'success');
+            setCheck('Tested locally',    process.env.RESULT_HUGO_BUILD    === 'success');
+
+            // ── Remove unchecked "Type of change" options ─────────────────────
+            body = body.replace(/^- \[ \] `\w+` —[^\n]*\n?/gm, '');
+
+            // ── Collapse leftover blank lines ─────────────────────────────────
+            body = body.replace(/\n{3,}/g, '\n\n');
 
             await github.rest.pulls.update({
               owner: context.repo.owner,
