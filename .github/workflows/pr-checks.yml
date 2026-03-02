@@ -170,7 +170,7 @@ jobs:
           TZ: Europe/Amsterdam
         run: hugo --gc --minify --baseURL "http://localhost/"
       - name: Upload built site
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: hugo-public
           path: public/
