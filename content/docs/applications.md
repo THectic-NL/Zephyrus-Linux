@@ -499,3 +499,50 @@ sudo pacman -S solaar
 Runs in the system tray with battery notifications. You can also configure DPI, polling rate, and buttons from there.
 
 ![Solaar about screen - version 1.1.19](/images/solaar-about.avif)
+
+### LocalSend
+
+[LocalSend](https://localsend.org/) is an open-source, cross-platform file sharing app. I use it to transfer files between my Samsung S24 Ultra and the Zephyrus. If you're coming from Windows or Android, it's essentially the open-source equivalent of Quick Share: it discovers devices on the local network and transfers files directly, no cloud involved.
+
+The one thing it can't do is transfer files across different networks. Quick Share could route transfers through Google/Samsung's cloud when sender and receiver were on separate networks, but that was mobile-only. Desktop Quick Share was unreliable enough that it was rarely worth using anyway. Speed-wise, LocalSend is slightly slower, but not noticeably so in practice.
+
+Available natively in the [CachyOS package repository](https://packages.cachyos.org/package/cachyos/x86_64/localsend), built specifically for CachyOS. No AUR needed, which is a real plus.
+
+```bash
+sudo pacman -S localsend
+```
+
+The app shows up in the GNOME launcher after installing. Open it and it auto-discovers other LocalSend instances on your network.
+
+<img src="/images/localsend-desktop.avif" width="700" alt="LocalSend running on the desktop">
+
+<img src="/images/localsend-cachyos-package.avif" width="600" alt="LocalSend in the CachyOS package repository">
+
+**Firewall rules**
+
+LocalSend uses port 53317 (TCP and UDP) for both device discovery and file transfer. If you have a firewall active, you need to open this port.
+
+**ufw:**
+
+```bash
+sudo ufw allow 53317/tcp comment "LocalSend-App"
+sudo ufw allow 53317/udp comment "LocalSend-App"
+```
+
+**firewalld:**
+
+```bash
+sudo firewall-cmd --permanent --add-port=53317/tcp
+sudo firewall-cmd --permanent --add-port=53317/udp
+sudo firewall-cmd --reload
+```
+
+The Android app works the same way. Open it on your phone and it immediately appears as a discovered device on the desktop side, and vice versa.
+
+<img src="/images/localsend-android-1.avif" width="320" alt="LocalSend on Android (Samsung S24 Ultra)">
+
+Selecting files is straightforward. Pick what you want to send, choose the target device, and the transfer starts.
+
+<img src="/images/localsend-android-2.avif" width="320" alt="LocalSend on Android - selecting files to send">
+
+<img src="/images/localsend-android-3.avif" width="320" alt="LocalSend on Android - transfer in progress">
