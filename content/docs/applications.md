@@ -502,7 +502,7 @@ Runs in the system tray with battery notifications. You can also configure DPI, 
 
 ### LocalSend
 
-[LocalSend](https://localsend.org/) is an open-source, cross-platform file sharing app. I use it to transfer files between my Samsung S24 Ultra and the Zephyrus. If you're coming from Windows or Android, it's essentially the open-source equivalent of Quick Share: discovers devices on the local network and transfers files directly, no cloud involved.
+[LocalSend](https://localsend.org/) is an open-source, cross-platform file sharing app. I use it to transfer files between my Samsung S24 Ultra and the Zephyrus. If you're coming from Windows or Android, it's essentially the open-source equivalent of Quick Share: it discovers devices on the local network and transfers files directly, no cloud involved.
 
 The one thing it can't do is transfer files across different networks. Quick Share could route transfers through Google/Samsung's cloud when sender and receiver were on separate networks, but that was mobile-only. Desktop Quick Share was unreliable enough that it was rarely worth using anyway. Speed-wise, LocalSend is slightly slower, but not noticeably so in practice.
 
