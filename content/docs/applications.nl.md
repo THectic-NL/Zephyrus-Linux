@@ -499,3 +499,50 @@ sudo pacman -S solaar
 Draait in het systray met batterijnotificaties. Je kunt er ook DPI, polling rate en knoppen mee configureren.
 
 ![Solaar about screen - version 1.1.19](/images/solaar-about.avif)
+
+### LocalSend
+
+[LocalSend](https://localsend.org/) is een open-source, platformonafhankelijke app voor het delen van bestanden. Ik gebruik het om bestanden over te zetten tussen mijn Samsung S24 Ultra en de Zephyrus. Als je gewend bent aan Windows of Android, is het in feite het open-source equivalent van QuickShare: het ontdekt apparaten op het lokale netwerk en stuurt bestanden direct door, zonder cloud.
+
+Wat het niet kan, is bestanden versturen wanneer afzender en ontvanger op verschillende netwerken zitten. QuickShare kon dat wel via de cloud van Google en Samsung, maar dat was toch alleen beschikbaar via de mobiele app. De desktopversie van QuickShare werkte sowieso niet altijd even goed, dus in de praktijk mis je dat niet. Qua snelheid is LocalSend iets langzamer, maar dat merk je nauwelijks.
+
+Beschikbaar als native pakket in de [CachyOS-packagerepository](https://packages.cachyos.org/package/cachyos/x86_64/localsend), native gebouwd voor CachyOS. Geen AUR nodig, wat echt een pluspunt is.
+
+```bash
+sudo pacman -S localsend
+```
+
+Na het installeren verschijnt de app in de GNOME-launcher. Open hem en hij ontdekt direct andere LocalSend-instanties op het netwerk.
+
+<img src="/images/localsend-desktop.avif" width="700" alt="LocalSend draaiend op de desktop">
+
+<img src="/images/localsend-cachyos-package.avif" width="600" alt="LocalSend in de CachyOS-packagerepository">
+
+**Firewallregels**
+
+LocalSend gebruikt poort 53317 (TCP en UDP) voor zowel apparaatdetectie als bestandsoverdracht. Als je een firewall actief hebt, moet je deze poort openstellen.
+
+**ufw:**
+
+```bash
+sudo ufw allow 53317/tcp comment "LocalSend-App"
+sudo ufw allow 53317/udp comment "LocalSend-App"
+```
+
+**firewalld:**
+
+```bash
+sudo firewall-cmd --permanent --add-port=53317/tcp
+sudo firewall-cmd --permanent --add-port=53317/udp
+sudo firewall-cmd --reload
+```
+
+De Android-app werkt op dezelfde manier. Open hem op je telefoon en hij verschijnt meteen als ontdekt apparaat aan de desktopkant, en andersom.
+
+<img src="/images/localsend-android-1.avif" width="320" alt="LocalSend op Android (Samsung S24 Ultra)">
+
+Bestanden selecteren gaat eenvoudig. Kies wat je wilt versturen, selecteer het doelapparaat en de overdracht begint.
+
+<img src="/images/localsend-android-2.avif" width="320" alt="LocalSend op Android - bestanden selecteren">
+
+<img src="/images/localsend-android-3.avif" width="320" alt="LocalSend op Android - overdracht bezig">
