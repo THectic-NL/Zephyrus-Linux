@@ -72,6 +72,17 @@ sudo virsh net-autostart default
 
 Let op: Als je "network is already active" ziet, draait het netwerk al.
 
+{{< callout type="warning" >}}
+**Firewallmelding:** Op sommige distributies (bijv. CachyOS) blokkeert de firewall VM-netwerken standaard. Als je VM geen verbinding met internet kan maken of geen IP-adres krijgt, voeg dan deze UFW-regels toe:
+```bash
+sudo ufw allow in on virbr0 to any port 53 proto udp comment 'VM DNS'
+sudo ufw allow in on virbr0 to any port 67 proto udp comment 'VM DHCP'
+sudo ufw route allow in on virbr0
+sudo ufw route allow out on virbr0
+```
+Fedora en de meeste andere distributies staan dit verkeer standaard toe en hebben deze regels niet nodig.
+{{< /callout >}}
+
 **5. VirtIO drivers ISO downloaden:**
 ```bash
 # Download de officiële stable VirtIO drivers ISO (~753 MB)
