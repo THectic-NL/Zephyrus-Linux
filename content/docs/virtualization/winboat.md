@@ -34,7 +34,7 @@ The WinBoat website also lists an AUR package (`winboat-bin`) for other Arch-bas
 
 ## Setup
 
-When you first run WinBoat, it walks you through a setup wizard: install location, user credentials for the Windows account, and hardware allocation (CPU cores, RAM, disk size). From there it downloads and installs Windows 11 automatically through Podman. The install takes a while; you can follow the progress in your browser. The port can change between runs, so use this to get the current URL:
+When you first run WinBoat, it walks you through a setup wizard: install location, user credentials for the Windows account, and hardware allocation (CPU cores, RAM, disk size). From there it downloads and installs Windows 11 automatically through Podman. The install takes a while; you can follow the progress in your browser. The port can change between runs, so use this command to get the current URL:
 
 ```bash
 # Podman

@@ -18,7 +18,7 @@ Na het testen van meerdere distributies ben ik overgestapt op CachyOS (Arch) als
 - **Ingebouwde iGPU- en dGPU-drivers**: de AMD Radeon 890M en NVIDIA RTX 4060 werken correct vanaf een verse installatie, inclusief GPU-switching via `asusctl armoury`
 - **ASUS Linux-patches**: een deel van het werk van [Luke Jones](https://asus-linux.org/) is gemerged in de Linux kernel zelf (de `asus-armoury`-driver vanaf 6.19), terwijl aanvullende ROG-specifieke patches en `asusctl`-verbeteringen via CachyOS worden meegeleverd. Zowel `asusctl` als `rog-control-center` zijn direct beschikbaar vanuit de CachyOS repos; twee packages installeren en je bent klaar, zonder diepe systeemconfiguratie. CachyOS bevat op dit moment de meest volledige set aan optimalisaties voor deze hardware
 
-Fedora is een sterke tweede, een solide keuze als je de voorkeur geeft aan een stabielere releasecyclus boven rolling. Je zit goed zolang je op kernel 6.19 draait, die al beschikbaar is op Fedora, maar je moet wel even updaten. Dat gezegd hebbende voelt CachyOS nog altijd beter aan voor deze hardware: de CPU-scheduler tuning (BORE/EEVDF), vooraf geconfigureerde NVIDIA-driver ondersteuning en nauwere integratie met `asusctl` maken het dagelijks gebruik soepeler, zonder extra configuratie.
+Fedora is een sterke tweede, een solide keuze als je de voorkeur geeft aan een stabielere releasecyclus boven rolling. Je zit goed zolang je op kernel 6.19 draait, die al beschikbaar is op Fedora, maar je moet wel even updaten. CachyOS voelt echter nog altijd beter aan voor deze hardware: de CPU-scheduler tuning (BORE/EEVDF), vooraf geconfigureerde NVIDIA-driverondersteuning en nauwere integratie met `asusctl` maken het dagelijks gebruik soepeler, zonder extra configuratie.
 
 ## CachyOS Kernel Manager
 

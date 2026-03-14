@@ -5,7 +5,7 @@ prev: docs/virtualization/podman
 next: docs/known-issues
 ---
 
-VMware Workstation werkt goed op CachyOS met wat initiële configuratie. De belangrijkste stappen zijn het installeren van het pakket uit de AUR, het herstellen van de DKMS kernel modules en het instellen van netwerken. Op GNOME 49 Wayland is ook een keyboard grab fix nodig.
+VMware Workstation werkt goed op CachyOS met wat initiële configuratie. De belangrijkste stappen zijn het installeren van het pakket uit de AUR, het herstellen van de DKMS-kernelmodules en het instellen van netwerken. Op GNOME 49 Wayland is ook een correctie voor toetsenbordovername nodig.
 
 **Pakket:** `vmware-workstation` 25H2u1-1 uit de [AUR](https://aur.archlinux.org/packages/vmware-workstation)
 
@@ -110,11 +110,11 @@ echo 'vmnet8 = "yes"' | sudo tee -a /etc/vmware/networking
 {{% /details %}}
 
 
-## GNOME 49 Wayland Toetsenbord Grab
+## GNOME 49 Wayland-toetsenbordovername
 
 {{% details title="Toetsenbordinvoer in VM's herstellen op GNOME 49 Wayland" closed="true" %}}
 
-Op GNOME 49 met Wayland kan toetsenbordinvoer onjuist werken in VMware VM's. XWayland keyboard grab moet expliciet worden toegestaan voor VMware processen.
+Op GNOME 49 met Wayland kan toetsenbordinvoer onjuist werken in VMware VM's. XWayland-toetsenbordovername moet expliciet worden toegestaan voor VMware-processen.
 
 ```bash
 gsettings set org.gnome.mutter.wayland xwayland-allow-grabs true
@@ -131,7 +131,7 @@ Alt+F2 → r → Enter
 
 **In VMware:**
 
-- Gebruik **Ctrl+Alt** om input grab te wisselen
+- Gebruik **Ctrl+Alt** om de toetsenbordovername te wisselen
 - Schakel volledig scherm in voor betere toetsenbordafhandeling
 - Windows-sneltoetsen werken nu in de guest
 

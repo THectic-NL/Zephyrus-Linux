@@ -10,9 +10,9 @@ De YubiKey voor `sudo` en de GNOME-schermvergrendeling werkt betrouwbaar via `pa
 
 ## Wat werkt
 
-- **OATH/TOTP**: Yubico Authenticator 7.3.1 werkt uitstekend voor 2FA codes
-- **SSH**: FIDO2-backed SSH sleutels
-- **Bitwarden**: hardware-backed authenticatie
+- **OATH/TOTP**: Yubico Authenticator 7.3.1 werkt uitstekend voor 2FA-codes
+- **SSH**: FIDO2-ondersteunde SSH-sleutels
+- **Bitwarden**: hardware-ondersteunde authenticatie
 - **pam-u2f**: YubiKey touch voor `sudo` en GNOME-schermvergrendeling
 
 
@@ -30,7 +30,7 @@ Installeer vervolgens Yubico Authenticator via Flathub of de CachyOS-repository 
 
 ## pam-u2f
 
-YubiKey touch vereisen voor `sudo` en de GNOME-schermvergrendeling. Geen initramfs, geen boot-timing problemen.
+YubiKey touch vereisen voor `sudo` en de GNOME-schermvergrendeling. Geen initramfs, geen boot-timingproblemen.
 
 ```bash
 sudo pacman -S pam-u2f

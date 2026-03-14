@@ -48,7 +48,7 @@ Upstream Chromium issue. Chromium receives high-precision scroll events from lib
 Open. No fix in Brave as of early 2026. The issue has been reported since at least 2022.
 
 **Attempted workaround (abandoned):**
-Lowering the global `scroll-factor` in [libinput-config]({{< relref "/docs/applications#touchpad-scroll-speed-no-native-gnome-setting-yet" >}}) does reduce scrolling speed in Brave, but it's a system-wide change that affects every application, including ones where scrolling was already fine. After running with this for about a week I removed it. The Brave-specific problem doesn't justify slowing down everything else.
+Lowering the global `scroll-factor` in [libinput-config]({{< relref "/docs/applications#touchpad-scroll-speed-no-native-gnome-setting-yet" >}}) does reduce scrolling speed in Brave, but it's a system-wide change that affects every application, including ones where scrolling was already fine. After running with this for about a week, I removed it. The Brave-specific problem doesn't justify slowing down everything else.
 
 **Sources:**
 - [brave-browser #36569: native touchpad scrolling on Linux Wayland](https://github.com/brave/brave-browser/issues/36569)
@@ -72,7 +72,7 @@ See the **Things I Wished Had Worked** section at the bottom of this page for th
 
 ## Resolved Issues
 
-The following issues are resolved. Each entry is either fixed by the Linux kernel developers (notably the AMD GPU page fault bugs in 6.18 and the asus-armoury driver merged in 6.19), or resolved through a configuration workaround I applied myself. Kept here as reference.
+The following issues are resolved. Each entry is either fixed by the Linux kernel developers (notably the AMD GPU page fault bugs in 6.18 and the asus-armoury driver merged in 6.19), or resolved through a configuration workaround I applied myself. Kept here as a reference.
 
 ## GPU & Display
 

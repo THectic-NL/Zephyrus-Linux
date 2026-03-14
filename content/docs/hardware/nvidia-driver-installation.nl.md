@@ -7,8 +7,8 @@ prev: docs/getting-started
 De G16 heeft een NVIDIA RTX 4060 naast de AMD iGPU. De open-source Nouveau driver werkt niet goed op moderne NVIDIA-hardware, dus proprietary drivers zijn nodig.
 
 **Driver die ik gebruik:**
-- Versie: 590.48.01
-- CUDA-versie: 13.1
+- Versie: 595.45.04
+- CUDA-versie: 13.2
 
 
 ## CachyOS (Arch)
@@ -34,11 +34,11 @@ sudo dnf install \
   https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 ```
 
-### Systeem Verificatie
+### Systeemverificatie
 
 {{% details title="Controleer kernelversie" closed="true" %}}
 
-Vereist: Kernel 6.19+ voor Ryzen AI 9 HX 370 ondersteuning.
+Vereist: Kernel 6.19+ voor Ryzen AI 9 HX 370-ondersteuning.
 
 ```bash
 uname -r
@@ -91,13 +91,13 @@ sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda xorg-x11-drv-nvidia-libs.
 ```
 
 Dit installeert de driver, CUDA libraries en build dependencies (ongeveer 1 GB).
-- `akmod-nvidia` - NVIDIA driver via akmods voor automatisch kernel module bouwen en signeren
-- `xorg-x11-drv-nvidia-cuda` - CUDA-ondersteuning en driverutilities (inclusief Wayland ondersteuning)
+- `akmod-nvidia` - NVIDIA driver via akmods voor het automatisch builden en signen van kernelmodules
+- `xorg-x11-drv-nvidia-cuda` - CUDA-ondersteuning en driverutilities (inclusief Wayland-ondersteuning)
 - `xorg-x11-drv-nvidia-libs.i686` - 32-bit NVIDIA libraries (nodig voor Steam/Proton)
 
-### Kernel modules bouwen
+### Kernel modules builden
 
-akmods bouwt en ondertekent kernelmodules automatisch tijdens installatie. Om handmatig te triggeren:
+akmods bouwt en signt kernelmodules automatisch tijdens de installatie. Om een rebuild handmatig te triggeren:
 
 ```bash
 sudo akmods --force
@@ -116,15 +116,15 @@ ls /lib/modules/$(uname -r)/kernel/drivers/video/
 
 De NVIDIA modules moeten aanwezig zijn.
 
-### MOK signing key enrollen
+### MOK-ondertekeningssleutel inschrijven
 
-Als Secure Boot is ingeschakeld, importeer de akmods signing key en stel een wachtwoord in:
+Als Secure Boot is ingeschakeld, importeer de akmods-ondertekeningssleutel en stel een wachtwoord in:
 
 ```bash
 sudo mokutil --import /etc/pki/akmods/certs/public_key.der
 ```
 
-### MOK enrollment bij volgende boot
+### MOK-inschrijving bij de volgende boot
 
 ```bash
 sudo reboot
@@ -137,7 +137,7 @@ Tijdens boot verschijnt het MOK Management scherm (blauw scherm):
 4. Voer het wachtwoord in dat je in de vorige stap hebt ingesteld
 5. Reboot
 
-Het systeem boot normaal na MOK enrollment.
+Het systeem start normaal op na de MOK-inschrijving.
 
 ### Definitieve reboot
 
@@ -162,22 +162,22 @@ sudo systemctl enable nvidia-hibernate.service nvidia-suspend.service nvidia-res
 
 Deze services voorkomen GPU state problemen na suspend/resume cycli.
 
-**Belangrijk: `nvidia-powerd` niet activeren; permanent masken**
+**Belangrijk: `nvidia-powerd` niet activeren; permanent maskeren**
 
 De `nvidia-powerd.service` beheert NVIDIA Dynamic Boost, waarmee extra wattage (~5-15W) van de CPU naar de GPU geschoven wordt tijdens zware GPU-belasting. Hoewel nuttig op Intel-gebaseerde laptops, conflicteert het met AMD ATPX power management op de Zephyrus G16 en veroorzaakt soft lockups en "GPU has fallen off the bus" fouten.
 
 Op deze laptop wordt GPU-vermogensbeheer geregeld via ATPX (AMD-gestuurd via ACPI). De NVIDIA suspend/hibernate/resume services beheren power states correct zonder `nvidia-powerd`.
 
-**Wat je verliest door het uit te zetten:** Minimaal. Een paar FPS minder bij zware GPU workloads. De ~5-15W Dynamic Boost is de instabiliteit niet waard op AMD ATPX hardware.
+**Wat je verliest door het uit te zetten:** Minimaal. Iets minder FPS bij zware GPU workloads. De ~5-15W Dynamic Boost is de instabiliteit niet waard op AMD ATPX hardware.
 
-**Uitschakelen en permanent masken:**
+**Uitschakelen en permanent maskeren:**
 ```bash
 sudo systemctl disable nvidia-powerd.service
 sudo systemctl stop nvidia-powerd.service
 sudo systemctl mask nvidia-powerd.service
 ```
 
-Masken maakt een symlink naar `/dev/null`, waardoor geen enkel proces (ook geen NVIDIA driver updates via `dnf`) de service opnieuw kan activeren.
+Maskeren maakt een symlink naar `/dev/null`, waardoor geen enkel proces (ook geen NVIDIA driver updates via `dnf`) de service opnieuw kan activeren.
 
 **Als je het later opnieuw wilt proberen** (bijv. na een kernel- of driver-update die het ATPX-conflict mogelijk verhelpt):
 ```bash
@@ -186,7 +186,7 @@ sudo systemctl enable --now nvidia-powerd.service
 ```
 
 **Referentie:**
-- [NVIDIA Power Management Documentatie](https://download.nvidia.com/XFree86/Linux-x86_64/590.48.01/README/powermanagement.html)
+- [NVIDIA Power Management Documentatie](https://download.nvidia.com/XFree86/Linux-x86_64/595.45.04/README/powermanagement.html)
 
 {{% /steps %}}
 
@@ -194,9 +194,9 @@ sudo systemctl enable --now nvidia-powerd.service
 
 {{% steps %}}
 
-### Verifieer NVIDIA driver
+### NVIDIA-driver verifiëren
 
-Na reboot, check driver status:
+Na de herstart, controleer de driverstatus:
 
 ```bash
 nvidia-smi
@@ -210,7 +210,7 @@ Je ziet de NVIDIA driver- en CUDA-versies in de output.
 lsmod | grep nvidia
 ```
 
-De NVIDIA modules zijn geladen en de driver is functioneel.
+Als de modules zichtbaar zijn, is de driver geladen en functioneel.
 
 {{% /steps %}}
 
@@ -237,7 +237,7 @@ Controleer welk paneel jouw exemplaar heeft:
 cat /sys/class/drm/card*-eDP-*/edid | edid-decode 2>/dev/null | grep -i "manufacturer\|model\|product name"
 ```
 
-Deze kleurprofielen zijn verkregen door het reverse engineeren van het ASUS Windows driver package. Door de structuur van de ASUS CDN en de inhoud van de driver ZIP-bestanden te analyseren, zijn alle factory-gekalibreerde profielen voor deze laptop gevonden. De ICC metadata is vervolgens aangepast zodat de profielen direct met leesbare namen verschijnen in GNOME Color Management.
+Deze kleurprofielen zijn verkregen door het reverse engineeren van het ASUS Windows driver package. Door de structuur van de ASUS CDN en de inhoud van de driver ZIP-bestanden te analyseren, zijn alle fabrieksgekalibreerde profielen voor deze laptop gevonden. De ICC metadata is vervolgens aangepast zodat de profielen direct met leesbare namen verschijnen in GNOME Color Management.
 
 **Installeer de kleurprofielen:**
 
@@ -267,7 +267,7 @@ cp GA605WV_1002_104D158E_CMDEF.icm ~/.local/share/icc/
 
 **Opmerking:** Als GNOME Settings de oude technische namen toont (bijv. "ASUS GA605WV 1002 104D158E CMDEF" in plaats van "Native"), sluit Settings af en heropen, of log uit/in om de color cache te verversen.
 
-De bestandsnaam bevat je GPU (`1002` = AMD, `10DE` = NVIDIA) en paneel-ID. Match deze aan jouw exemplaar via de paneeltabel hierboven. Alle profielen staan in de [`/icc-profiles/`](https://github.com/Stensel8/Zephyrus-Linux/tree/main/static/icc-profiles) map.
+De bestandsnaam bevat je GPU (`1002` = AMD, `10DE` = NVIDIA) en paneel-ID. Koppel deze aan jouw exemplaar via de paneeltabel hierboven. Alle profielen staan in de [`/icc-profiles/`](https://github.com/Stensel8/Zephyrus-Linux/tree/main/static/icc-profiles) map.
 
 **Achtergrond:**
 
@@ -324,13 +324,13 @@ Bekende problemen en probleemoplossing voor NVIDIA driver-installatie staan op d
 {{< /callout >}}
 
 
-## Technische weetjes
+## Technische notities
 
 ### Package Naming
-Het `akmod-nvidia` package is de aanbevolen NVIDIA driver voor Fedora. Het gebruikt het akmods framework om kernelmodules automatisch opnieuw te bouwen na kernelupdates.
+Het `akmod-nvidia` package is de aanbevolen NVIDIA driver voor Fedora. Het gebruikt het akmods framework om kernelmodules automatisch opnieuw te builden na kernelupdates.
 
 ### Secure Boot
-akmods rebuildt en signeert kernelmodules automatisch na kernelupdates. Op Fedora kan `sbctl` ook worden gebruikt voor Secure Boot sleutelbeheer.
+akmods herbouwt en ondertekent kernelmodules automatisch na kernelupdates. Op Fedora kan `sbctl` ook worden gebruikt voor Secure Boot-sleutelbeheer.
 
 
 ## Aanvullende Bronnen

@@ -14,7 +14,7 @@ Na het ontgrendelen van de schijf met LUKS bij het opstarten wilde ik niet nog e
 
 ## Configuratie
 
-Bewerk de GDM configuratie:
+Bewerk de GDM-configuratie:
 
 ```bash
 sudo nano /etc/gdm/custom.conf

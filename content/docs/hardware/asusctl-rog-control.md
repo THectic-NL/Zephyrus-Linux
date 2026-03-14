@@ -28,7 +28,7 @@ This installs:
 - `asusctl`: CLI frontend that communicates with asusd
 - `rog-control-center`: graphical frontend that communicates with asusd
 
-On CachyOS this is all you need; both packages are available directly from the repos and everything works out of the box. No kernel patching or deep system configuration required.
+On CachyOS, this is all you need; both packages are available directly from the repos and everything works out of the box. No kernel patching or deep system configuration required.
 
 ### Enable services
 

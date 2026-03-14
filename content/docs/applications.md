@@ -185,7 +185,7 @@ Password manager. Available via Flathub and works well.
 
 ### Signal Messenger
 
-Signal is my main messaging app. The [CachyOS extra repository](https://packages.cachyos.org/package/extra/x86_64/signal-desktop) ships a native package, which is what I use and it works better than the Flatpak.
+Signal is my main messaging app. The [CachyOS extra repository](https://packages.cachyos.org/package/extra/x86_64/signal-desktop) ships a native package, which is what I use; it works better than the Flatpak.
 
 **CachyOS / Arch (recommended):**
 

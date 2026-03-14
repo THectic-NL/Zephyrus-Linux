@@ -34,14 +34,14 @@ Gebruik de officiële Windows 11 Media Creation Tool met een activatiemethode:
    - Selecteer de juiste activatiemethode voor je setup
    - Geen 90-daagse beperking, volledige Windows 11-ervaring
 
-**Optie 3: AtlasOS (Geoptimaliseerd voor prestatie)**
+**Optie 3: AtlasOS (Geoptimaliseerd voor prestaties)**
 
 [AtlasOS](https://atlasos.net/) creëert een uitgeklede Windows 11 ISO met bloatware verwijderd en onnodige services uitgeschakeld, wat zorgt voor aanzienlijk betere prestaties in een VM.
 
 **Een AtlasOS ISO aanmaken:**
 
 - **Vanaf een Windows machine:** Download de [AtlasOS Playbook](https://atlasos.net/) en voer deze uit op een Windows-installatie om een geoptimaliseerde ISO aan te maken
-- **Vanuit de VM (OOBE):** Je kunt de AtlasOS Playbook rechtstreeks uitvoeren tijdens de initiële setup fase van Windows 11
+- **Vanuit de VM (OOBE):** Je kunt de AtlasOS Playbook rechtstreeks uitvoeren tijdens de initiële setupfase van Windows 11
 
 **Belangrijk:** ISOs gemaakt met AtlasOS zijn **alleen voor persoonlijk gebruik**. Distribueer of deel deze ISOs niet, want ze bevatten Microsoft-software. Iedere gebruiker moet zijn eigen geoptimaliseerde kopie aanmaken met de officiële tools en AtlasOS Playbook.
 
@@ -61,7 +61,7 @@ sudo usermod --append --groups libvirt $(whoami)
 ```
 Log uit en weer in (of herstart) voordat je virt-manager opent.
 
-**3. Libvirtd starten en enablen:**
+**3. Libvirtd starten en inschakelen:**
 ```bash
 sudo systemctl enable --now libvirtd
 ```
@@ -121,7 +121,7 @@ sudo curl -L -o /var/lib/libvirt/images/Enterprise-25H2.iso [ISO_URL]
 
 Virt-manager kan nu beide ISO's direct selecteren uit deze directory.
 
-**8. (Optioneel) Apart storage pool aanmaken voor VM disks:**
+**8. (Optioneel) Apart opslagpool aanmaken voor VM-schijven:**
 
 Standaard slaat virt-manager alles op in `/var/lib/libvirt/images/`. Als je VM disks op een aparte schijf of partitie wilt:
 
@@ -130,7 +130,7 @@ Standaard slaat virt-manager alles op in `/var/lib/libvirt/images/`. Als je VM d
 3. Klik op **+** om een nieuw pool toe te voegen
 4. Naam: `vmstore`, Type: dir, Target Path: `/mnt/vmstore`
 
-Zo houd je grote VM disk images van je root-bestandssysteem af.
+Zo houd je grote VM-schijfimages van je rootbestandssysteem af.
 
 **9. VM aanmaken in virt-manager:**
 - File → New Virtual Machine → Local install media
@@ -205,7 +205,7 @@ Nadat Windows is geïnstalleerd en de guest tools aanwezig zijn, kun je de VM-co
 | **Disk: `discard="unmap"`** | Geeft TRIM/discard commando's door aan de host, waardoor het qcow2-bestand niet onnodig groeit |
 | **Hyper-V enlightenments** | Windows-specifieke paravirtualisatie-features (`vapic`, `synic`, `stimer`, `tlbflush`, `ipi`, `avic`, etc.) die de guest-prestaties aanzienlijk verbeteren |
 | **CPU: `host-passthrough`** | Toont het echte CPU-model aan de guest: beste prestaties, vereist voor sommige applicaties |
-| **CPU topologie: 8 cores, 1 thread** | Presenteert 8 fysieke cores aan Windows. Komt overeen met de werkelijke toewijzing zonder SMT-overhead |
+| **CPU-topologie: 8 cores, 1 thread** | Presenteert 8 fysieke cores aan Windows. Komt overeen met de werkelijke toewijzing zonder SMT-overhead |
 | **SPICE met GL-acceleratie** | Gebruikt `gl enable="yes"` met `rendernode` naar de AMD iGPU voor hardware-versnelde display-output |
 | **VirtIO inputs** | VirtIO toetsenbord en tablet in plaats van PS/2 voor lagere input-latentie |
 | **QEMU Guest Agent** | Het `org.qemu.guest_agent.0` kanaal maakt communicatie mogelijk tussen host en guest (graceful shutdown, filesystem freeze voor snapshots) |
@@ -213,7 +213,7 @@ Nadat Windows is geïnstalleerd en de guest tools aanwezig zijn, kun je de VM-co
 | **Watchdog (iTCO)** | Reset de VM automatisch als de guest vastloopt |
 | **Memory balloon** | Maakt dynamisch geheugenbeheer mogelijk tussen host en guest |
 
-### Volledige VM XML referentie
+### Volledige VM XML-referentie
 
 {{% details title="Klik om de volledige geoptimaliseerde VM XML te zien" closed="true" %}}
 

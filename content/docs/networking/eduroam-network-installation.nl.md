@@ -5,7 +5,7 @@ prev: docs/applications
 next: docs/virtualization/vm-setup
 ---
 
-eduroam werkend krijgen op Linux is pijnlijker dan het zou moeten zijn. Elke "officiële" methode die ik probeerde faalde; de verbinding bleef gewoon hangen tijdens de TLS-handshake en verbond nooit. Uiteindelijk heb ik een handmatige setup gevonden die betrouwbaar werkt en daar een script omheen geschreven. Ik deel het hier zodat jij hopelijk niet hetzelfde proces hoeft door te maken.
+eduroam werkend krijgen op Linux is pijnlijker dan het zou moeten zijn. Elke "officiële" methode die ik probeerde faalde; de verbinding bleef gewoon hangen tijdens de TLS-handshake en lukte nooit. Uiteindelijk heb ik een handmatige setup gevonden die betrouwbaar werkt en daar een script omheen geschreven. Ik deel het hier zodat jij hopelijk niet hetzelfde proces hoeft door te maken.
 
 ## Wat niet werkt
 
@@ -46,7 +46,7 @@ PEAP/MSCHAPv2 met CA-validatie via de systeem-truststore en `domain-suffix-match
 | Interne authenticatie | MSCHAPv2 |
 | CA-certificaat | Systeem-CA-bundel (`/etc/pki/tls/certs/ca-bundle.crt`) |
 | Domeinvalidatie | `domain-suffix-match: ise.infra.saxion.net` |
-| Fase2 domeinvalidatie | `phase2-domain-suffix-match: ise.infra.saxion.net` |
+| Fase-2-domeinvalidatie | `phase2-domain-suffix-match: ise.infra.saxion.net` |
 | Anonieme identiteit | `anonymous@saxion.nl` |
 | Identiteit | `gebruiker@instelling.nl` |
 
@@ -59,13 +59,13 @@ Een Python-script automatiseert de volledige `nmcli`-verbindingsconfiguratie voo
 curl -LO https://zephyrus-linux.stensel.nl/scripts/saxion-eduroam.py
 
 # 2. Controleer de checksum
-echo "7f1b43666da272455ad6e0300ea3f64bc1a75a0c84c76d761d4a6cd4476c850e  saxion-eduroam.py" | sha256sum -c
+echo "8dd2f2120ddebdfd9d764e04954322307dccb8c855c691de7600f2a8a71db42b  saxion-eduroam.py" | sha256sum -c
 
 # 3. Uitvoeren
 python3 saxion-eduroam.py
 ```
 
-**SHA256:** `7f1b43666da272455ad6e0300ea3f64bc1a75a0c84c76d761d4a6cd4476c850e`
+**SHA256:** `8dd2f2120ddebdfd9d764e04954322307dccb8c855c691de7600f2a8a71db42b`
 
 Het script verwijdert een eventueel bestaand eduroam-profiel, vraagt je **gebruikersnaam** via een GUI-dialoog (zenity, kdialog of yad) of terminal-fallback, en activeert de verbinding. Je wachtwoord wordt nooit door het script gevraagd; dat wordt bij het verbinden opgevraagd door je GNOME Keyring en veilig opgeslagen, nooit in platte tekst.
 

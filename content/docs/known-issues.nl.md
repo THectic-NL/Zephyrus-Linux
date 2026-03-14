@@ -48,7 +48,7 @@ Upstream Chromium-probleem. Chromium ontvangt hoge-precisie scroll-events van li
 Open. Geen fix in Brave tot begin 2026. Het probleem wordt al gemeld sinds minimaal 2022.
 
 **Geprobeerde workaround (afgebroken):**
-Het verlagen van de globale `scroll-factor` in [libinput-config]({{< relref "/docs/applications#touchpad-scroll-speed-no-native-gnome-setting-yet" >}}) vermindert de scrollsnelheid in Brave, maar het is een systeembrede instelling die elke applicatie beïnvloedt, inclusief apps waar scrollen al prima werkte. Na ongeveer een week verwijderd. Het Brave-specifieke probleem rechtvaardigt niet dat alles trager scrollt.
+Het verlagen van de globale `scroll-factor` in [libinput-config]({{< relref "/docs/applications#touchpad-scroll-speed-no-native-gnome-setting-yet" >}}) vermindert de scrollsnelheid in Brave, maar het is een systeembrede instelling die elke applicatie beïnvloedt, inclusief apps waar scrollen al prima werkte. Na ongeveer een week heb ik het verwijderd. Het Brave-specifieke probleem rechtvaardigt niet dat alles trager scrollt.
 
 **Bronnen:**
 - [brave-browser #36569: native touchpad scrolling op Linux Wayland](https://github.com/brave/brave-browser/issues/36569)
@@ -126,7 +126,7 @@ Als er geen `amdgpu: [drm] *ERROR*`-berichten verschijnen, werkt de fix.
 {{% details title="Systeem bevriest tijdens gebruik van VS Code (AMD GPU page fault, Kernel 6.18.x)" closed="true" %}}
 
 **Wat speelt er:**
-Systeem bevriest volledig tijdens het gebruik van VS Code. Kernel 6.18.x/6.19.x hebben kritieke amdgpu-driverbugs. VS Code hardware-acceleratie triggert een AMD Radeon 890M page fault → volledige bevriezing.
+Systeem bevriest volledig tijdens het gebruik van VS Code. Kernel 6.18.x/6.19.x hebben kritieke amdgpu-driverbugs. VS Code hardware-acceleratie veroorzaakt een AMD Radeon 890M page fault → volledige bevriezing.
 
 **Fix:**
 Voeg toe aan `~/.config/Code/User/settings.json`:
@@ -147,7 +147,7 @@ Herstart VS Code. Systeem blijft nu stabiel, VS Code iets langzamer maar prima b
 {{% details title="Systeem bevriest tijdens gebruik van Brave Browser (AMD GPU page fault, Kernel 6.18.x)" closed="true" %}}
 
 **Wat speelt er:**
-Systeem bevriest of crasht tijdens het gebruik van Brave Browser, zelfs bij minimale workload (enkele tabs). Chromium-gebaseerde applicaties met hardware-acceleratie triggeren AMD Radeon 890M page faults op kernel 6.18.x/6.19.x.
+Systeem bevriest of crasht tijdens het gebruik van Brave Browser, zelfs bij minimale workload (enkele tabs). Chromium-gebaseerde applicaties met hardware-acceleratie veroorzaken AMD Radeon 890M page faults op kernel 6.18.x/6.19.x.
 
 Typische crash-sequentie in de logs:
 ```
@@ -175,7 +175,7 @@ brave-browser-stable --disable-gpu
 Herstart Brave. Verifieer via `brave://gpu` dat GPU-acceleratie is uitgeschakeld.
 
 **Achtergrond:**
-Brave, VS Code en andere Chromium-gebaseerde applicaties (Chrome, Edge, Electron-apps) gebruiken GPU shader-compilatie via Mesa. Op kernel 6.18.x heeft de amdgpu-driver een bug in de Shader Queue Controller (SQC) geheugenaccess, waardoor page faults ontstaan die een volledige GPU-reset triggeren. De fix is hardware-acceleratie per applicatie uitschakelen totdat een kernel- of Mesa-update het probleem verhelpt.
+Brave, VS Code en andere Chromium-gebaseerde applicaties (Chrome, Edge, Electron-apps) gebruiken GPU shader-compilatie via Mesa. Op kernel 6.18.x heeft de amdgpu-driver een bug in de Shader Queue Controller (SQC) geheugenaccess, waardoor page faults ontstaan die een volledige GPU-reset veroorzaken. De fix is hardware-acceleratie per applicatie uitschakelen totdat een kernel- of Mesa-update het probleem verhelpt.
 
 **Bronnen:**
 - [Framework: Critical amdgpu bugs kernel 6.18.x](https://community.frame.work/t/attn-critical-bugs-in-amdgpu-driver-included-with-kernel-6-18-x-6-19-x/79221)
@@ -227,7 +227,7 @@ watchdog: watchdog0: watchdog did not stop!
 
 **Fix:**
 
-1. Disable én **mask** `nvidia-powerd` (masken is essentieel, `disable` alleen is niet genoeg omdat `supergfxd` het omzeilt):
+1. Schakel `nvidia-powerd` uit en **maskeer** het (maskeren is essentieel, `disable` alleen is niet genoeg omdat `supergfxd` het omzeilt):
 ```bash
 sudo systemctl disable nvidia-powerd.service
 sudo systemctl stop nvidia-powerd.service
@@ -305,7 +305,7 @@ Zorg dat de kernelheaders overeenkomen met de draaiende kernel:
 sudo dnf install kernel-devel
 ```
 
-Forceer een rebuild:
+Forceer een herbouw:
 ```bash
 sudo akmods --force
 sudo dracut --force
@@ -352,7 +352,7 @@ grep "^Exec" ~/.local/share/applications/brave-browser.desktop
 {{% details title="GNOME Shell crasht tijdens videoweergave in Brave (AMD VCN hardware decode)" closed="true" %}}
 
 **Wat speelt er:**
-GNOME Shell crasht met SIGABRT tijdens Picture-in-Picture video in Brave. De AMD VCN hardware decoder triggert een context-reset die gnome-shell neerlaat. Dit staat gedocumenteerd in [gnome-mutter issue #4625](https://gitlab.gnome.org/GNOME/mutter/-/issues/4625).
+GNOME Shell crasht met SIGABRT tijdens Picture-in-Picture video in Brave. De AMD VCN-harddecoder veroorzaakt een context-reset die gnome-shell neerlaat. Dit staat gedocumenteerd in [gnome-mutter issue #4625](https://gitlab.gnome.org/GNOME/mutter/-/issues/4625).
 
 **Let op:** Deze crash treedt ook op met de `--disable-features=WaylandWpColorManagerV1`-flag actief. Beide workarounds zijn nodig.
 
@@ -643,14 +643,14 @@ sudo systemctl disable nvidia-fallback.service
 sudo systemctl mask nvidia-fallback.service
 ```
 
-#### Initramfs rebuilden en rebooten
+#### Initramfs herbouwen en herstarten
 
 ```bash
 sudo dracut --force
 sudo reboot
 ```
 
-#### Verificatie na reboot
+#### Verificatie na de herstart
 
 ```bash
 lspci -nnk -d 10de:28e0
@@ -668,7 +668,7 @@ nvidia-smi
 
 De KVMFR module levert de `/dev/kvmfr0` interface voor de IVSHMEM shared memory buffer.
 
-#### Module builden en installeren via DKMS
+#### Module bouwen en installeren via DKMS
 
 ```bash
 cd ~/source/looking-glass-B7/module
@@ -691,7 +691,7 @@ echo "kvmfr" | sudo tee /etc/modules-load.d/kvmfr.conf
 echo "options kvmfr static_size_mb=128" | sudo tee /etc/modprobe.d/kvmfr.conf
 ```
 
-#### Udev permissions instellen
+#### Udev-rechten instellen
 
 ```bash
 echo 'SUBSYSTEM=="kvmfr", OWNER="sten", GROUP="kvm", MODE="0660"' | \
@@ -861,7 +861,7 @@ ls -la /dev/kvmfr0
 
 # QEMU fallback:
 ls -la /dev/shm/looking-glass
-sudo chown sten:kvm /dev/shm/looking-glass  # als permissions niet kloppen
+sudo chown sten:kvm /dev/shm/looking-glass  # als rechten niet kloppen
 ```
 
 #### Client starten
@@ -951,7 +951,7 @@ sudo dkms remove kvmfr/0.0.12 --all
 sudo mokutil --delete /var/lib/dkms/mok.pub
 # Stel wachtwoord in voor de MOK prompt bij reboot
 
-# Initramfs rebuilden
+# Initramfs herbouwen
 sudo akmods --force
 sudo dracut --force
 

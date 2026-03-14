@@ -7,8 +7,8 @@ prev: docs/getting-started
 The G16 has an NVIDIA RTX 4060 alongside the AMD iGPU. The open-source Nouveau driver doesn't perform well on modern NVIDIA hardware, so proprietary drivers are necessary.
 
 **Driver I'm running:**
-- Version: 590.48.01
-- CUDA Version: 13.1
+- Version: 595.45.04
+- CUDA Version: 13.2
 
 
 ## CachyOS (Arch)
@@ -54,7 +54,7 @@ mokutil --sb-state
 
 {{% /details %}}
 
-### Why Proprietary Driver
+### Why the Proprietary Driver
 
 The open-source Nouveau driver has poor performance on modern NVIDIA GPUs. The proprietary driver is required for:
 - Gaming and graphics-intensive applications
@@ -76,7 +76,7 @@ Wait for update completion.
 
 ### Verify driver version
 
-Check available NVIDIA driver version:
+Check the available NVIDIA driver version:
 
 ```bash
 dnf info akmod-nvidia
@@ -84,7 +84,7 @@ dnf info akmod-nvidia
 
 ### Install NVIDIA driver
 
-Install driver with CUDA support:
+Install the driver with CUDA support:
 
 ```bash
 sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda xorg-x11-drv-nvidia-libs.i686
@@ -97,7 +97,7 @@ This installs the driver, CUDA libraries, and build dependencies (about 1 GB).
 
 ### Build kernel modules
 
-akmods automatically builds and signs kernel modules on installation. To manually trigger a rebuild:
+akmods automatically builds and signs kernel modules during installation. To manually trigger a rebuild:
 
 ```bash
 sudo akmods --force
@@ -168,7 +168,7 @@ The `nvidia-powerd.service` manages NVIDIA Dynamic Boost, which shifts extra wat
 
 On this laptop, GPU power is managed via ATPX (AMD-driven via ACPI). The NVIDIA suspend/hibernate/resume services handle power states correctly without `nvidia-powerd`.
 
-**What you lose by disabling it:** Minimal. A few FPS less during heavy GPU workloads. The ~5-15W Dynamic Boost is not worth the instability on AMD ATPX hardware.
+**What you lose by disabling it:** Minimal. Slightly fewer FPS during heavy GPU workloads. The ~5-15W Dynamic Boost is not worth the instability on AMD ATPX hardware.
 
 **Disable and mask permanently:**
 ```bash
@@ -186,7 +186,7 @@ sudo systemctl enable --now nvidia-powerd.service
 ```
 
 **Reference:**
-- [NVIDIA Power Management Documentation](https://download.nvidia.com/XFree86/Linux-x86_64/590.48.01/README/powermanagement.html)
+- [NVIDIA Power Management Documentation](https://download.nvidia.com/XFree86/Linux-x86_64/595.45.04/README/powermanagement.html)
 
 {{% /steps %}}
 
@@ -197,7 +197,7 @@ sudo systemctl enable --now nvidia-powerd.service
 
 ### Verify NVIDIA driver
 
-After reboot, check driver status:
+After rebooting, check the driver status:
 
 ```bash
 nvidia-smi
@@ -211,7 +211,7 @@ You should see the NVIDIA driver and CUDA versions listed.
 lsmod | grep nvidia
 ```
 
-The NVIDIA modules are loaded and the driver is functional.
+If the modules are listed, the driver is loaded and functional.
 
 {{% /steps %}}
 
@@ -268,7 +268,7 @@ cp GA605WV_1002_104D158E_CMDEF.icm ~/.local/share/icc/
 
 **Note:** If GNOME Settings shows old technical names (e.g., "ASUS GA605WV 1002 104D158E CMDEF" instead of "Native"), close Settings and reopen, or log out/in to refresh the color cache.
 
-The filename encodes your GPU (`1002` = AMD, `10DE` = NVIDIA) and panel ID. Match these to your unit using the panel table above. All profiles are in the [`/icc-profiles/`](https://github.com/Stensel8/Zephyrus-Linux/tree/main/static/icc-profiles) directory.
+The filename encodes your GPU (`1002` = AMD, `10DE` = NVIDIA) and panel ID. Match them to your unit using the panel table above. All profiles are in the [`/icc-profiles/`](https://github.com/Stensel8/Zephyrus-Linux/tree/main/static/icc-profiles) directory.
 
 **Background:**
 
@@ -287,7 +287,7 @@ The profiles in this repository are pre-processed with custom ICC metadata 'desc
 
 {{% details title="Install Samsung color profile for LS27B800TGUXEN (S80TB) Thunderbolt display" closed="true" %}}
 
-The Samsung ViewFinity S8 Thunderbolt (LS27B800TGUXEN) ships with a factory color profile (`SxxB80xT.icm`) included in the Windows INF driver package. On Linux this profile must be installed manually.
+The Samsung ViewFinity S8 Thunderbolt (LS27B800TGUXEN) ships with a factory color profile (`SxxB80xT.icm`) included in the Windows INF driver package. On Linux, this profile must be installed manually.
 
 The profile is located in the [`/icc-profiles/LS27B800TGUXEN - S80TB/`](https://github.com/Stensel8/Zephyrus-Linux/tree/main/static/icc-profiles/LS27B800TGUXEN%20-%20S80TB) directory of this repository.
 

@@ -49,7 +49,7 @@ gsettings set org.gnome.desktop.wm.preferences button-layout 'appmenu:minimize,m
 
 ### GNOME-sneltoetsen: meer als Windows
 
-Als je vanuit Windows komt, voelt een paar dingen meteen anders zonder de juiste sneltoetsen. Dit zijn de sneltoetsen die ik heb ingesteld.
+Als je vanuit Windows komt, voelen een paar dingen meteen anders zonder de juiste sneltoetsen. Dit zijn de sneltoetsen die ik heb ingesteld.
 
 **Ingebouwde sneltoetsen (via Settings > Keyboard > Keyboard Shortcuts):**
 
@@ -185,7 +185,7 @@ Wachtwoordbeheerder. Beschikbaar via Flathub en werkt goed.
 
 ### Signal Messenger
 
-Signal is mijn belangrijkste berichtenapp. De [CachyOS extra-repository](https://packages.cachyos.org/package/extra/x86_64/signal-desktop) levert een native pakket, wat ik gebruik en het werkt beter dan de Flatpak.
+Signal is mijn belangrijkste berichtenapp. De [CachyOS extra-repository](https://packages.cachyos.org/package/extra/x86_64/signal-desktop) levert een native pakket dat ik gebruik; het werkt beter dan de Flatpak.
 
 **CachyOS / Arch (aanbevolen):**
 
@@ -271,7 +271,7 @@ sudo pacman -S libreoffice-fresh
 
 **APA-verwijzingen: ingebouwd**
 
-Anders dan OnlyOffice heeft LibreOffice een ingebouwde bibliografiedatabase en referentie-invoeg functie. Je kunt je bronnen beheren en citaten in APA-stijl invoegen direct vanuit de menu's:
+Anders dan OnlyOffice heeft LibreOffice een ingebouwde bibliografiedatabase en referentie-invoegfunctie. Je kunt je bronnen beheren en citaten in APA-stijl invoegen direct vanuit de menu's:
 
 ![LibreOffice bibliografiebeheerder](/images/libreoffice-bibliograpy.avif)
 
@@ -315,7 +315,7 @@ Beschikbaar in de [CachyOS extra-repository](https://packages.cachyos.org/packag
 
 Ik onderteken mijn Git commits en tags met een GPG-sleutel. Kleopatra maakt het aanmaken en beheren van sleutels makkelijk via een GUI.
 
-Na het installeren van VS Code en Git, installeer Kleopatra en maak je sleutels daarin aan. Daarna Git configureren:
+Na het installeren van VS Code en Git, installeer Kleopatra en maak je sleutels daarin aan. Daarna configureer je Git:
 
 ```bash
 git config --global user.name "JOUW_NAAM"
