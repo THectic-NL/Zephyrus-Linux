@@ -28,7 +28,7 @@ This installs:
 - `asusctl`: CLI frontend that communicates with asusd
 - `rog-control-center`: graphical frontend that communicates with asusd
 
-On CachyOS this is all you need; both packages are available directly from the repos and everything works out of the box. No kernel patching or deep system configuration required.
+On CachyOS, this is all you need; both packages are available directly from the repos and everything works out of the box. No kernel patching or deep system configuration required.
 
 ### Enable services
 
@@ -161,18 +161,24 @@ asusctl profile
 
 {{% /details %}}
 
-{{% details title="GPU mode switching (asusctl armoury)" closed="true" %}}
+{{% details title="GPU mode switching (ROG Control Center / asusctl armoury)" closed="true" %}}
 
 The GA605WV has a hybrid GPU setup: the AMD Radeon 890M (iGPU) drives the internal display, and the NVIDIA RTX 4060 (dGPU) handles GPU workloads.
 
-GPU switching is managed via `asusctl armoury`, which interfaces directly with the `asus-armoury` kernel driver (available since kernel 6.19).
-
-> **Note:** `supergfxctl` was previously used for GPU switching but is now deprecated. Use `asusctl armoury` instead.
+GPU switching is managed via ROG Control Center (GUI) or `asusctl armoury` (CLI), both of which interface directly with the `asus-armoury` kernel driver (available since kernel 6.19).
 
 | Mode | Description |
 |------|-------------|
 | Hybrid (`dgpu_disable 0`) | Both GPUs active. NVIDIA handles GPU workloads, AMD drives the display. Best for gaming. |
 | Integrated (`dgpu_disable 1`) | Only AMD iGPU. Lower power consumption, no NVIDIA. Good for battery. |
+
+**Switch via GUI (ROG Control Center):**
+
+Open ROG Control Center (`rog-control-center`) and navigate to the GPU switching section to toggle between Hybrid and Integrated mode.
+
+![ROG Control Center - GPU switching](/images/rog-control-gpu-switching.avif)
+
+**Switch via CLI (asusctl armoury):**
 
 **Check current dGPU state:**
 ```bash
@@ -298,7 +304,7 @@ Known issues and troubleshooting for asusctl & ROG Control Center are documented
 
 ### Kernel 6.19: asus-armoury driver lands in mainline
 
-The `asus-armoury` driver has been [merged into Linux 6.19](https://www.phoronix.com/news/ASUS-Armoury-Driver-Linux-6.19). This new `platform/x86` driver replaces parts of the older `asus-wmi` with a cleaner sysfs-based API, enabling panel mode switching, APU memory allocation, PPT tuning, and more directly from the kernel. The driver is entirely community-developed by the [asus-linux team](https://asus-linux.org/), with no involvement from ASUS themselves. CachyOS ships kernel 6.19.4-2 which includes this driver and additional ASUS-specific patches.
+The `asus-armoury` driver has been [merged into Linux 6.19](https://www.phoronix.com/news/ASUS-Armoury-Driver-Linux-6.19). This new `platform/x86` driver replaces parts of the older `asus-wmi` with a cleaner sysfs-based API, enabling panel mode switching, APU memory allocation, PPT tuning, and more directly from the kernel. The driver is entirely community-developed by the [asus-linux team](https://asus-linux.org/), with no involvement from ASUS themselves. CachyOS ships kernel 6.19.8-1-cachyos which includes this driver and additional ASUS-specific patches.
 
 **Before**: basic asusctl controls without Armoury settings:
 

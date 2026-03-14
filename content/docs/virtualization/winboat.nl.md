@@ -6,12 +6,18 @@ next: docs/virtualization/podman
 
 WinBoat is een open-source project dat Windows draait in een Podman-container op Linux. Het idee: Windows-apps gewoon als losse vensters op je Linux-desktop, zonder dat je een volledige VM nodig hebt. Ik heb het getest met Podman.
 
-> **Status: Beta.** WinBoat is vroege beta. Getest op v0.9.0. Bugs zijn te verwachten, het project zegt het zelf ook.
+> **Status: Beta.** WinBoat is vroege beta. Getest op v0.9.0. Bugs zijn te verwachten; het project zegt het zelf ook.
 
 ![WinBoat feature-overzicht van de projectwebsite](/images/winboat-features.avif)
 
 
 ## Installatie
+
+{{< callout type="info" >}}
+Sinds de [CachyOS-release van maart 2026](https://cachyos.org/blog/2603-march-release/) bevat **CachyOS Hello** een knop om WinBoat direct te installeren en in te schakelen. Nieuwe gebruikers kunnen de handmatige stappen hieronder overslaan en de welkomst-app gebruiken.
+{{< /callout >}}
+
+![CachyOS Hello: Install Winboat-knop onder Utilities](/images/cachyos-hello-winboat.avif)
 
 WinBoat staat in de CachyOS-packagerepository:
 
@@ -68,18 +74,18 @@ Andere dingen die ik tegenkwam:
 - De Guest API verbindt nooit ("WinBoat Guest API - Offline")
 - Windows-apps verschijnen niet als losse vensters op de desktop
 
-Als WinBoat wel opstart, probeerde ik eerst iets eenvoudigs: Notepad en de Verkenner openen. Microsoft 365 had ik nog niet geïnstalleerd via `winget`, dus ik begon gewoon klein. In plaats van die apps kreeg ik rare vakjes en glitches op mijn scherm. Daarna heb ik de container gereboot en wat processen gekilld, maar ook dat hielp niet. Dat is ook terug te zien in de demo hierboven.
+Als WinBoat wel opstart, probeerde ik eerst iets eenvoudigs: Notepad en de Verkenner openen. Microsoft 365 had ik nog niet geïnstalleerd via `winget`, dus ik begon gewoon klein. In plaats van die apps kreeg ik rare vakjes en glitches op mijn scherm. Daarna heb ik de container herstart en wat processen beëindigd, maar ook dat hielp niet. Dat is ook terug te zien in de demo hierboven.
 
 {{< callout type="warning" >}}
 WinBoat is vroege beta. Het project zegt zelf dat je wat troubleshootingervaring moet hebben. De huidige versie is niet representatief voor het eindproduct.
 {{< /callout >}}
 
 
-## Ok, en wat nu?
+## En wat nu?
 
 Eerlijk gezegd is dit een van de gaafste app-concepten die ik in tijden heb gezien. Windows-apps gewoon als desktopvensters, zonder volledige VM. Dat kan Bottles of Wine ook niet, zeker niet voor Microsoft 365. Ik zou dit super graag stabiel werkend willen krijgen.
 
-Maar zo ver zijn we nog niet. Voor nu is de [KVM/QEMU VM-setup]({{< relref "/docs/virtualization/vm-setup" >}}) met VirtIO en SPICE GL nog de betrouwbaardere optie op deze laptop. Ik hoop dat dit soort problemen met de volgende release worden aangepakt. Ik zou hem graag nog een keertje willen proberen, als ie stabieler is.
+Maar zo ver zijn we nog niet. Voor dagelijks Windows-gebruik geeft [VMware Workstation]({{< relref "/docs/virtualization/vmware-workstation" >}}) momenteel de beste ervaring op deze hardware. De [KVM/QEMU-setup]({{< relref "/docs/virtualization/vm-setup" >}}) is een goed open-source alternatief. Ik zou WinBoat graag nog een keer willen proberen als het stabieler is; de Docker-backend doet het misschien beter dan de Podman-versie die ik getest heb.
 
 
 ## Referenties

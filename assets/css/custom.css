@@ -103,12 +103,6 @@
   margin-top: 3.5rem !important;
 }
 
-/* Terminal screenshots are transparent — give them a dark background in light mode
-   so anti-aliased text renders correctly regardless of theme */
-html:not(.dark) .content img[src*="system-info"] {
-  background-color: #1c1b20;
-  border-radius: 6px;
-}
 
 /* Language/theme controls live in the navbar — hide sidebar and footer duplicates */
 .hextra-sidebar-container > [data-toggle-animation="show"] {

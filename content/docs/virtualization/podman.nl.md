@@ -2,10 +2,10 @@
 title: "Podman & Podman Desktop"
 weight: 4
 prev: docs/virtualization/winboat
-next: docs/known-issues
+next: docs/virtualization/vmware-workstation
 ---
 
-Ik had Docker hiervoor, maar wilde eens wat anders proberen. De filosofie achter Podman sprak me genoeg aan om volledig over te stappen.
+Ik gebruikte Docker hiervoor, maar wilde eens wat anders proberen. De filosofie achter Podman sprak me genoeg aan om volledig over te stappen.
 
 Podman draait containers standaard **rootless**, als gewone gebruiker zonder verhoogde rechten. Het heeft ook geen **daemon**: Docker heeft altijd een achtergrondproces (`dockerd`) dat als root draait; bij Podman zit er niets tussen, dus minder overhead.
 
@@ -69,7 +69,7 @@ Dit is het gedeelte dat wat extra opzet vergt buiten de pakketinstallatie.
 
 Standaard weet Podman niet welke registry het moet doorzoeken als je een korte imagenaam gebruikt zoals `stensel8/my-image:latest`. Docker gebruikte Docker Hub als standaard; Podman doet dat niet tenzij je het expliciet instelt.
 
-Een korte naam pullen zonder configuratie mislukt:
+Een korte naam ophalen zonder configuratie mislukt:
 
 ```
 $ podman pull stensel8/public-cloud-concepts:latest
@@ -141,13 +141,13 @@ Gebruik bij Instellingen → Registries je gebruikersnaam en het PAT als wachtwo
 
 ![Podman Desktop Registries - Docker Hub en GitHub gekoppeld via PATs](/images/podman-desktop-registries-configured.avif)
 
-Daarna worden images van privérepositories op beide registries zonder problemen gepulld.
+Daarna worden images van privérepositories op beide registries zonder problemen opgehaald.
 
 ---
 
 ## Images en containers beheren
 
-De Images-weergave toont alle lokaal gepulde images met hun registry, grootte en architectuur:
+De Images-weergave toont alle lokaal opgehaalde images met hun registry, grootte en architectuur:
 
 ![Podman Desktop Images-weergave - ghcr.io images in de lijst](/images/podman-desktop-images.avif)
 

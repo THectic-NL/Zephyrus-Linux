@@ -7,7 +7,7 @@ next: docs/security/autologin
 De Zephyrus G16 heeft veel hardware-functies die op Linux niet zomaar werken: fan curves, performance-profielen, de Slash LED op het deksel, GPU-switching, batterijlaadlimiet. Op deze pagina staat hoe ik dat allemaal werkend heb gekregen met asusctl en de tools van het ASUS Linux-project. Op CachyOS zijn deze tools direct beschikbaar vanuit de package repos.
 
 **Pakketinformatie:**
-- `asusd` 6.3.4: achtergrond daemon (backend) die alle hardware-functies beheert
+- `asusd` 6.3.4: achtergrondproces (backend) dat alle hardware-functies beheert
 - `asusctl` 6.3.4: CLI frontend voor fan curves, profielen, batterijlimiet, RGB, Slash LED, GPU-switching
 - `rog-control-center` 6.3.4: grafische frontend, onderdeel van de asusctl/asusd suite
 - Bron: [asus-linux releases](https://gitlab.com/asus-linux/asusctl/-/releases) · beschikbaar in CachyOS/Arch repos
@@ -24,8 +24,8 @@ sudo pacman -S asusctl rog-control-center
 ```
 
 Dit installeert:
-- `asusd`: de backend daemon die alle ASUS hardware-functies beheert
-- `asusctl`: CLI frontend die communiceert met asusd
+- `asusd`: het achtergrondproces (backend) dat alle ASUS hardware-functies beheert
+- `asusctl`: CLI-frontend die communiceert met asusd
 - `rog-control-center`: grafische frontend die communiceert met asusd
 
 Op CachyOS is dit alles wat je nodig hebt; beide packages zijn direct beschikbaar vanuit de repos en alles werkt meteen. Geen kernel patches of diepe systeemconfiguratie vereist.
@@ -65,10 +65,10 @@ sudo pacman -S nvtop powertop s-tui lm_sensors i2c-tools
 
 | Package | Beschrijving |
 |---------|--------------|
-| `nvtop` | GPU procesmonitor (AMD + NVIDIA tegelijk) |
-| `powertop` | Stroomverbruik analyse per proces/apparaat |
-| `s-tui` | TUI dashboard: CPU frequentie, temperatuur, load, stress test |
-| `lm_sensors` | Hardware temperatuursensor uitlezen |
+| `nvtop` | GPU-procesmonitor (AMD + NVIDIA tegelijk) |
+| `powertop` | Stroomverbruikanalyse per proces/apparaat |
+| `s-tui` | TUI-dashboard: CPU-frequentie, temperatuur, belasting, stresstest |
+| `lm_sensors` | Hardware-temperatuursensor uitlezen |
 | `i2c-tools` | Low-level hardware bus diagnostics |
 
 {{% /steps %}}
@@ -130,9 +130,9 @@ asusctl slash -l 128
 
 {{% /details %}}
 
-{{% details title="Performance profielen" closed="true" %}}
+{{% details title="Prestatieprofielen" closed="true" %}}
 
-asusctl biedt drie performance profielen die de CPU/GPU-vermogensgrenzen en ventilatorgedrag bepalen:
+asusctl biedt drie prestatieprofielen die de CPU/GPU-vermogensgrenzen en het ventilatorgedrag bepalen:
 
 | Profiel | Beschrijving |
 |---------|--------------|
@@ -161,18 +161,24 @@ asusctl profile
 
 {{% /details %}}
 
-{{% details title="GPU mode switching (asusctl armoury)" closed="true" %}}
+{{% details title="GPU mode switching (ROG Control Center / asusctl armoury)" closed="true" %}}
 
-De GA605WV heeft een hybrid GPU setup: de AMD Radeon 890M (iGPU) stuurt het interne display aan en de NVIDIA RTX 4060 (dGPU) verwerkt GPU workloads.
+De GA605WV heeft een hybride GPU-setup: de AMD Radeon 890M (iGPU) stuurt het interne display aan en de NVIDIA RTX 4060 (dGPU) verwerkt GPU-werklast.
 
-GPU-switching wordt beheerd via `asusctl armoury`, dat direct communiceert met de `asus-armoury` kernel driver (beschikbaar vanaf kernel 6.19).
-
-> **Let op:** `supergfxctl` werd eerder gebruikt voor GPU-switching maar is nu verouderd (deprecated). Gebruik in plaats daarvan `asusctl armoury`.
+GPU-switching wordt beheerd via ROG Control Center (GUI) of `asusctl armoury` (CLI), die direct communiceren met de `asus-armoury` kernel driver (beschikbaar vanaf kernel 6.19).
 
 | Mode | Beschrijving |
 |------|--------------|
-| Hybrid (`dgpu_disable 0`) | Beide GPU's actief. NVIDIA verwerkt GPU workloads, AMD stuurt het display aan. Het beste voor gaming. |
+| Hybrid (`dgpu_disable 0`) | Beide GPU's actief. NVIDIA verwerkt GPU-werklast, AMD stuurt het display aan. Het beste voor gaming. |
 | Integrated (`dgpu_disable 1`) | Alleen AMD iGPU. Lager stroomverbruik, geen NVIDIA. Goed voor batterij. |
+
+**Wisselen via GUI (ROG Control Center):**
+
+Open ROG Control Center (`rog-control-center`) en navigeer naar de GPU-switching sectie om te wisselen tussen de Hybrid- en Integrated-modus.
+
+![ROG Control Center - GPU switching](/images/rog-control-gpu-switching.avif)
+
+**Wisselen via CLI (asusctl armoury):**
 
 **Huidige dGPU status bekijken:**
 ```bash
@@ -191,7 +197,7 @@ asusctl armoury set dgpu_disable 0
 
 > **Let op:** Na het wisselen van mode kan een herstart of uitloggen/inloggen vereist zijn.
 
-> **Belangrijk:** `nvidia-powerd.service` moet uitgeschakeld en **gemaskt** blijven op deze laptop. Het conflicteert met AMD ATPX power management en veroorzaakt soft lockups en reboot hangs (zwart scherm, backlights blijven aan). GPU-vermogensbeheer loopt via ATPX (via ACPI). Zie de [NVIDIA Driver Installatie Guide]({{< relref "/docs/hardware/nvidia-driver-installation" >}}) voor diagnosedetails en commando's.
+> **Belangrijk:** `nvidia-powerd.service` moet uitgeschakeld en **gemaskeerd** blijven op deze laptop. Het conflicteert met AMD ATPX power management en veroorzaakt soft lockups en reboot hangs (zwart scherm, backlights blijven aan). GPU-vermogensbeheer loopt via ATPX (via ACPI). Zie de [NVIDIA Driver Installatie Guide]({{< relref "/docs/hardware/nvidia-driver-installation" >}}) voor diagnosedetails en commando's.
 
 {{% /details %}}
 
@@ -214,7 +220,7 @@ Ga naar de sectie "Keyboard Aura" voor animatie, kleur en per-toets configuratie
 
 {{% details title="Aangepaste fan curves" closed="true" %}}
 
-Fan curves kunnen per performance profiel worden geconfigureerd in ROG Control Center of via de CLI.
+Fan curves kunnen per prestatieprofiel worden geconfigureerd in ROG Control Center of via de CLI.
 
 **ROG Control Center openen:**
 ```bash
@@ -246,7 +252,7 @@ asusctl fan-curve -m Balanced -D 30:0,40:10,50:30,60:50,70:70,80:85,90:100,100:1
 nvtop
 ```
 
-**CPU frequentie, temperatuur, load dashboard:**
+**CPU-frequentie, temperatuur, belastingsdashboard:**
 ```bash
 s-tui
 ```
@@ -256,7 +262,7 @@ s-tui
 sudo powertop
 ```
 
-**Hardware temperaturen:**
+**Hardware-temperaturen:**
 ```bash
 sensors
 ```
@@ -281,8 +287,8 @@ Bekende problemen en probleemoplossing voor asusctl & ROG Control Center staan o
 | `asusctl info` | Gedetecteerde hardware tonen |
 | `asusctl battery --charge-limit 80` | Batterijlaadlimiet instellen op 80% |
 | `asusctl battery` | Huidig laadlimiet tonen |
-| `asusctl profile` | Huidig performance profiel tonen |
-| `asusctl profile -P Balanced` | Performance profiel instellen |
+| `asusctl profile` | Huidig prestatieprofiel tonen |
+| `asusctl profile -P Balanced` | Prestatieprofiel instellen |
 | `asusctl profile --next` | Naar volgend profiel wisselen |
 | `asusctl slash --list` | Beschikbare Slash LED animaties tonen |
 | `asusctl slash --enable -b false -s false` | Slash LED aan, uit op batterij en slaapstand |
@@ -298,7 +304,7 @@ Bekende problemen en probleemoplossing voor asusctl & ROG Control Center staan o
 
 ### Kernel 6.19: asus-armoury driver in mainline Linux
 
-De `asus-armoury` driver is [gemerged in Linux 6.19](https://www.phoronix.com/news/ASUS-Armoury-Driver-Linux-6.19). Deze nieuwe `platform/x86` driver vervangt delen van de oudere `asus-wmi` met een schonere sysfs-gebaseerde API, waarmee o.a. paneel modus wisselen, APU geheugentoewijzing, PPT tuning en meer mogelijk wordt direct vanuit de kernel. De driver is volledig door de community ontwikkeld door het [asus-linux team](https://asus-linux.org/), zonder enige betrokkenheid van ASUS zelf. CachyOS levert kernel 6.19.4-2, inclusief deze driver en aanvullende ASUS-specifieke patches.
+De `asus-armoury` driver is [gemerged in Linux 6.19](https://www.phoronix.com/news/ASUS-Armoury-Driver-Linux-6.19). Deze nieuwe `platform/x86` driver vervangt delen van de oudere `asus-wmi` met een schonere sysfs-gebaseerde API, waarmee o.a. paneelmodusschakeling, APU-geheugentoewijzing, PPT-tuning en meer mogelijk wordt direct vanuit de kernel. De driver is volledig door de community ontwikkeld door het [asus-linux team](https://asus-linux.org/), zonder enige betrokkenheid van ASUS zelf. CachyOS levert kernel 6.19.8-1-cachyos, inclusief deze driver en aanvullende ASUS-specifieke patches.
 
 **Voor**: basale asusctl-bediening zonder Armoury-instellingen:
 

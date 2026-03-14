@@ -40,10 +40,9 @@ DESCRIPTION = (
 )
 
 class Installer:
-    def __init__(self, silent: bool = False, username: str = "", password: str = ""):
+    def __init__(self, silent: bool = False, username: str = ""):
         self.silent = silent
         self.username = username
-        self.password = password
         self.gui_tool = self._detect_gui()
         
     def _detect_gui(self) -> str | None:
@@ -225,7 +224,6 @@ class Installer:
 def main():
     parser = argparse.ArgumentParser(description="Saxion eduroam Installer")
     parser.add_argument("-u", "--username", help="Saxion username")
-    parser.add_argument("-p", "--password", help="Saxion password")
     parser.add_argument("--silent", action="store_true", help="Run without GUI")
     args = parser.parse_args()
 
@@ -239,7 +237,7 @@ def main():
         )
         initial_username = ""
 
-    installer = Installer(args.silent, initial_username, args.password)
+    installer = Installer(args.silent, initial_username)
     installer.install()
 
 if __name__ == "__main__":

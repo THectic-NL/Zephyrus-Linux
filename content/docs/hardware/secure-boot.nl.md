@@ -10,6 +10,17 @@ Na de installatie kan Secure Boot opnieuw worden ingeschakeld met je eigen onder
 > **Resultaat:** UEFI Secure Boot gaat van **Fail** naar **Pass** na het voltooien van deze handleiding. De algehele HSI-score blijft **HSI:3!** (de Encrypted RAM-check op HSI-4 wordt niet ondersteund op deze hardware, waardoor HSI:4 niet haalbaar is).
 
 
+## Even een kanttekening
+
+Secure Boot klinkt als een stevige beveiligingsfunctie, en technisch gezien doet het wat het belooft: het verifieert dat de bootloader en kernel zijn ondertekend door een vertrouwde sleutel. Maar het is de moeite waard om even stil te staan bij wat "vertrouwd" hier eigenlijk betekent.
+
+Het Secure Boot-ecosysteem wordt beheerd door Microsoft. Zij beheren de signing-servers, geven de certificaten uit en bepalen welke bootloaders en shims toegang krijgen tot de vertrouwensketen. De meeste hardware wordt geleverd met de sleutels van Microsoft al ingeschreven, wat betekent dat hun sleutels standaard bepalen wat "secure" is op jouw apparaat. Dat is geen onafhankelijke standaard; het is een door een leverancier beheerde lijst.
+
+De `--microsoft`-vlag in stap 3 maakt dit direct zichtbaar: zelfs met je eigen sleutels moet je de UEFI CA-certificaten van Microsoft meenemen, anders laadt je GPU-firmware niet. Hun sleutels zitten structureel ingebakken in hoe de hardware werkt.
+
+Maakt dat Secure Boot nutteloos? Nee. Je eigen bootloader en kernel ondertekenen met sleutels die jij beheert verhoogt de lat echt voor bepaalde aanvallen (evil maid, gemanipuleerde bootloader, etc.). Maar als Linux-gebruiker moet je dit in perspectief blijven zien: dit is geen neutrale, onafhankelijke beveiligingsstandaard. Het is een door Microsoft beheerde poort, met alle voorbehouden van dien. Stel het in als het zinvol is voor jouw situatie, maak je er geen zorgen over als dat niet zo is, en laat de HSI-score geen doel op zich worden.
+
+
 ## Context van het beveiligingsrapport
 
 Het uitvoeren van `fwupdmgr security` toont wat slaagt en wat niet. Na het inschakelen van Secure Boot zijn de overgebleven fouten op deze hardware:

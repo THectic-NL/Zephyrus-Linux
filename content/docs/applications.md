@@ -185,7 +185,7 @@ Password manager. Available via Flathub and works well.
 
 ### Signal Messenger
 
-Signal is my main messaging app. The [CachyOS extra repository](https://packages.cachyos.org/package/extra/x86_64/signal-desktop) ships a native package, which is what I use and it works better than the Flatpak.
+Signal is my main messaging app. The [CachyOS extra repository](https://packages.cachyos.org/package/extra/x86_64/signal-desktop) ships a native package, which is what I use; it works better than the Flatpak.
 
 **CachyOS / Arch (recommended):**
 
@@ -444,7 +444,7 @@ flatpak install flathub com.usebottles.bottles
 
 Alternatively, open GNOME Software Center, search for "Bottles", and make sure to select the **Flathub** source.
 
-For anything that doesn't work under Wine (like Microsoft 365), I use a Windows VM instead. See [Windows 11 VM Setup]({{< relref "/docs/virtualization/vm-setup" >}}).
+For anything that doesn't work under Wine (like Microsoft 365), I use a Windows VM instead. See [Virt-Manager / KVM]({{< relref "/docs/virtualization/vm-setup" >}}).
 
 ![Bottles in the Flathub store](/images/bottles-flathub.avif)
 
