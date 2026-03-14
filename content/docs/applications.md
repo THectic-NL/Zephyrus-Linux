@@ -444,7 +444,7 @@ flatpak install flathub com.usebottles.bottles
 
 Alternatively, open GNOME Software Center, search for "Bottles", and make sure to select the **Flathub** source.
 
-For anything that doesn't work under Wine (like Microsoft 365), I use a Windows VM instead. See [Windows 11 VM Setup]({{< relref "/docs/virtualization/vm-setup" >}}).
+For anything that doesn't work under Wine (like Microsoft 365), I use a Windows VM instead. See [Virt-Manager / KVM]({{< relref "/docs/virtualization/vm-setup" >}}).
 
 ![Bottles in the Flathub store](/images/bottles-flathub.avif)
 

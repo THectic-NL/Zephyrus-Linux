@@ -13,6 +13,12 @@ WinBoat is an open-source project that runs Windows inside a Podman container on
 
 ## Installation
 
+{{< callout type="info" >}}
+Since the [March 2026 CachyOS release](https://cachyos.org/blog/2603-march-release/), **CachyOS Hello** includes a one-click button to install and enable WinBoat. New users can skip the manual steps below and use the welcome app instead.
+{{< /callout >}}
+
+![CachyOS Hello: Install Winboat button under Utilities](/images/cachyos-hello-winboat.avif)
+
 I got WinBoat from the CachyOS package repository:
 
 ```bash
@@ -79,7 +85,7 @@ WinBoat is in early beta. The project itself warns that users should be comforta
 
 Honestly, this is one of the coolest app concepts I've seen in a while. Running Windows apps as regular desktop windows without a full VM is something Bottles and Wine can't do either, especially for Microsoft 365. I'd love to get this working properly.
 
-But we're not there yet. For now the [KVM/QEMU VM setup]({{< relref "/docs/virtualization/vm-setup" >}}) with VirtIO and SPICE GL is still the more reliable option on this laptop. I'm hoping the next release addresses these kinds of issues. I'd like to give it another shot when it's more stable.
+But we're not there yet. For everyday Windows use, [VMware Workstation]({{< relref "/docs/virtualization/vmware-workstation" >}}) currently gives the best experience on this hardware. The [KVM/QEMU setup]({{< relref "/docs/virtualization/vm-setup" >}}) is a solid open-source alternative. I'd like to give WinBoat another shot when it's more stable; the Docker backend may behave better than the Podman one I tested.
 
 
 ## References

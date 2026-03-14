@@ -38,7 +38,7 @@ toc: false
 | **iGPU** | AMD Radeon 890M |
 | **dGPU** | NVIDIA GeForce RTX 4060 Laptop (Max-Q) |
 | **OS** | CachyOS (Arch) |
-| **Kernel** | 6.19.4-2 |
+| **Kernel** | 6.19.8-1-cachyos |
 | **Display Server** | Wayland (GNOME 49) |
 | **CPU Scheduler** | scx_lavd (sched_ext) |
 | **Secure Boot** | Enabled |

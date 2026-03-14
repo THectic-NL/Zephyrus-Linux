@@ -46,10 +46,10 @@ Installeer NVIDIA-drivers, stel Secure Boot in met je eigen ondertekeningssleute
 
 ### Beveiliging & Privacy
 
-Stel hardware-gebaseerde LUKS-ontgrendeling in met een YubiKey, en configureer optioneel GDM om het inlogscherm over te slaan na schijfontsluiting.
+Configureer optioneel GDM om het inlogscherm over te slaan na schijfontsluiting. Stel de YubiKey in voor `sudo` en de GNOME-schermvergrendeling via pam-u2f.
 
-→ [YubiKey 5C NFC]({{< relref "/docs/security/yubikey" >}})
 → [GDM Autologin]({{< relref "/docs/security/autologin" >}})
+→ [YubiKey]({{< relref "/docs/security/yubikey" >}})
 
 ### Applicaties
 
@@ -65,8 +65,9 @@ eduroam werkend krijgen. De officiële installers werken niet op Linux; een hand
 
 ### Virtualisatie
 
-Windows 11 VM opzetten voor software die niet op Linux draait (Microsoft 365, etc.).
+Windows 11 VM opzetten voor software die niet op Linux draait (Microsoft 365, etc.), of VMware Workstation gebruiken voor meer geavanceerde virtualisatiebehoeften.
 
-→ [Windows 11 VM Setup]({{< relref "/docs/virtualization/vm-setup" >}})
+→ [Virt-Manager / KVM]({{< relref "/docs/virtualization/vm-setup" >}})
+→ [VMware Workstation]({{< relref "/docs/virtualization/vmware-workstation" >}})
 
 {{% /steps %}}

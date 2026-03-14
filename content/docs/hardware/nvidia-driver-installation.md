@@ -166,7 +166,7 @@ These services prevent GPU state issues after suspend/resume cycles.
 
 The `nvidia-powerd.service` manages NVIDIA Dynamic Boost, which shifts extra wattage (~5-15W) from the CPU to the GPU during heavy GPU loads. While useful on Intel-based laptops, it conflicts with AMD ATPX power management on the Zephyrus G16 and causes soft lockups and "GPU has fallen off the bus" errors.
 
-On this laptop, GPU power is managed via ATPX (AMD-driven via ACPI). The NVIDIA suspend/hibernate/resume services and `supergfxctl` handle power states correctly without `nvidia-powerd`.
+On this laptop, GPU power is managed via ATPX (AMD-driven via ACPI). The NVIDIA suspend/hibernate/resume services handle power states correctly without `nvidia-powerd`.
 
 **What you lose by disabling it:** Minimal. A few FPS less during heavy GPU workloads. The ~5-15W Dynamic Boost is not worth the instability on AMD ATPX hardware.
 
