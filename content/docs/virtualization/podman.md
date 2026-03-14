@@ -2,7 +2,7 @@
 title: "Podman & Podman Desktop"
 weight: 4
 prev: docs/virtualization/winboat
-next: docs/known-issues
+next: docs/virtualization/vmware-workstation
 ---
 
 I used Docker before, but wanted to try something different. Podman's philosophy around rootless containers appealed to me enough to switch completely.

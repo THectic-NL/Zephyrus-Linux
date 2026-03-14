@@ -1,7 +1,7 @@
 ---
 title: "Known Issues"
 weight: 7
-prev: docs/virtualization/podman
+prev: docs/virtualization/vmware-workstation
 ---
 
 Central reference for hardware and software issues on the ASUS ROG Zephyrus G16 GA605WV. Active issues are listed first. Resolved issues are kept as reference at the bottom.
@@ -396,7 +396,7 @@ This issue has since resolved itself. Steam now launches normally; the `__GL_CON
 ROG Control Center shows a warning that the `asus-armoury` kernel driver is not loaded. Some advanced features (PPT power limits, APU memory allocation, MUX switch control) are unavailable.
 
 **Cause:**
-The `asus-armoury` driver was merged into the Linux mainline kernel in version 6.19. CachyOS ships kernel 6.19.4-2 which includes this driver, so it should be available.
+The `asus-armoury` driver was merged into the Linux mainline kernel in version 6.19. CachyOS ships kernel 6.19.8-1-cachyos which includes this driver, so it should be available.
 
 **Fix:**
 Verify the driver is loaded:

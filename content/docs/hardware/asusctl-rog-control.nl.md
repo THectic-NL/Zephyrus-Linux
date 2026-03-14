@@ -161,18 +161,24 @@ asusctl profile
 
 {{% /details %}}
 
-{{% details title="GPU mode switching (asusctl armoury)" closed="true" %}}
+{{% details title="GPU mode switching (ROG Control Center / asusctl armoury)" closed="true" %}}
 
 De GA605WV heeft een hybrid GPU setup: de AMD Radeon 890M (iGPU) stuurt het interne display aan en de NVIDIA RTX 4060 (dGPU) verwerkt GPU workloads.
 
-GPU-switching wordt beheerd via `asusctl armoury`, dat direct communiceert met de `asus-armoury` kernel driver (beschikbaar vanaf kernel 6.19).
-
-> **Let op:** `supergfxctl` werd eerder gebruikt voor GPU-switching maar is nu verouderd (deprecated). Gebruik in plaats daarvan `asusctl armoury`.
+GPU-switching wordt beheerd via ROG Control Center (GUI) of `asusctl armoury` (CLI), die direct communiceren met de `asus-armoury` kernel driver (beschikbaar vanaf kernel 6.19).
 
 | Mode | Beschrijving |
 |------|--------------|
 | Hybrid (`dgpu_disable 0`) | Beide GPU's actief. NVIDIA verwerkt GPU workloads, AMD stuurt het display aan. Het beste voor gaming. |
 | Integrated (`dgpu_disable 1`) | Alleen AMD iGPU. Lager stroomverbruik, geen NVIDIA. Goed voor batterij. |
+
+**Wisselen via GUI (ROG Control Center):**
+
+Open ROG Control Center (`rog-control-center`) en navigeer naar de GPU-switching sectie om te wisselen tussen Hybrid en Integrated mode.
+
+![ROG Control Center - GPU switching](/images/rog-control-gpu-switching.avif)
+
+**Wisselen via CLI (asusctl armoury):**
 
 **Huidige dGPU status bekijken:**
 ```bash
@@ -298,7 +304,7 @@ Bekende problemen en probleemoplossing voor asusctl & ROG Control Center staan o
 
 ### Kernel 6.19: asus-armoury driver in mainline Linux
 
-De `asus-armoury` driver is [gemerged in Linux 6.19](https://www.phoronix.com/news/ASUS-Armoury-Driver-Linux-6.19). Deze nieuwe `platform/x86` driver vervangt delen van de oudere `asus-wmi` met een schonere sysfs-gebaseerde API, waarmee o.a. paneel modus wisselen, APU geheugentoewijzing, PPT tuning en meer mogelijk wordt direct vanuit de kernel. De driver is volledig door de community ontwikkeld door het [asus-linux team](https://asus-linux.org/), zonder enige betrokkenheid van ASUS zelf. CachyOS levert kernel 6.19.4-2, inclusief deze driver en aanvullende ASUS-specifieke patches.
+De `asus-armoury` driver is [gemerged in Linux 6.19](https://www.phoronix.com/news/ASUS-Armoury-Driver-Linux-6.19). Deze nieuwe `platform/x86` driver vervangt delen van de oudere `asus-wmi` met een schonere sysfs-gebaseerde API, waarmee o.a. paneel modus wisselen, APU geheugentoewijzing, PPT tuning en meer mogelijk wordt direct vanuit de kernel. De driver is volledig door de community ontwikkeld door het [asus-linux team](https://asus-linux.org/), zonder enige betrokkenheid van ASUS zelf. CachyOS levert kernel 6.19.8-1-cachyos, inclusief deze driver en aanvullende ASUS-specifieke patches.
 
 **Voor**: basale asusctl-bediening zonder Armoury-instellingen:
 

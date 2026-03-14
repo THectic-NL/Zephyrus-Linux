@@ -2,7 +2,7 @@
 title: "Podman & Podman Desktop"
 weight: 4
 prev: docs/virtualization/winboat
-next: docs/known-issues
+next: docs/virtualization/vmware-workstation
 ---
 
 Ik had Docker hiervoor, maar wilde eens wat anders proberen. De filosofie achter Podman sprak me genoeg aan om volledig over te stappen.

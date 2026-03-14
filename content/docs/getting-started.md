@@ -65,8 +65,9 @@ Get eduroam working. The official installers don't work on Linux; a manual PEAP/
 
 ### Virtualization
 
-Set up a Windows 11 VM for software that doesn't run on Linux (Microsoft 365, etc.).
+Set up a Windows 11 VM for software that doesn't run on Linux (Microsoft 365, etc.), or run VMware Workstation for more advanced virtualization needs.
 
 → [Windows 11 VM Setup]({{< relref "/docs/virtualization/vm-setup" >}})
+→ [VMware Workstation]({{< relref "/docs/virtualization/vmware-workstation" >}})
 
 {{% /steps %}}

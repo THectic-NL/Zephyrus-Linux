@@ -65,8 +65,9 @@ eduroam werkend krijgen. De officiële installers werken niet op Linux; een hand
 
 ### Virtualisatie
 
-Windows 11 VM opzetten voor software die niet op Linux draait (Microsoft 365, etc.).
+Windows 11 VM opzetten voor software die niet op Linux draait (Microsoft 365, etc.), of VMware Workstation gebruiken voor meer geavanceerde virtualisatiebehoeften.
 
 → [Windows 11 VM Setup]({{< relref "/docs/virtualization/vm-setup" >}})
+→ [VMware Workstation]({{< relref "/docs/virtualization/vmware-workstation" >}})
 
 {{% /steps %}}
