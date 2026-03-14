@@ -123,11 +123,11 @@ gsettings reset org.gnome.desktop.wm.keybindings switch-applications
 gsettings reset org.gnome.desktop.wm.keybindings switch-windows
 ```
 
-Restart GNOME Shell without logging out:
+Apply the changes by restarting your GNOME session:
 
-```
-Alt+F2 → r → Enter
-```
+- Log out of GNOME and log back in, or reboot your system.
+
+After restarting the session, the new XWayland keyboard grab settings will be active.
 
 **In VMware:**
 
