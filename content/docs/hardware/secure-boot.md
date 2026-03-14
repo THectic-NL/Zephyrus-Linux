@@ -10,6 +10,17 @@ After installation, it's possible to re-enable it with your own signing keys. Th
 > **Result:** UEFI Secure Boot goes from **Fail** to **Pass** after completing this guide. The overall HSI score remains **HSI:3!** (the Encrypted RAM check at HSI-4 is not supported on this hardware, which prevents reaching HSI:4).
 
 
+## A word of caution first
+
+Secure Boot sounds like a solid security feature, and technically it does what it says: it verifies that the bootloader and kernel were signed by a trusted key. But it's worth being clear about what "trusted" actually means here.
+
+The Secure Boot ecosystem is controlled by Microsoft. They operate the signing servers, issue the certificates, and decide which bootloaders and shims are allowed into the chain of trust. Most hardware ships with Microsoft's keys pre-enrolled, which means their keys define what "secure" is on your machine by default. That's not an independent standard; it's a vendor-controlled list.
+
+The `--microsoft` flag in step 3 illustrates this directly: even with your own custom keys, you still have to include Microsoft's UEFI CA certificates, or your GPU firmware won't load. Their keys are structurally embedded in how the hardware works.
+
+Does that make Secure Boot useless? No. Signing your own bootloader and kernel with keys you control does meaningfully raise the bar against certain attacks (evil maid, tampered bootloader, etc.). But as a Linux user you should keep a sense of perspective: this isn't some neutral, independent security standard. It's a Microsoft-controlled gate with an asterisk attached. Set it up if it makes sense for your threat model, don't stress about it if it doesn't, and don't let the HSI score turn into a goal in itself.
+
+
 ## Security Report Context
 
 Running `fwupdmgr security` shows what passes and what doesn't. After enabling Secure Boot, the remaining failures on this hardware are:

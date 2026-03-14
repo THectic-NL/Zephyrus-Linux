@@ -34,10 +34,9 @@ After installation, the `vmmon` and `vmnet` kernel modules may fail to build. Ch
 sudo cat /var/lib/dkms/vmmon/1/build/make.log
 ```
 
-Install the community-maintained host modules and rebuild:
+Rebuild the modules:
 
 ```bash
-paru -Syu vmware-host-modules-dkms-git
 sudo dkms autoinstall
 sudo vmware-modconfig --console --install-all
 ```
@@ -56,6 +55,21 @@ reboot
 ```
 
 {{% /steps %}}
+
+
+## VM Configuration
+
+The VM settings dialog lets you adjust hardware resources assigned to a virtual machine.
+
+![VMware Workstation - VM settings](/images/vmware-workstation-settings.avif)
+
+{{% details title="Recommended VMware preferences" closed="true" %}}
+
+Open **Edit → Preferences** to configure global VMware settings. The Workspace tab shows the default VM storage location and hardware compatibility level.
+
+![VMware Preferences - Workspace](/images/vmware-preferences-workspace.avif)
+
+{{% /details %}}
 
 
 ## Networking
@@ -120,6 +134,10 @@ Alt+F2 → r → Enter
 - Use **Ctrl+Alt** to toggle input grab
 - Enable fullscreen to improve keyboard handling
 - Windows shortcuts now work inside the guest
+
+![VMware Preferences - Input](/images/vmware-preferences-input.avif)
+
+![VMware Preferences - Hot Keys](/images/vmware-preferences-hotkeys.avif)
 
 {{% /details %}}
 

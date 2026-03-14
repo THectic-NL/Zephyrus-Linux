@@ -1,12 +1,16 @@
 ---
-title: "Windows 11 VM Setup"
+title: "Virt-Manager / KVM"
 weight: 1
 prev: docs/networking/eduroam-network-installation
 ---
 
-Sommige dingen draaien gewoon niet op Linux, Microsoft 365 is het meest voor de hand liggende voorbeeld. Daarvoor heb ik een Windows 11 VM opgezet met KVM/QEMU via virt-manager. Met VirtIO-drivers en SPICE GL-acceleratie via de AMD iGPU is de performance goed genoeg voor dagelijks kantoorwerk.
+Deze handleiding beschrijft het opzetten van een Windows 11 VM met virt-manager via KVM/QEMU, VirtIO-drivers en SPICE GL-acceleratie via de AMD iGPU. Een solide open-source optie voor dagelijks kantoorwerk.
 
-> **GPU passthrough gewenst?** Als je near-native GPU performance wilt in je VM, zie de [Looking Glass Poging]({{< relref "/docs/virtualization/looking-glass-attempt" >}}). Spoiler: het werkt niet op deze laptop door hardwarebeperkingen, maar de documentatie kan nuttig zijn voor andere hardware.
+{{< callout type="info" >}}
+Op zoek naar een andere aanpak? [VMware Workstation]({{< relref "/docs/virtualization/vmware-workstation" >}}) geeft momenteel betere performance en een eenvoudigere setup. [WinBoat]({{< relref "/docs/virtualization/winboat" >}}) draait Windows in een container (nog in beta).
+{{< /callout >}}
+
+> **GPU passthrough gewenst?** Zie de [Looking Glass Poging]({{< relref "/docs/virtualization/looking-glass-attempt" >}}). Spoiler: het werkt niet op deze laptop door hardwarebeperkingen.
 
 
 ## Windows 11 Enterprise ISO

@@ -34,10 +34,9 @@ Na installatie kan het voorkomen dat de `vmmon` en `vmnet` kernel modules niet w
 sudo cat /var/lib/dkms/vmmon/1/build/make.log
 ```
 
-Installeer de community-ondersteunde host modules en herbouw:
+Herbouw de modules:
 
 ```bash
-paru -Syu vmware-host-modules-dkms-git
 sudo dkms autoinstall
 sudo vmware-modconfig --console --install-all
 ```
@@ -56,6 +55,21 @@ reboot
 ```
 
 {{% /steps %}}
+
+
+## VM-configuratie
+
+Het VM-instellingenvenster laat je hardware-resources aanpassen die aan een virtuele machine zijn toegewezen.
+
+![VMware Workstation - VM-instellingen](/images/vmware-workstation-settings.avif)
+
+{{% details title="Aanbevolen VMware-voorkeuren" closed="true" %}}
+
+Open **Bewerken → Voorkeuren** om globale VMware-instellingen te configureren. Het tabblad Werkruimte toont de standaard opslaglocatie voor VM's en het hardwarecompatibiliteitsniveau.
+
+![VMware Voorkeuren - Werkruimte](/images/vmware-preferences-workspace.avif)
+
+{{% /details %}}
 
 
 ## Netwerken
@@ -120,6 +134,10 @@ Alt+F2 → r → Enter
 - Gebruik **Ctrl+Alt** om input grab te wisselen
 - Schakel volledig scherm in voor betere toetsenbordafhandeling
 - Windows-sneltoetsen werken nu in de guest
+
+![VMware Voorkeuren - Invoer](/images/vmware-preferences-input.avif)
+
+![VMware Voorkeuren - Sneltoetsen](/images/vmware-preferences-hotkeys.avif)
 
 {{% /details %}}
 

@@ -46,10 +46,10 @@ Install NVIDIA drivers, set up Secure Boot with your own signing keys, and confi
 
 ### Security & Privacy
 
-Set up hardware-backed LUKS unlock with a YubiKey, and optionally configure GDM to skip the login screen after disk unlock.
+Optionally configure GDM to skip the login screen after disk unlock. Set up the YubiKey for `sudo` and the GNOME lock screen via pam-u2f.
 
-→ [YubiKey 5C NFC]({{< relref "/docs/security/yubikey" >}})
 → [GDM Autologin]({{< relref "/docs/security/autologin" >}})
+→ [YubiKey]({{< relref "/docs/security/yubikey" >}})
 
 ### Applications
 
@@ -67,7 +67,7 @@ Get eduroam working. The official installers don't work on Linux; a manual PEAP/
 
 Set up a Windows 11 VM for software that doesn't run on Linux (Microsoft 365, etc.), or run VMware Workstation for more advanced virtualization needs.
 
-→ [Windows 11 VM Setup]({{< relref "/docs/virtualization/vm-setup" >}})
+→ [Virt-Manager / KVM]({{< relref "/docs/virtualization/vm-setup" >}})
 → [VMware Workstation]({{< relref "/docs/virtualization/vmware-workstation" >}})
 
 {{% /steps %}}
