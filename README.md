@@ -15,22 +15,6 @@ I'm still actively testing and experimenting: things may change, break, or turn 
 
 I am not affiliated with, endorsed by, or acting on behalf of ASUS, NVIDIA, Microsoft, CachyOS, or any other company or project mentioned here.
 
-
-## System specs
-
-| Component | Specification |
-|-----------|---------------|
-| **Model** | ASUS ROG Zephyrus G16 GA605WV (2024) |
-| **CPU** | AMD Ryzen AI 9 HX 370 |
-| **RAM** | 32 GB LPDDR5 |
-| **iGPU** | AMD Radeon 890M |
-| **dGPU** | NVIDIA GeForce RTX 4060 Laptop (Max-Q) |
-| **OS** | CachyOS (Arch) |
-| **Kernel** | 6.19.4-2 |
-| **Display Server** | Wayland (GNOME 49) |
-| **CPU Scheduler** | scx_lavd (sched_ext) |
-| **Secure Boot** | Enabled |
-
 ![System information overview](static/images/system-info.avif)
 
 
