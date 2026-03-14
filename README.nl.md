@@ -15,22 +15,6 @@ Ik ben nog actief aan het testen en experimenteren: dingen kunnen veranderen, ka
 
 Ik ben niet gelieerd aan, goedgekeurd door, of handelend namens ASUS, NVIDIA, Microsoft, CachyOS, of enig ander bedrijf of project dat hier wordt genoemd.
 
-
-## Systeemspecificaties
-
-| Onderdeel | Specificatie |
-|-----------|--------------|
-| **Model** | ASUS ROG Zephyrus G16 GA605WV (2024) |
-| **CPU** | AMD Ryzen AI 9 HX 370 |
-| **RAM** | 32 GB LPDDR5 |
-| **iGPU** | AMD Radeon 890M |
-| **dGPU** | NVIDIA GeForce RTX 4060 Laptop (Max-Q) |
-| **OS** | CachyOS (Arch) |
-| **Kernel** | 6.19.4-2 |
-| **Displayserver** | Wayland (GNOME 49) |
-| **CPU-scheduler** | scx_lavd (sched_ext) |
-| **Secure Boot** | Ingeschakeld |
-
 ![Systeeminformatie-overzicht](static/images/system-info.avif)
 
 
