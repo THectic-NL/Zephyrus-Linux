@@ -123,11 +123,10 @@ gsettings reset org.gnome.desktop.wm.keybindings switch-applications
 gsettings reset org.gnome.desktop.wm.keybindings switch-windows
 ```
 
-Herstart GNOME Shell zonder uit te loggen:
+Laat de wijzigingen gelden door je GNOME-sessie te herstarten:
 
-```
-Alt+F2 → r → Enter
-```
+- **Op GNOME 49 Wayland werkt `Alt+F2 → r` niet.** Log uit en vervolgens weer in op je GNOME-sessie, of herstart je systeem.
+- Na het opnieuw aanmelden worden de nieuwe `gsettings`-instellingen voor XWayland-toetsenbordovername toegepast.
 
 **In VMware:**
 
