@@ -10,8 +10,6 @@ Deze handleiding beschrijft het opzetten van een Windows 11 VM met virt-manager 
 Op zoek naar een andere aanpak? [VMware Workstation]({{< relref "/docs/virtualization/vmware-workstation" >}}) geeft momenteel betere performance en een eenvoudigere setup. [WinBoat]({{< relref "/docs/virtualization/winboat" >}}) draait Windows in een container (nog in beta).
 {{< /callout >}}
 
-> **GPU passthrough gewenst?** Zie de [Looking Glass Poging]({{< relref "/docs/virtualization/looking-glass-attempt" >}}). Spoiler: het werkt niet op deze laptop door hardwarebeperkingen.
-
 
 ## Windows 11 Enterprise ISO
 
