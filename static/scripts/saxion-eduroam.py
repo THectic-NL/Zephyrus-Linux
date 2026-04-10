@@ -61,11 +61,26 @@ class Installer:
         Masks usernames, passwords, and other sensitive data.
         """
         # Mask Saxion usernames (e.g., user@saxion.nl)
-        text = re.sub(r'\b[a-zA-Z0-9._-]+@([a-zA-Z0-9-]+\.)*saxion\.nl\b', '[REDACTED]', text, flags=re.IGNORECASE)
+        text = re.sub(
+            r'\b[a-zA-Z0-9._-]+@([a-zA-Z0-9-]+\.)*saxion\.nl\b',
+            '[REDACTED]',
+            text,
+            flags=re.IGNORECASE
+        )
         # Mask generic email addresses
-        text = re.sub(r'\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b', '[REDACTED]', text, flags=re.IGNORECASE)
+        text = re.sub(
+            r'\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b',
+            '[REDACTED]',
+            text,
+            flags=re.IGNORECASE
+        )
         # Mask passwords (generic pattern)
-        text = re.sub(r'\bpassword[=: ]*[^\s]+', 'password=[REDACTED]', text, flags=re.IGNORECASE)
+        text = re.sub(
+            r'\bpassword[=: ]*[^\s]+',
+            'password=[REDACTED]',
+            text,
+            flags=re.IGNORECASE
+        )
         return text
 
     def show_message(self, text: str, is_error: bool = False):
@@ -214,7 +229,7 @@ class Installer:
         if ca_path:
             cmd_secure = cmd + ["802-1x.ca-cert", ca_path]
             success = self.run_nmcli(cmd_secure)
-        
+
         # Fallback if CA fails or is not found (still secure via domain suffix validation)
         if not success:
             print("Note: Using system default trust store (implicit validation).")
@@ -230,9 +245,16 @@ class Installer:
         )
 
         # Attempt to activate the connection and show only relevant output
-        res = subprocess.run(["nmcli", "connection", "up", CON_NAME], capture_output=True, text=True)
+        res = subprocess.run(
+            ["nmcli", "connection", "up", CON_NAME],
+            capture_output=True,
+            text=True
+        )
         if res.returncode == 0:
-            print("[INFO] Connection attempt started. If you entered your password, you should be connected to eduroam.")
+            print(
+                "[INFO] Connection attempt started. If you entered your "
+                "password, you should be connected to eduroam."
+            )
         else:
             print("[ERROR] Could not activate eduroam connection:")
             print(res.stderr.strip() or res.stdout.strip())
