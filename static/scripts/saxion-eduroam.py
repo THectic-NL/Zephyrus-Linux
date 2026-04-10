@@ -245,7 +245,7 @@ class Installer:
 
         # Show explanation before attempting connection so the password prompt makes sense
         self.show_message(
-            f"Username '{self.username}' added.\n\n"
+            "eduroam profile created successfully.\n\n"
             "Your password will now be requested by your desktop keyring (e.g. GNOME Keyring).\n"
             "This is normal and ensures your password is stored securely encrypted, never in plaintext.\n\n"
             "If you do not see a password prompt, open your network settings and connect to eduroam manually."
