@@ -40,11 +40,12 @@ DESCRIPTION = (
 )
 
 class Installer:
+
     def __init__(self, silent: bool = False, username: str = ""):
         self.silent = silent
         self.username = username
         self.gui_tool = self._detect_gui()
-        
+
     def _detect_gui(self) -> str | None:
         """Detects available GUI tools (zenity, kdialog, yad)."""
         if not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
@@ -204,8 +205,10 @@ class Installer:
         ca_path = self.find_system_ca_bundle()
         
         # 1. Remove any existing eduroam connection
-        subprocess.run(["nmcli", "connection", "delete", CON_NAME], 
-                      capture_output=True)
+        subprocess.run(
+            ["nmcli", "connection", "delete", CON_NAME],
+            capture_output=True
+        )
 
         # 2. Build nmcli command for new connection
         cmd = [
@@ -260,6 +263,7 @@ class Installer:
             print(res.stderr.strip() or res.stdout.strip())
 
 def main():
+
     parser = argparse.ArgumentParser(description="Saxion eduroam Installer")
     parser.add_argument("-u", "--username", help="Saxion username")
     parser.add_argument("--silent", action="store_true", help="Run without GUI")
