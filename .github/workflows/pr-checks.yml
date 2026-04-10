@@ -78,7 +78,7 @@ jobs:
 
       - name: Post PR comment
         if: steps.check.outputs.found == 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           FILES: ${{ steps.check.outputs.files }}
           ACTOR: ${{ github.event.pull_request.user.login }}
@@ -203,7 +203,7 @@ jobs:
     if: always()
     needs: [pr-title, bilingual, image-format, hugo-build, link-check]
     steps:
-      - uses: actions/github-script@v8
+      - uses: actions/github-script@v9
         env:
           RESULT_PR_TITLE:    ${{ needs.pr-title.result }}
           RESULT_BILINGUAL:   ${{ needs.bilingual.result }}
