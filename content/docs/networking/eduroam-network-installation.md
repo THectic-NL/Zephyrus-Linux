@@ -59,7 +59,7 @@ A Python script automates the full `nmcli` connection setup for Saxion:
 curl -LO https://zephyrus-linux.stensel.nl/scripts/saxion-eduroam.py
 
 # 2. Verify checksum
-echo "8dd2f2120ddebdfd9d764e04954322307dccb8c855c691de7600f2a8a71db42b  saxion-eduroam.py" | sha256sum -c
+echo "c8d5eb6551807ae5e2b8b1b38e8edd02fc13f9c3c62edf5626f2f8845c916021  saxion-eduroam.py" | sha256sum -c
 
 # 3. Run
 python3 saxion-eduroam.py

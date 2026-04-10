@@ -55,12 +55,27 @@ class Installer:
                 return tool
         return None
 
+    def _sanitize_for_log(self, text: str) -> str:
+        """
+        Sanitize text to remove potential sensitive information before logging.
+        Masks usernames, passwords, and other sensitive data.
+        """
+        # Mask Saxion usernames (e.g., user@saxion.nl)
+        text = re.sub(r'\b[a-zA-Z0-9._-]+@([a-zA-Z0-9-]+\.)*saxion\.nl\b', '[REDACTED]', text, flags=re.IGNORECASE)
+        # Mask generic email addresses
+        text = re.sub(r'\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b', '[REDACTED]', text, flags=re.IGNORECASE)
+        # Mask passwords (generic pattern)
+        text = re.sub(r'\bpassword[=: ]*[^\s]+', 'password=[REDACTED]', text, flags=re.IGNORECASE)
+        return text
+
     def show_message(self, text: str, is_error: bool = False):
         if self.silent:
             if is_error:
-                print(f"Error: {text}", file=sys.stderr)
+                sanitized_text = self._sanitize_for_log(text)
+                print(f"Error: {sanitized_text}", file=sys.stderr)
             else:
-                print(text)
+                sanitized_text = self._sanitize_for_log(text)
+                print(sanitized_text)
             return
 
         if not self.gui_tool:
@@ -151,7 +166,8 @@ class Installer:
                 return False
 
             # Log full nmcli error to stderr (terminal only — never into GUI subprocess args).
-            print(f"NetworkManager error:\n{res.stderr.strip()}", file=sys.stderr)
+            sanitized_error = self._sanitize_for_log(res.stderr.strip())
+            print(f"NetworkManager error:\n{sanitized_error}", file=sys.stderr)
 
             # Fatal error: show a static message to the GUI to avoid passing
             # nmcli output (which may echo user input) into a subprocess argument
