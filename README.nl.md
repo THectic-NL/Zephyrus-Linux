@@ -7,6 +7,45 @@ CachyOS op de ASUS ROG Zephyrus G16 GA605WV (2024). Mijn persoonlijke setup-log:
 **Bekijk de volledige documentatiesite: [zephyrus-linux.stensel.nl](https://zephyrus-linux.stensel.nl/nl/)**
 
 
+## Systeeminformatie
+
+```
+❯ fish
+					 .-------------------------:                    sten@Sten-Laptop
+					.+=========================.                    ----------------
+				 :++===++==================-       :++-           OS: CachyOS x86_64
+				:*++====+++++=============-        .==:           Host: ROG Zephyrus G16 GA605WV_GA605WV (1.0)
+			 -*+++=====+***++==========:                        Kernel: Linux 6.19.11-1-cachyos
+			=*++++========------------:                         Uptime: 3 hours, 49 mins
+		 =*+++++=====-                     ...                Packages: 1695 (pacman), 22 (flatpak)
+	 .+*+++++=-===:                    .=+++=:              Shell: fish 4.6.0
+	:++++=====-==:                     -*****+              Display (LQ160R1JW02): 2560x1600 @ 1.33x in 16", 240 Hz [Built-in]
+ :++========-=.                      .=+**+.              DE: GNOME 50.0
+.+==========-.                          .                 WM: Mutter (Wayland)
+ :+++++++====-                                .--==-.     WM Theme: Adwaita
+	:++==========.                             :+++++++:    Theme: Adwaita [GTK2/3/4]
+	 .-===========.                            =*****+*+    Icons: Adwaita [GTK2/3/4]
+		.-===========:                           .+*****+:    Font: Adwaita Sans (11pt) [GTK2/3/4]
+			-=======++++:::::::::::::::::::::::::-:  .---:      Cursor: Adwaita (24px)
+			 :======++++====+++******************=.             Terminal: GNOME Console 50.0
+				:=====+++==========++++++++++++++*-               Terminal Font: Adwaita Mono (11pt)
+				 .====++==============++++++++++*-                CPU: AMD Ryzen AI 9 HX 370 (24) @ 5.16 GHz
+					.===+==================+++++++:                 GPU 1: AMD Radeon 890M Graphics [Integrated]
+					 .-=======================+++:                  GPU 2: NVIDIA GeForce RTX 4060 Max-Q / Mobile [Discrete]
+						 ..........................                   Memory: 10.24 GiB / 28.98 GiB (35%)
+																													Swap: 1.28 MiB / 28.98 GiB (0%)
+																													Disk (/): 270.70 GiB / 951.85 GiB (28%) - btrfs
+																													Local IP (wlan0): 192.168.0.72/24
+																													Battery (A32-K55): 100% [AC Connected]
+																													Locale: en_US.UTF-8
+
+                                                                                  
+                                                                                  
+~
+❯ 
+```
+
+
 ## Over dit project
 
 Dit is mijn persoonlijke setup-log voor CachyOS op deze laptop. Ik ben geen software-engineer of developer: gewoon iemand die naar Linux is overgestapt en daarna tegen van alles aanliep wat niet meteen werkte. Ik heb alles opgeschreven zodat anderen niet hetzelfde hoeven uitzoeken als ik.

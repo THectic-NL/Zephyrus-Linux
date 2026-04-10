@@ -1,0 +1,34 @@
+{
+  "extends": ["config:base"],
+  "automerge": false,
+  "timezone": "Europe/Amsterdam",
+  "labels": ["dependencies"],
+  "schedule": ["before 3am on Monday"],
+  "prHourlyLimit": 2,
+  "prConcurrentLimit": 5,
+  "packageRules": [
+    {
+      "managers": ["gomod"],
+      "groupName": "go modules",
+      "schedule": ["before 3am on Monday"]
+    },
+    {
+      "managers": ["pip"],
+      "groupName": "python packages",
+      "schedule": ["before 3am on Monday"]
+    },
+    {
+      "managers": ["github-actions"],
+      "groupName": "github actions",
+      "automerge": true,
+      "automergeType": "minor",
+      "schedule": ["before 3am on Monday"]
+    },
+    {
+      "managers": ["docker"],
+      "groupName": "docker images",
+      "schedule": ["before 3am on Monday"],
+      "automerge": false
+    }
+  ]
+}
