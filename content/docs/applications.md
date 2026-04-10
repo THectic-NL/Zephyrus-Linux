@@ -39,7 +39,7 @@ Nothing special here, just set the hostname via System Settings so the machine h
 
 ### GNOME window buttons: adding minimize & maximize back
 
-By default, GNOME 49 only shows the close button. One command fixes it:
+By default, GNOME 50 only shows the close button. One command fixes it:
 
 ```bash
 gsettings set org.gnome.desktop.wm.preferences button-layout 'appmenu:minimize,maximize,close'
@@ -91,7 +91,7 @@ Using Just Perfection alone without the `gsettings` change may still leave edge 
 
 ### Touchpad scroll speed: no native GNOME setting (yet)
 
-As of GNOME 49, there is simply **no native setting** for touchpad scroll speed anywhere in the Settings panel. KDE Plasma has had this for years. There are merge requests open in [mutter](https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1840) and [GNOME Control Center](https://gitlab.gnome.org/GNOME/gnome-control-center/-/merge_requests/991) to add it, but they've been sitting there for years. See the [GNOME Discourse thread](https://discourse.gnome.org/t/adding-scroll-speed-setting-in-gnome/25893) for context.
+As of GNOME 50, there is simply **no native setting** for touchpad scroll speed anywhere in the Settings panel. KDE Plasma has had this for years. There are merge requests open in [mutter](https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1840) and [GNOME Control Center](https://gitlab.gnome.org/GNOME/gnome-control-center/-/merge_requests/991) to add it, but they've been sitting there for years. See the [GNOME Discourse thread](https://discourse.gnome.org/t/adding-scroll-speed-setting-in-gnome/25893) for context.
 
 [libinput-config](https://github.com/lz42/libinput-config) by lz42 is a third-party workaround that intercepts libinput events and applies a scroll multiplier.
 

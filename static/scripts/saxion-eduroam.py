@@ -39,32 +39,64 @@ DESCRIPTION = (
     "Click OK to continue."
 )
 
+
 class Installer:
+
     def __init__(self, silent: bool = False, username: str = ""):
         self.silent = silent
         self.username = username
         self.gui_tool = self._detect_gui()
-        
+
     def _detect_gui(self) -> str | None:
         """Detects available GUI tools (zenity, kdialog, yad)."""
         if not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
             return None
-        
+
         for tool in ["zenity", "kdialog", "yad"]:
             if shutil.which(tool):
                 return tool
         return None
 
+    def _sanitize_for_log(self, text: str) -> str:
+        """
+        Sanitize text to remove potential sensitive information before logging.
+        Masks usernames, passwords, and other sensitive data.
+        """
+        # Mask Saxion usernames (e.g., user@saxion.nl)
+        text = re.sub(
+            r'\b[a-zA-Z0-9._-]+@([a-zA-Z0-9-]+\.)*saxion\.nl\b',
+            '[REDACTED]',
+            text,
+            flags=re.IGNORECASE
+        )
+        # Mask generic email addresses
+        text = re.sub(
+            r'\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b',
+            '[REDACTED]',
+            text,
+            flags=re.IGNORECASE
+        )
+        # Mask passwords (generic pattern)
+        text = re.sub(
+            r'\bpassword[=: ]*[^\s]+',
+            'password=[REDACTED]',
+            text,
+            flags=re.IGNORECASE
+        )
+        return text
+
     def show_message(self, text: str, is_error: bool = False):
         if self.silent:
             if is_error:
-                print(f"Error: {text}", file=sys.stderr)
+                sanitized_text = self._sanitize_for_log(text)
+                print(f"Error: {sanitized_text}", file=sys.stderr)
             else:
-                print(text)
+                sanitized_text = self._sanitize_for_log(text)
+                print(sanitized_text)
             return
 
         if not self.gui_tool:
-            print(f"\n{text}\n")
+            print(f"\n{self._sanitize_for_log(text)}\n")
             return
 
         cmd = []
@@ -76,7 +108,7 @@ class Installer:
             cmd = ["kdialog", type_flag, text, f"--title={TITLE}"]
         elif self.gui_tool == "yad":
             image = "dialog-error" if is_error else "dialog-information"
-            cmd = ["yad", f"--image={image}", "--button=OK", "--width=500", 
+            cmd = ["yad", f"--image={image}", "--button=OK", "--width=500",
                    f"--title={TITLE}", f"--text={text}"]
 
         subprocess.run(cmd, stderr=subprocess.DEVNULL)
@@ -101,7 +133,7 @@ class Installer:
         res = subprocess.run(cmd, capture_output=True, text=True)
         if res.returncode != 0:
             return None
-        
+
         val = res.stdout.strip()
         # Yad sometimes adds a trailing separator
         if self.gui_tool == "yad" and val.endswith("|"):
@@ -151,12 +183,16 @@ class Installer:
                 return False
 
             # Log full nmcli error to stderr (terminal only — never into GUI subprocess args).
-            print(f"NetworkManager error:\n{res.stderr.strip()}", file=sys.stderr)
+            sanitized_error = self._sanitize_for_log(res.stderr.strip())
+            print(f"NetworkManager error:\n{sanitized_error}", file=sys.stderr)
 
             # Fatal error: show a static message to the GUI to avoid passing
             # nmcli output (which may echo user input) into a subprocess argument
             # (CWE-78 / CodeQL py/command-line-injection).
-            self.show_message("NetworkManager failed to configure the connection.\nSee terminal output for details.", True)
+            self.show_message(
+                "NetworkManager failed to configure the connection.\n"
+                "See terminal output for details.", True
+            )
             sys.exit(1)
         return True
 
@@ -169,12 +205,14 @@ class Installer:
             sys.exit(1)
 
         self.get_credentials()
-        
+
         ca_path = self.find_system_ca_bundle()
-        
+
         # 1. Remove any existing eduroam connection
-        subprocess.run(["nmcli", "connection", "delete", CON_NAME], 
-                      capture_output=True)
+        subprocess.run(
+            ["nmcli", "connection", "delete", CON_NAME],
+            capture_output=True
+        )
 
         # 2. Build nmcli command for new connection
         cmd = [
@@ -198,7 +236,7 @@ class Installer:
         if ca_path:
             cmd_secure = cmd + ["802-1x.ca-cert", ca_path]
             success = self.run_nmcli(cmd_secure)
-        
+
         # Fallback if CA fails or is not found (still secure via domain suffix validation)
         if not success:
             print("Note: Using system default trust store (implicit validation).")
@@ -207,21 +245,30 @@ class Installer:
 
         # Show explanation before attempting connection so the password prompt makes sense
         self.show_message(
-            f"Username '{self.username}' added.\n\n"
+            "eduroam profile created successfully.\n\n"
             "Your password will now be requested by your desktop keyring (e.g. GNOME Keyring).\n"
             "This is normal and ensures your password is stored securely encrypted, never in plaintext.\n\n"
             "If you do not see a password prompt, open your network settings and connect to eduroam manually."
         )
 
         # Attempt to activate the connection and show only relevant output
-        res = subprocess.run(["nmcli", "connection", "up", CON_NAME], capture_output=True, text=True)
+        res = subprocess.run(
+            ["nmcli", "connection", "up", CON_NAME],
+            capture_output=True,
+            text=True
+        )
         if res.returncode == 0:
-            print("[INFO] Connection attempt started. If you entered your password, you should be connected to eduroam.")
+            print(
+                "[INFO] Connection attempt started. If you entered your "
+                "password, you should be connected to eduroam."
+            )
         else:
             print("[ERROR] Could not activate eduroam connection:")
             print(res.stderr.strip() or res.stdout.strip())
 
+
 def main():
+
     parser = argparse.ArgumentParser(description="Saxion eduroam Installer")
     parser.add_argument("-u", "--username", help="Saxion username")
     parser.add_argument("--silent", action="store_true", help="Run without GUI")
@@ -239,6 +286,7 @@ def main():
 
     installer = Installer(args.silent, initial_username)
     installer.install()
+
 
 if __name__ == "__main__":
     main()
