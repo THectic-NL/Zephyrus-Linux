@@ -304,7 +304,7 @@ Known issues and troubleshooting for asusctl & ROG Control Center are documented
 
 ### Kernel 6.19: asus-armoury driver lands in mainline
 
-The `asus-armoury` driver has been [merged into Linux 6.19](https://www.phoronix.com/news/ASUS-Armoury-Driver-Linux-6.19). This new `platform/x86` driver replaces parts of the older `asus-wmi` with a cleaner sysfs-based API, enabling panel mode switching, APU memory allocation, PPT tuning, and more directly from the kernel. The driver is entirely community-developed by the [asus-linux team](https://asus-linux.org/), with no involvement from ASUS themselves. CachyOS ships kernel 6.19.8-1-cachyos which includes this driver and additional ASUS-specific patches.
+The `asus-armoury` driver has been [merged into Linux 6.19](https://www.phoronix.com/news/ASUS-Armoury-Driver-Linux-6.19). This new `platform/x86` driver replaces parts of the older `asus-wmi` with a cleaner sysfs-based API, enabling panel mode switching, APU memory allocation, PPT tuning, and more directly from the kernel. The driver is entirely community-developed by the [asus-linux team](https://asus-linux.org/), with no involvement from ASUS themselves. CachyOS ships kernel 6.19.11-1-cachyos which includes this driver and additional ASUS-specific patches.
 
 **Before**: basic asusctl controls without Armoury settings:
 
