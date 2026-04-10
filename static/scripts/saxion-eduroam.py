@@ -251,20 +251,45 @@ class Installer:
             "If you do not see a password prompt, open your network settings and connect to eduroam manually."
         )
 
-        # Attempt to activate the connection and show only relevant output
+        # Attempt to activate the connection (best-effort; profile is already saved).
         res = subprocess.run(
             ["nmcli", "connection", "up", CON_NAME],
             capture_output=True,
             text=True
         )
+        output = res.stderr.strip() or res.stdout.strip()
+
         if res.returncode == 0:
+            print("[INFO] Connected to eduroam successfully.")
+        elif "network could not be found" in output or "No network with SSID" in output:
+            # Not in range; the passwd-file warning is also present but not the root cause.
             print(
-                "[INFO] Connection attempt started. If you entered your "
-                "password, you should be connected to eduroam."
+                "[INFO] eduroam profile saved, but the network could not be reached right now.\n"
+                "       You are probably not in range of an eduroam access point.\n"
+                "       The profile is stored — connect to eduroam from your network settings when nearby."
+            )
+        elif (
+            "Secrets were required" in output
+            or "Authentication rejected" in output
+        ):
+            print(
+                "[ERROR] eduroam profile saved, but authentication failed.\n"
+                "        Your credentials may be incorrect.\n"
+                "        Re-run the script with the correct username, or update the profile in\n"
+                "        your network settings (nmcli connection edit eduroam)."
+            )
+        elif "passwd-file" in output or "cannot ask without" in output:
+            # nmcli was not invoked with --ask; keyring will prompt on first connect.
+            print(
+                "[INFO] eduroam profile saved. "
+                "Enter your password when prompted by your desktop keyring upon connecting."
             )
         else:
-            print("[ERROR] Could not activate eduroam connection:")
-            print(res.stderr.strip() or res.stdout.strip())
+            print(
+                "[WARN] eduroam profile saved, but automatic activation failed.\n"
+                "       You can connect manually via your network settings.\n"
+                f"       nmcli: {output}"
+            )
 
 
 def main():
