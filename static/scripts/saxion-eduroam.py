@@ -39,6 +39,7 @@ DESCRIPTION = (
     "Click OK to continue."
 )
 
+
 class Installer:
 
     def __init__(self, silent: bool = False, username: str = ""):
@@ -50,7 +51,7 @@ class Installer:
         """Detects available GUI tools (zenity, kdialog, yad)."""
         if not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
             return None
-        
+
         for tool in ["zenity", "kdialog", "yad"]:
             if shutil.which(tool):
                 return tool
@@ -107,7 +108,7 @@ class Installer:
             cmd = ["kdialog", type_flag, text, f"--title={TITLE}"]
         elif self.gui_tool == "yad":
             image = "dialog-error" if is_error else "dialog-information"
-            cmd = ["yad", f"--image={image}", "--button=OK", "--width=500", 
+            cmd = ["yad", f"--image={image}", "--button=OK", "--width=500",
                    f"--title={TITLE}", f"--text={text}"]
 
         subprocess.run(cmd, stderr=subprocess.DEVNULL)
@@ -132,7 +133,7 @@ class Installer:
         res = subprocess.run(cmd, capture_output=True, text=True)
         if res.returncode != 0:
             return None
-        
+
         val = res.stdout.strip()
         # Yad sometimes adds a trailing separator
         if self.gui_tool == "yad" and val.endswith("|"):
@@ -188,7 +189,10 @@ class Installer:
             # Fatal error: show a static message to the GUI to avoid passing
             # nmcli output (which may echo user input) into a subprocess argument
             # (CWE-78 / CodeQL py/command-line-injection).
-            self.show_message("NetworkManager failed to configure the connection.\nSee terminal output for details.", True)
+            self.show_message(
+                "NetworkManager failed to configure the connection.\n"
+                "See terminal output for details.", True
+            )
             sys.exit(1)
         return True
 
@@ -201,9 +205,9 @@ class Installer:
             sys.exit(1)
 
         self.get_credentials()
-        
+
         ca_path = self.find_system_ca_bundle()
-        
+
         # 1. Remove any existing eduroam connection
         subprocess.run(
             ["nmcli", "connection", "delete", CON_NAME],
@@ -262,6 +266,7 @@ class Installer:
             print("[ERROR] Could not activate eduroam connection:")
             print(res.stderr.strip() or res.stdout.strip())
 
+
 def main():
 
     parser = argparse.ArgumentParser(description="Saxion eduroam Installer")
@@ -281,6 +286,7 @@ def main():
 
     installer = Installer(args.silent, initial_username)
     installer.install()
+
 
 if __name__ == "__main__":
     main()
