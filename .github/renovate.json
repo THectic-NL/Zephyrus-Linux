@@ -1,5 +1,5 @@
 {
-  "extends": ["config:base"],
+  "extends": ["config:recommended"],
   "automerge": false,
   "timezone": "Europe/Amsterdam",
   "labels": ["dependencies"],
@@ -23,12 +23,6 @@
       "automerge": true,
       "automergeType": "minor",
       "schedule": ["before 3am on Monday"]
-    },
-    {
-      "managers": ["docker"],
-      "groupName": "docker images",
-      "schedule": ["before 3am on Monday"],
-      "automerge": false
     }
   ]
 }

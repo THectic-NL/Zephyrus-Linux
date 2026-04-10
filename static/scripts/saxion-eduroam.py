@@ -95,7 +95,7 @@ class Installer:
             return
 
         if not self.gui_tool:
-            print(f"\n{text}\n")
+            print(f"\n{self._sanitize_for_log(text)}\n")
             return
 
         cmd = []
