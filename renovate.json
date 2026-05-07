@@ -3,7 +3,7 @@
   "extends": ["config:recommended"],
   "timezone": "Europe/Amsterdam",
   "labels": ["dependencies"],
-  "enabledManagers": ["github-actions", "gomod", "regex"],
+  "enabledManagers": ["github-actions", "gomod","custom.regex"],
   "prHourlyLimit": 2,
   "prConcurrentLimit": 5,
   "packageRules": [
