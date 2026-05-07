@@ -20,7 +20,7 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["^\\.github\\/workflows\\/.*\\.ya?ml$"],
+      "managerFilePatterns": ["^\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "HUGO_VERSION:\\s*(?<currentValue>\\d+\\.\\d+\\.\\d+)"
       ],
@@ -30,7 +30,7 @@
     },
     {
       "customType": "regex",
-      "managerFilePatterns": ["^\\.github\\/workflows\\/.*\\.ya?ml$"],
+      "managerFilePatterns": ["^\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "hugo-version:\\s*['\\\"]?(?<currentValue>\\d+\\.\\d+\\.\\d+)['\\\"]?"
       ],
