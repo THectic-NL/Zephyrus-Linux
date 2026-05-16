@@ -1,47 +1,78 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": [
+    "config:recommended"
+  ],
   "timezone": "Europe/Amsterdam",
-  "schedule": ["every day"],
+  "schedule": [
+    "every day"
+  ],
   "forkProcessing": "enabled",
   "pinDigests": true,
   "assigneesFromCodeOwners": true,
   "reviewersFromCodeOwners": true,
-  "enabledManagers": ["github-actions", "gomod", "custom.regex"],
+  "enabledManagers": [
+    "github-actions",
+    "gomod",
+    "custom.regex"
+  ],
   "prHourlyLimit": 2,
   "prConcurrentLimit": 5,
-  "labels": ["dependencies"],
+  "labels": [
+    "dependencies"
+  ],
   "packageRules": [
     {
-      "matchManagers": ["dockerfile", "docker-compose"],
+      "matchManagers": [
+        "dockerfile",
+        "docker-compose"
+      ],
       "groupName": "Docker images",
-      "addLabels": ["docker"]
+      "addLabels": [
+        "docker"
+      ]
     },
     {
-      "matchManagers": ["github-actions"],
+      "matchManagers": [
+        "github-actions"
+      ],
       "groupName": "GitHub Actions",
-      "addLabels": ["github-actions"]
+      "addLabels": [
+        "github-actions"
+      ]
     },
     {
-      "matchManagers": ["gomod"],
-      "groupName": "go modules"
-    },
-    {
-      "matchUpdateTypes": ["patch", "digest"],
+      "matchUpdateTypes": [
+        "patch",
+        "digest"
+      ],
       "automerge": true,
       "automergeType": "pr"
     },
     {
-      "matchUpdateTypes": ["major"],
+      "matchUpdateTypes": [
+        "major"
+      ],
       "automerge": false
+    },
+    {
+      "matchManagers": [
+        "gomod"
+      ],
+      "groupName": "Go modules",
+      "addLabels": [
+        "go"
+      ]
     }
   ],
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["^\.github/workflows/.*\.ya?ml$"],
+      "managerFilePatterns": [
+        "^\\.github/workflows/.*\\.ya?ml$"
+      ],
       "matchStrings": [
-        "HUGO_VERSION:\s*(?<currentValue>\d+\.\d+\.\d+)"
+        "HUGO_VERSION:\\s*(?<currentValue>\\d+\\.\\d+\\.\\d+)"
       ],
       "depNameTemplate": "gohugoio/hugo",
       "datasourceTemplate": "github-releases",
@@ -49,9 +80,11 @@
     },
     {
       "customType": "regex",
-      "managerFilePatterns": ["^\.github/workflows/.*\.ya?ml$"],
+      "managerFilePatterns": [
+        "^\\.github/workflows/.*\\.ya?ml$"
+      ],
       "matchStrings": [
-        "hugo-version:\s*['\\\"]?(?<currentValue>\d+\.\d+\.\d+)['\\\"]?"
+        "hugo-version:\\s*['\"]?(?<currentValue>\\d+\\.\\d+\\.\\d+)['\"]?"
       ],
       "depNameTemplate": "gohugoio/hugo",
       "datasourceTemplate": "github-releases",
