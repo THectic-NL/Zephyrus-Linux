@@ -2,27 +2,46 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "timezone": "Europe/Amsterdam",
-  "labels": ["dependencies"],
-  "enabledManagers": ["github-actions", "gomod","custom.regex"],
+  "schedule": ["* 12 * * *"],
+  "forkProcessing": "enabled",
+  "pinDigests": true,
+  "assigneesFromCodeOwners": true,
+  "reviewersFromCodeOwners": true,
+  "enabledManagers": ["github-actions", "gomod", "custom.regex"],
   "prHourlyLimit": 2,
   "prConcurrentLimit": 5,
+  "labels": ["dependencies"],
   "packageRules": [
     {
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "groupName": "Docker images",
+      "addLabels": ["docker"]
+    },
+    {
       "matchManagers": ["github-actions"],
-      "groupName": "github actions",
-      "pinDigests": true
+      "groupName": "GitHub Actions",
+      "addLabels": ["github-actions"]
     },
     {
       "matchManagers": ["gomod"],
       "groupName": "go modules"
+    },
+    {
+      "matchUpdateTypes": ["patch", "digest"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "automerge": false
     }
   ],
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["^\\.github/workflows/.*\\.ya?ml$"],
+      "managerFilePatterns": ["^\.github/workflows/.*\.ya?ml$"],
       "matchStrings": [
-        "HUGO_VERSION:\\s*(?<currentValue>\\d+\\.\\d+\\.\\d+)"
+        "HUGO_VERSION:\s*(?<currentValue>\d+\.\d+\.\d+)"
       ],
       "depNameTemplate": "gohugoio/hugo",
       "datasourceTemplate": "github-releases",
@@ -30,9 +49,9 @@
     },
     {
       "customType": "regex",
-      "managerFilePatterns": ["^\\.github/workflows/.*\\.ya?ml$"],
+      "managerFilePatterns": ["^\.github/workflows/.*\.ya?ml$"],
       "matchStrings": [
-        "hugo-version:\\s*['\\\"]?(?<currentValue>\\d+\\.\\d+\\.\\d+)['\\\"]?"
+        "hugo-version:\s*['\\\"]?(?<currentValue>\d+\.\d+\.\d+)['\\\"]?"
       ],
       "depNameTemplate": "gohugoio/hugo",
       "datasourceTemplate": "github-releases",
