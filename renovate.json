@@ -39,20 +39,6 @@
       ]
     },
     {
-      "matchUpdateTypes": [
-        "patch",
-        "digest"
-      ],
-      "automerge": true,
-      "automergeType": "pr"
-    },
-    {
-      "matchUpdateTypes": [
-        "major"
-      ],
-      "automerge": false
-    },
-    {
       "matchManagers": [
         "gomod"
       ],
@@ -87,5 +73,8 @@
       "datasourceTemplate": "github-releases",
       "versioningTemplate": "semver"
     }
-  ]
+  ],
+  "automerge": true,
+  "automergeType": "pr",
+  "semanticCommits": "enabled"
 }
