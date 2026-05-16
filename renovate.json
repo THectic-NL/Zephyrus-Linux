@@ -69,7 +69,7 @@
         "^\\.github/workflows/.*\\.ya?ml$"
       ],
       "matchStrings": [
-        "HUGO_VERSION:\\\\.s*(?<currentValue>\\\\.d+\\.\\\\.d+\\.\\\\.d+)"
+        "HUGO_VERSION:\\s*(?<currentValue>\\d+\\.\\d+\\.\\d+)"
       ],
       "depNameTemplate": "gohugoio/hugo",
       "datasourceTemplate": "github-releases",
@@ -81,7 +81,7 @@
         "^\\.github/workflows/.*\\.ya?ml$"
       ],
       "matchStrings": [
-        "hugo-version:\\\\.s*['\"]?(?<currentValue>\\\\.d+\\.\\\\.d+\\.\\\\.d+)['\"]?"
+        "hugo-version:\\s*['\"]?(?<currentValue>\\d+\\.\\d+\\.\\d+)['\"]?"
       ],
       "depNameTemplate": "gohugoio/hugo",
       "datasourceTemplate": "github-releases",
