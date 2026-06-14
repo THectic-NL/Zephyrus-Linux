@@ -39,7 +39,7 @@ Gewoon de hostname instellen via Systeeminstellingen zodat de machine een fatsoe
 
 ### GNOME-vensterknoppen: minimize en maximize terug
 
-Standaard toont GNOME 49 alleen de sluitknop. Eén commando lost het op:
+Standaard toont GNOME 50 alleen de sluitknop. Eén commando lost het op:
 
 ```bash
 gsettings set org.gnome.desktop.wm.preferences button-layout 'appmenu:minimize,maximize,close'
@@ -89,51 +89,93 @@ De oplossing die wel werkt is het toepassen van **beide** instellingen tegelijk:
 
 Alleen Just Perfection gebruiken zonder de `gsettings`-wijziging kan nog steeds randgevallen opleveren. Alleen `gsettings` is niet voldoende voor apps die het activatieprotocol niet implementeren. Beide samen dekt de grote meerderheid van de gevallen.
 
-### Touchpad-scrollsnelheid: geen native GNOME-instelling (nog niet)
+### Touchpad-scrollsnelheid: nog steeds geen native GNOME-instelling
 
-GNOME 49 heeft simpelweg **geen instelling** voor touchpad-scrollsnelheid. KDE Plasma heeft dat al jaren. Er zijn merge requests open in [mutter](https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1840) en [GNOME Control Center](https://gitlab.gnome.org/GNOME/gnome-control-center/-/merge_requests/991), maar die staan al jaren open. Zie de [GNOME Discourse-discussie](https://discourse.gnome.org/t/adding-scroll-speed-setting-in-gnome/25893) voor meer context.
+Vanaf GNOME 50 is er nog steeds geen manier om de scrollsnelheid van het trackpad native aan te passen. Niet via Instellingen, niet ergens anders. KDE Plasma heeft dit al jaren. De community vraagt er ook al lang om, met merge requests open in [mutter](https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1840) en [GNOME Control Center](https://gitlab.gnome.org/GNOME/gnome-control-center/-/merge_requests/991) die jaren blijven liggen. Zie de [GNOME Discourse-discussie](https://discourse.gnome.org/t/adding-scroll-speed-setting-in-gnome/25893) voor de volledige geschiedenis.
 
-[libinput-config](https://github.com/lz42/libinput-config) van lz42 is een third-party workaround die libinput events onderschept en een scrollmultiplicator toepast.
+Twee third-party tools vullen dit gat. **wayland-scroll-factor** is de aanbevolen optie; **libinput-config** is het oudere systeembrede alternatief dat wat omslachtiger in te stellen is.
+
+#### wayland-scroll-factor (aanbevolen)
+
+[wayland-scroll-factor](https://github.com/daniel-g-carrasco/wayland-scroll-factor) van daniel-g-carrasco is een tool op gebruikersniveau die libinput-functieaanroepen binnen `gnome-shell` onderschept en een scrollmultiplicator toepast. Geen root nodig; alles staat in je eigen home-directory.
+
+**Installatie:**
+
+```bash
+git clone https://github.com/daniel-g-carrasco/wayland-scroll-factor.git
+cd wayland-scroll-factor
+meson setup build --prefix="$HOME/.local"
+ninja -C build
+meson install -C build
+cd ..
+rm -rf wayland-scroll-factor
+```
+
+**Configuratie:**
+
+```bash
+wsf set 0.2     # 1.0 = standaardsnelheid, lager = langzamer; ik gebruik 0.2
+wsf enable      # vereist één keer uitloggen en inloggen
+wsf status      # controleer of het actief is
+```
+
+De instellingen worden opgeslagen in `~/.config/wayland-scroll-factor/config`. Na de eerste `wsf enable` en her-inloggen past `wsf set` de snelheid live aan zonder opnieuw uit te loggen.
+
+Als alles werkt, bevestigt `wsf status` dat de library in gnome-shell is geïnjecteerd:
+
+```
+gnome-shell LD_PRELOAD: ~/.local/lib/wayland-scroll-factor/libwsf_preload.so (includes WSF)
+gnome-shell library mapped: yes
+runtime config reload: active (factor changes should apply live)
+```
+
+Als de status aangeeft dat het env-bestand aanwezig is maar systemd het nog niet heeft opgepakt, voer dan `systemctl --user daemon-reexec` uit en log daarna één keer uit en weer in.
+
+**Optionele GUI** (`wsf-gui` - vereist libadwaita ≥ 1.4):
+
+```bash
+wsf-gui
+```
+
+Hiermee stel je de verticale en horizontale scrollsnelheid apart in, en ook pinch zoom en rotate. De System integration-schakelaar staat gelijk aan `wsf enable`/`wsf disable`.
+
+![Wayland Scroll Factor GUI met scrollsnelheidsliders](/images/wayland-scroll-factor-gui.avif)
+
+**Terugdraaien:**
+
+```bash
+wsf disable
+```
+
+#### libinput-config (alternatief)
+
+[libinput-config](https://github.com/lz42/libinput-config) van lz42 is een systeembrede workaround die bouwen uit de broncode vereist en root-toegang nodig heeft. Gebruik dit als wayland-scroll-factor niet werkt voor jouw setup.
 
 **Installatie (eenmalig):**
 
 ```bash
-# 1. Dependencies installeren
 sudo pacman -S meson ninja libinput git
 
-# 2. libinput-config clonen
 git clone https://github.com/lz42/libinput-config.git
 cd libinput-config
-
-# 3. Bouwen
 meson setup build
 ninja -C build
-
-# 4. Systeembreed installeren
 sudo ninja -C build install
-
-# 5. Opruimen (optioneel)
 cd ..
 rm -rf libinput-config
 ```
 
-**Configuratie voor langzamere touchpad-scroll:**
+**Configuratie:**
 
 ```bash
 sudo tee /etc/libinput.conf >/dev/null << 'EOF'
-# libinput-config configuration
 override-compositor=enabled
-
-# Touchpad-scroll langzamer (lager = langzamer)
-# Standaard: 1.0, geteste waarde: 0.25
 scroll-factor=0.25
-
-# Muiswiel normaal houden
 discrete-scroll-factor=1.0
 EOF
 ```
 
-Uitloggen en weer inloggen (of reboot), dan `scroll-factor` aanpassen naar voorkeur.
+Uitloggen en weer inloggen, dan `scroll-factor` aanpassen naar voorkeur.
 
 **Terugdraaien:**
 
@@ -147,14 +189,19 @@ sudo rm /etc/libinput.conf
 
 ### Brave
 
-Brave is mijn standaardbrowser. Ik begon met de Flatpak-versie maar ben overgestapt naar het native pakket, dat beter integreert met het systeem en betere prestaties biedt.
+Mijn standaardbrowser is [Brave Origin](https://packages.cachyos.org/package/cachyos/x86_64/brave-origin-bin). Ik begon met gewone Brave en ben daarna overgestapt. Brave Origin voelt merkbaar lichter en sneller, heeft minder ingebouwde functies en is voor de meeste mensen waarschijnlijk de betere keuze.
 
-- **Native (pacman):** Betere integratie, betere prestaties. Dit gebruik ik.
-- **Flatpak:** Kan in sommige situaties beter werken, maar voelt wat geïsoleerder.
+Brave Origin is de gestripte versie van Brave. Op Windows is het een betaald product ($60); op Linux is het gratis.
 
-**Installatie**
+Zowel Brave als Brave Origin zijn beschikbaar via drie bronnen: de CachyOS-repositories, de AUR en Flathub. Het native CachyOS-pakket geeft de beste integratie. Brave geeft dit zelf ook al aan op hun website en raadt native pakketten aan waar mogelijk. Flatpak werkt maar voelt wat geïsoleerder.
 
-[brave-bin in CachyOS packages](https://packages.cachyos.org/package/cachyos/x86_64/brave-bin): direct beschikbaar in de CachyOS-repo, geen AUR-helper nodig.
+**Brave Origin installeren (aanbevolen):**
+
+```bash
+sudo pacman -S brave-origin-bin
+```
+
+**Of gewone Brave, als je de volledige functieset wilt:**
 
 ```bash
 sudo pacman -S brave-bin
@@ -162,15 +209,7 @@ sudo pacman -S brave-bin
 
 ![Officiële Brave Linux installatie-instructies](/images/brave-linux-install.avif)
 
-Hardware acceleration werkt prima met huidige Brave- en kernelversies. De crashbugs die Brave 1.82–1.86 troffen zijn opgelost. Zie [Bekende Problemen]({{< relref "/docs/known-issues" >}}) voor de achtergrond.
-
-**Flatpak-alternatief**
-
-Als het native pakket problemen geeft:
-
-```bash
-flatpak install flathub com.brave.Browser
-```
+Hardware-acceleratie werkt prima met huidige Brave- en kernelversies. De crashbugs die Brave 1.82–1.86 troffen zijn opgelost. Zie [Bekende Problemen]({{< relref "/docs/known-issues" >}}) voor de achtergrond.
 
 
 ---
@@ -255,7 +294,7 @@ sudo pacman -S onlyoffice-bin
 
 **Ontbrekend: APA-stijl verwijzingen**
 
-Een opvallend gemis voor academisch werk: OnlyOffice heeft geen ingebouwde citatiebeheerder of APA-referentiestijl standaard.
+Wat ontbreekt: OnlyOffice heeft geen ingebouwde citatiebeheerder of APA-referentiestijl standaard.
 
 ![OnlyOffice - referenties-functie ontbreekt](/images/only-office-missing_references.avif)
 
@@ -337,7 +376,7 @@ Gebruik de ID van de `sec` regel (bijv. `rsa4096/JOUW_GPG_KEY_ID`).
 [Archi](https://www.archimatetool.com/) is een gratis ArchiMate-modelleertool. Het Linux-pakket is een portable archief zonder installer. Om het netjes in GNOME te laten verschijnen met een icoon, moet je de bestanden zelf plaatsen en een desktop entry handmatig aanmaken.
 
 {{< callout type="info" >}}
-De downloadpagina van Archi waarschuwt voor mogelijke UI-problemen op Wayland. In mijn ervaring werkt hij prima op GNOME 49 Wayland.
+De downloadpagina van Archi waarschuwt voor mogelijke UI-problemen op Wayland. In mijn ervaring werkt hij prima op GNOME 50 Wayland.
 {{< /callout >}}
 
 ![Archi downloadpagina - Linux versie met Wayland-opmerking](/images/archi-download.avif)
@@ -345,13 +384,13 @@ De downloadpagina van Archi waarschuwt voor mogelijke UI-problemen op Wayland. I
 ```bash
 # Download en extraheer
 cd /tmp
-curl -L https://github.com/archimatetool/archi.io/releases/download/5.7.0/Archi-Linux64-5.7.0.tgz | tar -xz
+curl -L https://github.com/archimatetool/archi.io/releases/download/5.9.0/Archi-Linux64-5.9.0.tgz | tar -xz
 
 # Verplaats naar /opt
-sudo mv Archi-Linux64-5.7.0/Archi /opt/
+sudo mv Archi-Linux64-5.9.0/Archi /opt/
 
 # Opruimen
-rm -rf Archi-Linux64-5.7.0
+rm -rf Archi-Linux64-5.9.0
 cd ~
 
 # Symlink zodat je 'archi' kunt starten vanuit de terminal
@@ -370,17 +409,23 @@ Type=Application
 Name=Archi
 Comment=ArchiMate Modelling Tool
 Exec=/opt/Archi/Archi
-Icon=/opt/Archi/plugins/com.archimatetool.editor_5.7.0.202509230807/img/app-128.png
+Icon=__ICON__
 Terminal=false
 Categories=Development;IDE;
 StartupWMClass=Archi
+```
+
+Vervang `__ICON__` door het werkelijke pad (dit bevat een buildtijdstempel die per versie verschilt):
+
+```bash
+find /opt/Archi/plugins -name "app-128.png" | head -1
 ```
 
 Na het opslaan verschijnt Archi in de GNOME-app launcher:
 
 ![Archi in de GNOME-app launcher](/images/archi-launcher.avif)
 
-![Archi draaiend op Wayland met GNOME 49](/images/archi-running.avif)
+![Archi draaiend op Wayland met GNOME 50](/images/archi-running.avif)
 
 ### Podman & Podman Desktop
 
