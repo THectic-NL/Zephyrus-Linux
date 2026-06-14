@@ -5,20 +5,20 @@ weight: 2
 
 Om CachyOS te installeren moet Secure Boot eerst uit. Anders dan Ubuntu of Fedora gebruikt CachyOS geen shim, een door Microsoft ondertekende bootloader waarmee distributies van derden kunnen opstarten onder Secure Boot. Zonder shim blokkeert Secure Boot de CachyOS-bootloader bij het opstarten, waardoor het voor de installatie uitgeschakeld moet worden ([CachyOS installatiedocumentatie](https://wiki.cachyos.org/installation/installation_on_root/)).
 
-Na de installatie kan Secure Boot opnieuw worden ingeschakeld met je eigen ondertekeningssleutels. Dit is hoe ik dat heb gedaan met `sbctl`.
+Na de installatie kun je Secure Boot opnieuw inschakelen met eigen ondertekeningssleutels via `sbctl`. Zo heb ik dat gedaan. De sectie hieronder is het lezen waard voordat je eraan begint, want op Linux met een NVIDIA GPU kun je je afvragen of het de moeite echt waard is.
 
 > **Resultaat:** UEFI Secure Boot gaat van **Fail** naar **Pass** na het voltooien van deze handleiding. De algehele HSI-score blijft **HSI:3!** (de Encrypted RAM-check op HSI-4 wordt niet ondersteund op deze hardware, waardoor HSI:4 niet haalbaar is).
 
 
-## Even een kanttekening
+## Is het de moeite waard?
 
-Secure Boot klinkt als een stevige beveiligingsfunctie, en technisch gezien doet het wat het belooft: het verifieert dat de bootloader en kernel zijn ondertekend door een vertrouwde sleutel. Maar het is de moeite waard om even stil te staan bij wat "vertrouwd" hier eigenlijk betekent.
+Secure Boot dekt alleen de opstartcyclus: firmware, bootloader, kernel. Op deze hardware eindigt die keten met de NVIDIA-driver die als niet-ondertekende DKMS-module laadt, waardoor de kernel permanent tainted is. Je hebt de voordeur beveiligd en het raam opengezet.
 
-Het Secure Boot-ecosysteem wordt beheerd door Microsoft. Zij beheren de signing-servers, geven de certificaten uit en bepalen welke bootloaders en shims toegang krijgen tot de vertrouwensketen. De meeste hardware wordt geleverd met de sleutels van Microsoft al ingeschreven, wat betekent dat hun sleutels standaard bepalen wat "secure" is op jouw apparaat. Dat is geen onafhankelijke standaard; het is een door een leverancier beheerde lijst.
+Dan is er nog het Microsoft-aspect. Stap 3 vereist de `--microsoft`-vlag, want zonder de UEFI CA-certificaten van Microsoft laadt de GPU-firmware niet. Je schrijft dus de sleutels van Microsoft in op je eigen machine, ook al gebruik je "eigen" sleutels. Dat is een beetje tegenstrijdig voor iets wat als jouw eigen vertrouwensketen wordt verkocht.
 
-De `--microsoft`-vlag in stap 3 maakt dit direct zichtbaar: zelfs met je eigen sleutels moet je de UEFI CA-certificaten van Microsoft meenemen, anders laadt je GPU-firmware niet. Hun sleutels zitten structureel ingebakken in hoe de hardware werkt.
+Waar Secure Boot eigenlijk tegen beschermt is het scenario waarbij iemand met fysieke toegang je bootloader vervangt terwijl je er niet bij bent. Als dat een echte zorg is, is volledige schijfversleuteling een veel directere oplossing, en CachyOS stelt dat al in tijdens de installatie.
 
-Maakt dat Secure Boot nutteloos? Nee. Je eigen bootloader en kernel ondertekenen met sleutels die jij beheert verhoogt de lat echt voor bepaalde aanvallen (evil maid, gemanipuleerde bootloader, etc.). Maar als Linux-gebruiker moet je dit in perspectief blijven zien: dit is geen neutrale, onafhankelijke beveiligingsstandaard. Het is een door Microsoft beheerde poort, met alle voorbehouden van dien. Stel het in als het zinvol is voor jouw situatie, maak je er geen zorgen over als dat niet zo is, en laat de HSI-score geen doel op zich worden.
+In de praktijk zorgt Secure Boot inschakelen ervoor dat `fwupdmgr security` en het GNOME-beveiligingspaneel er netjes uitzien en de HSI-score van 2 naar 3 gaat. Dat is zo'n beetje de winst. Ik heb het toch ingesteld omdat ik wilde begrijpen hoe het werkt, en de betere score is een leuke bijkomstigheid. Maar als je het wilt overslaan, is dat ook prima.
 
 
 ## Context van het beveiligingsrapport
