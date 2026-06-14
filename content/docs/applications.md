@@ -89,51 +89,93 @@ The fix that actually works is applying **both** settings together: the `gsettin
 
 Using Just Perfection alone without the `gsettings` change may still leave edge cases. Using only `gsettings` is not enough for apps that don't implement the activation protocol. Both together covers the vast majority of cases.
 
-### Touchpad scroll speed: no native GNOME setting (yet)
+### Touchpad scroll speed: still no native GNOME setting
 
-As of GNOME 50, there is simply **no native setting** for touchpad scroll speed anywhere in the Settings panel. KDE Plasma has had this for years. There are merge requests open in [mutter](https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1840) and [GNOME Control Center](https://gitlab.gnome.org/GNOME/gnome-control-center/-/merge_requests/991) to add it, but they've been sitting there for years. See the [GNOME Discourse thread](https://discourse.gnome.org/t/adding-scroll-speed-setting-in-gnome/25893) for context.
+As of GNOME 50, there is still no way to natively change trackpad scroll speed on Linux. Not in Settings, not anywhere. KDE Plasma has had this for years. The community has been asking for it for a long time too, with merge requests open in [mutter](https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1840) and [GNOME Control Center](https://gitlab.gnome.org/GNOME/gnome-control-center/-/merge_requests/991) that have gone essentially nowhere. See the [GNOME Discourse thread](https://discourse.gnome.org/t/adding-scroll-speed-setting-in-gnome/25893) for the full history.
 
-[libinput-config](https://github.com/lz42/libinput-config) by lz42 is a third-party workaround that intercepts libinput events and applies a scroll multiplier.
+Two third-party tools fill this gap. **wayland-scroll-factor** is the recommended option; **libinput-config** is the older system-wide alternative that's more awkward to set up.
+
+#### wayland-scroll-factor (recommended)
+
+[wayland-scroll-factor](https://github.com/daniel-g-carrasco/wayland-scroll-factor) by daniel-g-carrasco is a user-level tool that intercepts libinput function calls inside `gnome-shell` and applies a scroll multiplier. No root access required; everything lives in your home directory.
+
+**Install:**
+
+```bash
+git clone https://github.com/daniel-g-carrasco/wayland-scroll-factor.git
+cd wayland-scroll-factor
+meson setup build --prefix="$HOME/.local"
+ninja -C build
+meson install -C build
+cd ..
+rm -rf wayland-scroll-factor
+```
+
+**Configure:**
+
+```bash
+wsf set 0.2     # 1.0 = default speed, lower = slower; I use 0.2
+wsf enable      # requires one logout/login to take effect
+wsf status      # check whether it is active
+```
+
+Settings are stored in `~/.config/wayland-scroll-factor/config`. After the first `wsf enable` and re-login, `wsf set` applies live without needing another logout.
+
+When everything is working, `wsf status` confirms the library is injected into gnome-shell:
+
+```
+gnome-shell LD_PRELOAD: ~/.local/lib/wayland-scroll-factor/libwsf_preload.so (includes WSF)
+gnome-shell library mapped: yes
+runtime config reload: active (factor changes should apply live)
+```
+
+If the status shows the env file is present but systemd hasn't picked it up yet, run `systemctl --user daemon-reexec` and log out/in once.
+
+**Optional GUI** (`wsf-gui`, requires libadwaita ≥ 1.4):
+
+```bash
+wsf-gui
+```
+
+Lets you adjust vertical and horizontal scroll speed separately, along with pinch zoom and pinch rotate. The System integration toggle maps to `wsf enable`/`wsf disable`.
+
+![Wayland Scroll Factor GUI showing scroll sensitivity sliders](/images/wayland-scroll-factor-gui.avif)
+
+**Rollback:**
+
+```bash
+wsf disable
+```
+
+#### libinput-config (alternative)
+
+[libinput-config](https://github.com/lz42/libinput-config) by lz42 is a system-wide workaround that requires building from source and root access. Use this if wayland-scroll-factor does not work for your setup.
 
 **Install (one-time):**
 
 ```bash
-# 1. Install dependencies
 sudo pacman -S meson ninja libinput git
 
-# 2. Clone libinput-config
 git clone https://github.com/lz42/libinput-config.git
 cd libinput-config
-
-# 3. Build
 meson setup build
 ninja -C build
-
-# 4. Install system-wide
 sudo ninja -C build install
-
-# 5. Cleanup (optional)
 cd ..
 rm -rf libinput-config
 ```
 
-**Configuration for slower touchpad scroll:**
+**Configuration:**
 
 ```bash
 sudo tee /etc/libinput.conf >/dev/null << 'EOF'
-# libinput-config configuration
 override-compositor=enabled
-
-# Make touchpad scroll slower (lower = slower)
-# Default: 1.0, tested value: 0.25
 scroll-factor=0.25
-
-# Keep mouse wheel behavior normal
 discrete-scroll-factor=1.0
 EOF
 ```
 
-Log out and back in (or reboot), then adjust `scroll-factor` to your liking.
+Log out and back in, then adjust `scroll-factor` to your liking.
 
 **Rollback:**
 
@@ -147,14 +189,19 @@ sudo rm /etc/libinput.conf
 
 ### Brave
 
-I use Brave as my main browser. I started with the Flatpak version but switched to the native package, which integrates better with the system and offers better performance.
+I use [Brave Origin](https://packages.cachyos.org/package/cachyos/x86_64/brave-origin-bin) as my main browser. I started out with regular Brave, then switched to Brave Origin. It feels noticeably lighter and faster, has fewer built-in features, and for most people it's probably the better starting point.
 
-- **Native (pacman):** Better system integration, better performance. This is what I use.
-- **Flatpak:** Might work better in some situations, but feels a bit more isolated.
+Brave Origin is the stripped-down version of Brave. On Windows it's a paid product ($60); on Linux it's free.
 
-**Installation**
+Both Brave and Brave Origin are available from three sources: the CachyOS repositories, the AUR, and Flathub. The CachyOS native package gives the best integration. Brave themselves say the same on their website and recommend native packages where possible. Flatpak works but feels a bit isolated.
 
-[brave-bin on CachyOS packages](https://packages.cachyos.org/package/cachyos/x86_64/brave-bin): available directly in the CachyOS repo, no AUR helper needed.
+**Install Brave Origin (recommended):**
+
+```bash
+sudo pacman -S brave-origin-bin
+```
+
+**Or regular Brave, if you want the full feature set:**
 
 ```bash
 sudo pacman -S brave-bin
@@ -163,14 +210,6 @@ sudo pacman -S brave-bin
 ![Brave official Linux install instructions](/images/brave-linux-install.avif)
 
 Hardware acceleration works fine with current Brave and kernel versions. The crash bugs that affected Brave 1.82–1.86 are resolved. See [Known Issues]({{< relref "/docs/known-issues" >}}) for the history.
-
-**Flatpak alternative**
-
-If the native package causes issues:
-
-```bash
-flatpak install flathub com.brave.Browser
-```
 
 
 ---
@@ -255,7 +294,7 @@ sudo pacman -S onlyoffice-bin
 
 **Missing: APA-style references**
 
-One notable gap for academic work: OnlyOffice has no built-in citation manager or APA reference style support out of the box.
+One thing that is missing: OnlyOffice has no built-in citation manager or APA reference style support out of the box.
 
 ![OnlyOffice - references feature missing](/images/only-office-missing_references.avif)
 
@@ -337,7 +376,7 @@ Use the ID from the `sec` line (e.g., `rsa4096/YOUR_GPG_KEY_ID`).
 [Archi](https://www.archimatetool.com/) is a free ArchiMate modeling tool. The Linux package is a portable archive with no installer. To make it show up in GNOME with an icon, you have to place the files yourself and create a desktop entry manually.
 
 {{< callout type="info" >}}
-Archi's download page warns about possible UI issues on Wayland. In my experience it runs fine on GNOME 49 Wayland.
+Archi's download page warns about possible UI issues on Wayland. In my experience it runs fine on GNOME 50 Wayland.
 {{< /callout >}}
 
 ![Archi download page - Linux version with Wayland note](/images/archi-download.avif)
@@ -345,13 +384,13 @@ Archi's download page warns about possible UI issues on Wayland. In my experienc
 ```bash
 # Download and extract
 cd /tmp
-curl -L https://github.com/archimatetool/archi.io/releases/download/5.7.0/Archi-Linux64-5.7.0.tgz | tar -xz
+curl -L https://github.com/archimatetool/archi.io/releases/download/5.9.0/Archi-Linux64-5.9.0.tgz | tar -xz
 
 # Move to /opt
-sudo mv Archi-Linux64-5.7.0/Archi /opt/
+sudo mv Archi-Linux64-5.9.0/Archi /opt/
 
 # Cleanup
-rm -rf Archi-Linux64-5.7.0
+rm -rf Archi-Linux64-5.9.0
 cd ~
 
 # Create symlink so you can run 'archi' from the terminal
@@ -370,17 +409,23 @@ Type=Application
 Name=Archi
 Comment=ArchiMate Modelling Tool
 Exec=/opt/Archi/Archi
-Icon=/opt/Archi/plugins/com.archimatetool.editor_5.7.0.202509230807/img/app-128.png
+Icon=__ICON__
 Terminal=false
 Categories=Development;IDE;
 StartupWMClass=Archi
+```
+
+Replace `__ICON__` with the actual path (it includes a build timestamp that changes per release):
+
+```bash
+find /opt/Archi/plugins -name "app-128.png" | head -1
 ```
 
 After saving, Archi appears in the GNOME app launcher:
 
 ![Archi in the GNOME application launcher](/images/archi-launcher.avif)
 
-![Archi running on Wayland with GNOME 49](/images/archi-running.avif)
+![Archi running on Wayland with GNOME 50](/images/archi-running.avif)
 
 ### Podman & Podman Desktop
 
