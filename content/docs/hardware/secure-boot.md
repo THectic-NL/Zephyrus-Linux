@@ -5,20 +5,20 @@ weight: 2
 
 To install CachyOS, Secure Boot has to be off first. Unlike Ubuntu or Fedora, CachyOS doesn't use shim, a Microsoft-signed bootloader that lets third-party systems boot under Secure Boot. Without it, Secure Boot blocks the CachyOS bootloader before it even starts, so it has to be disabled for installation ([CachyOS installation docs](https://wiki.cachyos.org/installation/installation_on_root/)).
 
-After installation, it's possible to re-enable it with your own signing keys. This is how I did that using `sbctl`.
+After installation, it's possible to re-enable it with your own signing keys using `sbctl`. This is how I did that. Worth reading the next section first though, because on Linux with an NVIDIA GPU there's a fair argument that it's mostly a formality.
 
 > **Result:** UEFI Secure Boot goes from **Fail** to **Pass** after completing this guide. The overall HSI score remains **HSI:3!** (the Encrypted RAM check at HSI-4 is not supported on this hardware, which prevents reaching HSI:4).
 
 
-## A word of caution first
+## Is it actually worth it?
 
-Secure Boot sounds like a solid security feature, and technically it does what it says: it verifies that the bootloader and kernel were signed by a trusted key. But it's worth being clear about what "trusted" actually means here.
+Secure Boot only covers the boot chain: firmware, bootloader, kernel. On this hardware, the chain ends with the NVIDIA driver loading as an unsigned DKMS module, which permanently taints the kernel. You've secured the front door and left the window open.
 
-The Secure Boot ecosystem is controlled by Microsoft. They operate the signing servers, issue the certificates, and decide which bootloaders and shims are allowed into the chain of trust. Most hardware ships with Microsoft's keys pre-enrolled, which means their keys define what "secure" is on your machine by default. That's not an independent standard; it's a vendor-controlled list.
+Then there's the Microsoft thing. Step 3 requires the `--microsoft` flag because without their UEFI CA certificates the GPU firmware won't load. So even with your own keys, you're still enrolling Microsoft's certificates into your own machine. That's a bit of a contradiction for something sold as "your own" chain of trust.
 
-The `--microsoft` flag in step 3 illustrates this directly: even with your own custom keys, you still have to include Microsoft's UEFI CA certificates, or your GPU firmware won't load. Their keys are structurally embedded in how the hardware works.
+What Secure Boot actually defends against is someone with physical access swapping your bootloader while you're not around. If that's a genuine concern, full disk encryption is a much more direct answer, and CachyOS sets that up during installation anyway.
 
-Does that make Secure Boot useless? No. Signing your own bootloader and kernel with keys you control does meaningfully raise the bar against certain attacks (evil maid, tampered bootloader, etc.). But as a Linux user you should keep a sense of perspective: this isn't some neutral, independent security standard. It's a Microsoft-controlled gate with an asterisk attached. Set it up if it makes sense for your threat model, don't stress about it if it doesn't, and don't let the HSI score turn into a goal in itself.
+In practice, enabling Secure Boot makes `fwupdmgr security` and the GNOME device security panel look tidy and pushes the HSI score from 2 to 3. That's roughly the extent of it. I still set it up because I wanted to understand how it works, and the score is a nice side effect. But if you'd rather skip it, that's a completely reasonable call.
 
 
 ## Security Report Context
