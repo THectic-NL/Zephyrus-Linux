@@ -28,7 +28,7 @@ toc: false
 **Persoonlijke documentatie.** Ik ben geen developer en mijn kennis van low-level Linux-zaken is beperkt, maar ik leer gaandeweg steeds meer. Het ene heb ik uitgezocht via guides van anderen, het andere door gewoon te proberen en te kijken wat er gebeurt. Ik deel wat werkte zodat anderen niet helemaal opnieuw hoeven te beginnen. Alles is op eigen risico. Kom je ergens niet uit, laat het gerust weten; ik denk graag mee.
 {{< /callout >}}
 
-## Huidige Systeemconfiguratie
+## Huidige Systeemconfiguratie (op het moment van schrijven)
 
 | Onderdeel | Specificatie |
 |-----------|--------------|
@@ -38,7 +38,7 @@ toc: false
 | **iGPU** | AMD Radeon 890M |
 | **dGPU** | NVIDIA GeForce RTX 4060 Laptop (Max-Q) |
 | **OS** | CachyOS (Arch) |
-| **Kernel** | 6.19.11-1-cachyos |
+| **Kernel** | 7.0.12-1-cachyos |
 | **Display Server** | Wayland (GNOME 50) |
 | **CPU Scheduler** | scx_lavd (sched_ext) |
 | **Secure Boot** | Ingeschakeld |

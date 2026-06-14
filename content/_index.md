@@ -28,7 +28,7 @@ toc: false
 **Personal documentation.** I'm not a developer and my low-level Linux knowledge is limited, but I'm learning more with every step. Some things I figured out through guides, others by just trying and seeing what happens. I share what worked for me so others don't have to start from scratch. Everything here is at your own risk. Feel free to reach out if something doesn't work; I'm happy to think along.
 {{< /callout >}}
 
-## Current System Configuration
+## Current System Configuration (at the time of writing)
 
 | Component | Specification |
 |-----------|---------------|
@@ -38,7 +38,7 @@ toc: false
 | **iGPU** | AMD Radeon 890M |
 | **dGPU** | NVIDIA GeForce RTX 4060 Laptop (Max-Q) |
 | **OS** | CachyOS (Arch) |
-| **Kernel** | 6.19.11-1-cachyos |
+| **Kernel** | 7.0.12-1-cachyos |
 | **Display Server** | Wayland (GNOME 50) |
 | **CPU Scheduler** | scx_lavd (sched_ext) |
 | **Secure Boot** | Enabled |
