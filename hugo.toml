@@ -7,11 +7,11 @@ enableGitInfo = true
 
 [languages]
   [languages.en]
-    languageName = 'English'
+    label = 'English'
     weight = 1
     title = 'Zephyrus Linux'
   [languages.nl]
-    languageName = 'Nederlands'
+    label = 'Nederlands'
     weight = 2
     title = 'Zephyrus Linux'
 
