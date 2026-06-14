@@ -6,9 +6,9 @@ prev: docs/getting-started
 
 The G16 has an NVIDIA RTX 4060 alongside the AMD iGPU. The open-source Nouveau driver doesn't perform well on modern NVIDIA hardware, so proprietary drivers are necessary.
 
-**Driver I'm running:**
-- Version: 595.45.04
-- CUDA Version: 13.2
+**Driver I'm running (at the time of writing):**
+- Version: 610.43.02
+- CUDA Version: 13.3
 
 
 ## CachyOS (Arch)
@@ -186,7 +186,7 @@ sudo systemctl enable --now nvidia-powerd.service
 ```
 
 **Reference:**
-- [NVIDIA Power Management Documentation](https://download.nvidia.com/XFree86/Linux-x86_64/595.45.04/README/powermanagement.html)
+- [NVIDIA Power Management Documentation](https://download.nvidia.com/XFree86/Linux-x86_64/610.43.02/README/powermanagement.html)
 
 {{% /steps %}}
 
