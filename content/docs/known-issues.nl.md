@@ -26,33 +26,13 @@ Open. WinBoat is in beta en het project erkent de instabiliteit. Zie de [WinBoat
 {{% details title="WinBoat: applicatievensters verschuiven en krimpen willekeurig" closed="true" %}}
 
 **Wat er gebeurt:**
-Wanneer WinBoat wel succesvol start en een Windows-applicatie (zoals Microsoft Word) wordt geopend, gedraagt het venster zich grillig: het schuift naar rechts over het scherm, schaalt willekeurig kleiner, en wordt steeds kleiner totdat het nauwelijks nog zichtbaar is. Dit maakt WinBoat in de praktijk onbruikbaar voor productiviteitsapplicaties.
+Als WinBoat wel opstart en je opent een Windows-app zoals Word, dan kruipt het venster langzaam naar rechts en wordt het steeds kleiner totdat het praktisch weg is. Herstarten helpt niet structureel.
 
 **Workaround:**
-Geen gevonden. De applicatie of WinBoat herstarten lost het niet betrouwbaar op.
+Geen gevonden.
 
 **Status:**
 Open. Beta-beperking.
-
-{{% /details %}}
-
-{{% details title="Brave Browser: touchpad scrollt te snel op Wayland" closed="true" %}}
-
-**Wat er gebeurt:**
-Scrollen met het touchpad in Brave voelt aanzienlijk sneller aan dan in Firefox of native GTK-apps. Een korte veegbeweging stuurt de pagina al ver naar beneden. Dit treft alle Chromium-gebaseerde browsers op Wayland.
-
-**Oorzaak:**
-Upstream Chromium-probleem. Chromium ontvangt hoge-precisie scroll-events van libinput op Wayland, maar normaliseert deze niet zoals GTK dat doet. Firefox gebruikt de GTK-inputstack, die dit correct afhandelt. Chromium niet.
-
-**Status:**
-Open. Geen fix in Brave tot begin 2026. Het probleem wordt al gemeld sinds minimaal 2022.
-
-**Geprobeerde workaround (afgebroken):**
-Het verlagen van de globale `scroll-factor` in [libinput-config]({{< relref "/docs/applications#touchpad-scroll-speed-no-native-gnome-setting-yet" >}}) vermindert de scrollsnelheid in Brave, maar het is een systeembrede instelling die elke applicatie beïnvloedt, inclusief apps waar scrollen al prima werkte. Na ongeveer een week heb ik het verwijderd. Het Brave-specifieke probleem rechtvaardigt niet dat alles trager scrollt.
-
-**Bronnen:**
-- [brave-browser #36569: native touchpad scrolling op Linux Wayland](https://github.com/brave/brave-browser/issues/36569)
-- [Brave Community: hoge-resolutie touchpad scrolling op Linux Wayland](https://community.brave.app/t/scrolling-speed-is-way-too-fast/649357)
 
 {{% /details %}}
 
@@ -72,7 +52,7 @@ Zie de sectie **Dingen die ik graag werkend had gezien** onderaan deze pagina vo
 
 ## Opgeloste Problemen
 
-De volgende problemen zijn opgelost. Elk is ofwel verholpen door de Linux kernel-ontwikkelaars (met name de AMD GPU page fault-bugs in 6.18 en de asus-armoury driver die gemerged is in 6.19), of opgelost via een configuratiewijziging die ik zelf heb toegepast. Bewaard als naslagwerk.
+De volgende problemen zijn opgelost. Sommige zijn verholpen door kernel- of driver-updates, andere via een configuratiewijziging, en eerlijk gezegd heb ik een aantal dingen misschien gewoon zelf fout gedaan. Ik heb ze hier toch bewaard, want misschien bespaar ik iemand anders dezelfde zoektocht.
 
 ## GPU & Beeldscherm
 
@@ -368,7 +348,24 @@ Daarna toont `brave://gpu`:
 
 ![brave://gpu - Video Decode uitgeschakeld, software only](/images/brave-gpu-config.avif)
 
-Brave is iets langzamer op video-intensieve pagina's maar stabiel. Hardware video decode is nog niet stabiel op de AMD Radeon 890M met GNOME Wayland.
+Deze workaround was van toepassing op kernel 6.18.x/6.19.x. Hardware video decode op de Radeon 890M is stabiel vanaf kernel 7.0 en deze vlag hoeft niet meer uitgeschakeld te worden.
+
+{{% /details %}}
+
+{{% details title="Touchpad scrollt te snel op Wayland (GNOME)" closed="true" %}}
+
+**Wat er speelde:**
+Scrollen met het touchpad voelde aanzienlijk sneller aan dan normaal in Brave en andere niet-GTK apps. Een korte veegbeweging stuurde de pagina al ver naar beneden.
+
+**Oorzaak:**
+Een GNOME/Wayland-probleem, niet specifiek aan Brave. GNOME normaliseert scroll-events niet zoals het zou moeten, waardoor apps die niet via GTK's inputstack gaan rauwe hoge-precisie events van libinput ontvangen. Firefox en native GTK-apps werken wel goed omdat zij via GTK gaan. Veel andere apps hadden hetzelfde probleem.
+
+**Oplossing:**
+[wayland-scroll-factor]({{< relref "/docs/applications#touchpad-scroll-speed-still-no-native-gnome-setting" >}}) lost dit op op GNOME-niveau door libinput-aanroepen binnen gnome-shell te onderscheppen en een scrollvermenigvuldiger toe te passen. Alles komt genormaliseerd uit. Het onderliggende GNOME-probleem staat nog steeds open upstream, maar WSF maakt het in de praktijk geen probleem meer.
+
+**Bronnen:**
+- [brave-browser #36569: native touchpad scrolling op Linux Wayland](https://github.com/brave/brave-browser/issues/36569)
+- [Brave Community: hoge-resolutie touchpad scrolling op Linux Wayland](https://community.brave.app/t/scrolling-speed-is-way-too-fast/649357)
 
 {{% /details %}}
 
@@ -396,7 +393,7 @@ Dit probleem heeft zichzelf opgelost. Steam start nu gewoon op; de `__GL_CONSTAN
 ROG Control Center toont een melding dat de `asus-armoury` kerneldriver niet is geladen. Geavanceerde functies (PPT-vermogensgrenzen, APU-geheugenallocatie, MUX-switchbesturing) zijn niet beschikbaar.
 
 **Oorzaak:**
-De `asus-armoury`-driver is samengevoegd in de Linux mainline-kernel in versie 6.19. CachyOS levert kernel 6.19.11-1-cachyos inclusief deze driver, dus hij zou beschikbaar moeten zijn.
+De `asus-armoury`-driver is toegevoegd aan de Linux mainline-kernel in versie 6.19. Deze driver zit in elke CachyOS-kernel vanaf 6.19; de huidige kernel op het moment van schrijven is 7.0.12-1-cachyos.
 
 **Fix:**
 Verifieer dat de driver is geladen:
