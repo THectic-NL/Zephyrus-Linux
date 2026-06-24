@@ -29,7 +29,7 @@ enableGitInfo = true
   [[menu.main]]
     name = 'GitHub'
     weight = 3
-    url = 'https://github.com/Stensel8/Zephyrus-Linux'
+    url = 'https://github.com/THectic-NL/Zephyrus-Linux'
     [menu.main.params]
       icon = 'github'
   [[menu.main]]
@@ -73,7 +73,7 @@ enableGitInfo = true
 
   [params.editURL]
     enable = true
-    base = 'https://github.com/Stensel8/Zephyrus-Linux/edit/main/content'
+    base = 'https://github.com/THectic-NL/Zephyrus-Linux/edit/main/content'
 
   [params.highlight]
     [params.highlight.copy]

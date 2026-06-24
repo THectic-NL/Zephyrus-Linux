@@ -14,7 +14,7 @@
 - [ ] `refactor` — restructuring without content changes
 - [ ] `style` — formatting, whitespace, typos
 
-> [PR title and commit types must follow these standards — view the contributing guide](https://github.com/Stensel8/Zephyrus-Linux/blob/main/CONTRIBUTING.md#commit-messages)
+> [PR title and commit types must follow these standards — view the contributing guide](https://github.com/THectic-NL/Zephyrus-Linux/blob/main/CONTRIBUTING.md#commit-messages)
 
 ## Checklist
 

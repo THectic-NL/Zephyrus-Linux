@@ -26,7 +26,7 @@ jobs:
           pip install flake8 bandit
 
       - name: Lint with flake8
-        run: flake8 static/scripts/saxion-eduroam.py --max-line-length=120
+        run: flake8 src/static/scripts/saxion-eduroam.py --max-line-length=120
 
       - name: Security scan with bandit
-        run: bandit -r static/scripts/saxion-eduroam.py -ll
+        run: bandit -r src/static/scripts/saxion-eduroam.py -ll
