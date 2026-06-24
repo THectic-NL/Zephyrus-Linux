@@ -15,7 +15,7 @@ Ik ben nog actief aan het testen en experimenteren: dingen kunnen veranderen, ka
 
 Ik ben niet gelieerd aan, goedgekeurd door, of handelend namens ASUS, NVIDIA, Microsoft, CachyOS, of enig ander bedrijf of project dat hier wordt genoemd.
 
-![Systeeminformatie-overzicht](static/images/system-info.avif)
+![Systeeminformatie-overzicht](src/static/images/system-info.avif)
 
 
 ## De site lokaal bouwen
@@ -35,7 +35,7 @@ sudo pacman -S hugo go
 
 **Repository klonen:**
 ```bash
-git clone https://github.com/Stensel8/Zephyrus-Linux.git
+git clone https://github.com/THectic-NL/Zephyrus-Linux.git
 cd Zephyrus-Linux
 ```
 
@@ -43,6 +43,7 @@ Hugo downloadt de thema-module automatisch bij de eerste keer uitvoeren.
 
 **Ontwikkelserver starten:**
 ```bash
+cd src
 hugo server
 ```
 
@@ -50,10 +51,11 @@ De site is beschikbaar op `http://localhost:1313/`. Hugo detecteert wijzigingen 
 
 **Bouwen voor productie:**
 ```bash
+cd src
 hugo --gc --minify
 ```
 
-De output wordt geschreven naar `./public/`. Bij een push naar `main` bouwt GitHub Actions de site automatisch en deployt naar GitHub Pages.
+De output wordt geschreven naar `./src/public/`. Bij een push naar `main` bouwt GitHub Actions de site automatisch en deployt naar GitHub Pages.
 
 
 ## Afbeeldingen
@@ -66,10 +68,10 @@ Installeer `avifenc` uit het `libavif`-pakket om PNG-screenshots om te zetten na
 sudo pacman -S libavif
 ```
 
-Batch-conversie van alle PNGs in `static/images/` (converteert en verwijdert de originelen):
+Batch-conversie van alle PNGs in `src/static/images/` (converteert en verwijdert de originelen):
 
 ```bash
-cd static/images
+cd src/static/images
 for f in *.png; do avifenc -q 80 -s 6 "$f" "${f%.png}.avif" && rm "$f"; done
 ```
 

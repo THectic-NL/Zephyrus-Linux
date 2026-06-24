@@ -242,7 +242,7 @@ These color profiles were obtained by reverse engineering the ASUS Windows drive
 
 **Install the color profiles:**
 
-The ICC color profiles are located in the [`/icc-profiles/`](https://github.com/Stensel8/Zephyrus-Linux/tree/main/static/icc-profiles) directory of this repository. Clone the repository or manually download the profiles and copy them to either location:
+The ICC color profiles are located in the [`/icc-profiles/`](https://github.com/THectic-NL/Zephyrus-Linux/tree/main/src/static/icc-profiles) directory of this repository. Clone the repository or manually download the profiles and copy them to either location:
 
 | Location | Scope |
 |---|---|
@@ -268,7 +268,7 @@ cp GA605WV_1002_104D158E_CMDEF.icm ~/.local/share/icc/
 
 **Note:** If GNOME Settings shows old technical names (e.g., "ASUS GA605WV 1002 104D158E CMDEF" instead of "Native"), close Settings and reopen, or log out/in to refresh the color cache.
 
-The filename encodes your GPU (`1002` = AMD, `10DE` = NVIDIA) and panel ID. Match them to your unit using the panel table above. All profiles are in the [`/icc-profiles/`](https://github.com/Stensel8/Zephyrus-Linux/tree/main/static/icc-profiles) directory.
+The filename encodes your GPU (`1002` = AMD, `10DE` = NVIDIA) and panel ID. Match them to your unit using the panel table above. All profiles are in the [`/icc-profiles/`](https://github.com/THectic-NL/Zephyrus-Linux/tree/main/src/static/icc-profiles) directory.
 
 **Background:**
 
@@ -289,7 +289,7 @@ The profiles in this repository are pre-processed with custom ICC metadata 'desc
 
 The Samsung ViewFinity S8 Thunderbolt (LS27B800TGUXEN) ships with a factory color profile (`SxxB80xT.icm`) included in the Windows INF driver package. On Linux, this profile must be installed manually.
 
-The profile is located in the [`/icc-profiles/LS27B800TGUXEN - S80TB/`](https://github.com/Stensel8/Zephyrus-Linux/tree/main/static/icc-profiles/LS27B800TGUXEN%20-%20S80TB) directory of this repository.
+The profile is located in the [`/icc-profiles/LS27B800TGUXEN - S80TB/`](https://github.com/THectic-NL/Zephyrus-Linux/tree/main/src/static/icc-profiles/LS27B800TGUXEN%20-%20S80TB) directory of this repository.
 
 **Install the color profile:**
 
