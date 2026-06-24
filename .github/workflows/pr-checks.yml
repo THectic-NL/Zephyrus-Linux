@@ -37,7 +37,7 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: DavidAnson/markdownlint-cli2-action@ded1f9488f68a970bc66ea5619e13e9b52e601cd # v23.2.0
         with:
-          globs: "content/**/*.md"
+          globs: "src/content/**/*.md"
 
   # ── 3. Python security scan ─────────────────────────────────────────────────
   python-security:
@@ -50,7 +50,7 @@ jobs:
           python-version: "3.x"
       - run: pip install bandit
       - name: Run bandit
-        run: bandit -r static/scripts/ -ll
+        run: bandit -r src/static/scripts/ -ll
 
   # ── 4. Images must be AVIF ──────────────────────────────────────────────────
   image-format:
@@ -64,11 +64,11 @@ jobs:
         run: |
           {
             echo "files<<EOF"
-            find static/images -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" \) | sort
+            find src/static/images -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" \) | sort
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
-          count=$(find static/images -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" \) | wc -l)
+          count=$(find src/static/images -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" \) | wc -l)
           if [ "$count" -gt 0 ]; then
             echo "found=true" >> "$GITHUB_OUTPUT"
           else
@@ -89,7 +89,7 @@ jobs:
             const body = [
               `Hey @${actor}, looks like you forgot something!`,
               '',
-              'The following images in `static/images/` are not in AVIF format:',
+              'The following images in `src/static/images/` are not in AVIF format:',
               files,
               '',
               'Please convert them before merging. Install `avifenc` first:',
@@ -99,7 +99,7 @@ jobs:
               '',
               'Then batch-convert all images in `static/images/`:',
               '```bash',
-              'cd static/images',
+              'cd src/static/images',
               'for f in *.png *.jpg *.jpeg; do',
               '  [ -f "$f" ] && avifenc -q 80 -s 6 "$f" "${f%.*}.avif" && rm "$f"',
               'done',
@@ -132,7 +132,7 @@ jobs:
       - name: Check every .md has a matching .nl.md
         run: |
           missing=""
-          for en in content/docs/*.md; do
+          for en in src/content/docs/*.md; do
             base="${en%.md}"
             nl="${base}.nl.md"
             # Skip files that are already .nl.md
@@ -156,8 +156,11 @@ jobs:
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          submodules: recursive
           fetch-depth: 0
+      - name: Setup Go
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version-file: src/go.mod
       - name: Install Hugo
         run: |
           wget -O ${{ runner.temp }}/hugo.deb \
@@ -168,12 +171,12 @@ jobs:
           HUGO_CACHEDIR: ${{ runner.temp }}/hugo_cache
           HUGO_ENVIRONMENT: production
           TZ: Europe/Amsterdam
-        run: hugo --gc --minify --baseURL "http://localhost/"
+        run: cd src && hugo --gc --minify --baseURL "http://localhost/"
       - name: Upload built site
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: hugo-public
-          path: public/
+          path: src/public/
           retention-days: 1
 
   # ── 7. Broken internal links ─────────────────────────────────────────────────

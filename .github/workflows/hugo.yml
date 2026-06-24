@@ -33,8 +33,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          submodules: recursive
           fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version-file: src/go.mod
 
       - name: Setup Pages
         id: pages
@@ -46,7 +50,7 @@ jobs:
           HUGO_ENVIRONMENT: production
           TZ: Europe/Amsterdam
         run: |
-          hugo \
+          cd src && hugo \
             --gc \
             --minify \
             --baseURL "${{ steps.pages.outputs.base_url }}/"
@@ -54,7 +58,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
-          path: ./public
+          path: ./src/public
 
   deploy:
     environment:
