@@ -241,7 +241,7 @@ Deze kleurprofielen zijn verkregen door het reverse engineeren van het ASUS Wind
 
 **Installeer de kleurprofielen:**
 
-De ICC kleurprofielen staan in de [`/icc-profiles/`](https://github.com/Stensel8/Zephyrus-Linux/tree/main/static/icc-profiles) map van deze repository. Clone de repository of download de profielen handmatig en kopieer ze naar één van deze locaties:
+De ICC kleurprofielen staan in de [`/icc-profiles/`](https://github.com/THectic-NL/Zephyrus-Linux/tree/main/src/static/icc-profiles) map van deze repository. Clone de repository of download de profielen handmatig en kopieer ze naar één van deze locaties:
 
 | Locatie | Bereik |
 |---|---|
@@ -267,7 +267,7 @@ cp GA605WV_1002_104D158E_CMDEF.icm ~/.local/share/icc/
 
 **Opmerking:** Als GNOME Settings de oude technische namen toont (bijv. "ASUS GA605WV 1002 104D158E CMDEF" in plaats van "Native"), sluit Settings af en heropen, of log uit/in om de color cache te verversen.
 
-De bestandsnaam bevat je GPU (`1002` = AMD, `10DE` = NVIDIA) en paneel-ID. Koppel deze aan jouw exemplaar via de paneeltabel hierboven. Alle profielen staan in de [`/icc-profiles/`](https://github.com/Stensel8/Zephyrus-Linux/tree/main/static/icc-profiles) map.
+De bestandsnaam bevat je GPU (`1002` = AMD, `10DE` = NVIDIA) en paneel-ID. Koppel deze aan jouw exemplaar via de paneeltabel hierboven. Alle profielen staan in de [`/icc-profiles/`](https://github.com/THectic-NL/Zephyrus-Linux/tree/main/src/static/icc-profiles) map.
 
 **Achtergrond:**
 
@@ -288,7 +288,7 @@ De profielen in deze repository zijn al voorbewerkt met aangepaste ICC metadata 
 
 De Samsung ViewFinity S8 Thunderbolt (LS27B800TGUXEN) wordt geleverd met een fabriekskleurprofiel (`SxxB80xT.icm`) dat is opgenomen in het Windows INF driver package. Op Linux moet dit profiel handmatig worden geïnstalleerd.
 
-Het profiel staat in de [`/icc-profiles/LS27B800TGUXEN - S80TB/`](https://github.com/Stensel8/Zephyrus-Linux/tree/main/static/icc-profiles/LS27B800TGUXEN%20-%20S80TB) map van deze repository.
+Het profiel staat in de [`/icc-profiles/LS27B800TGUXEN - S80TB/`](https://github.com/THectic-NL/Zephyrus-Linux/tree/main/src/static/icc-profiles/LS27B800TGUXEN%20-%20S80TB) map van deze repository.
 
 **Installeer het kleurprofiel:**
 

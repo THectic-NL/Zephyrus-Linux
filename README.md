@@ -15,7 +15,7 @@ I'm still actively testing and experimenting: things may change, break, or turn 
 
 I am not affiliated with, endorsed by, or acting on behalf of ASUS, NVIDIA, Microsoft, CachyOS, or any other company or project mentioned here.
 
-![System information overview](static/images/system-info.avif)
+![System information overview](src/static/images/system-info.avif)
 
 
 ## Building the site locally
@@ -35,7 +35,7 @@ sudo pacman -S hugo go
 
 **Clone the repository:**
 ```bash
-git clone https://github.com/Stensel8/Zephyrus-Linux.git
+git clone https://github.com/THectic-NL/Zephyrus-Linux.git
 cd Zephyrus-Linux
 ```
 
@@ -43,6 +43,7 @@ Hugo automatically downloads the theme module on first run.
 
 **Run the development server:**
 ```bash
+cd src
 hugo server
 ```
 
@@ -50,10 +51,11 @@ The site is available at `http://localhost:1313/`. Hugo watches for file changes
 
 **Build for production:**
 ```bash
+cd src
 hugo --gc --minify
 ```
 
-The output is written to `./public/`. On push to `main`, GitHub Actions builds and deploys to GitHub Pages automatically.
+The output is written to `./src/public/`. On push to `main`, GitHub Actions builds and deploys to GitHub Pages automatically.
 
 
 ## Image assets
@@ -66,10 +68,10 @@ To convert PNG screenshots to AVIF, install `avifenc` from the `libavif` package
 sudo pacman -S libavif
 ```
 
-Batch convert all PNGs in `static/images/` (converts and removes originals):
+Batch convert all PNGs in `src/static/images/` (converts and removes originals):
 
 ```bash
-cd static/images
+cd src/static/images
 for f in *.png; do avifenc -q 80 -s 6 "$f" "${f%.png}.avif" && rm "$f"; done
 ```
 

@@ -49,8 +49,8 @@ style: fix Dutch translation typos
 - PR titles must follow the same commit convention above
 - One logical change per PR
 - Update both EN (`*.md`) and NL (`*.nl.md`) versions where applicable
-- All images must be in **AVIF format** — no PNG or JPG in `static/images/`
-- Test locally with `hugo server` before opening a PR
+- All images must be in **AVIF format** — no PNG or JPG in `src/static/images/`
+- Test locally with `cd src && hugo server` before opening a PR
 - Target the `development` branch, not `main`
 
 ---
@@ -63,17 +63,17 @@ All images must be in AVIF format. Install `avifenc` from the `libavif` package:
 sudo pacman -S libavif
 ```
 
-Batch convert all PNGs in `static/images/` (converts and removes originals):
+Batch convert all PNGs in `src/static/images/` (converts and removes originals):
 
 ```bash
-cd static/images
+cd src/static/images
 for f in *.png; do avifenc -q 80 -s 6 "$f" "${f%.png}.avif" && rm "$f"; done
 ```
 
 - `-q 80` — 80% quality (0–100 scale, 100 = lossless)
 - `-s 6` — encoder speed (0 = best compression, 10 = fastest)
 
-Place converted images in `static/images/` and reference them as `/images/filename.avif` in markdown.
+Place converted images in `src/static/images/` and reference them as `/images/filename.avif` in markdown.
 
 ---
 
@@ -81,5 +81,5 @@ Place converted images in `static/images/` and reference them as `/images/filena
 
 This site is bilingual (EN + NL). When updating content:
 
-- Edit both `content/docs/page.md` and `content/docs/page.nl.md`
+- Edit both `src/content/docs/page.md` and `src/content/docs/page.nl.md`
 - Keep the structure and headings in sync between the two files

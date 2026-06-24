@@ -1,4 +1,4 @@
-module github.com/Stensel8/Zephyrus-Linux
+module github.com/THectic-NL/Zephyrus-Linux
 
 go 1.26
 
