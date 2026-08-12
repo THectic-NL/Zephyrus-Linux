@@ -361,7 +361,7 @@ Scrollen met het touchpad voelde aanzienlijk sneller aan dan normaal in Brave en
 Een GNOME/Wayland-probleem, niet specifiek aan Brave. GNOME normaliseert scroll-events niet zoals het zou moeten, waardoor apps die niet via GTK's inputstack gaan rauwe hoge-precisie events van libinput ontvangen. Firefox en native GTK-apps werken wel goed omdat zij via GTK gaan. Veel andere apps hadden hetzelfde probleem.
 
 **Oplossing:**
-[wayland-scroll-factor]({{< relref "/docs/applications#touchpad-scroll-speed-still-no-native-gnome-setting" >}}) lost dit op op GNOME-niveau door libinput-aanroepen binnen gnome-shell te onderscheppen en een scrollvermenigvuldiger toe te passen. Alles komt genormaliseerd uit. Het onderliggende GNOME-probleem staat nog steeds open upstream, maar WSF maakt het in de praktijk geen probleem meer.
+[wayland-scroll-factor]({{< relref "/docs/applications#touchpad-scrollsnelheid-nog-steeds-geen-native-gnome-instelling" >}}) lost dit op op GNOME-niveau door libinput-aanroepen binnen gnome-shell te onderscheppen en een scrollvermenigvuldiger toe te passen. Alles komt genormaliseerd uit. Het onderliggende GNOME-probleem staat nog steeds open upstream, maar WSF maakt het in de praktijk geen probleem meer.
 
 **Bronnen:**
 - [brave-browser #36569: native touchpad scrolling op Linux Wayland](https://github.com/brave/brave-browser/issues/36569)

@@ -163,9 +163,9 @@ jobs:
           go-version-file: src/go.mod
       - name: Install Hugo
         run: |
-          wget -O ${{ runner.temp }}/hugo.deb \
-            https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
-          && sudo dpkg -i ${{ runner.temp }}/hugo.deb
+          wget -O "${{ runner.temp }}/hugo.deb" \
+            "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb" \
+          && sudo dpkg -i "${{ runner.temp }}/hugo.deb"
       - name: Build
         env:
           HUGO_CACHEDIR: ${{ runner.temp }}/hugo_cache
@@ -189,15 +189,43 @@ jobs:
         with:
           name: hugo-public
           path: public/
+      # Installed by hand rather than through lycheeverse/lychee-action. That
+      # action fetches its binary with a bare `curl -sfLO`: no retry, and no
+      # check on what comes back. This job and one in THectic.nl both failed on
+      # that download within a quarter of an hour when GitHub's release CDN was
+      # having a bad day, neither having checked a single link. Pinned version,
+      # verified checksum, retried download.
+      - name: Install lychee
+        env:
+          # extractVersion: lychee tags its releases "lychee-v0.24.2", not
+          # "v0.24.2", so the default pattern cannot read the version out.
+          # renovate: datasource=github-releases depName=lycheeverse/lychee extractVersion=^lychee-v(?<version>.+)$
+          LYCHEE_VERSION: "0.24.2"
+          # From the release's own lychee-x86_64-unknown-linux-gnu.tar.gz.sha256
+          LYCHEE_SHA256: "1f4e0ef7f6554a6ed33dd7ac144fb2e1bbed98598e7af973042fc5cd43951c9a"
+        run: |
+          curl -sSL --fail-with-body -o lychee.tar.gz \
+            --retry 5 --retry-delay 3 --retry-all-errors \
+            "https://github.com/lycheeverse/lychee/releases/download/lychee-v${LYCHEE_VERSION}/lychee-x86_64-unknown-linux-gnu.tar.gz"
+          echo "${LYCHEE_SHA256}  lychee.tar.gz" | sha256sum -c -
+          tar -xzf lychee.tar.gz lychee-x86_64-unknown-linux-gnu/lychee
+          sudo install -m 0755 lychee-x86_64-unknown-linux-gnu/lychee /usr/local/bin/lychee
+          lychee --version
+
+      # --index-files: without it lychee treats a link to /docs/applications/ as
+      # a link to a directory and stops there, so it can never look inside for
+      # the #fragment. Every anchor into another page then reports "Cannot find
+      # fragment" even though the heading is right there. Hugo serves every page
+      # as <page>/index.html, so this flag is what makes --include-fragments
+      # usable at all here.
+      #
+      # The glob is quoted deliberately. Unquoted, bash expands it first, and
+      # without globstar ** collapses to a single level -- which is why this job
+      # was checking 95 links instead of 3379.
       - name: Check internal links
-        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
-        with:
-          args: >-
-            --offline
-            --include-fragments
-            --root-dir ./public
-            public/**/*.html
-          fail: true
+        run: |
+          lychee --offline --include-fragments --index-files index.html \
+            --root-dir ./public "public/**/*.html"
 
   # ── 8. Auto-tick PR checklist ────────────────────────────────────────────────
   update-checklist:

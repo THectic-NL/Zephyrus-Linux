@@ -1,0 +1,121 @@
+# Copyright (C) 2026 Sten Tijhuis
+# SPDX-License-Identifier: MIT
+name: Config validation
+
+# The bot configs are the one part of CI that nothing else exercises: a broken
+# renovate.json or dependabot.yml does not fail a build, it just quietly stops
+# doing its job. This workflow is the thing that notices.
+
+on:
+  push:
+    branches: [main, development]
+    paths:
+      - 'renovate.json'
+      - '.github/renovate.json'
+      - '.github/dependabot.yml'
+      - '.github/dependabot.yaml'
+      - '.github/scripts/check-renovate-patterns.py'
+      # Broader than the other repos: the actionlint job below covers every
+      # workflow, so every workflow change is relevant here.
+      - '.github/workflows/**'
+  pull_request:
+    branches: [main, development]
+    paths:
+      - 'renovate.json'
+      - '.github/renovate.json'
+      - '.github/dependabot.yml'
+      - '.github/dependabot.yaml'
+      - '.github/scripts/check-renovate-patterns.py'
+      # Broader than the other repos: the actionlint job below covers every
+      # workflow, so every workflow change is relevant here.
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  bot-configs:
+    name: Renovate and Dependabot config
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 'lts/*'
+
+      # Renovate's own validator. --strict also fails on warnings, such as an
+      # option that is valid but deprecated. Given no arguments it finds the
+      # config files itself and validates them as repository config; passing a
+      # path instead makes it validate them as global config, which is a
+      # different and weaker set of rules.
+      - name: Validate Renovate config
+        env:
+          # renovate: datasource=npm depName=renovate
+          RENOVATE_VERSION: "42.99.0"
+        run: npx --yes --package "renovate@${RENOVATE_VERSION}" -- renovate-config-validator --strict
+
+      # The validator above accepts a well-formed pattern that matches nothing,
+      # so this covers the gap it leaves.
+      - name: Check Renovate file patterns
+        run: python3 .github/scripts/check-renovate-patterns.py renovate.json .github/renovate.json
+
+      # GitHub validates dependabot.yml only after it is on the default branch,
+      # and reports the result on a tab nobody opens. This brings that forward
+      # to the pull request.
+      - name: Validate Dependabot config
+        env:
+          # renovate: datasource=pypi depName=check-jsonschema
+          CHECK_JSONSCHEMA_VERSION: "0.38.0"
+        run: |
+          config=""
+          for candidate in .github/dependabot.yml .github/dependabot.yaml; do
+            if [ -f "$candidate" ]; then
+              config="$candidate"
+              break
+            fi
+          done
+          if [ -z "$config" ]; then
+            echo "No dependabot.yml in this repository; nothing to validate."
+            exit 0
+          fi
+          pipx install "check-jsonschema==${CHECK_JSONSCHEMA_VERSION}"
+          check-jsonschema --builtin-schema vendor.dependabot "$config"
+
+  # The workflow files are config too. The other repositories in the
+  # organisation run actionlint from their quality workflow; this one had no
+  # equivalent, so it lives here.
+  workflow-lint:
+    name: Check workflow files
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Pinned release plus checksum, rather than piping a script from a
+      # branch straight into bash.
+      - name: Install actionlint
+        env:
+          # renovate: datasource=github-releases depName=rhysd/actionlint
+          ACTIONLINT_VERSION: "1.7.12"
+          ACTIONLINT_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+        run: |
+          curl -sSL --fail-with-body -o actionlint.tar.gz \
+            --retry 5 --retry-delay 3 --retry-all-errors \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          echo "${ACTIONLINT_SHA256}  actionlint.tar.gz" | sha256sum -c -
+          tar -xzf actionlint.tar.gz actionlint
+          sudo install -m 0755 actionlint /usr/local/bin/actionlint
+
+      - name: Run actionlint
+        run: actionlint -color
