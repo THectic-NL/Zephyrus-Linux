@@ -58,7 +58,7 @@ jobs:
       - name: Validate Renovate config
         env:
           # renovate: datasource=npm depName=renovate
-          RENOVATE_VERSION: "42.99.0"
+          RENOVATE_VERSION: "44.26.0"
         run: npx --yes --package "renovate@${RENOVATE_VERSION}" -- renovate-config-validator --strict
 
       # The validator above accepts a well-formed pattern that matches nothing,
