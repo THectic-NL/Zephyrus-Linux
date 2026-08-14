@@ -30,7 +30,15 @@ De handleiding op [linux.datanose.nl](https://linux.datanose.nl/linux/eduroam/) 
 
 ## Wat wel werkt
 
-PEAP/MSCHAPv2 met CA-validatie via de systeem-truststore en `domain-suffix-match` (de moderne vervanging voor het verouderde `altsubject-matches`).
+PEAP/MSCHAPv2, gevalideerd tegen Saxion's eigen certificaatautoriteit die in het script
+is vastgelegd, plus `domain-suffix-match` (de moderne vervanging voor het verouderde
+`altsubject-matches`).
+
+Het script wees eerder naar de systeem-truststore. Daarmee kon elk van de ongeveer 150
+publieke CA's die je distributie meelevert instaan voor een server die zich
+`ise.infra.saxion.net` noemt. Nu wordt alleen de keten vertrouwd die Saxion via eduroam
+CAT publiceert — USERTrust RSA Certification Authority en GEANT OV RSA CA 4 — precies
+wat de officiële CAT-installers doen.
 
 **Vereisten:**
 - Python 3.10+
@@ -44,7 +52,7 @@ PEAP/MSCHAPv2 met CA-validatie via de systeem-truststore en `domain-suffix-match
 | Authenticatie | Protected EAP (PEAP) |
 | PEAP-versie | Automatisch |
 | Interne authenticatie | MSCHAPv2 |
-| CA-certificaat | Systeem-CA-bundel (`/etc/pki/tls/certs/ca-bundle.crt`) |
+| CA-certificaat | De door Saxion gepubliceerde keten, geschreven naar `~/.config/saxion-eduroam/saxion-eduroam-ca.pem` |
 | Domeinvalidatie | `domain-suffix-match: ise.infra.saxion.net` |
 | Fase-2-domeinvalidatie | `phase2-domain-suffix-match: ise.infra.saxion.net` |
 | Anonieme identiteit | `anonymous@saxion.nl` |
@@ -59,13 +67,13 @@ Een Python-script automatiseert de volledige `nmcli`-verbindingsconfiguratie voo
 curl -LO https://zephyrus-linux.stensel.nl/scripts/saxion-eduroam.py
 
 # 2. Controleer de checksum
-echo "bef16a8ce91644a26cdd428f8dd0300de8e49ed72d9cbf4b6d39efea6d8facc1  saxion-eduroam.py" | sha256sum -c
+echo "b1a9b7ee4a55f77e118d40e886979ca96c8db8e145d593027f0bde0a578c46bc  saxion-eduroam.py" | sha256sum -c
 
 # 3. Uitvoeren
 python3 saxion-eduroam.py
 ```
 
-**SHA256:** `bef16a8ce91644a26cdd428f8dd0300de8e49ed72d9cbf4b6d39efea6d8facc1`
+**SHA256:** `b1a9b7ee4a55f77e118d40e886979ca96c8db8e145d593027f0bde0a578c46bc`
 
 Het script verwijdert een eventueel bestaand eduroam-profiel, vraagt je **gebruikersnaam** via een GUI-dialoog (zenity, kdialog of yad) of terminal-fallback, en activeert de verbinding. Je wachtwoord wordt nooit door het script gevraagd; dat wordt bij het verbinden opgevraagd door je GNOME Keyring en veilig opgeslagen, nooit in platte tekst.
 
@@ -100,7 +108,7 @@ nmcli connection add \
   802-1x.identity "gebruiker@instelling.nl" \
   802-1x.password "je-wachtwoord" \
   802-1x.anonymous-identity "anonymous@saxion.nl" \
-  802-1x.ca-cert file:///etc/pki/tls/certs/ca-bundle.crt \
+  802-1x.ca-cert file://$HOME/.config/saxion-eduroam/saxion-eduroam-ca.pem \
   802-1x.domain-suffix-match "ise.infra.saxion.net" \
   802-1x.phase2-domain-suffix-match "ise.infra.saxion.net"
 ```

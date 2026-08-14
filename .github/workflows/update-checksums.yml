@@ -28,14 +28,27 @@ jobs:
     runs-on: ubuntu-latest
     # Only Renovate's own branches. Running this on a human's pull request
     # would mean pushing commits to a branch someone is actively working on.
-    if: startsWith(github.head_ref, 'renovate/') && github.actor == 'renovate[bot]'
+    #
+    # The author of the pull request, not github.actor. actor is whoever
+    # triggered the most recent event, which on a synchronize is whoever pushed
+    # last; comparing that to a bot name is a check zizmor rightly calls
+    # spoofable. The author is fixed when the pull request is opened and cannot
+    # be set to another account.
+    if: >-
+      startsWith(github.head_ref, 'renovate/') &&
+      github.event.pull_request.user.login == 'renovate[bot]'
     permissions:
       contents: write
     steps:
+      # persist-credentials: false, even though this job pushes. Otherwise the
+      # token sits in .git/config for the whole job, including while the script
+      # below downloads release tarballs off the internet. The push step gets
+      # the token explicitly instead, for exactly one command.
       - name: Check out the pull request branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.head_ref }}
+          persist-credentials: false
 
       # The script verifies each download against the checksum the project
       # publishes next to the release before writing anything, so a hash only
@@ -44,6 +57,9 @@ jobs:
         run: .github/scripts/update-tool-checksums.sh --apply
 
       - name: Commit updated checksums
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ github.head_ref }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -52,5 +68,6 @@ jobs:
             echo "Checksums are already up to date, nothing to commit."
           else
             git commit -m "chore: update tool SHA256 checksums"
-            git push
+            git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+              "HEAD:refs/heads/${BRANCH}"
           fi

@@ -30,7 +30,15 @@ The guide at [linux.datanose.nl](https://linux.datanose.nl/linux/eduroam/) (UvA/
 
 ## What does work
 
-PEAP/MSCHAPv2 with CA validation via the system trust store and `domain-suffix-match` (the modern replacement for the deprecated `altsubject-matches`).
+PEAP/MSCHAPv2 validated against Saxion's own certificate authority, pinned inside the
+script, plus `domain-suffix-match` (the modern replacement for the deprecated
+`altsubject-matches`).
+
+The script used to point at the system trust store, which meant any of the roughly 150
+public CAs your distribution ships could vouch for a server calling itself
+`ise.infra.saxion.net`. It now trusts only the chain Saxion publishes through eduroam
+CAT — USERTrust RSA Certification Authority and GEANT OV RSA CA 4 — which is what the
+official CAT installers do.
 
 **Requirements:**
 - Python 3.10+
@@ -44,7 +52,7 @@ PEAP/MSCHAPv2 with CA validation via the system trust store and `domain-suffix-m
 | Authentication | Protected EAP (PEAP) |
 | PEAP version | Automatic |
 | Inner authentication | MSCHAPv2 |
-| CA certificate | System CA bundle (`/etc/pki/tls/certs/ca-bundle.crt`) |
+| CA certificate | Saxion's published chain, written to `~/.config/saxion-eduroam/saxion-eduroam-ca.pem` |
 | Domain validation | `domain-suffix-match: ise.infra.saxion.net` |
 | Phase2 domain validation | `phase2-domain-suffix-match: ise.infra.saxion.net` |
 | Anonymous identity | `anonymous@saxion.nl` |
@@ -59,13 +67,13 @@ A Python script automates the full `nmcli` connection setup for Saxion:
 curl -LO https://zephyrus-linux.stensel.nl/scripts/saxion-eduroam.py
 
 # 2. Verify checksum
-echo "bef16a8ce91644a26cdd428f8dd0300de8e49ed72d9cbf4b6d39efea6d8facc1  saxion-eduroam.py" | sha256sum -c
+echo "b1a9b7ee4a55f77e118d40e886979ca96c8db8e145d593027f0bde0a578c46bc  saxion-eduroam.py" | sha256sum -c
 
 # 3. Run
 python3 saxion-eduroam.py
 ```
 
-**SHA256:** `bef16a8ce91644a26cdd428f8dd0300de8e49ed72d9cbf4b6d39efea6d8facc1`
+**SHA256:** `b1a9b7ee4a55f77e118d40e886979ca96c8db8e145d593027f0bde0a578c46bc`
 
 The script removes any existing eduroam profile, prompts for your **username** via a GUI dialog (zenity, kdialog, or yad) or terminal fallback, and activates the connection. Your password is never asked by the script; it is requested by your GNOME Keyring at connection time and stored securely, never in plaintext.
 
@@ -100,7 +108,7 @@ nmcli connection add \
   802-1x.identity "user@institution.tld" \
   802-1x.password "your-password" \
   802-1x.anonymous-identity "anonymous@saxion.nl" \
-  802-1x.ca-cert file:///etc/pki/tls/certs/ca-bundle.crt \
+  802-1x.ca-cert file://$HOME/.config/saxion-eduroam/saxion-eduroam-ca.pem \
   802-1x.domain-suffix-match "ise.infra.saxion.net" \
   802-1x.phase2-domain-suffix-match "ise.infra.saxion.net"
 ```
