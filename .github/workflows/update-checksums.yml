@@ -1,0 +1,56 @@
+# Copyright (C) 2026 Sten Tijhuis
+# SPDX-License-Identifier: MIT
+name: Update tool SHA256 checksums
+
+# Renovate bumps the pinned tool versions but cannot compute a checksum, so on
+# its own every bump lands with the previous release's hash still in place and
+# the build stops at "computed checksum did NOT match". This recalculates the
+# hashes on Renovate's pull requests and commits them back onto the branch.
+#
+# Renovate must be told to ignore those commits, or it treats the branch as
+# modified by someone else and stops maintaining the pull request. That is the
+# gitIgnoredAuthors entry in renovate.json.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main, development]
+    paths:
+      - '.github/workflows/config-validation.yml'
+      - '.github/workflows/pr-checks.yml'
+      - '.github/scripts/update-tool-checksums.sh'
+
+permissions: {}
+
+jobs:
+  update-checksums:
+    name: Recalculate SHA256 checksums
+    runs-on: ubuntu-latest
+    # Only Renovate's own branches. Running this on a human's pull request
+    # would mean pushing commits to a branch someone is actively working on.
+    if: startsWith(github.head_ref, 'renovate/') && github.actor == 'renovate[bot]'
+    permissions:
+      contents: write
+    steps:
+      - name: Check out the pull request branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+
+      # The script verifies each download against the checksum the project
+      # publishes next to the release before writing anything, so a hash only
+      # lands here if upstream vouches for it too.
+      - name: Recalculate and apply checksums
+        run: .github/scripts/update-tool-checksums.sh --apply
+
+      - name: Commit updated checksums
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/workflows/config-validation.yml .github/workflows/pr-checks.yml
+          if git diff --staged --quiet; then
+            echo "Checksums are already up to date, nothing to commit."
+          else
+            git commit -m "chore: update tool SHA256 checksums"
+            git push
+          fi

@@ -6,6 +6,10 @@
   "timezone": "Europe/Amsterdam",
   "forkProcessing": "enabled",
   "pinDigests": true,
+  "gitIgnoredAuthors": [
+    "github-actions[bot]@users.noreply.github.com",
+    "41898282+github-actions[bot]@users.noreply.github.com"
+  ],
   "assigneesFromCodeOwners": true,
   "reviewersFromCodeOwners": true,
   "enabledManagers": [
