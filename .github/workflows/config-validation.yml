@@ -55,11 +55,19 @@ jobs:
       # config files itself and validates them as repository config; passing a
       # path instead makes it validate them as global config, which is a
       # different and weaker set of rules.
+      #
+      # Deliberately unpinned. This is a linter for our config, not something we
+      # ship, and the newest release is the one that knows about the newest
+      # deprecations. Its own version is not worth a pull request.
+      #
+      # NPM_CONFIG_LOGLEVEL: npm prints "npm warn deprecated ..." for packages
+      # deep inside Renovate's own dependency tree. Those say nothing about the
+      # config being validated, and reading them as if they did is the obvious
+      # mistake to make when they appear directly above the validator's output.
       - name: Validate Renovate config
         env:
-          # renovate: datasource=npm depName=renovate
-          RENOVATE_VERSION: "44.28.0"
-        run: npx --yes --package "renovate@${RENOVATE_VERSION}" -- renovate-config-validator --strict
+          NPM_CONFIG_LOGLEVEL: error
+        run: npx --yes --package renovate -- renovate-config-validator --strict
 
       # The validator above accepts a well-formed pattern that matches nothing,
       # so this covers the gap it leaves.
