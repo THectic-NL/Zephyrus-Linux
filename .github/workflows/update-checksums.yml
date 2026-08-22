@@ -34,9 +34,15 @@ jobs:
     # last; comparing that to a bot name is a check zizmor rightly calls
     # spoofable. The author is fixed when the pull request is opened and cannot
     # be set to another account.
+    #
+    # Also require the head repo to be this repo, not a fork. This job checks
+    # out github.head_ref and runs a script from it with a write token, so a
+    # PR from a fork naming its branch renovate/* would otherwise get its
+    # attacker-controlled script executed with push access.
     if: >-
       startsWith(github.head_ref, 'renovate/') &&
-      github.event.pull_request.user.login == 'renovate[bot]'
+      github.event.pull_request.user.login == 'renovate[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: write
     steps:

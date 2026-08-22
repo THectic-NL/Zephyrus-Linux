@@ -288,7 +288,7 @@ class Installer:
             os.makedirs(CA_DIR, mode=0o755, exist_ok=True)
             with open(CA_FILE, "w", encoding="ascii") as handle:
                 handle.write(SAXION_CA_PEM)
-            os.chmod(CA_FILE, 0o644)
+            os.chmod(CA_FILE, 0o600)
         except OSError as error:
             self.show_message(
                 f"Could not write the CA certificate to {CA_FILE}: {error}", True
