@@ -50,10 +50,15 @@ jobs:
       # token sits in .git/config for the whole job, including while the script
       # below downloads release tarballs off the internet. The push step gets
       # the token explicitly instead, for exactly one command.
+      # Pinned to the exact commit the pull_request event fired for, not the
+      # mutable branch name. head_ref is a moving target: a push to the
+      # renovate/* branch between the job's "if:" check above and this step
+      # would check out commits that check never evaluated. head.sha is fixed
+      # in the event payload, so it can't move underneath the job.
       - name: Check out the pull request branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
       # The script verifies each download against the checksum the project
