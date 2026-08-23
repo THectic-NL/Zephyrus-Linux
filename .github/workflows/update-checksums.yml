@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: MIT
 name: Update tool SHA256 checksums
 
-# Renovate bumps the pinned tool versions but cannot compute a checksum, so on
-# its own every bump lands with the previous release's hash still in place and
-# the build stops at "computed checksum did NOT match". This recalculates the
-# hashes on Renovate's pull requests and commits them back onto the branch.
+# Renovate bumpt de vastgezette toolversies maar kan geen checksum berekenen,
+# dus op eigen kracht landt elke bump met de hash van de vorige release er nog
+# in, en stopt de build op "computed checksum did NOT match". Dit herberekent
+# de hashes op Renovates pull requests en commit ze terug op de branch.
 #
-# Renovate must be told to ignore those commits, or it treats the branch as
-# modified by someone else and stops maintaining the pull request. That is the
-# gitIgnoredAuthors entry in renovate.json.
+# Renovate moet die commits leren negeren, anders ziet hij de branch als door
+# iemand anders gewijzigd en onderhoudt hij de pull request niet meer. Dat is
+# de gitIgnoredAuthors-regel in renovate.json.
 
 on:
   pull_request:
@@ -26,14 +26,15 @@ jobs:
   update-checksums:
     name: Recalculate SHA256 checksums
     runs-on: ubuntu-latest
-    # Only Renovate's own branches. Running this on a human's pull request
-    # would mean pushing commits to a branch someone is actively working on.
+    # Alleen Renovates eigen branches. Dit op een pull request van een mens
+    # draaien betekent commits pushen naar een branch waar iemand op dat moment
+    # aan werkt.
     #
-    # The author of the pull request, not github.actor. actor is whoever
-    # triggered the most recent event, which on a synchronize is whoever pushed
-    # last; comparing that to a bot name is a check zizmor rightly calls
-    # spoofable. The author is fixed when the pull request is opened and cannot
-    # be set to another account.
+    # De auteur van de pull request, niet github.actor. actor is degene die het
+    # meest recente event veroorzaakte, en dat is bij een synchronize degene die
+    # als laatste pushte; dat vergelijken met een botnaam is een controle die
+    # zizmor terecht spoofbaar noemt. De auteur ligt vast zodra de pull request
+    # geopend wordt en is niet naar een ander account te zetten.
     #
     # Also require the head repo to be this repo, not a fork. This job checks
     # out github.head_ref and runs a script from it with a write token, so a
@@ -46,10 +47,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      # persist-credentials: false, even though this job pushes. Otherwise the
-      # token sits in .git/config for the whole job, including while the script
-      # below downloads release tarballs off the internet. The push step gets
-      # the token explicitly instead, for exactly one command.
+      # persist-credentials: false, ook al pusht deze job. Anders staat het
+      # token de hele job in .git/config, ook terwijl het script hieronder
+      # release-tarballs van internet haalt. De push-stap krijgt het token in
+      # plaats daarvan expliciet mee, voor precies één commando.
       # Pinned to the exact commit the pull_request event fired for, not the
       # mutable branch name. head_ref is a moving target: a push to the
       # renovate/* branch between the job's "if:" check above and this step
@@ -61,9 +62,9 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
-      # The script verifies each download against the checksum the project
-      # publishes next to the release before writing anything, so a hash only
-      # lands here if upstream vouches for it too.
+      # Het script controleert elke download tegen de checksum die het project
+      # naast de release publiceert voordat er iets wordt weggeschreven, dus een
+      # hash landt hier alleen als upstream er ook voor instaat.
       - name: Recalculate and apply checksums
         run: .github/scripts/update-tool-checksums.sh --apply
 

@@ -4,80 +4,83 @@ on:
   pull_request:
     branches: [main, development]
 
-# Nothing by default; each job asks for exactly what it needs. Granting
-# pull-requests: write at the top handed it to every job, including the ones
-# that only read the checkout.
+# Snel achter elkaar naar dezelfde pull request pushen startte evenveel volledige
+# runs, en de eerste zijn dan al achterhaald.
+concurrency:
+  group: pr-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions: {}
 
 jobs:
-
-  # ── 1. PR title follows conventional commits ────────────────────────────────
-  pr-title:
-    name: Conventional commit title
+  # Alle controles op een pull request, in een job.
+  #
+  # Dit waren er zes: markdownlint, de EN/NL-pariteit, de AVIF-controle, de
+  # Hugo-build, de linkcheck en het bijwerken van de checklist. Ze duurden 3, 4,
+  # 3, 12, 6 en 6 seconden -- vierendertig seconden werk, verdeeld over zes
+  # runners. GitHub rekent per job en rondt elke job naar boven af op een hele
+  # minuut, dus dat waren zes gefactureerde minuten.
+  #
+  # Er verdwijnt meer dan die vijf minuten. De linkcheck kreeg de gebouwde site
+  # via een artefact aangeleverd, met een upload, een download en de opslag
+  # erbij; nu leest hij gewoon de map die de build ernaast heeft neergezet.
+  #
+  # Elke stap draait op !cancelled(), zodat een rode markdownlint de Hugo-build
+  # niet verbergt. Je wilt alle fouten in een run zien, niet de tweede pas nadat
+  # je de eerste hebt opgelost. De job faalt alsnog zodra er iets fout is.
+  #
+  # De job draagt `pull-requests: write` omdat twee stappen op de pull request
+  # zelf schrijven: de AVIF-controle plaatst een comment en de laatste stap werkt
+  # de checklist bij. Dat is de prijs van het samenvoegen; alle actions staan op
+  # een vastgezette SHA.
+  pr-checks:
+    name: PR checks
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: read
-    steps:
-      - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          types: |
-            feat
-            fix
-            content
-            docs
-            chore
-            refactor
-            style
-            revert
-
-  # ── 2. Markdown formatting ──────────────────────────────────────────────────
-  markdown:
-    name: Markdown lint
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff # v24.2.0
-        with:
-          globs: "src/content/**/*.md"
-
-  # ── 3. Python security scan ─────────────────────────────────────────────────
-  python-security:
-    name: Python security (bandit)
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.x"
-      - run: pip install bandit
-      - name: Run bandit
-        run: bandit -r src/static/scripts/ -ll
-
-  # ── 4. Images must be AVIF ──────────────────────────────────────────────────
-  image-format:
-    name: No PNG/JPG in static/images
-    runs-on: ubuntu-latest
-    # pull-requests: write for the comment this job posts when it finds a PNG.
     permissions:
       contents: read
       pull-requests: write
+    env:
+      HUGO_VERSION: 0.165.0
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # fetch-depth: 0 voor Hugo's .GitInfo en .Lastmod.
+          fetch-depth: 0
           persist-credentials: false
 
+      # ── 1. Markdown-opmaak ──────────────────────────────────────────────────
+      - name: Markdown lint
+        id: markdown
+        if: ${{ !cancelled() }}
+        uses: DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff # v24.2.0
+        with:
+          globs: "src/content/**/*.md"
+
+      # ── 2. Elk Engels document heeft een Nederlandse tegenhanger ────────────
+      - name: Check every .md has a matching .nl.md
+        id: bilingual
+        if: ${{ !cancelled() }}
+        run: |
+          missing=""
+          for en in src/content/docs/*.md; do
+            base="${en%.md}"
+            nl="${base}.nl.md"
+            # Bestanden die zelf al .nl.md zijn overslaan
+            [[ "$en" == *.nl.md ]] && continue
+            if [ ! -f "$nl" ]; then
+              missing="$missing\n  $en → $nl missing"
+            fi
+          done
+          if [ -n "$missing" ]; then
+            echo -e "::error::Missing Dutch translation(s):$missing"
+            exit 1
+          fi
+          echo "All docs have EN + NL versions."
+
+      # ── 3. Afbeeldingen moeten AVIF zijn ────────────────────────────────────
       - name: Find non-AVIF images
-        id: check
+        id: images
+        if: ${{ !cancelled() }}
         run: |
           {
             echo "files<<EOF"
@@ -94,10 +97,10 @@ jobs:
           fi
 
       - name: Post PR comment
-        if: steps.check.outputs.found == 'true'
+        if: ${{ !cancelled() && steps.images.outputs.found == 'true' }}
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          FILES: ${{ steps.check.outputs.files }}
+          FILES: ${{ steps.images.outputs.files }}
           ACTOR: ${{ github.event.pull_request.user.login }}
         with:
           script: |
@@ -131,103 +134,83 @@ jobs:
             });
 
       - name: Annotate and fail
-        if: steps.check.outputs.found == 'true'
+        if: ${{ !cancelled() && steps.images.outputs.found == 'true' }}
         env:
-          FILES: ${{ steps.check.outputs.files }}
+          FILES: ${{ steps.images.outputs.files }}
         run: |
           while IFS= read -r f; do
             echo "::error file=$f::Convert to AVIF before merging (see README → Image assets)"
           done <<< "$FILES"
           exit 1
 
-  # ── 5. Both EN and NL files present ─────────────────────────────────────────
-  bilingual:
-    name: EN/NL file parity
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # ── 4. Python: stijl en beveiliging ─────────────────────────────────────
+      #
+      # Stond in python-checks.yml als eigen job, die op elke pull request
+      # draaide zonder padfilter -- een volle gefactureerde minuut, ook op een
+      # pull request die alleen content aanraakte. Als stap hier kost hij geen
+      # extra job. python-checks.yml houdt zijn wekelijkse run en zijn run op
+      # main: daar zit de waarde van een herhaalde bandit-scan, want die vindt
+      # met nieuwe regels iets in code die niet veranderd is.
+      - name: Set up Python
+        if: ${{ !cancelled() }}
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          persist-credentials: false
-      - name: Check every .md has a matching .nl.md
-        run: |
-          missing=""
-          for en in src/content/docs/*.md; do
-            base="${en%.md}"
-            nl="${base}.nl.md"
-            # Skip files that are already .nl.md
-            [[ "$en" == *.nl.md ]] && continue
-            if [ ! -f "$nl" ]; then
-              missing="$missing\n  $en → $nl missing"
-            fi
-          done
-          if [ -n "$missing" ]; then
-            echo -e "::error::Missing Dutch translation(s):$missing"
-            exit 1
-          fi
-          echo "All docs have EN + NL versions."
+          python-version: '3.14'
 
-  # ── 6. Hugo builds without errors ───────────────────────────────────────────
-  hugo-build:
-    name: Hugo build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    env:
-      HUGO_VERSION: 0.165.0
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
+      - name: Install flake8 and bandit
+        if: ${{ !cancelled() }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 bandit
+
+      - name: Lint with flake8
+        if: ${{ !cancelled() }}
+        run: flake8 src/static/scripts/ --max-line-length=120
+
+      - name: Security scan with bandit
+        if: ${{ !cancelled() }}
+        run: bandit -r src/static/scripts/ -ll
+
+      # ── 5. Hugo bouwt zonder fouten ─────────────────────────────────────────
       - name: Setup Go
+        if: ${{ !cancelled() }}
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: src/go.mod
+
       - name: Install Hugo
+        if: ${{ !cancelled() }}
         run: |
           wget -O "${{ runner.temp }}/hugo.deb" \
             "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb" \
           && sudo dpkg -i "${{ runner.temp }}/hugo.deb"
+
       - name: Build
+        id: hugo
+        if: ${{ !cancelled() }}
         env:
           HUGO_CACHEDIR: ${{ runner.temp }}/hugo_cache
           HUGO_ENVIRONMENT: production
           TZ: Europe/Amsterdam
         run: cd src && hugo --gc --minify --baseURL "http://localhost/"
-      - name: Upload built site
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: hugo-public
-          path: src/public/
-          retention-days: 1
 
-  # ── 7. Broken internal links ─────────────────────────────────────────────────
-  link-check:
-    name: Broken link check
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    needs: hugo-build
-    steps:
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: hugo-public
-          path: public/
-      # Installed by hand rather than through lycheeverse/lychee-action. That
-      # action fetches its binary with a bare `curl -sfLO`: no retry, and no
-      # check on what comes back. This job and one in THectic.nl both failed on
-      # that download within a quarter of an hour when GitHub's release CDN was
-      # having a bad day, neither having checked a single link. Pinned version,
-      # verified checksum, retried download.
+      # ── 6. Kapotte interne links ────────────────────────────────────────────
+      #
+      # Met de hand geïnstalleerd in plaats van via lycheeverse/lychee-action.
+      # Die actie haalt zijn binary op met een kale `curl -sfLO`: geen retry, en
+      # geen controle op wat er terugkomt. Deze stap en een in THectic.nl
+      # faalden binnen een kwartier allebei op die download toen GitHubs
+      # release-CDN een slechte dag had, zonder ook maar een link te hebben
+      # gecontroleerd. Vastgezette versie, geverifieerde checksum, retry.
       - name: Install lychee
+        if: ${{ !cancelled() }}
         env:
-          # extractVersion: lychee tags its releases "lychee-v0.24.2", not
-          # "v0.24.2", so the default pattern cannot read the version out.
+          # extractVersion: lychee tagt zijn releases als "lychee-v0.24.2" en
+          # niet als "v0.24.2", dus het standaardpatroon leest de versie er niet
+          # uit.
           # renovate: datasource=github-releases depName=lycheeverse/lychee extractVersion=^lychee-v(?<version>.+)$
           LYCHEE_VERSION: "0.24.2"
-          # From the release's own lychee-x86_64-unknown-linux-gnu.tar.gz.sha256
+          # Uit de lychee-x86_64-unknown-linux-gnu.tar.gz.sha256 van de release zelf
           LYCHEE_SHA256: "1f4e0ef7f6554a6ed33dd7ac144fb2e1bbed98598e7af973042fc5cd43951c9a"
         run: |
           curl -sSL --fail-with-body -o lychee.tar.gz \
@@ -238,38 +221,42 @@ jobs:
           sudo install -m 0755 lychee-x86_64-unknown-linux-gnu/lychee /usr/local/bin/lychee
           lychee --version
 
-      # --index-files: without it lychee treats a link to /docs/applications/ as
-      # a link to a directory and stops there, so it can never look inside for
-      # the #fragment. Every anchor into another page then reports "Cannot find
-      # fragment" even though the heading is right there. Hugo serves every page
-      # as <page>/index.html, so this flag is what makes --include-fragments
-      # usable at all here.
+      # Leest src/public rechtstreeks. Dat ging via een artefact omdat de
+      # linkcheck een eigen runner was; nu staat de build ernaast.
       #
-      # The glob is quoted deliberately. Unquoted, bash expands it first, and
-      # without globstar ** collapses to a single level -- which is why this job
-      # was checking 95 links instead of 3379.
+      # --index-files: zonder die vlag ziet lychee een link naar
+      # /docs/applications/ als een link naar een map en stopt hij daar, dus kan
+      # hij nooit naar binnen kijken voor het #fragment. Elke anker-link naar een
+      # andere pagina meldt dan "Cannot find fragment" terwijl de kop er gewoon
+      # staat. Hugo levert elke pagina uit als <pagina>/index.html, dus deze vlag
+      # is wat --include-fragments hier bruikbaar maakt.
+      #
+      # De glob staat bewust tussen quotes. Zonder quotes expandeert bash hem
+      # eerst, en zonder globstar klapt ** dan in tot een mapniveau -- daardoor
+      # controleerde deze stap ooit 95 links in plaats van 3379.
       - name: Check internal links
+        id: links
+        if: ${{ !cancelled() }}
         run: |
           lychee --offline --include-fragments --index-files index.html \
-            --root-dir ./public "public/**/*.html"
+            --root-dir "${GITHUB_WORKSPACE}/src/public" "src/public/**/*.html"
 
-  # ── 8. Auto-tick PR checklist ────────────────────────────────────────────────
-  update-checklist:
-    name: Update PR checklist
-    runs-on: ubuntu-latest
-    # pull-requests: write to rewrite the description's checklist.
-    permissions:
-      pull-requests: write
-    if: always()
-    needs: [pr-title, bilingual, image-format, hugo-build, link-check]
-    steps:
-      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      # ── 7. Checklist in de omschrijving bijwerken ───────────────────────────
+      #
+      # Leest de uitkomst van de stappen hierboven in plaats van van losse jobs.
+      # Dat was hiervoor `needs: [...]` met vier jobresultaten; in een job is het
+      # steps.<id>.outcome, en dat scheelt de zesde runner.
+      #
+      # Draait op !cancelled() en niet op success(), want juist bij een rode
+      # controle wil je de checklist bijgewerkt zien.
+      - name: Update PR checklist
+        if: ${{ !cancelled() }}
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          RESULT_PR_TITLE:    ${{ needs.pr-title.result }}
-          RESULT_BILINGUAL:   ${{ needs.bilingual.result }}
-          RESULT_IMAGE_FORMAT: ${{ needs.image-format.result }}
-          RESULT_HUGO_BUILD:  ${{ needs.hugo-build.result }}
-          RESULT_LINK_CHECK:  ${{ needs.link-check.result }}
+          RESULT_BILINGUAL: ${{ steps.bilingual.outcome }}
+          RESULT_IMAGES:    ${{ steps.images.outputs.found }}
+          RESULT_HUGO:      ${{ steps.hugo.outcome }}
+          RESULT_LINKS:     ${{ steps.links.outcome }}
         with:
           script: |
             const { data: pr } = await github.rest.pulls.get({
@@ -279,8 +266,8 @@ jobs:
             });
 
             let body = pr.body || '';
+            if (!body.trim()) return;
 
-            // ── Tick checklist items based on CI results ──────────────────────
             const setCheck = (keyword, passed) => {
               body = body.replace(
                 new RegExp(`- \\[[ xX]\\] (.*${keyword}.*)`, 'i'),
@@ -288,21 +275,36 @@ jobs:
               );
             };
 
-            setCheck('PR title follows',  process.env.RESULT_PR_TITLE     === 'success');
-            setCheck('Both EN and NL',    process.env.RESULT_BILINGUAL     === 'success');
-            setCheck('Media is in AVIF',  process.env.RESULT_IMAGE_FORMAT  === 'success');
-            setCheck('No broken image',   process.env.RESULT_LINK_CHECK    === 'success');
-            setCheck('Tested locally',    process.env.RESULT_HUGO_BUILD    === 'success');
+            // Dezelfde typelijst als pr-title.yml en CONTRIBUTING.md. Een scope
+            // en een `!` voor een breaking change zijn toegestaan: feat(nav)!: ...
+            const TITLE_RE =
+              /^(feat|fix|content|docs|chore|refactor|style|revert)(\([^)]+\))?!?: .+/;
 
-            // ── Remove unchecked "Type of change" options ─────────────────────
-            body = body.replace(/^- \[ \] `\w+` —[^\n]*\n?/gm, '');
+            setCheck('PR title follows', TITLE_RE.test(pr.title));
+            setCheck('Both EN and NL',   process.env.RESULT_BILINGUAL === 'success');
+            // De AVIF-stap slaagt ook als hij bestanden vindt; het oordeel zit
+            // in zijn output, niet in zijn uitkomst.
+            setCheck('Media is in AVIF', process.env.RESULT_IMAGES    === 'false');
+            setCheck('No broken image',  process.env.RESULT_LINKS     === 'success');
+            setCheck('Tested locally',   process.env.RESULT_HUGO      === 'success');
 
-            // ── Collapse leftover blank lines ─────────────────────────────────
+            // De niet-gekozen types weghalen, maar alleen als er al een gekozen
+            // is. Zonder die voorwaarde stript de eerste run alle acht regels weg
+            // voordat de auteur er een heeft aangevinkt.
+            const TYPE_LINE = /^- \[([ xX])\] `\w+` —[^\n]*\n?/gm;
+            const ticked = [...body.matchAll(TYPE_LINE)]
+              .some(m => m[1].toLowerCase() === 'x');
+            if (ticked) {
+              body = body.replace(/^- \[ \] `\w+` —[^\n]*\n?/gm, '');
+            }
+
             body = body.replace(/\n{3,}/g, '\n\n');
 
-            await github.rest.pulls.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number,
-              body,
-            });
+            if (body !== pr.body) {
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number,
+                body,
+              });
+            }

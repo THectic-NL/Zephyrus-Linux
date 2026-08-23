@@ -1,0 +1,24 @@
+# .gitattributes zorgt voor consistente regeleindes tussen Windows, Mac en Linux.
+# Zonder dit kunnen regeleindes per ontwikkelaar of OS verschillen, wat leidt
+# tot onnodige git-diffs en merge-conflicten.
+#
+# Deze versie is organisatiebreed gelijk. Wijk hier niet per repository van af:
+# vier licht verschillende varianten leverden alleen ruis op, geen voordeel.
+
+# Standaard: forceer LF voor alle tekstbestanden
+* text=auto eol=lf
+
+# Binaire bestanden: geen regeleindeconversie
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.avif binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.zip binary

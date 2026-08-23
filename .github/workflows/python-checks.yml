@@ -1,15 +1,18 @@
 name: Python Checks
 
+# Geen pull_request meer: flake8 en bandit draaien daar als stap in
+# pr-checks.yml, waar ze geen eigen gefactureerde job kosten. Hier bleven de
+# wekelijkse run en de run op main staan, en daar zit de waarde van een
+# herhaalde scan: bandit vindt met nieuwe regels iets in code die zelf niet
+# veranderd is, en dat merk je nooit als hij alleen op gewijzigde code draait.
 on:
   push:
-    branches: [ main, development ]
-  pull_request:
     branches: [ main, development ]
   schedule:
     - cron: '0 5 * * 0'
   workflow_dispatch:
 
-# Without this the workflow inherits whatever the repository default is.
+# Zonder dit erft de workflow wat de repository-default ook is.
 permissions: {}
 
 jobs:
@@ -33,7 +36,7 @@ jobs:
           pip install flake8 bandit
 
       - name: Lint with flake8
-        run: flake8 src/static/scripts/saxion-eduroam.py --max-line-length=120
+        run: flake8 src/static/scripts/ --max-line-length=120
 
       - name: Security scan with bandit
-        run: bandit -r src/static/scripts/saxion-eduroam.py -ll
+        run: bandit -r src/static/scripts/ -ll

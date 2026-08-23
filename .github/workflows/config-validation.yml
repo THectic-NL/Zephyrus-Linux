@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: MIT
 name: Config validation
 
-# The bot configs are the one part of CI that nothing else exercises: a broken
-# renovate.json or dependabot.yml does not fail a build, it just quietly stops
-# doing its job. This workflow is the thing that notices.
+# De bot-configs zijn het enige deel van CI dat verder nergens door wordt
+# geraakt: een kapotte renovate.json of dependabot.yml laat geen build falen,
+# die houdt gewoon stilletjes op met zijn werk. Deze workflow merkt dat op.
 
 on:
   push:
@@ -50,33 +50,33 @@ jobs:
         with:
           node-version: 'lts/*'
 
-      # Renovate's own validator. --strict also fails on warnings, such as an
-      # option that is valid but deprecated. Given no arguments it finds the
-      # config files itself and validates them as repository config; passing a
-      # path instead makes it validate them as global config, which is a
-      # different and weaker set of rules.
+      # Renovates eigen validator. --strict laat hem ook falen op warnings,
+      # bijvoorbeeld een optie die geldig maar verouderd is. Zonder argumenten
+      # zoekt hij de configbestanden zelf op en valideert hij ze als
+      # repository-config; geef je een pad mee, dan valideert hij ze als
+      # global config, en dat is een andere en zwakkere set regels.
       #
-      # Deliberately unpinned. This is a linter for our config, not something we
-      # ship, and the newest release is the one that knows about the newest
-      # deprecations. Its own version is not worth a pull request.
+      # Bewust niet vastgezet. Dit is een linter op onze eigen config en geen
+      # onderdeel van wat we uitleveren, en juist de nieuwste release kent de
+      # nieuwste deprecations. Zijn eigen versie is geen pull request waard.
       #
-      # NPM_CONFIG_LOGLEVEL: npm prints "npm warn deprecated ..." for packages
-      # deep inside Renovate's own dependency tree. Those say nothing about the
-      # config being validated, and reading them as if they did is the obvious
-      # mistake to make when they appear directly above the validator's output.
+      # NPM_CONFIG_LOGLEVEL: npm print "npm warn deprecated ..." voor packages
+      # diep in Renovates eigen dependency-boom. Die zeggen niets over de config
+      # die gevalideerd wordt, en ze lezen alsof dat wel zo is, is de fout die
+      # je vanzelf maakt als ze vlak boven de output van de validator staan.
       - name: Validate Renovate config
         env:
           NPM_CONFIG_LOGLEVEL: error
         run: npx --yes --package renovate -- renovate-config-validator --strict
 
-      # The validator above accepts a well-formed pattern that matches nothing,
-      # so this covers the gap it leaves.
+      # De validator hierboven accepteert een correct gevormd patroon dat
+      # nergens op matcht; dit dekt het gat dat hij daarmee laat.
       - name: Check Renovate file patterns
         run: python3 .github/scripts/check-renovate-patterns.py renovate.json .github/renovate.json
 
-      # GitHub validates dependabot.yml only after it is on the default branch,
-      # and reports the result on a tab nobody opens. This brings that forward
-      # to the pull request.
+      # GitHub valideert dependabot.yml pas als die op de default branch staat,
+      # en meldt het resultaat op een tabblad dat niemand opent. Dit haalt dat
+      # naar voren, naar de pull request.
       - name: Validate Dependabot config
         env:
           # renovate: datasource=pypi depName=check-jsonschema
@@ -96,23 +96,19 @@ jobs:
           pipx install "check-jsonschema==${CHECK_JSONSCHEMA_VERSION}"
           check-jsonschema --builtin-schema vendor.dependabot "$config"
 
-  # The workflow files are config too. The other repositories in the
-  # organisation run actionlint from their quality workflow; this one had no
-  # equivalent, so it lives here.
-  workflow-lint:
-    name: Check workflow files
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Check out source code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      # Pinned release plus checksum, rather than piping a script from a
-      # branch straight into bash.
+      # De workflowbestanden zijn ook config. De andere repositories draaien
+      # actionlint vanuit hun quality-workflow; deze had geen equivalent, dus
+      # het hoort hier.
+      #
+      # Als stap en niet als eigen job: GitHub rekent per job en rondt naar
+      # boven af op een hele minuut. actionlint is in vijf seconden klaar en
+      # heeft dezelfde checkout nodig als de stappen hierboven, dus een eigen
+      # job kostte een volle minuut extra voor niets.
+      #
+      # Vanaf hier draait elke stap op !cancelled(), zodat één rode controle de
+      # andere niet verbergt. De job faalt alsnog zodra er iets fout is.
       - name: Install actionlint
+        if: ${{ !cancelled() }}
         env:
           # renovate: datasource=github-releases depName=rhysd/actionlint
           ACTIONLINT_VERSION: "1.7.12"
@@ -126,4 +122,5 @@ jobs:
           sudo install -m 0755 actionlint /usr/local/bin/actionlint
 
       - name: Run actionlint
+        if: ${{ !cancelled() }}
         run: actionlint -color

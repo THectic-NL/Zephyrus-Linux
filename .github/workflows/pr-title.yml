@@ -1,0 +1,45 @@
+# Copyright (C) 2026 Sten Tijhuis
+# SPDX-License-Identifier: MIT
+name: PR title
+
+# De titel van de pull request is wat er op main terechtkomt zodra je squasht,
+# dus dat is de plek waar Conventional Commits gecontroleerd moet worden en niet
+# op de losse commits in de branch.
+#
+# Renovate levert zijn eigen titels al in dit formaat aan; dat is de
+# semanticCommits-instelling in renovate.json. Deze controle dekt de rest.
+
+on:
+  pull_request:
+    # edited hoort erbij: zonder dat blijft de check rood staan nadat iemand de
+    # titel heeft verbeterd, want een titelwijziging is geen nieuwe push.
+    types: [opened, edited, synchronize, reopened]
+
+# Snel achter elkaar de omschrijving aanpassen startte evenveel runs. Alleen
+# de laatste zegt nog iets, dus de rest mag weg.
+concurrency:
+  group: pr-title-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  pr-title:
+    name: Conventional commit title
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            content
+            docs
+            chore
+            refactor
+            style
+            revert

@@ -1,12 +1,35 @@
+# EditorConfig houdt de opmaak gelijk tussen editors en IDE's.
+# VS Code, JetBrains en anderen lezen dit bestand vanzelf.
+# Meer info: https://editorconfig.org
+#
+# Deze versie is organisatiebreed gelijk. Wijk hier niet per repository van af:
+# vijf licht verschillende varianten leverden alleen ruis op, geen voordeel.
+#
+# De configbestanden die zelf geen comments kunnen dragen omdat het JSON is,
+# staan hier genoemd zodat er ergens een aanwijzing is wat ze doen:
+#
+#   .htmlhintrc    - HTML-linting (HTMLHint). Structuur- en toegankelijkheidsregels.
+#   renovate.json  - Renovate-bot. Automatische dependency-updates via pull requests.
+
 root = true
 
 [*]
 charset = utf-8
 end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
 indent_style = space
 indent_size = 2
-trim_trailing_whitespace = true
-insert_final_newline = true
 
 [*.md]
+# Trailing whitespace betekent iets in Markdown (regeleinde)
 trim_trailing_whitespace = false
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[*.py]
+indent_size = 4
+
+[*.sh]
+indent_size = 4

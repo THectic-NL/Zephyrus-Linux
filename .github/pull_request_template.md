@@ -13,6 +13,7 @@
 - [ ] `chore` — maintenance (dependencies, config, CI/CD)
 - [ ] `refactor` — restructuring without content changes
 - [ ] `style` — formatting, whitespace, typos
+- [ ] `revert` — reverting a previous commit
 
 > [PR title and commit types must follow these standards — view the contributing guide](https://github.com/THectic-NL/Zephyrus-Linux/blob/main/CONTRIBUTING.md#commit-messages)
 
