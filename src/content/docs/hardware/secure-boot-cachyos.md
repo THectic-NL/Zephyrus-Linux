@@ -1,9 +1,15 @@
 ---
-title: "Secure Boot"
-weight: 2
+title: "Secure Boot on CachyOS"
+weight: 3
+prev: docs/hardware/nvidia-bazzite
+next: docs/hardware/secure-boot-bazzite
 ---
 
-To install CachyOS, Secure Boot has to be off first. Unlike Ubuntu or Fedora, CachyOS doesn't use shim, a Microsoft-signed bootloader that lets third-party systems boot under Secure Boot. Without it, Secure Boot blocks the CachyOS bootloader before it even starts, so it has to be disabled for installation ([CachyOS installation docs](https://wiki.cachyos.org/installation/installation_on_root/)).
+To install CachyOS, Secure Boot has to be off first. Unlike Ubuntu or Bazzite, CachyOS doesn't use shim, a Microsoft-signed bootloader that lets third-party systems boot under Secure Boot. Without it, Secure Boot blocks the CachyOS bootloader before it even starts, so it has to be disabled for installation ([CachyOS installation docs](https://wiki.cachyos.org/installation/installation_on_root/)).
+
+{{< callout type="info" >}}
+On Bazzite this page does not apply. There you enroll one key with `ujust` and you're done — see [Secure Boot on Bazzite]({{< relref "/docs/hardware/secure-boot-bazzite" >}}).
+{{< /callout >}}
 
 After installation, it's possible to re-enable it with your own signing keys using `sbctl`. This is how I did that. Worth reading the next section first though, because on Linux with an NVIDIA GPU there's a fair argument that it's mostly a formality.
 

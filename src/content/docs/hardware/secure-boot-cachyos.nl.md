@@ -1,9 +1,15 @@
 ---
-title: "Secure Boot"
-weight: 2
+title: "Secure Boot op CachyOS"
+weight: 3
+prev: docs/hardware/nvidia-bazzite
+next: docs/hardware/secure-boot-bazzite
 ---
 
-Om CachyOS te installeren moet Secure Boot eerst uit. Anders dan Ubuntu of Fedora gebruikt CachyOS geen shim, een door Microsoft ondertekende bootloader waarmee distributies van derden kunnen opstarten onder Secure Boot. Zonder shim blokkeert Secure Boot de CachyOS-bootloader bij het opstarten, waardoor het voor de installatie uitgeschakeld moet worden ([CachyOS installatiedocumentatie](https://wiki.cachyos.org/installation/installation_on_root/)).
+Om CachyOS te installeren moet Secure Boot eerst uit. Anders dan Ubuntu of Bazzite gebruikt CachyOS geen shim, een door Microsoft ondertekende bootloader waarmee distributies van derden kunnen opstarten onder Secure Boot. Zonder shim blokkeert Secure Boot de CachyOS-bootloader bij het opstarten, waardoor het voor de installatie uitgeschakeld moet worden ([CachyOS installatiedocumentatie](https://wiki.cachyos.org/installation/installation_on_root/)).
+
+{{< callout type="info" >}}
+Op Bazzite geldt deze pagina niet. Daar schrijf je met `ujust` één sleutel in en ben je klaar — zie [Secure Boot op Bazzite]({{< relref "/docs/hardware/secure-boot-bazzite" >}}).
+{{< /callout >}}
 
 Na de installatie kun je Secure Boot opnieuw inschakelen met eigen ondertekeningssleutels via `sbctl`. Zo heb ik dat gedaan. De sectie hieronder is het lezen waard voordat je eraan begint, want op Linux met een NVIDIA GPU kun je je afvragen of het de moeite echt waard is.
 

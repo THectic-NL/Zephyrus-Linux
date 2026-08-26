@@ -1,9 +1,15 @@
 ---
 title: "VMware Workstation"
-weight: 5
+weight: 6
 prev: docs/virtualization/podman
 next: docs/known-issues
 ---
+
+{{< callout type="warning" >}}
+**This page is CachyOS only.** VMware Workstation needs its own out-of-tree kernel modules (`vmmon`, `vmnet`) built by DKMS, and its installer writes into `/usr`. On Bazzite `/usr` is read-only and the kernel comes with the image, so there is no supported way to do this that survives an update — and every image update would need the modules rebuilt against a kernel you don't control.
+
+If you're on Bazzite and want a Windows VM, use [Virt-Manager / KVM]({{< relref "/docs/virtualization/vm-setup" >}}) instead. Same hypervisor underneath, no kernel modules to maintain, and `ujust setup-virtualization` sets it up in one command.
+{{< /callout >}}
 
 VMware Workstation runs well on CachyOS with some initial setup. The main steps are installing the package from AUR, fixing the DKMS kernel modules, and configuring networking. On GNOME 49 Wayland there is also a keyboard grab fix required.
 

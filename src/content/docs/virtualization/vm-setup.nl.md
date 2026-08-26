@@ -2,6 +2,7 @@
 title: "Virt-Manager / KVM"
 weight: 1
 prev: docs/networking/eduroam-network-installation
+next: docs/virtualization/winboat
 ---
 
 Deze handleiding beschrijft het opzetten van een Windows 11 VM met virt-manager via KVM/QEMU, VirtIO-drivers en SPICE GL-acceleratie via de AMD iGPU. Een solide open-source optie voor dagelijks kantoorwerk.
@@ -48,6 +49,11 @@ Gebruik de officiële Windows 11 Media Creation Tool met een activatiemethode:
 
 ## Installatie
 
+Het opzetten van de stack is het deel dat verschilt. Alles vanaf het standaardnetwerk is op allebei hetzelfde.
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
 **1. Packages installeren:**
 ```bash
 sudo pacman -S virt-manager qemu-full swtpm edk2-ovmf dnsmasq
@@ -66,6 +72,38 @@ Log uit en weer in (of herstart) voordat je virt-manager opent.
 sudo systemctl enable --now libvirtd
 ```
 
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+De QEMU- en libvirt-backend zit niet in de image en moet dus gelaagd worden — en Bazzite heeft een recept dat het layeren, het groepslidmaatschap en de service in één keer regelt:
+
+**1. Voer het setup-recept uit:**
+```bash
+ujust setup-virtualization
+```
+
+**2. Herstart:**
+```bash
+systemctl reboot
+```
+
+Die herstart is niet optioneel: de packages worden op de volgende image gelaagd, niet op de draaiende.
+
+Controleer daarna of het gelukt is:
+
+```bash
+rpm-ostree status
+groups
+systemctl is-enabled libvirtd
+```
+
+{{< callout type="info" >}}
+Dat `virt-manager` een ISO uit je home-map niet kan openen komt hier voor. libvirt draait onder SELinux-confinement en `/home` is een symlink naar `/var/home`, wat het beleid niet altijd volgt. ISO's in `/var/lib/libvirt/images/` zetten — wat de VirtIO-stap hieronder toch al doet — omzeilt dat.
+{{< /callout >}}
+
+{{< /tab >}}
+{{< /tabs >}}
+
 **4. Standaard netwerk configureren:**
 ```bash
 sudo virsh net-start default
@@ -75,14 +113,31 @@ sudo virsh net-autostart default
 Let op: Als je "network is already active" ziet, draait het netwerk al.
 
 {{< callout type="warning" >}}
-**Firewallmelding:** Op sommige distributies (bijv. CachyOS) blokkeert de firewall VM-netwerken standaard. Als je VM geen verbinding met internet kan maken of geen IP-adres krijgt, voeg dan deze UFW-regels toe:
+**Firewall-melding:** kan je VM niet bij internet of krijgt hij geen IP-adres, kijk dan eerst naar de firewall van de host.
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+UFW blokkeert VM-netwerkverkeer standaard. Voeg deze regels toe:
+
 ```bash
 sudo ufw allow in on virbr0 to any port 53 proto udp comment 'VM DNS'
 sudo ufw allow in on virbr0 to any port 67 proto udp comment 'VM DHCP'
 sudo ufw route allow in on virbr0
 sudo ufw route allow out on virbr0
 ```
-Fedora en de meeste andere distributies staan dit verkeer standaard toe en hebben deze regels niet nodig.
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+firewalld zet `virbr0` in de `libvirt`-zone, en die staat DNS en DHCP al toe, dus normaal hoef je hier niets te doen. Werkt het toch niet, controleer dan of de interface echt in die zone terecht is gekomen:
+
+```bash
+sudo firewall-cmd --get-active-zones
+```
+
+{{< /tab >}}
+{{< /tabs >}}
 {{< /callout >}}
 
 **5. VirtIO drivers ISO downloaden:**

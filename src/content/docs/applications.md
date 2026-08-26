@@ -1,15 +1,22 @@
 ---
 title: "Applications"
-weight: 4
+weight: 5
 prev: docs/security/yubikey
 next: docs/networking/eduroam-network-installation
 ---
 
-Everything I installed after the initial CachyOS setup. Organized loosely by category. Most of this is personal preference, but the Brave and libinput-config sections include non-obvious workarounds that aren't documented elsewhere.
+Everything I installed after the initial system setup. Organized loosely by category. Most of this is personal preference, but the Brave and libinput-config sections include non-obvious workarounds that aren't documented elsewhere.
+
+Most of these applications are Flatpaks and install identically on both distributions. Where an install command differs, the page shows both.
 
 ## Package sources
 
-On CachyOS there are three places to get software from. When looking for an application, check them in this order:
+Where you get software from is the biggest day-to-day difference between the two distributions, so it's worth reading your tab before the rest of the page.
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+Three places, in this order:
 
 1. **[CachyOS packages](https://packages.cachyos.org/)**: CachyOS's own repository, built on top of Arch. Packages here are optimized for modern CPUs (x86-64-v3/v4) and include CachyOS-specific patches. Install with `sudo pacman -S <package>`.
 
@@ -27,7 +34,35 @@ On CachyOS there are three places to get software from. When looking for an appl
 | **Compatibility** | Depends on distro | Consistent across distros |
 | **Security** | Standard | Better sandboxing |
 
-Native packages offer better performance and system integration. Flatpaks trade some efficiency for compatibility and sandboxing. The choice is yours per application; both work fine on CachyOS.
+Native packages offer better performance and system integration. Flatpaks trade some efficiency for compatibility and sandboxing. The choice is yours per application; both work fine here.
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+Four places, and the order matters more than on CachyOS — it's Bazzite's own order of preference, from most to least recommended:
+
+1. **[Flathub](https://flathub.org/)**: the primary way to install graphical applications. `flatpak install flathub <app-id>`. Bazzite ships **Bazaar** as the graphical store for these.
+
+2. **[Homebrew](https://brew.sh/)**: for command-line tools. `brew install <tool>`. Installs into `/home/linuxbrew`, so no layering and no reboot.
+
+3. **[Distrobox](https://distrobox.it/)**: for anything that needs a real package manager, and for development environments. `distrobox enter <container>`, then that container's own package manager. `distrobox-export --app <package>` puts a graphical app from the container in your host menu.
+
+4. **`rpm-ostree` layering**: last resort, for things that must be part of the system — drivers, kernel modules, PAM modules, system services. Needs a reboot, and every layered package is re-applied on top of each new image.
+
+**Which to choose?**
+
+| | Flatpak | Homebrew | Distrobox | Layering |
+|---|---|---|---|---|
+| **Reboot needed** | No | No | No | Yes |
+| **Survives image updates** | Yes | Yes | Yes | Re-applied each time |
+| **Good for** | GUI apps | CLI tools | Toolchains, dev environments | System-level pieces |
+| **Isolation** | Sandboxed | None | Container | None |
+| **Can break an update** | No | No | No | Yes |
+
+The last column is the one to keep in mind. A Flatpak that fails is a broken app; a layered package that fails to build against a newer Fedora blocks the whole system update. Keep `rpm-ostree status` short.
+
+{{< /tab >}}
+{{< /tabs >}}
 
 ## Initial System Setup
 
@@ -111,6 +146,17 @@ cd ..
 rm -rf wayland-scroll-factor
 ```
 
+{{< callout type="info" >}}
+**On Bazzite:** the result lands in `$HOME/.local`, which is fine, but the build needs a toolchain and `libinput` headers, and the library it produces is preloaded into the *host's* `gnome-shell`. Build it in a Fedora distrobox of the same release as your image, or layer the build dependencies:
+
+```bash
+rpm-ostree install meson ninja-build gcc libinput-devel
+systemctl reboot
+```
+
+A container built against a different Fedora release can produce a library `gnome-shell` refuses to load.
+{{< /callout >}}
+
 **Configure:**
 
 ```bash
@@ -150,6 +196,10 @@ wsf disable
 #### libinput-config (alternative)
 
 [libinput-config](https://github.com/lz42/libinput-config) by lz42 is a system-wide workaround that requires building from source and root access. Use this if wayland-scroll-factor does not work for your setup.
+
+{{< callout type="warning" >}}
+**CachyOS only.** This installs into `/usr`, which is read-only on Bazzite. There is no clean way to do it there — use wayland-scroll-factor above, which stays inside your home directory.
+{{< /callout >}}
 
 **Install (one-time):**
 
@@ -193,7 +243,12 @@ I use [Brave Origin](https://packages.cachyos.org/package/cachyos/x86_64/brave-o
 
 Brave Origin is the stripped-down version of Brave. On Windows it's a paid product ($60); on Linux it's free.
 
-Both Brave and Brave Origin are available from three sources: the CachyOS repositories, the AUR, and Flathub. The CachyOS native package gives the best integration. Brave themselves say the same on their website and recommend native packages where possible. Flatpak works but feels a bit isolated.
+Brave themselves recommend a native package over the Flatpak where one exists; the Flatpak works but feels a bit isolated.
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+Both Brave and Brave Origin are available from three sources: the CachyOS repositories, the AUR, and Flathub. The CachyOS native package gives the best integration.
 
 **Install Brave Origin (recommended):**
 
@@ -206,6 +261,22 @@ sudo pacman -S brave-origin-bin
 ```bash
 sudo pacman -S brave-bin
 ```
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+Brave Origin has no Fedora package, so on Bazzite it's regular Brave. Brave publishes its own RPM repository, but a browser doesn't need to be part of the system image — take the Flatpak:
+
+```bash
+flatpak install flathub com.brave.Browser
+```
+
+{{< callout type="info" >}}
+The Brave GPU workarounds on the [Known Issues]({{< relref "/docs/known-issues" >}}) page apply to the Flatpak too, but a Flatpak reads its launch flags from `~/.var/app/com.brave.Browser/config/brave-flags.conf` instead of `~/.config/brave-flags.conf`.
+{{< /callout >}}
+
+{{< /tab >}}
+{{< /tabs >}}
 
 ![Brave official Linux install instructions](/images/brave-linux-install.avif)
 
@@ -224,7 +295,7 @@ Password manager. Available via Flathub and works well.
 
 ### Signal Messenger
 
-Signal is my main messaging app. The [CachyOS extra repository](https://packages.cachyos.org/package/extra/x86_64/signal-desktop) ships a native package, which is what I use; it works better than the Flatpak.
+Signal is my main messaging app. On CachyOS the [extra repository](https://packages.cachyos.org/package/extra/x86_64/signal-desktop) ships a native package, which is what I use; it works better than the Flatpak. On Bazzite the Flatpak is the option.
 
 **CachyOS / Arch (recommended):**
 
@@ -242,7 +313,7 @@ flatpak install flathub org.signal.Signal
 
 ### Proton Mail
 
-Proton Mail desktop app is a wrapper around the web app rather than a native client. The [CachyOS repository](https://packages.cachyos.org/package/cachyos/any/proton-mail-bin) ships `proton-mail-bin`, which integrates more natively into the desktop than the Flatpak: better tray icon behavior, system notifications, and no Flatpak sandbox overhead.
+Proton Mail desktop app is a wrapper around the web app rather than a native client. On CachyOS the [repository](https://packages.cachyos.org/package/cachyos/any/proton-mail-bin) ships `proton-mail-bin`, which integrates more natively into the desktop than the Flatpak: better tray icon behavior, system notifications, and no Flatpak sandbox overhead. On Bazzite the Flatpak is the option.
 
 **CachyOS / Arch (recommended):**
 
@@ -264,13 +335,26 @@ Standard Notes is part of the Proton ecosystem, with the same privacy-first phil
 
 The feel is somewhere between a minimal text editor and OneNote: clean sidebar, quick note switching, tags, no bloat. Everything is encrypted before it leaves your device. The sync to Android (Samsung S24 in my case) is seamless and instant.
 
-What makes it stand out is exactly what's _not_ there. No unnecessary UI chrome, no subscription upsell banners everywhere, no slow startup. It's just fast.
+What makes it stand out is exactly what's *not* there. No unnecessary UI chrome, no subscription upsell banners everywhere, no slow startup. It's just fast.
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
 
 ```bash
 paru -S standardnotes-bin
 ```
 
 Available on the [AUR](https://aur.archlinux.org/packages/standardnotes-bin) (`standardnotes-bin`). No native CachyOS/Arch package exists yet.
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+```bash
+flatpak install flathub org.standardnotes.standardnotes
+```
+
+{{< /tab >}}
+{{< /tabs >}}
 
 ![Standard Notes running on the desktop](/images/standard-notes-desktop.avif)
 
@@ -286,9 +370,22 @@ No official Microsoft 365 client exists for Linux. Two solid alternatives cover 
 
 [OnlyOffice](https://packages.cachyos.org/package/cachyos/x86_64/onlyoffice-bin) is the closest thing to Microsoft 365 on Linux. The UI is nearly identical, with Word, Excel, and PowerPoint equivalents that look and behave like the Microsoft originals. Good compatibility with `.docx`, `.xlsx`, and `.pptx` files.
 
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
 ```bash
 sudo pacman -S onlyoffice-bin
 ```
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+```bash
+flatpak install flathub org.onlyoffice.desktopeditors
+```
+
+{{< /tab >}}
+{{< /tabs >}}
 
 ![OnlyOffice running on GNOME](/images/only-office.avif)
 
@@ -304,9 +401,24 @@ There are workarounds via plugins. The [OnlyOffice help center documents referen
 
 [LibreOffice Fresh](https://packages.cachyos.org/package/cachyos-extra-znver4/x86_64_v4/libreoffice-fresh) is the most actively developed open-source office suite and the most Linux-native option. More development effort goes into it than any alternative.
 
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
 ```bash
 sudo pacman -S libreoffice-fresh
 ```
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+```bash
+flatpak install flathub org.libreoffice.LibreOffice
+```
+
+The Flathub build tracks the Fresh series too, so this is the same LibreOffice.
+
+{{< /tab >}}
+{{< /tabs >}}
 
 **APA references: built in**
 
@@ -326,13 +438,31 @@ LibreOffice can open and save `.docx`/`.xlsx`/`.pptx` files, but there are known
 
 ### Git & GitHub CLI
 
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
 ```bash
 sudo pacman -S git github-cli
 ```
 
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+`git` is already in the image. `gh` is a command-line tool, so Homebrew rather than layering:
+
+```bash
+brew install gh
+```
+
+{{< /tab >}}
+{{< /tabs >}}
+
 ### Visual Studio Code
 
 Two builds are available. The **Microsoft build** includes the full Microsoft extension marketplace and proprietary extensions like GitHub Copilot. The **open-source build** (`code`) removes Microsoft telemetry and branding, but proprietary extensions are not available.
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
 
 **Microsoft build (recommended, full extension support):**
 
@@ -350,11 +480,52 @@ sudo pacman -S code
 
 Available in the [CachyOS extra repository](https://packages.cachyos.org/package/cachyos-extra-znver4/x86_64_v4/code).
 
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+**Microsoft build:**
+
+```bash
+flatpak install flathub com.visualstudio.code
+```
+
+**Open-source build (VSCodium, no Microsoft telemetry):**
+
+```bash
+flatpak install flathub com.vscodium.codium
+```
+
+{{< callout type="info" >}}
+The Flatpak is sandboxed, which matters for an editor more than for most applications: extensions that shell out to a toolchain see the sandbox's filesystem, not yours. If you develop against tools on the host, run VS Code from a distrobox container instead and export it with `distrobox-export --app code` — that's the usual arrangement on an atomic system.
+{{< /callout >}}
+
+{{< /tab >}}
+{{< /tabs >}}
+
 ### Kleopatra & GPG commit signing
 
 I sign my Git commits and tags with a GPG key. Kleopatra makes generating and managing keys straightforward via a GUI instead of having to figure out the GPG command line.
 
-After installing VS Code and Git, install Kleopatra and create your keys there. Then configure Git to use them:
+After installing VS Code and Git, install Kleopatra and create your keys there.
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+```bash
+sudo pacman -S kleopatra
+```
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+```bash
+flatpak install flathub org.kde.kleopatra
+```
+
+{{< /tab >}}
+{{< /tabs >}}
+
+Then configure Git to use them:
 
 ```bash
 git config --global user.name "YOUR_NAME"
@@ -397,6 +568,10 @@ cd ~
 sudo ln -s /opt/Archi/Archi /usr/local/bin/archi
 ```
 
+{{< callout type="info" >}}
+**On Bazzite** the extraction and the symlink work unchanged: `/opt` and `/usr/local` are symlinks to `/var/opt` and `/var/usrlocal` on an atomic system, so both are writable and survive image updates. The desktop entry below is the exception — `/usr/share/applications` is read-only. Put it in `~/.local/share/applications/archi.desktop` instead, without `sudo`.
+{{< /callout >}}
+
 Create a desktop entry so Archi shows up in GNOME:
 ```bash
 sudo nano /usr/share/applications/archi.desktop
@@ -431,11 +606,26 @@ After saving, Archi appears in the GNOME app launcher:
 
 For container workloads I use Podman instead of Docker. Podman is daemonless, runs containers rootless by default, and ships a Docker-compatible CLI so existing workflows keep working. `podman-docker` replaces the `docker` package entirely.
 
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
 All three packages are available in the CachyOS repositories: [podman](https://packages.cachyos.org/package/cachyos-extra-znver4/x86_64_v4/podman), [podman-docker](https://packages.cachyos.org/package/cachyos-extra-znver4/x86_64_v4/podman-docker), [podman-desktop](https://packages.cachyos.org/package/extra/x86_64/podman-desktop).
 
 ```bash
 sudo pacman -S podman podman-docker podman-desktop
 ```
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+`podman` and `podman-docker` are already in the image; only Podman Desktop is missing:
+
+```bash
+flatpak install flathub io.podman_desktop.PodmanDesktop
+```
+
+{{< /tab >}}
+{{< /tabs >}}
 
 For the full setup (including registry configuration and connecting Docker Hub and GitHub), see [Podman & Podman Desktop]({{< relref "/docs/virtualization/podman" >}}) in the Virtualization section.
 
@@ -445,11 +635,26 @@ For the full setup (including registry configuration and connecting Docker Hub a
 
 ### Steam
 
-On CachyOS, Steam is available directly from the [CachyOS repository](https://packages.cachyos.org/package/cachyos/x86_64/steam), no extra repos needed.
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+Steam is available directly from the [CachyOS repository](https://packages.cachyos.org/package/cachyos/x86_64/steam), no extra repos needed.
 
 ```bash
 sudo pacman -S steam
 ```
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+Nothing to install. Steam is part of the image — gaming is what Bazzite is built around, and it ships configured, with the Proton and controller pieces already in place.
+
+```bash
+which steam
+```
+
+{{< /tab >}}
+{{< /tabs >}}
 
 ![Steam in GNOME Software](/images/steam-website.avif)
 
@@ -463,9 +668,22 @@ There's no official Tidal client for Linux. Two community alternatives exist.
 
 [High Tide](https://aur.archlinux.org/packages/high-tide) is a native GTK4 frontend for Tidal, not an Electron wrapper, but an actual application built with proper Linux toolkit. It looks clean, integrates well with GNOME, and supports Hi-Fi quality.
 
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
 ```bash
 paru -S high-tide
 ```
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+```bash
+flatpak install flathub io.github.nokse22.high-tide
+```
+
+{{< /tab >}}
+{{< /tabs >}}
 
 ![High Tide running on GNOME](/images/high-tide.avif)
 
@@ -533,11 +751,28 @@ Go to **Settings → Keyboard → Custom Shortcuts** and add:
 
 ### Solaar for Logitech devices
 
-[Solaar](https://github.com/pwr-Solaar/Solaar) manages Logitech keyboards, mice, and other peripherals. Available in the [CachyOS extra repository](https://packages.cachyos.org/package/extra/any/solaar).
+[Solaar](https://github.com/pwr-Solaar/Solaar) manages Logitech keyboards, mice, and other peripherals.
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+Available in the [CachyOS extra repository](https://packages.cachyos.org/package/extra/any/solaar).
 
 ```bash
 sudo pacman -S solaar
 ```
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+```bash
+flatpak install flathub io.github.pwr_solaar.solaar
+```
+
+Solaar talks to the receiver over HID, so the Flatpak needs the udev rules on the host to grant your user access to the device. Those rules ship with the image; if Solaar starts but sees no devices, that's the thing to check.
+
+{{< /tab >}}
+{{< /tabs >}}
 
 ![Solaar package page in the CachyOS repository](/images/solaar-docs.avif)
 
@@ -551,11 +786,24 @@ Runs in the system tray with battery notifications. You can also configure DPI, 
 
 The one thing it can't do is transfer files across different networks. Quick Share could route transfers through Google/Samsung's cloud when sender and receiver were on separate networks, but that was mobile-only. Desktop Quick Share was unreliable enough that it was rarely worth using anyway. Speed-wise, LocalSend is slightly slower, but not noticeably so in practice.
 
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
 Available natively in the [CachyOS package repository](https://packages.cachyos.org/package/cachyos/x86_64/localsend), built specifically for CachyOS. No AUR needed, which is a real plus.
 
 ```bash
 sudo pacman -S localsend
 ```
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+```bash
+flatpak install flathub org.localsend.localsend_app
+```
+
+{{< /tab >}}
+{{< /tabs >}}
 
 The app shows up in the GNOME launcher after installing. Open it and it auto-discovers other LocalSend instances on your network.
 

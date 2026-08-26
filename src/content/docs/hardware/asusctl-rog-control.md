@@ -1,10 +1,11 @@
 ---
 title: "asusctl & ROG Control Center"
-weight: 3
-next: docs/security/autologin
+weight: 5
+prev: docs/hardware/secure-boot-bazzite
+next: docs/hardware/color-profiles
 ---
 
-The Zephyrus G16 has a lot of hardware features that don't work out of the box on Linux: fan curves, performance profiles, the Slash LED on the lid, GPU switching, battery charge limiting. This page documents how I got all of it working using asusctl and the ASUS Linux project tools. On CachyOS, these tools are available directly from the package repos.
+The Zephyrus G16 has a lot of hardware features that don't work out of the box on Linux: fan curves, performance profiles, the Slash LED on the lid, GPU switching, battery charge limiting. This page documents how I got all of it working using asusctl and the ASUS Linux project tools. Everything below the installation step is identical on both distributions — it's the same daemon reading the same hardware. Only getting it installed differs.
 
 {{< callout type="warning" >}}
 **supergfxctl is abandoned.** If you come across guides that mention `supergfxctl` or `supergfxd` for GPU switching on ASUS laptops: don't use them. The project is unmaintained and poses security risks. Everything it used to handle is now part of `asusctl` and ROG Control Center, which are actively maintained by the asus-linux team.
@@ -14,7 +15,7 @@ The Zephyrus G16 has a lot of hardware features that don't work out of the box o
 - `asusd` 6.3.8: background daemon (backend) that manages all hardware features
 - `asusctl` 6.3.8: CLI frontend for fan curves, profiles, battery limit, RGB, Slash LED, GPU switching
 - `rog-control-center` 6.3.8: graphical frontend, part of the asusctl/asusd suite
-- Source: [asus-linux releases](https://gitlab.com/asus-linux/asusctl/-/releases) · available in CachyOS/Arch repos
+- Source: [asus-linux releases](https://gitlab.com/asus-linux/asusctl/-/releases) · in the CachyOS/Arch repos, and in [Terra](https://terra.fyralabs.com/) for Fedora
 
 
 ## Installation
@@ -23,16 +24,55 @@ The Zephyrus G16 has a lot of hardware features that don't work out of the box o
 
 ### Install asusctl and ROG Control Center
 
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
 ```bash
 sudo pacman -S asusctl rog-control-center
 ```
 
-This installs:
+Both packages come straight from the repos and everything works out of the box. No kernel patching or deep system configuration required.
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+`asusd` is a system daemon with a kernel-facing job, so this is one of the few cases where layering is the right answer rather than a last resort. It isn't in Fedora's own repositories; the ASUS Linux packages live in [Terra](https://terra.fyralabs.com/).
+
+Add the Terra repository, then layer the packages:
+
+```bash
+curl -fsSL https://github.com/terrapkg/subatomic-repos/raw/main/terra.repo | pkexec tee /etc/yum.repos.d/terra.repo
+rpm-ostree install terra-release
+systemctl reboot
+```
+
+```bash
+rpm-ostree install asusctl rog-control-center
+systemctl reboot
+```
+
+Two reboots, because a layered package is applied to the next image rather than the running one.
+
+{{< callout type="warning" >}}
+Check before you layer. Bazzite images built for ASUS handhelds already ship `asusctl`, and layering a package that's in the image is a conflict rather than an upgrade:
+
+```bash
+rpm -q asusctl
+ujust
+```
+
+If `asusctl` is already there, or `ujust` lists an ASUS recipe, use that instead.
+{{< /callout >}}
+
+The older `lukenukem/asus-linux` COPR that most guides point at is no longer maintained — use Terra.
+
+{{< /tab >}}
+{{< /tabs >}}
+
+This gives you:
 - `asusd`: the backend daemon that manages all ASUS hardware features
 - `asusctl`: CLI frontend that communicates with asusd
 - `rog-control-center`: graphical frontend that communicates with asusd
-
-On CachyOS, this is all you need; both packages are available directly from the repos and everything works out of the box. No kernel patching or deep system configuration required.
 
 ### Enable services
 
@@ -63,9 +103,31 @@ Board name: GA605WV
 
 Useful utilities for monitoring hardware alongside asusctl:
 
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
 ```bash
 sudo pacman -S nvtop powertop s-tui lm_sensors i2c-tools
 ```
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+These are command-line tools, so Homebrew or a distrobox container is the right place for them rather than the image:
+
+```bash
+brew install nvtop powertop s-tui
+```
+
+`lm_sensors` and `i2c-tools` read hardware directly and want to be on the host. `lm_sensors` is generally already present; layer `i2c-tools` if you need it:
+
+```bash
+rpm-ostree install i2c-tools
+systemctl reboot
+```
+
+{{< /tab >}}
+{{< /tabs >}}
 
 | Package | Description |
 |---------|-------------|
@@ -201,7 +263,7 @@ asusctl armoury set dgpu_disable 0
 
 > **Note:** A reboot or logout/login may be required after switching modes.
 
-> **Important:** `nvidia-powerd.service` must remain disabled and **masked** on this laptop. It conflicts with AMD ATPX power management and causes soft lockups and reboot hangs (black screen, backlights stay on). GPU power is managed via ATPX (via ACPI). See [NVIDIA Driver Installation Guide]({{< relref "/docs/hardware/nvidia-driver-installation" >}}) for diagnosis details and commands.
+> **Important:** `nvidia-powerd.service` must remain disabled and **masked** on this laptop. It conflicts with AMD ATPX power management and causes soft lockups and reboot hangs (black screen, backlights stay on). GPU power is managed via ATPX (via ACPI). See the NVIDIA driver page for your distribution — [CachyOS]({{< relref "/docs/hardware/nvidia-cachyos" >}}) or [Bazzite]({{< relref "/docs/hardware/nvidia-bazzite" >}}) — for diagnosis details and commands.
 
 {{% /details %}}
 
@@ -332,4 +394,4 @@ Kernel 7.0 shipped in April 2026 and CachyOS picked it up fast. For this ASUS RO
 - [asus-linux.org](https://asus-linux.org/): official project site
 - [asusctl GitLab](https://gitlab.com/asus-linux/asusctl): source code and issue tracker
 - [CachyOS Wiki: ASUS](https://wiki.cachyos.org/): CachyOS-specific documentation
-- [NVIDIA Driver Installation Guide]({{< relref "/docs/hardware/nvidia-driver-installation" >}}): NVIDIA driver setup and known issues
+- NVIDIA driver setup and known issues: [CachyOS]({{< relref "/docs/hardware/nvidia-cachyos" >}}) · [Bazzite]({{< relref "/docs/hardware/nvidia-bazzite" >}})

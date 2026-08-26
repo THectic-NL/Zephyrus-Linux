@@ -27,6 +27,9 @@ Drie pakketten vormen de volledige setup:
 | `podman-docker` | Drop-in `docker` CLI-vervanging; verwijdert Docker als het geïnstalleerd is |
 | `podman-desktop` | GUI voor het beheren van containers, images, volumes en registries |
 
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
 ```bash
 sudo pacman -S podman podman-docker podman-desktop
 ```
@@ -34,6 +37,34 @@ sudo pacman -S podman podman-docker podman-desktop
 {{< callout type="warning" >}}
 `podman-docker` **conflicteert met** `docker`. Pacman vraagt je Docker te verwijderen voor de installatie. Dit is opzettelijk: `podman-docker` levert het `docker` commando als wrapper die Podman aanroept, zodat al je bestaande `docker`-commando's gewoon blijven werken.
 {{< /callout >}}
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+`podman` en `podman-docker` zitten al in de image — Podman is de container-runtime waar het hele systeem op gebouwd is, dus er valt niets te installeren en nergens voor te herstarten:
+
+```bash
+podman --version
+docker --version
+```
+
+Alleen Podman Desktop ontbreekt, en dat is een grafische applicatie, dus die komt van Flathub:
+
+```bash
+flatpak install flathub io.podman_desktop.PodmanDesktop
+```
+
+{{< callout type="info" >}}
+De Flatpak draait in een sandbox en bereikt Podman via de socket van de gebruiker. Start Podman Desktop en meldt hij dat hij Podman niet kan vinden, kijk dan naar die socket:
+
+```bash
+systemctl --user enable --now podman.socket
+systemctl --user status podman.socket
+```
+{{< /callout >}}
+
+{{< /tab >}}
+{{< /tabs >}}
 
 Elk `docker` commando loopt nu via Podman en toont eenmalig een melding:
 
@@ -55,7 +86,7 @@ Bij de eerste keer opstarten doorloopt Podman Desktop een wizard voor het instel
 
 ![Podman Desktop welkomstscherm - v1.25.1 met Podman, kubectl en Compose extensies](/images/podman-desktop-welcome.avif)
 
-Podman zelf wordt direct herkend omdat het al via pacman was geïnstalleerd. De wizard bevestigt dit en laat je autostart instellen:
+Podman zelf wordt direct herkend, want die is er sowieso al. De wizard bevestigt dit en laat je autostart instellen:
 
 ![Podman Desktop setup - Podman herkend en correct geconfigureerd](/images/podman-desktop-containers.avif)
 

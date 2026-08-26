@@ -1,24 +1,31 @@
 ---
-title: "Getting Started"
+title: "CachyOS"
 weight: 1
-next: docs/hardware/nvidia-driver-installation
+prev: docs/getting-started
+next: docs/getting-started/bazzite
 ---
 
-This is my personal setup documentation for the ROG Zephyrus G16 running CachyOS (Arch). I'm not a software engineer or developer, just someone who switched to Linux and ran into a lot of things that didn't work out of the box. I figured I'd write it all down so others don't have to go through the same trial and error.
+CachyOS is an Arch-based distribution with hardware-specific optimizations, and it's what I run as my daily driver on the G16.
 
-If something here helps you, great. If you run into something I haven't covered, feel free to reach out; I'm happy to think along.
-
-## Why CachyOS?
-
-After testing multiple distributions, I settled on CachyOS (Arch) as my daily driver. CachyOS is an Arch-based distribution with hardware-specific optimizations that make it stand out for the Zephyrus G16:
+## Why CachyOS
 
 - **BORE/EEVDF scheduler**: CachyOS ships with an improved CPU scheduler that provides better responsiveness and lower latency under mixed workloads
 - **Improved power management**: better handling of suspend/resume and ACPI power states on AMD+NVIDIA hybrid setups
 - **Dynamic refresh rate support**: out-of-the-box support for variable refresh rate on the ROG Nebula Display
 - **Built-in iGPU and dGPU drivers**: the AMD Radeon 890M and NVIDIA RTX 4060 work correctly from a fresh install, including GPU switching via `asusctl armoury`
-- **ASUS Linux patches**: part of [Luke Jones'](https://asus-linux.org/) work has been merged into the Linux kernel mainline (the `asus-armoury` driver since 6.19), while additional ROG-specific patches and `asusctl` tooling improvements are carried by CachyOS. Both `asusctl` and `rog-control-center` are available directly from the CachyOS repos; install two packages and you're done, no deep system configuration required. CachyOS currently ships the most complete set of optimizations for this hardware
+- **ASUS Linux patches**: part of [Luke Jones'](https://asus-linux.org/) work has been merged into the Linux kernel mainline (the `asus-armoury` driver since 6.19), while additional ROG-specific patches and `asusctl` tooling improvements are carried by CachyOS. Both `asusctl` and `rog-control-center` are available directly from the CachyOS repos; install two packages and you're done, no deep system configuration required
 
-Fedora is a strong second, a solid option if you prefer a more stable release cycle over rolling. You're in good shape as long as you're on kernel 6.19 (already available on Fedora, but make sure to update). That said, CachyOS still feels more polished for this hardware: the CPU scheduler tuning (BORE/EEVDF), pre-configured NVIDIA driver support, and tighter integration with `asusctl` make day-to-day use more seamless out of the box.
+## What rolling means here
+
+Packages arrive as upstream releases them. There is no release to upgrade to and no version number to be behind on, but there is also nothing holding a change back, so updating is something you do deliberately rather than something that happens to you.
+
+```bash
+sudo pacman -Syu
+```
+
+The system is fully writable. `pacman` installs into `/usr` and the package is usable the moment it finishes; nothing needs a reboot except a new kernel.
+
+If an update does break something, you roll back by hand — downgrading the package from the pacman cache in `/var/cache/pacman/pkg/`, or from the [Arch Linux Archive](https://wiki.archlinux.org/title/Arch_Linux_Archive). Worth knowing before you need it. This is the main practical difference with Bazzite, where a bad update is one `rpm-ostree rollback` away.
 
 ## CachyOS Kernel Manager
 
@@ -30,6 +37,12 @@ I use `scx_lavd` with the profile set to **Auto**. LAVD (Latency-criticality Awa
 
 The scheduler can be changed at any time without a reboot.
 
+## Secure Boot before you install
+
+CachyOS doesn't use shim, so Secure Boot has to be **off** before the installer will boot. You can enable it again afterwards with your own signing keys.
+
+→ [Secure Boot on CachyOS]({{< relref "/docs/hardware/secure-boot-cachyos" >}})
+
 ## Recommended setup order
 
 After a fresh CachyOS install, this is the order that made sense for me:
@@ -38,11 +51,12 @@ After a fresh CachyOS install, this is the order that made sense for me:
 
 ### Hardware & Drivers
 
-Install NVIDIA drivers, set up Secure Boot with your own signing keys, and configure ASUS ROG hardware features (fan curves, performance profiles, GPU switching).
+The NVIDIA driver is already configured by the installer, so this is mostly verification. Then set up Secure Boot with your own signing keys and configure the ASUS ROG hardware features (fan curves, performance profiles, GPU switching).
 
-→ [NVIDIA Driver Installation]({{< relref "/docs/hardware/nvidia-driver-installation" >}})
-→ [Secure Boot]({{< relref "/docs/hardware/secure-boot" >}})
+→ [NVIDIA Driver: CachyOS]({{< relref "/docs/hardware/nvidia-cachyos" >}})
+→ [Secure Boot on CachyOS]({{< relref "/docs/hardware/secure-boot-cachyos" >}})
 → [asusctl & ROG Control Center]({{< relref "/docs/hardware/asusctl-rog-control" >}})
+→ [Display Color Profiles]({{< relref "/docs/hardware/color-profiles" >}})
 
 ### Security & Privacy
 
@@ -71,3 +85,9 @@ Set up a Windows 11 VM for software that doesn't run on Linux (Microsoft 365, et
 → [VMware Workstation]({{< relref "/docs/virtualization/vmware-workstation" >}})
 
 {{% /steps %}}
+
+## Additional Resources
+
+- [CachyOS Wiki](https://wiki.cachyos.org/)
+- [CachyOS installation docs](https://wiki.cachyos.org/installation/installation_on_root/)
+- [Arch Wiki](https://wiki.archlinux.org/)

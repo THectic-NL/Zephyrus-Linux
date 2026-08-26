@@ -27,6 +27,9 @@ Three packages make up the full setup:
 | `podman-docker` | Drop-in `docker` CLI replacement; removes Docker if installed |
 | `podman-desktop` | GUI for managing containers, images, volumes, and registries |
 
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
 ```bash
 sudo pacman -S podman podman-docker podman-desktop
 ```
@@ -34,6 +37,34 @@ sudo pacman -S podman podman-docker podman-desktop
 {{< callout type="warning" >}}
 `podman-docker` **conflicts with** `docker`. Pacman will ask you to remove Docker before installing. This is by design: `podman-docker` provides the `docker` command as a shim that calls Podman underneath, so all your existing `docker` commands keep working.
 {{< /callout >}}
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+`podman` and `podman-docker` are already in the image — Podman is the container runtime the whole system is built on, so there is nothing to install and nothing to reboot for:
+
+```bash
+podman --version
+docker --version
+```
+
+Only Podman Desktop is missing, and it's a graphical application, so it comes from Flathub:
+
+```bash
+flatpak install flathub io.podman_desktop.PodmanDesktop
+```
+
+{{< callout type="info" >}}
+The Flatpak is sandboxed and reaches Podman through the user's socket. If Podman Desktop starts and reports it can't find Podman, that socket is what to check:
+
+```bash
+systemctl --user enable --now podman.socket
+systemctl --user status podman.socket
+```
+{{< /callout >}}
+
+{{< /tab >}}
+{{< /tabs >}}
 
 Any `docker` command now runs through Podman and prints a one-time notice:
 
@@ -55,7 +86,7 @@ When you first launch Podman Desktop it walks you through setting up Podman, kub
 
 ![Podman Desktop welcome screen - v1.25.1 with Podman, kubectl, and Compose extensions](/images/podman-desktop-welcome.avif)
 
-Podman itself is detected immediately since it was already installed via pacman. The setup wizard confirms this and lets you configure autostart:
+Podman itself is detected immediately, since it is already installed either way. The setup wizard confirms this and lets you configure autostart:
 
 ![Podman Desktop setup - Podman detected and configured correctly](/images/podman-desktop-containers.avif)
 

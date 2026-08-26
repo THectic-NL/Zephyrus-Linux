@@ -1,6 +1,6 @@
 ---
 title: "Virtualisatie"
-weight: 6
+weight: 7
 toc: false
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: "GDM Autologin"
 weight: 1
-prev: docs/hardware/asusctl-rog-control
+prev: docs/hardware/color-profiles
 next: docs/security/yubikey
 ---
 
@@ -11,6 +11,10 @@ After unlocking the disk with LUKS at boot, I didn't want to type a second passw
 - Power on → LUKS password prompt → desktop (no second login)
 - Suspend / screen lock → password required as normal
 
+
+{{< callout type="info" >}}
+Nothing on this page is distribution-specific. GDM reads the same `/etc/gdm/custom.conf` on both, and `/etc` is writable on Bazzite too, so no layering and no reboot beyond the one below. The exception is a KDE image, which uses SDDM rather than GDM and configures autologin elsewhere.
+{{< /callout >}}
 
 ## Configuration
 

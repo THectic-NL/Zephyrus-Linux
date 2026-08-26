@@ -89,6 +89,12 @@ disableHugoGeneratorInject = true
   [params.page]
     width = 'wide'
 
+    # Tab groups sync by tab name across the page. Every CachyOS/Bazzite tab on
+    # the site uses those two names, so picking a distribution once carries
+    # through the rest of the page instead of having to be picked per block.
+    [params.page.tabs]
+      sync = true
+
   [params.imageZoom]
     enable = true
 
