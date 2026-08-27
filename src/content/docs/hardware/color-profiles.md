@@ -2,7 +2,7 @@
 title: "Display Color Profiles"
 weight: 6
 prev: docs/hardware/asusctl-rog-control
-next: docs/security/autologin
+next: docs/desktop/kde
 ---
 
 ASUS factory-calibrates the panel in every GA605WV and ships the profiles through its Windows driver package. Nothing applies them on Linux, so both the built-in display and an external Samsung ViewFinity are left on their defaults until you install the profiles by hand.

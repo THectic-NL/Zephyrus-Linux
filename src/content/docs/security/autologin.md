@@ -1,7 +1,7 @@
 ---
 title: "GDM Autologin"
 weight: 1
-prev: docs/hardware/color-profiles
+prev: docs/desktop/kde
 next: docs/security/yubikey
 ---
 
