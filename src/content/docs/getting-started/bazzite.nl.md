@@ -5,7 +5,9 @@ prev: docs/getting-started/cachyos
 next: docs/hardware/nvidia-cachyos
 ---
 
-Bazzite is een [Universal Blue](https://universal-blue.org/)-image gebouwd op Fedora Atomic. Waar CachyOS je een systeem geeft dat je uit elkaar kunt halen, geeft Bazzite je een systeem dat bewust moeilijk uit elkaar te halen is — en daarmee ook moeilijk stuk te krijgen.
+Bazzite is een [Universal Blue](https://universal-blue.org/)-image gebouwd op Fedora Atomic — onderhuids gewoon Fedora, met de gaming-stack en de hardware-onderdelen al in elkaar gezet. Waar CachyOS je een systeem geeft dat je uit elkaar kunt halen, geeft Bazzite je een systeem dat bewust moeilijk uit elkaar te halen is, en daarmee ook moeilijk stuk te krijgen.
+
+Daarmee is het de keuze voor twee soorten mensen: gamers, want Steam, Proton en de controller-stack zitten geconfigureerd in de image, en iedereen die zijn avonden liever niet aan het tweaken van een besturingssysteem besteedt.
 
 Lees deze pagina voordat je installeert, want de dingen die anders zijn dan bij een gewone distributie zijn geen details. Ze veranderen hoe je software installeert en hoe je een fout terugdraait.
 
