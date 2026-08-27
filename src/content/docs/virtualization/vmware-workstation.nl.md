@@ -1,7 +1,7 @@
 ---
 title: "VMware Workstation"
 weight: 6
-prev: docs/virtualization/podman
+prev: docs/virtualization/distrobox
 next: docs/known-issues
 ---
 
