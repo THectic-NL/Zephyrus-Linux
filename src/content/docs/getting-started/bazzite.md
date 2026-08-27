@@ -2,7 +2,7 @@
 title: "Bazzite"
 weight: 2
 prev: docs/getting-started/cachyos
-next: docs/hardware/nvidia-cachyos
+next: docs/getting-started/topgrade
 ---
 
 Bazzite is a [Universal Blue](https://universal-blue.org/) image built on Fedora Atomic — plain Fedora underneath, with the gaming stack and the hardware pieces already assembled. Where CachyOS hands you a system you can take apart, Bazzite hands you a system that is deliberately hard to take apart, and correspondingly hard to break.
@@ -27,7 +27,7 @@ An update is not a set of packages, it's a new image. It's downloaded in the bac
 ujust update
 ```
 
-Desktop images update themselves in the background, so in practice you rarely run this by hand — mostly when you're on a TTY or over SSH.
+Desktop images update themselves in the background, so in practice you rarely run this by hand — mostly when you're on a TTY or over SSH. [Topgrade]({{< relref "/docs/getting-started/topgrade" >}}) can drive this together with your Flatpaks, Homebrew and containers.
 
 ### The previous image stays on disk
 

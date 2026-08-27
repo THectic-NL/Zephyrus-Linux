@@ -27,6 +27,10 @@ The system is fully writable. `pacman` installs into `/usr` and the package is u
 
 If an update does break something, you roll back by hand — downgrading the package from the pacman cache in `/var/cache/pacman/pkg/`, or from the [Arch Linux Archive](https://wiki.archlinux.org/title/Arch_Linux_Archive). Worth knowing before you need it. This is the main practical difference with Bazzite, where a bad update is one `rpm-ostree rollback` away.
 
+{{< callout type="info" >}}
+Keeping everything up to date in one go — pacman, the AUR, Flatpak and the rest — is covered on the [Topgrade]({{< relref "/docs/getting-started/topgrade" >}}) page.
+{{< /callout >}}
+
 ## CachyOS Kernel Manager
 
 CachyOS ships the **CachyOS Kernel Manager** as a pre-installed GUI tool. It lets you manage installed kernels and configure the `sched-ext` scheduler, the Linux kernel's extensible scheduler framework that allows userspace schedulers to replace the default one.

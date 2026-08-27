@@ -27,6 +27,10 @@ Het systeem is volledig beschrijfbaar. `pacman` installeert in `/usr` en het pac
 
 Gaat een update wél mis, dan draai je hem met de hand terug — het package downgraden vanuit de pacman-cache in `/var/cache/pacman/pkg/`, of vanuit het [Arch Linux Archive](https://wiki.archlinux.org/title/Arch_Linux_Archive). Handig om te weten vóórdat je het nodig hebt. Dit is het belangrijkste praktische verschil met Bazzite, waar een slechte update één `rpm-ostree rollback` verderop ligt.
 
+{{< callout type="info" >}}
+Alles in één keer bijwerken — pacman, de AUR, Flatpak en de rest — staat op de pagina [Topgrade]({{< relref "/docs/getting-started/topgrade" >}}).
+{{< /callout >}}
+
 ## CachyOS Kernel Manager
 
 CachyOS wordt geleverd met de **CachyOS Kernel Manager** als voorgeïnstalleerde GUI-tool. Hiermee beheer je geïnstalleerde kernels en configureer je de `sched-ext` scheduler, het extensible scheduler framework van de Linux kernel waarmee een userspace-scheduler de standaard kan vervangen.

@@ -1,7 +1,7 @@
 ---
 title: "NVIDIA Driver: CachyOS"
 weight: 1
-prev: docs/getting-started/bazzite
+prev: docs/getting-started/topgrade
 next: docs/hardware/nvidia-bazzite
 ---
 
