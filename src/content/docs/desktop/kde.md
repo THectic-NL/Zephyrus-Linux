@@ -2,7 +2,7 @@
 title: "KDE Plasma"
 weight: 1
 prev: docs/hardware/color-profiles
-next: docs/security/autologin
+next: docs/desktop/astra-monitor
 ---
 
 Everything else on this site is written for GNOME. This page is the exception: what changes if you'd rather run KDE Plasma on the G16, and — more importantly — which of the other guides stop applying if you do.

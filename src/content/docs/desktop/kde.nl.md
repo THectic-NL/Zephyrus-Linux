@@ -2,7 +2,7 @@
 title: "KDE Plasma"
 weight: 1
 prev: docs/hardware/color-profiles
-next: docs/security/autologin
+next: docs/desktop/astra-monitor
 ---
 
 De rest van deze site is voor GNOME geschreven. Deze pagina is de uitzondering: wat er verandert als je liever KDE Plasma op de G16 draait, en — belangrijker — welke van de andere handleidingen dan niet meer opgaan.

@@ -1,7 +1,7 @@
 ---
 title: "GDM Autologin"
 weight: 1
-prev: docs/desktop/kde
+prev: docs/desktop/astra-monitor
 next: docs/security/yubikey
 ---
 
