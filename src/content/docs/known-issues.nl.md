@@ -1,10 +1,12 @@
 ---
 title: "Bekende Problemen"
-weight: 7
-prev: docs/virtualization/vmware-workstation
+weight: 9
+prev: docs/gaming/steamos
 ---
 
 Centrale referentie voor hardware- en softwareproblemen op de ASUS ROG Zephyrus G16 GA605WV. Actieve problemen staan bovenaan. Opgeloste problemen staan onderaan als naslagwerk.
+
+Het meeste hier gaat over de hardware en geldt op welke distributie je ook draait. Waar een oplossing verschilt, heeft het item een CachyOS- en een Bazzite-tab.
 
 ## Actieve Problemen
 
@@ -19,7 +21,7 @@ WinBoat raakt regelmatig verstrikt in een eindeloze opstartronde. De Podman-cont
 WinBoat resetten en de initiële configuratie opnieuw doorlopen zorgt dat het weer werkt. Dit is geen duurzame oplossing.
 
 **Status:**
-Verbeterd op v0.9.2. Kwam vaak voor op v0.9.0, sindsdien veel minder. Opgelost zou ik het nog niet noemen. v0.9.2 tilt de onderliggende `dockur/windows`-image van 5.14 naar 6.05, wat er verband mee kan houden. Zie de [WinBoat-pagina]({{< relref "/docs/virtualization/winboat" >}}) voor meer context.
+Open — bijgehouden als [#106](https://github.com/THectic-NL/Zephyrus-Linux/issues/106). WinBoat is in beta en het project erkent de instabiliteit. Zie de [WinBoat-pagina]({{< relref "/docs/virtualization/winboat" >}}) voor meer context.
 
 {{% /details %}}
 
@@ -32,7 +34,7 @@ Als WinBoat wel opstart en je opent een Windows-app zoals Word, dan kruipt het v
 Geen gevonden.
 
 **Status:**
-Open. Beta-beperking.
+Open — bijgehouden als [#107](https://github.com/THectic-NL/Zephyrus-Linux/issues/107). Beta-beperking.
 
 {{% /details %}}
 
@@ -44,7 +46,7 @@ Het inschrijven van de YubiKey als FIDO2 LUKS-ontgrendelsleutel lukt, maar bij h
 Geprobeerd met `token-timeout=30` in crypttab en `rd.udev.settle-timeout=10` als kernelparameter, beide op systemd 259. Geen van beide hielp.
 
 **Status:**
-Nog steeds onopgelost. Onduidelijk of dit een echt hardware/firmware timingprobleem is, iets specifiek voor dit apparaat, of een configuratiefout van mijn kant. Mogelijk later nog een keer opgepakt. Voorlopig gebruik ik de YubiKey voor `sudo` en de GNOME-schermvergrendeling.
+Nog steeds onopgelost — bijgehouden als [#108](https://github.com/THectic-NL/Zephyrus-Linux/issues/108). Onduidelijk of dit een echt hardware/firmware timingprobleem is, iets specifiek voor dit apparaat, of een configuratiefout van mijn kant. Mogelijk later nog een keer opgepakt. Voorlopig gebruik ik de YubiKey voor `sudo` en de GNOME-schermvergrendeling.
 
 Zie de sectie **Dingen die ik graag werkend had gezien** onderaan deze pagina voor de volledige context.
 
@@ -232,63 +234,113 @@ Op laptops met AMD iGPU + NVIDIA dGPU regelt het ATPX-framework (via ACPI) welke
 
 ## NVIDIA Driver
 
-> Deze onderdelen gelden voornamelijk voor de Fedora-installatieroute. CachyOS-gebruikers worden hier niet door getroffen; de driver is tijdens de installatie al vooraf geconfigureerd.
+> Geen van beide distributies vraagt je de driver met de hand te installeren: CachyOS configureert hem tijdens de installatie, Bazzite levert hem mee in de image. Ontbreekt de driver, dan ligt het dus vrijwel nooit aan de driver zelf.
 
-{{% details title="nvidia-smi: command not found of mislukt" closed="true" %}}
+{{% details title="nvidia-smi: command not found, of de modules laden niet" closed="true" %}}
 
-Controleer of NVIDIA-modules zijn geladen:
+Begin op allebei hetzelfde:
+
 ```bash
 lsmod | grep nvidia
-```
-
-Controleer systeemlogboeken op fouten:
-```bash
 sudo journalctl -b | grep nvidia
 ```
 
-Bouw kernelmodules opnieuw:
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+De driver is een DKMS-module, dus meestal betekent dit dat de herbouw tegen de huidige kernel is mislukt. Controleer en forceer:
+
 ```bash
-sudo akmods --force
-sudo dracut --force
+sudo dkms status
+sudo dkms autoinstall
 sudo reboot
 ```
+
+Mislukt de build zelf, kijk dan naar de kernelheaders van de draaiende kernel — `linux-cachyos-headers` moet overeenkomen met de kernel waarmee je daadwerkelijk bent opgestart.
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+Hier wordt lokaal niets gebouwd, dus er zijn maar twee realistische oorzaken.
+
+**1. Je zit niet op een NVIDIA-image.** Controleer de ref:
+
+```bash
+rpm-ostree status
+```
+
+Staat `nvidia-open` er niet in, dan is dat het hele probleem — zie [NVIDIA Driver: Bazzite]({{< relref "/docs/hardware/nvidia-bazzite" >}}) voor de rebase.
+
+**2. De Secure Boot-sleutel is niet ingeschreven.** De modules zijn ondertekend door Universal Blue; staat Secure Boot aan en ontbreekt de sleutel, dan weigeren ze stilzwijgend te laden:
+
+```bash
+mokutil --sb-state
+ujust enroll-secure-boot-key
+```
+
+Draai hier **geen** `akmods` of `dracut`. Gidsen die dat zeggen zijn geschreven voor gewoon Fedora; op een atomic image doen ze niets nuttigs en kunnen ze je met een kapotte initramfs achterlaten.
+
+{{< /tab >}}
+{{< /tabs >}}
 
 {{% /details %}}
 
-{{% details title="MOK enrollment: 'Key was rejected by service'" closed="true" %}}
+{{% details title="'Key was rejected by service' bij het laden van de module" closed="true" %}}
 
-Als je de foutmelding krijgt `modprobe: ERROR: could not insert 'nvidia': Key was rejected by service`, zijn de kernelmodules gebouwd voordat MOK enrollment was voltooid.
+`modprobe: ERROR: could not insert 'nvidia': Key was rejected by service` betekent dat Secure Boot aanstaat en de module ondertekend is met een sleutel die de firmware niet vertrouwt.
 
-Oplossing:
-```bash
-# Modules opnieuw bouwen na MOK enrollment
-sudo akmods --force
-sudo dracut --force
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
 
-# Herstart
-sudo reboot
-```
+Met `sbctl` en je eigen sleutels dwingt de kernel geen modulehandtekeningen af, dus normaal komt dit niet voor. Gebeurt het toch, dan heb je nog een MOK-opzet van een eerdere installatie: reset die en doorloop [Secure Boot op CachyOS]({{< relref "/docs/hardware/secure-boot-cachyos" >}}) opnieuw.
 
-Om MOK te resetten indien nodig:
 ```bash
 sudo mokutil --reset
 ```
 
-Herstart en probeer de enrollment opnieuw.
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+De sleutel van Universal Blue is niet ingeschreven, of de inschrijving is niet afgerond:
+
+```bash
+ujust enroll-secure-boot-key
+```
+
+Herstart, kies **Enroll MOK** → **Continue** → **Yes** en voer `universalblue` in. MokManager toont niets terwijl je typt — dat hoort zo, je toetsenbord is niet stuk.
+
+Wil je opnieuw beginnen:
+
+```bash
+sudo mokutil --reset
+```
+
+{{< /tab >}}
+{{< /tabs >}}
 
 {{% /details %}}
 
 {{% details title="Kernelmodule build-fouten" closed="true" %}}
 
-Zorg dat de kernelheaders overeenkomen met de draaiende kernel:
+**Alleen CachyOS.** Op Bazzite wordt lokaal niets gebouwd — de kernel en de NVIDIA-modules zitten samen in de image, en precies daarom bestaat deze fout daar niet.
+
+Zorg dat de headers overeenkomen met de draaiende kernel:
+
 ```bash
-sudo dnf install kernel-devel
+uname -r
+sudo pacman -S linux-cachyos-headers
 ```
 
-Forceer een herbouw:
+Forceer daarna de herbouw:
+
 ```bash
-sudo akmods --force
-sudo dracut --force
+sudo dkms autoinstall
+```
+
+Het buildlogboek noemt de echte oorzaak:
+
+```bash
+sudo cat /var/lib/dkms/nvidia/*/build/make.log
 ```
 
 {{% /details %}}
@@ -408,7 +460,28 @@ Als hij laadt, heropen ROG Control Center; de melding zou verdwenen moeten zijn 
 
 ## Secure Boot
 
-{{% details title="sbctl status toont nog steeds 'Setup Mode: Disabled' na het wissen van sleutels" closed="true" %}}
+{{% details title="Bazzite: geen GPU-versnelling na het installeren, verder werkt alles" closed="true" %}}
+
+Het meest voorkomende Bazzite-probleem op deze laptop, en het ziet er helemaal niet uit als een Secure Boot-probleem — het bureaublad komt op, alleen software-gerenderd, en `nvidia-smi` mislukt.
+
+Secure Boot staat aan en de sleutel van Universal Blue is nooit ingeschreven, dus de NVIDIA-modules weigeren te laden:
+
+```bash
+mokutil --sb-state
+lsmod | grep nvidia
+```
+
+Secure Boot aan plus geen `nvidia`-modules is het signaal. Oplossing:
+
+```bash
+ujust enroll-secure-boot-key
+```
+
+Herstart naar MokManager, **Enroll MOK** → **Continue** → **Yes**, wachtwoord `universalblue`. Zie [Secure Boot op Bazzite]({{< relref "/docs/hardware/secure-boot-bazzite" >}}).
+
+{{% /details %}}
+
+{{% details title="CachyOS: sbctl status toont nog steeds 'Setup Mode: Disabled' na het wissen van sleutels" closed="true" %}}
 
 Sommige ASUS UEFI-versies vereisen dat de platformsleutel (PK) expliciet wordt verwijderd voordat Setup Mode wordt geactiveerd.
 
@@ -421,7 +494,7 @@ Na het herstarten moet `sudo sbctl status` Setup Mode: Enabled tonen.
 
 {{% /details %}}
 
-{{% details title="Systeem start niet op na het inschakelen van Secure Boot" closed="true" %}}
+{{% details title="CachyOS: systeem start niet op na het inschakelen van Secure Boot" closed="true" %}}
 
 Als het systeem niet opstart na het inschakelen van Secure Boot, zijn een of meer EFI-bestanden niet ondertekend.
 

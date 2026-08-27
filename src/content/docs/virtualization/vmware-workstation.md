@@ -2,7 +2,7 @@
 title: "VMware Workstation"
 weight: 6
 prev: docs/virtualization/distrobox
-next: docs/known-issues
+next: docs/gaming/steamos
 ---
 
 {{< callout type="warning" >}}
