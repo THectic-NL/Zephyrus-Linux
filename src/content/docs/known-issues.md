@@ -1,7 +1,7 @@
 ---
 title: "Known Issues"
 weight: 9
-prev: docs/gaming/steamos
+prev: docs/gaming/proton-slr
 ---
 
 Central reference for hardware and software issues on the ASUS ROG Zephyrus G16 GA605WV. Active issues are listed first. Resolved issues are kept as reference at the bottom.

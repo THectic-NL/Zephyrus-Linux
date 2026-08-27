@@ -2,7 +2,7 @@
 title: "SteamOS & Game Mode"
 weight: 1
 prev: docs/virtualization/vmware-workstation
-next: docs/known-issues
+next: docs/gaming/proton-slr
 ---
 
 De console-ervaring van de Steam Deck — direct opstarten in Steam, met een controller, geen bureaublad tenzij je erom vraagt — kun je op deze laptop hebben. Wat je niet kunt hebben is SteamOS zelf.

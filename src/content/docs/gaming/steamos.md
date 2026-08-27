@@ -2,7 +2,7 @@
 title: "SteamOS & Game Mode"
 weight: 1
 prev: docs/virtualization/vmware-workstation
-next: docs/known-issues
+next: docs/gaming/proton-slr
 ---
 
 The console experience on the Steam Deck — boot straight into Steam, controller-driven, no desktop unless you ask for one — is a thing you can have on this laptop. What you can't have is SteamOS itself.
