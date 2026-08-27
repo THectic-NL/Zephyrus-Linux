@@ -1,7 +1,7 @@
 ---
 title: "WinBoat: Windows via Podman Container"
 weight: 3
-prev: docs/virtualization/vm-setup
+prev: docs/virtualization/quickemu
 next: docs/virtualization/podman
 ---
 

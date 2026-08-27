@@ -2,7 +2,7 @@
 title: "Virt-Manager / KVM"
 weight: 1
 prev: docs/networking/eduroam-network-installation
-next: docs/virtualization/winboat
+next: docs/virtualization/quickemu
 ---
 
 Deze handleiding beschrijft het opzetten van een Windows 11 VM met virt-manager via KVM/QEMU, VirtIO-drivers en SPICE GL-acceleratie via de AMD iGPU. Een solide open-source optie voor dagelijks kantoorwerk.
