@@ -19,7 +19,7 @@ WinBoat regularly gets stuck in an endless startup loop. The Podman container ke
 Resetting WinBoat and going through the initial configuration again gets it running again. This is not a sustainable fix.
 
 **Status:**
-Open. WinBoat is in beta and the project acknowledges instability. See the [WinBoat page]({{< relref "/docs/virtualization/winboat" >}}) for more context.
+Improved on v0.9.2. Seen frequently on v0.9.0; far less common since. Not something I would call solved. v0.9.2 bumps the underlying `dockur/windows` image from 5.14 to 6.05, which may be related. See the [WinBoat page]({{< relref "/docs/virtualization/winboat" >}}) for more context.
 
 {{% /details %}}
 

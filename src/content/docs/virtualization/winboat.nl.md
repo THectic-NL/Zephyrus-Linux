@@ -6,7 +6,13 @@ next: docs/virtualization/podman
 
 WinBoat is een open-source project dat Windows draait in een Podman-container op Linux. Het idee: Windows-apps gewoon als losse vensters op je Linux-desktop, zonder dat je een volledige VM nodig hebt. Ik heb het getest met Podman.
 
-> **Status: Beta.** WinBoat is vroege beta. Getest op v0.9.0. Bugs zijn te verwachten; het project zegt het zelf ook.
+> **Status: Beta, maar het gaat de goede kant op.** Oorspronkelijk getest op v0.9.0, en dat was ruw. Opnieuw getest op **v0.9.2** en het draait merkbaar rustiger. Nog niet af, maar het begint ergens op te lijken.
+
+{{< callout type="warning" >}}
+Zit je nog op v0.9.0? Updaten. v0.9.1 en v0.9.2 dichten een kwetsbaarheid waarmee een aanvaller via de `get-icon`-aanroep willekeurige PowerShell in de VM kon draaien, plus fixes voor UNC-padtoegang, injectie van stuurtekens, een Slowloris-achtige aanval, en wachtwoorden die in de compose- en FreeRDP-logs terechtkwamen. Het project bedankt @AndreaBonn en zegt binnen vier uur na de melding een fix te hebben uitgebracht.
+{{< /callout >}}
+
+Het project noemt dit de laatste 0.9-release: alleen onderhoud en beveiliging, op weg naar 1.0. Goed om te weten: v0.9.2 tilt `dockur/windows` van 5.14 naar 6.05, een flinke sprong in de image die Windows daadwerkelijk draait. Dat zou kunnen verklaren waarom het opstarten bij mij beter ging, al heb ik dat verband niet hard gemaakt.
 
 ![WinBoat feature-overzicht van de projectwebsite](/images/winboat-features.avif)
 
@@ -62,7 +68,9 @@ Wat ik het vaakst zag: **WinBoat Guest API - Offline** en **Container - Exited**
 
 ## Bugs
 
-Het grootste probleem is de startup loop. De container probeert steeds opnieuw op te starten, maar het lukt nooit, hoe lang je ook wacht. Dit is niet alleen een eenmalig iets, het gebeurt regelmatig.
+Alles in deze sectie is gezien op **v0.9.0**. Op v0.9.2 komt de startup loop veel minder voor, maar ik laat de bevindingen staan omdat ze beschrijven waar het project doorheen aan het werken is.
+
+Het grootste probleem is de startup loop. De container probeert steeds opnieuw op te starten, maar het lukt nooit, hoe lang je ook wacht. Op v0.9.0 was dat niet een eenmalig iets, het gebeurde regelmatig.
 
 WinBoat resetten en de setup opnieuw doorlopen werkt wel, maar dat is geen werkbare oplossing als je hem gewoon wilt gebruiken.
 
@@ -83,9 +91,11 @@ WinBoat is vroege beta. Het project zegt zelf dat je wat troubleshootingervaring
 
 ## En wat nu?
 
-Eerlijk gezegd is dit een van de gaafste app-concepten die ik in tijden heb gezien. Windows-apps gewoon als desktopvensters, zonder volledige VM. Dat kan Bottles of Wine ook niet, zeker niet voor Microsoft 365. Ik zou dit super graag stabiel werkend willen krijgen.
+Eerlijk gezegd is dit een van de gaafste app-concepten die ik in tijden heb gezien. Windows-apps gewoon als desktopvensters, zonder volledige VM. Dat kan Bottles of Wine ook niet, zeker niet voor Microsoft 365.
 
-Maar zo ver zijn we nog niet. Voor dagelijks Windows-gebruik geeft [VMware Workstation]({{< relref "/docs/virtualization/vmware-workstation" >}}) momenteel de beste ervaring op deze hardware. De [KVM/QEMU-setup]({{< relref "/docs/virtualization/vm-setup" >}}) is een goed open-source alternatief. Ik zou WinBoat graag nog een keer willen proberen als het stabieler is; de Docker-backend doet het misschien beter dan de Podman-versie die ik getest heb.
+v0.9.2 heeft dit verschoven van "interessant maar onbruikbaar" naar "echt het proberen waard". Het is nog steeds niet iets wat ik zou voorzetten aan iemand die vandaag gewoon Windows nodig heeft. Daarvoor geeft [VMware Workstation]({{< relref "/docs/virtualization/vmware-workstation" >}}) de beste ervaring op deze hardware, en is de [KVM/QEMU-setup]({{< relref "/docs/virtualization/vm-setup" >}}) een goed open-source alternatief.
+
+Maar de richting klopt, en het project handelde een securitymelding binnen vier uur af. Ik kijk oprecht uit naar de 1.0 stable release. WinBoat is een gaaf project en ik hoop dat ze er komen.
 
 
 ## Referenties

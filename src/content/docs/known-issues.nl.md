@@ -19,7 +19,7 @@ WinBoat raakt regelmatig verstrikt in een eindeloze opstartronde. De Podman-cont
 WinBoat resetten en de initiële configuratie opnieuw doorlopen zorgt dat het weer werkt. Dit is geen duurzame oplossing.
 
 **Status:**
-Open. WinBoat is in beta en het project erkent de instabiliteit. Zie de [WinBoat-pagina]({{< relref "/docs/virtualization/winboat" >}}) voor meer context.
+Verbeterd op v0.9.2. Kwam vaak voor op v0.9.0, sindsdien veel minder. Opgelost zou ik het nog niet noemen. v0.9.2 tilt de onderliggende `dockur/windows`-image van 5.14 naar 6.05, wat er verband mee kan houden. Zie de [WinBoat-pagina]({{< relref "/docs/virtualization/winboat" >}}) voor meer context.
 
 {{% /details %}}
 
