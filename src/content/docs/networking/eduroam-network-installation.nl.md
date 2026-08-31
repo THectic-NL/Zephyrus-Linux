@@ -14,7 +14,11 @@ De Python-installer van [cat.eduroam.org](https://cat.eduroam.org/) biedt een gr
 
 De oorzaak is niet NetworkManager: de CA in Saxion's CAT-profiel is de oude USERTrust / GEANT OV RSA CA 4 keten, terwijl de RADIUS-server inmiddels naar HARICA-roots ketent. Validatie kan dan niet slagen. Zie [#109](https://github.com/THectic-NL/Zephyrus-Linux/issues/109) voor de fingerprints en handshake-logs.
 
-![cat.eduroam.org downloadportaal voor Saxion](/images/eduroam-cat-portal.avif)
+![cat.eduroam.org-portaal voor Saxion, item laatst bijgewerkt 2024-01-31](/images/eduroam-cat-portal.avif)
+
+**Update, augustus 2026.** Het profiel is op 2026-08-11 aangeraakt, maar de CA is niet gecorrigeerd. De installer die je vanaf deze pagina downloadt draagt nog steeds de oude USERTrust-keten en kan de server dus nog altijd niet valideren. Beide screenshots blijven hier staan: de eerste laat zien dat het item sinds januari 2024 onaangeroerd was, de tweede laat een recente bewerking zien die het werkelijke probleem niet oploste.
+
+![Hetzelfde portaal op 2026-08-11, nog steeds met de verouderde CA](/images/eduroam-cat-portal-2026.avif)
 {{% /details %}}
 
 {{% details title="geteduroam Linux app (officieel)" closed="true" %}}
