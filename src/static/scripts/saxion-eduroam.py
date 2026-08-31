@@ -26,107 +26,105 @@ REALM = "saxion.nl"
 SERVER_DOMAIN = "ise.infra.saxion.net"
 ANONYMOUS_ID = f"anonymous@{REALM}"
 
-# Where the pinned CA is written. NetworkManager reads 802-1x.ca-cert every time
-# it connects, so it has to survive the script exiting; a temporary file will not
-# do. Under the user's config directory, so the script still needs no root.
+# nmcli's default is 90s of silence, which looks like a hang. Cut it short.
+CONNECT_TIMEOUT = 45
+
+# NetworkManager re-reads this on every connect, so it cannot be a temp file.
+# In the user's config dir, so no root needed.
 CA_DIR = os.path.join(
     os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"),
     "saxion-eduroam",
 )
 CA_FILE = os.path.join(CA_DIR, "saxion-eduroam-ca.pem")
 
-# The certificate chain Saxion publishes for manual configuration, via the
-# eduroam CAT profile ("eduroam CA certificate (PEM)"):
+# The roots ise.infra.saxion.net chains to. GEANT moved its cert service to
+# HARICA; this file used to pin the old USERTrust/"GEANT OV RSA CA 4" chain,
+# which the server stopped sending, so every connect died on "unknown CA"
+# (#109). Don't guess these -- read them off a real handshake:
 #
-#   https://cat.eduroam.org/  ->  Saxion University of Applied Sciences
+#   nmcli connection modify eduroam 802-1x.ca-cert ""
+#   nmcli connection up eduroam
+#   journalctl -u wpa_supplicant -b | grep CTRL-EVENT-EAP-PEER-CERT
 #
-#   1. USERTrust RSA Certification Authority   (root,         expires 2038-01-18)
-#      SHA-256 E7:93:C9:B0:2F:D8:AA:13:E2:1C:31:22:8A:CC:B0:81:
-#              19:64:3B:74:9C:89:89:64:B1:74:6D:46:C3:D4:CB:D2
-#   2. GEANT OV RSA CA 4                       (intermediate, expires 2033-05-01)
-#      SHA-256 37:83:4F:A5:EA:40:FB:F7:B6:11:96:95:59:62:E1:CA:
-#              05:58:87:24:35:E4:20:66:53:D3:F6:20:DD:8E:98:8E
+#   HARICA RootCA 2015              A0:40:92:9A:02:CE:53:B4... expires 2040
+#   HARICA TLS RSA Root CA 2021     D9:5D:0E:8E:DA:79:52:5B... expires 2045
 #
-# Both are shipped, as CAT does, so the chain still builds if GEANT rotates the
-# intermediate under the same root.
+# The first is what the server currently chains to; the second keeps this
+# working once GEANT drops the cross-signature. The GEANT TLS RSA 1
+# intermediate is not pinned -- the server sends it, and intermediates rotate
+# often enough to break us again.
 #
-# When Saxion changes RADIUS certificate authority this file stops working and
-# the fix is to replace the block below from the URL above. That is the cost of
-# pinning, and it is the point: without it any of the ~150 CAs in the system
-# trust store could vouch for a server calling itself ise.infra.saxion.net.
+# Yes, pinning breaks when Saxion switches CA. That is the trade: otherwise any
+# of ~150 public CAs can impersonate the RADIUS server, and PEAP/MSCHAPv2 hands
+# it a hash of the user's password.
 SAXION_CA_PEM = """\
 -----BEGIN CERTIFICATE-----
-MIIF3jCCA8agAwIBAgIQAf1tMPyjylGoG7xkDjUDLTANBgkqhkiG9w0BAQwFADCB
-iDELMAkGA1UEBhMCVVMxEzARBgNVBAgTCk5ldyBKZXJzZXkxFDASBgNVBAcTC0pl
-cnNleSBDaXR5MR4wHAYDVQQKExVUaGUgVVNFUlRSVVNUIE5ldHdvcmsxLjAsBgNV
-BAMTJVVTRVJUcnVzdCBSU0EgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkwHhcNMTAw
-MjAxMDAwMDAwWhcNMzgwMTE4MjM1OTU5WjCBiDELMAkGA1UEBhMCVVMxEzARBgNV
-BAgTCk5ldyBKZXJzZXkxFDASBgNVBAcTC0plcnNleSBDaXR5MR4wHAYDVQQKExVU
-aGUgVVNFUlRSVVNUIE5ldHdvcmsxLjAsBgNVBAMTJVVTRVJUcnVzdCBSU0EgQ2Vy
-dGlmaWNhdGlvbiBBdXRob3JpdHkwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIK
-AoICAQCAEmUXNg7D2wiz0KxXDXbtzSfTTK1Qg2HiqiBNCS1kCdzOiZ/MPans9s/B
-3PHTsdZ7NygRK0faOca8Ohm0X6a9fZ2jY0K2dvKpOyuR+OJv0OwWIJAJPuLodMkY
-tJHUYmTbf6MG8YgYapAiPLz+E/CHFHv25B+O1ORRxhFnRghRy4YUVD+8M/5+bJz/
-Fp0YvVGONaanZshyZ9shZrHUm3gDwFA66Mzw3LyeTP6vBZY1H1dat//O+T23LLb2
-VN3I5xI6Ta5MirdcmrS3ID3KfyI0rn47aGYBROcBTkZTmzNg95S+UzeQc0PzMsNT
-79uq/nROacdrjGCT3sTHDN/hMq7MkztReJVni+49Vv4M0GkPGw/zJSZrM233bkf6
-c0Plfg6lZrEpfDKEY1WJxA3Bk1QwGROs0303p+tdOmw1XNtB1xLaqUkL39iAigmT
-Yo61Zs8liM2EuLE/pDkP2QKe6xJMlXzzawWpXhaDzLhn4ugTncxbgtNMs+1b/97l
-c6wjOy0AvzVVdAlJ2ElYGn+SNuZRkg7zJn0cTRe8yexDJtC/QV9AqURE9JnnV4ee
-UB9XVKg+/XRjL7FQZQnmWEIuQxpMtPAlR1n6BB6T1CZGSlCBst6+eLf8ZxXhyVeE
-Hg9j1uliutZfVS7qXMYoCAQlObgOK6nyTJccBz8NUvXt7y+CDwIDAQABo0IwQDAd
-BgNVHQ4EFgQUU3m/WqorSs9UgOHYm8Cd8rIDZsswDgYDVR0PAQH/BAQDAgEGMA8G
-A1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQEMBQADggIBAFzUfA3P9wF9QZllDHPF
-Up/L+M+ZBn8b2kMVn54CVVeWFPFSPCeHlCjtHzoBN6J2/FNQwISbxmtOuowhT6KO
-VWKR82kV2LyI48SqC/3vqOlLVSoGIG1VeCkZ7l8wXEskEVX/JJpuXior7gtNn3/3
-ATiUFJVDBwn7YKnuHKsSjKCaXqeYalltiz8I+8jRRa8YFWSQEg9zKC7F4iRO/Fjs
-8PRF/iKz6y+O0tlFYQXBl2+odnKPi4w2r78NBc5xjeambx9spnFixdjQg3IM8WcR
-iQycE0xyNN+81XHfqnHd4blsjDwSXWXavVcStkNr/+XeTWYRUc+ZruwXtuhxkYze
-Sf7dNXGiFSeUHM9h4ya7b6NnJSFd5t0dCy5oGzuCr+yDZ4XUmFF0sbmZgIn/f3gZ
-XHlKYC6SQK5MNyosycdiyA5d9zZbyuAlJQG03RoHnHcAP9Dc1ew91Pq7P8yF1m9/
-qS3fuQL39ZeatTXaw2ewh0qpKJ4jjv9cJ2vhsE/zB+4ALtRZh8tSQZXq9EfX7mRB
-VXyNWQKV3WKdwrnuWih0hKWbt5DHDAff9Yk2dDLWKMGwsAvgnEzDHNb842m1R0aB
-L6KCq9NjRHDEjf8tM7qtj3u1cIiuPhnPQCjY/MiQu12ZIvVS5ljFH4gxQ+6IHdfG
-jjxDah2nGN59PRbxYvnKkKj9
+MIIGCzCCA/OgAwIBAgIBADANBgkqhkiG9w0BAQsFADCBpjELMAkGA1UEBhMCR1Ix
+DzANBgNVBAcTBkF0aGVuczFEMEIGA1UEChM7SGVsbGVuaWMgQWNhZGVtaWMgYW5k
+IFJlc2VhcmNoIEluc3RpdHV0aW9ucyBDZXJ0LiBBdXRob3JpdHkxQDA+BgNVBAMT
+N0hlbGxlbmljIEFjYWRlbWljIGFuZCBSZXNlYXJjaCBJbnN0aXR1dGlvbnMgUm9v
+dENBIDIwMTUwHhcNMTUwNzA3MTAxMTIxWhcNNDAwNjMwMTAxMTIxWjCBpjELMAkG
+A1UEBhMCR1IxDzANBgNVBAcTBkF0aGVuczFEMEIGA1UEChM7SGVsbGVuaWMgQWNh
+ZGVtaWMgYW5kIFJlc2VhcmNoIEluc3RpdHV0aW9ucyBDZXJ0LiBBdXRob3JpdHkx
+QDA+BgNVBAMTN0hlbGxlbmljIEFjYWRlbWljIGFuZCBSZXNlYXJjaCBJbnN0aXR1
+dGlvbnMgUm9vdENBIDIwMTUwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoIC
+AQDC+Kk/G4n8PDwEXT2QNrCROnk8ZlrvbTkBSRq0t89/TSNTt5AA4xMqKKYx8ZEA
+4yjsriFBzh/a/X0SWwGDD7mwX5nh8hKDgE0GPt+sr+ehiGsxr/CL0BgzuNtFajT0
+AoAkKAoCFZVedioNmToUW/bLy1O8E00BiDeUJRtCvCLYjqOWXjrZMts+6PAQZe10
+4S+nfK8nNLspfZu2zwnI5dMK/IhlZXQK3HMcXM1AsRzUtoSMTFDPaI6oWa7CJ06C
+ojXdFPQf/7J31Ycvqm59JCfnxssm5uX+Zwdj2EUN3TpZZTlYepKZcj2chF6IIbjV
+9Cz82XBST3i4vTwri5WY9bPRaM8gFH5MXF/ni+X1NYEZN9cRCLdmvtNKzoNXADrD
+gfgXy5I2XdGj2HUb4Ysn6npIQf1FGQatJ5lOwXBH3bWfgVMS5bGMSF0xQxfjjMZ6
+Y5ZLKTBOhE5iGV48zpeQpX8B653g+IuJ3SWYPZK2fu/Z8VFRfS0myGlZYeCsargq
+NhEEelC9MoS+L9xy1dcdFkfkR2YgP/SWxa+OAXqlD3pk9Q0Yh9muiNX6hME6wGko
+LfINaFGq46V3xqSQDqE3izEjR8EJCOtu93ib14L8hCCZSRm2Ekax+0VVFqmjZayc
+Bw/qa9wfLgZy7IaIEuQt218FL+TwA9MmM+eAws1CoRc0CwIDAQABo0IwQDAPBgNV
+HRMBAf8EBTADAQH/MA4GA1UdDwEB/wQEAwIBBjAdBgNVHQ4EFgQUcRVnyMjJvXVd
+ctA4GGqd83EkVAswDQYJKoZIhvcNAQELBQADggIBAHW7bVRLqhBYRjTyYtcWNl0I
+XtVsyIe9tC5G8jH4fOpCtZMWVdyhDBKg2mF+D1hYc2Ryx+hFjtyp8iY/xnmMsVMI
+M4GwVhO+5lFc2JsKT0ucVlMC6U/2DWDqTUJV6HwbISHTGzrMd/K4kPFox/la/vot
+9L/J9UUbzjgQKjeKeaO04wlshYaT/4mWJ3iBj2fjRnRUjtkNaeJK9E10A/+yd+2V
+Z5fkscWrv2oj6NSU4kQoYsRL4vDY4ilrGnB+JGGTe08DMiUNRSQrlrRGar9KC/ea
+j8GsGsVn82800vpzY4zvFrCopEYq+OsS7HK07/grfoxSwIuEVPkvPuNVqNxmsdnh
+X9izjFk0WaSrT2y7HxjbdavYy5LNlDhhDgcGH0tGEPEVvo2FXDtKK4F5D7Rpn0lQ
+l033DlZdwJVqwjbDG2jJ9SrcR5q+ss7FJej6A7na+RZukYT1HCjI/CbM1xyQVqdf
+bzoEvM14iQuODy+jqk+iGxI9FghAD/FGTNeqewjBCvVtJ94Cj8rDtSvK6evIIVM4
+pcw72Hc3MKJP2W/R8kCtQXoXxdZKNYm3QdV8hn9VTYNKpXMgwDqvkPGaJI7ZjnHK
+e7iG2rKPmT4dEw0SEe7Uq/DpFXYC5ODfqiAeW2GFZECpkJcNrVPSWh2HagCXZWK0
+vm9qp/UsQu0yrbYhnr68
 -----END CERTIFICATE-----
 -----BEGIN CERTIFICATE-----
-MIIG5TCCBM2gAwIBAgIRANpDvROb0li7TdYcrMTz2+AwDQYJKoZIhvcNAQEMBQAw
-gYgxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpOZXcgSmVyc2V5MRQwEgYDVQQHEwtK
-ZXJzZXkgQ2l0eTEeMBwGA1UEChMVVGhlIFVTRVJUUlVTVCBOZXR3b3JrMS4wLAYD
-VQQDEyVVU0VSVHJ1c3QgUlNBIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MB4XDTIw
-MDIxODAwMDAwMFoXDTMzMDUwMTIzNTk1OVowRDELMAkGA1UEBhMCTkwxGTAXBgNV
-BAoTEEdFQU5UIFZlcmVuaWdpbmcxGjAYBgNVBAMTEUdFQU5UIE9WIFJTQSBDQSA0
-MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEApYhi1aEiPsg9ZKRMAw9Q
-r8Mthsr6R20VSfFeh7TgwtLQi6RSRLOh4or4EMG/1th8lijv7xnBMVZkTysFiPmT
-PiLOfvz+QwO1NwjvgY+Jrs7fSoVA/TQkXzcxu4Tl3WHi+qJmKLJVu/JOuHud6mOp
-LWkIbhODSzOxANJ24IGPx9h4OXDyy6/342eE6UPXCtJ8AzeumTG6Dfv5KVx24lCF
-TGUzHUB+j+g0lSKg/Sf1OzgCajJV9enmZ/84ydh48wPp6vbWf1H0O3Rd3LhpMSVn
-TqFTLKZSbQeLcx/l9DOKZfBCC9ghWxsgTqW9gQ7v3T3aIfSaVC9rnwVxO0VjmDdP
-FNbdoxnh0zYwf45nV1QQgpRwZJ93yWedhp4ch1a6Ajwqs+wv4mZzmBSjovtV0mKw
-d+CQbSToalEUP4QeJq4Udz5WNmNMI4OYP6cgrnlJ50aa0DZPlJqrKQPGL69KQQz1
-2WgxvhCuVU70y6ZWAPopBa1ykbsttpLxADZre5cH573lIuLHdjx7NjpYIXRx2+QJ
-URnX2qx37eZIxYXz8ggM+wXH6RDbU3V2o5DP67hXPHSAbA+p0orjAocpk2osxHKo
-NSE3LCjNx8WVdxnXvuQ28tKdaK69knfm3bB7xpdfsNNTPH9ElcjscWZxpeZ5Iij8
-lyrCG1z0vSWtSBsgSnUyG/sCAwEAAaOCAYswggGHMB8GA1UdIwQYMBaAFFN5v1qq
-K0rPVIDh2JvAnfKyA2bLMB0GA1UdDgQWBBRvHTVJEGwy+lmgnryK6B+VvnF6DDAO
-BgNVHQ8BAf8EBAMCAYYwEgYDVR0TAQH/BAgwBgEB/wIBADAdBgNVHSUEFjAUBggr
-BgEFBQcDAQYIKwYBBQUHAwIwOAYDVR0gBDEwLzAtBgRVHSAAMCUwIwYIKwYBBQUH
-AgEWF2h0dHBzOi8vc2VjdGlnby5jb20vQ1BTMFAGA1UdHwRJMEcwRaBDoEGGP2h0
-dHA6Ly9jcmwudXNlcnRydXN0LmNvbS9VU0VSVHJ1c3RSU0FDZXJ0aWZpY2F0aW9u
-QXV0aG9yaXR5LmNybDB2BggrBgEFBQcBAQRqMGgwPwYIKwYBBQUHMAKGM2h0dHA6
-Ly9jcnQudXNlcnRydXN0LmNvbS9VU0VSVHJ1c3RSU0FBZGRUcnVzdENBLmNydDAl
-BggrBgEFBQcwAYYZaHR0cDovL29jc3AudXNlcnRydXN0LmNvbTANBgkqhkiG9w0B
-AQwFAAOCAgEAUtlC3e0xj/1BMfPhdQhUXeLjb0xp8UE28kzWE5xDzGKbfGgnrT2R
-lw5gLIx+/cNVrad//+MrpTppMlxq59AsXYZW3xRasrvkjGfNR3vt/1RAl8iI31lG
-hIg6dfIX5N4esLkrQeN8HiyHKH6khm4966IkVVtnxz5CgUPqEYn4eQ+4eeESrWBh
-AqXaiv7HRvpsdwLYekAhnrlGpioZ/CJIT2PTTxf+GHM6cuUnNqdUzfvrQgA8kt1/
-ASXx2od/M+c8nlJqrGz29lrJveJOSEMX0c/ts02WhsfMhkYa6XujUZLmvR1Eq08r
-48/EZ4l+t5L4wt0DV8VaPbsEBF1EOFpz/YS2H6mSwcFaNJbnYqqJHIvm3PLJHkFm
-EoLXRVrQXdCT+3wgBfgU6heCV5CYBz/YkrdWES7tiiT8sVUDqXmVlTsbiRNiyLs2
-bmEWWFUl76jViIJog5fongEqN3jLIGTG/mXrJT1UyymIcobnIGrbwwRVz/mpFQo0
-vBYIi1k2ThVh0Dx88BbF9YiP84dd8Fkn5wbE6FxXYJ287qfRTgmhePecPc73Yrzt
-apdRcsKVGkOpaTIJP/l+lAHRLZxk/dUtyN95G++bOSQqnOCpVPabUGl2E/OEyFrp
-Ipwgu2L/WJclvd6g+ZA/iWkLSMcpnFb+uX6QBqvD6+RNxul1FaB5iHY=
+MIIFpDCCA4ygAwIBAgIQOcqTHO9D88aOk8f0ZIk4fjANBgkqhkiG9w0BAQsFADBs
+MQswCQYDVQQGEwJHUjE3MDUGA1UECgwuSGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJl
+c2VhcmNoIEluc3RpdHV0aW9ucyBDQTEkMCIGA1UEAwwbSEFSSUNBIFRMUyBSU0Eg
+Um9vdCBDQSAyMDIxMB4XDTIxMDIxOTEwNTUzOFoXDTQ1MDIxMzEwNTUzN1owbDEL
+MAkGA1UEBhMCR1IxNzA1BgNVBAoMLkhlbGxlbmljIEFjYWRlbWljIGFuZCBSZXNl
+YXJjaCBJbnN0aXR1dGlvbnMgQ0ExJDAiBgNVBAMMG0hBUklDQSBUTFMgUlNBIFJv
+b3QgQ0EgMjAyMTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAIvC569l
+mwVnlskNJLnQDmT8zuIkGCyEf3dRywQRNrhe7Wlxp57kJQmXZ8FHws+RFjZiPTgE
+4VGC/6zStGndLuwRo0Xua2s7TL+MjaQenRG56Tj5eg4MmOIjHdFOY9TnuEFE+2uv
+a9of08WRiFukiZLRgeaMOVig1mlDqa2YUlhu2wr7a89o+uOkXjpFc5gH6l8Cct4M
+pbOfrqkdtx2z/IpZ525yZa31MJQjB/OCFks1mJxTuy/K5FrZx40d/JiZ+yykgmvw
+Kh+OC19xXFyuQnspiYHLA6OZyoieC0AJQTPb5lh6/a6ZcMBaD9YThnEvdmn8kN3b
+LW7R8pv1GmuebxWMevBLKKAiOIAkbDakO/IwkfN4E8/BPzWr8R0RI7VDIp4BkrcY
+AuUR0YLbFQDMYTfBKnya4dC6s1BG7oKsnTH4+yPiAwBIcKMJJnkVU2DzOFytOOqB
+AGMUuTNe3QvboEUHGjMJ+E20pwKmafTCWQWIZYVWrkvL4N48fS0ayOn7H6NhStYq
+E613TBoYm5EPWNgGVMWX+Ko/IIqmhaZ39qb8HOLubpQzKoNQhArlT4b4UEV4AIHr
+W2jjJo3Me1xR9BQsQL4aYB16cmEdH2MtiKrOokWQCPxrvrNQKlr9qEgYRtaQQJKQ
+CoReaDH46+0N0x3GfZkYVVYnZS6NRcUk7M7jAgMBAAGjQjBAMA8GA1UdEwEB/wQF
+MAMBAf8wHQYDVR0OBBYEFApII6ZgpJIKM+qTW8VX6iVNvRLuMA4GA1UdDwEB/wQE
+AwIBhjANBgkqhkiG9w0BAQsFAAOCAgEAPpBIqm5iFSVmewzVjIuJndftTgfvnNAU
+X15QvWiWkKQUEapobQk1OUAJ2vQJLDSle1mESSmXdMgHHkdt8s4cUCbjnj1AUz/3
+f5Z2EMVGpdAgS1D0NTsY9FVqQRtHBmg8uwkIYtlfVUKqrFOFrJVWNlar5AWMxaja
+H6NpvVMPxP/cyuN+8kyIhkdGGvMA9YCRotxDQpSbIPDRzbLrLFPCU3hKTwSUQZqP
+JzLB5UkZv/HywouoCjkxKLR9YjYsTewfM7Z+d21+UPCfDtcRj88YxeMn/ibvBZ3P
+zzfF0HvaO7AWhAw6k9a+F9sPPg4ZeAnHqQJyIkv3N3a6dcSFA1pj1bF1BcK5vZSt
+jBWZp5N99sXzqnTPBIWUmAD04vnKJGW/4GKvyMX6ssmeVkjaef2WdhW+o45WxLM0
+/L5H9MG0qPzVMIho7suuyWPEdr6sOBjhXlzPrjoiUevRi7PzKzMHVIf6tLITe7pT
+BGIBnfHAT+7hOtSLIBD6Alfm78ELt5BGnBkpjNxvoEppaZS3JGWg/6w/zgH7IS79
+aPib8qXPMThcFarmlwDB31qlpzmq6YR/PFGoOtmUW4y/Twhx5duoXNTSpv4Ao8YW
+xw/ogM4cKGR0GQjTQuPOAF1/sdwTsOEFy9EgqoZ0njnnkf3/W9b3raYvAwtt41dU
+63ZTGI0RmLo=
 -----END CERTIFICATE-----
 """
 
@@ -146,13 +144,13 @@ DESCRIPTION = (
 
 class Installer:
 
-    def __init__(self, silent: bool = False, username: str = ""):
+    def __init__(self, silent: bool = False, username: str = "",
+                 ignore_certificate: bool = False):
         self.silent = silent
         self.username = username
-        # --silent means no GUI, and that has to hold for prompts too. Deciding
-        # it once here keeps show_message and prompt_input from disagreeing:
-        # previously only show_message honoured the flag, so a --silent run on a
-        # desktop still opened a zenity box asking for the username.
+        self.ignore_certificate = ignore_certificate
+        # --silent means no GUI, prompts included. Decided once so show_message
+        # and prompt_input cannot disagree.
         self.gui_tool = None if silent else self._detect_gui()
 
     def _detect_gui(self) -> str | None:
@@ -184,10 +182,8 @@ class Installer:
             text,
             flags=re.IGNORECASE
         )
-        # Mask passwords. The separator is required: with it optional this also
-        # matched "password" followed by a space and swallowed the next word, so
-        # ordinary prose came out as "Your password=[REDACTED] now be requested
-        # by your desktop keyring".
+        # Separator is required. Without it this ate the word after "password"
+        # and mangled ordinary prose.
         text = re.sub(
             r'\bpassword\s*[=:]\s*\S+',
             'password=[REDACTED]',
@@ -274,20 +270,55 @@ class Installer:
                 continue
             self.username = val.strip()
 
-    def install_ca_bundle(self) -> str:
-        """
-        Write the pinned Saxion chain to a stable path and return it.
+    def warn_insecure(self):
+        """Say plainly what --ignore-certificate gives up."""
+        warning = (
+            "Certificate validation is OFF.\n\n"
+            "Any access point calling itself 'eduroam' will be trusted. It can "
+            "terminate the TLS tunnel itself and collect the MSCHAPv2 exchange, "
+            "which is crackable offline -- that is your Saxion password.\n\n"
+            "Use this to find out what the server is really serving, then fix the "
+            "pinned chain and reconnect without this flag."
+        )
+        print("\n" + "!" * 70, file=sys.stderr)
+        for line in warning.splitlines():
+            print(line, file=sys.stderr)
+        print("!" * 70 + "\n", file=sys.stderr)
+        if not self.silent:
+            self.show_message(warning, True)
 
-        This replaces pointing 802-1x.ca-cert at the system trust store. That
-        made any of the roughly 150 public CAs a valid signer for something
-        calling itself ise.infra.saxion.net; now only the chain Saxion actually
-        publishes is accepted. It is what eduroam CAT does, and the reason CAT
-        exists.
-        """
+    def report_server_chain(self):
+        """Print the chain the server actually presented, to fix the pin with."""
+        try:
+            res = subprocess.run(
+                ["journalctl", "-u", "wpa_supplicant", "-b", "--no-pager"],
+                capture_output=True, text=True, timeout=15,
+            )
+            certs = [ln.split("wpa_supplicant", 1)[-1].strip()
+                     for ln in res.stdout.splitlines() if "EAP-PEER-CERT" in ln]
+        except (OSError, subprocess.SubprocessError):
+            certs = []
+
+        print("\n--- certificate chain the server presented ---")
+        if certs:
+            for line in certs[-8:]:
+                print(f"  {line}")
+            print("\nPut the root above into SAXION_CA_PEM and drop the flag.")
+        else:
+            print(
+                "  Could not read the journal (needs root or the systemd-journal group).\n"
+                "  Run this to see it:\n"
+                "    journalctl -u wpa_supplicant -b | grep CTRL-EVENT-EAP-PEER-CERT"
+            )
+
+    def install_ca_bundle(self) -> str:
+        """Write the pinned chain to a stable path and return it."""
         try:
             os.makedirs(CA_DIR, mode=0o755, exist_ok=True)
             with open(CA_FILE, "w", encoding="ascii") as handle:
                 handle.write(SAXION_CA_PEM)
+            # NetworkManager reads this as root, so the mode does not matter to
+            # it. Keep it tight anyway.
             os.chmod(CA_FILE, 0o600)
         except OSError as error:
             self.show_message(
@@ -299,13 +330,15 @@ class Installer:
     def run_nmcli(self, cmd: list[str]) -> bool:
         res = subprocess.run(cmd, capture_output=True, text=True)
         if res.returncode != 0:
-            # Check for a specific error to allow fallback
-            if "Failed to recognize certificate" in res.stderr:
-                return False
-
-            # Log full nmcli error to stderr (terminal only — never into GUI subprocess args).
+            # Log before the cert check below: the caller tells people to look at
+            # "the terminal output above", and that path used to print nothing.
+            # Never into GUI subprocess args.
             sanitized_error = self._sanitize_for_log(res.stderr.strip())
             print(f"NetworkManager error:\n{sanitized_error}", file=sys.stderr)
+
+            # Cert failures get a better message from the caller.
+            if "Failed to recognize certificate" in res.stderr:
+                return False
 
             # Fatal error: show a static message to the GUI to avoid passing
             # nmcli output (which may echo user input) into a subprocess argument
@@ -327,7 +360,11 @@ class Installer:
 
         self.get_credentials()
 
-        ca_path = self.install_ca_bundle()
+        if self.ignore_certificate:
+            self.warn_insecure()
+            ca_path = ""
+        else:
+            ca_path = self.install_ca_bundle()
 
         # 1. Remove any existing eduroam connection
         subprocess.run(
@@ -349,21 +386,15 @@ class Installer:
             "802-1x.domain-suffix-match", SERVER_DOMAIN,
             "802-1x.phase2-domain-suffix-match", SERVER_DOMAIN,
             "802-1x.password-flags", "1",
-            # Saxion does not register devices by MAC, but it does block one
-            # temporarily when it looks like it is scanning or flooding. A
-            # randomised address would let that block be shrugged off by
-            # reconnecting, so the real one is used deliberately.
+            # Real MAC on purpose: Saxion blocks a MAC that looks like it is
+            # scanning, and randomising would let that block be shrugged off.
             "wifi.cloned-mac-address", "permanent",
-            # The pinned chain, not the system trust store.
-            "802-1x.ca-cert", ca_path,
         ]
+        if ca_path:
+            cmd += ["802-1x.ca-cert", ca_path]
 
-        # No unvalidated fallback. There used to be one, for when no CA bundle
-        # could be found on the system; with the chain shipped inside this
-        # script that situation no longer exists. If nmcli will not accept this
-        # configuration, connecting anyway would mean handing a Saxion password
-        # to whatever access point answered, which is not a trade worth making
-        # on the user's behalf.
+        # No unvalidated fallback. Connecting anyway would hand a Saxion
+        # password to whatever access point answered.
         if not self.run_nmcli(cmd):
             self.show_message(
                 "NetworkManager rejected the certificate configuration, so no eduroam "
@@ -385,16 +416,33 @@ class Installer:
             "If you do not see a password prompt, open your network settings and connect to eduroam manually."
         )
 
-        # Attempt to activate the connection (best-effort; profile is already saved).
-        res = subprocess.run(
-            ["nmcli", "connection", "up", CON_NAME],
-            capture_output=True,
-            text=True
-        )
+        # Best-effort; the profile is already saved. Output is captured, so
+        # without the print below the script looks dead while nmcli waits.
+        # --wait bounds nmcli, the subprocess timeout catches it ignoring that.
+        print(f"[INFO] Connecting to {SSID} (up to {CONNECT_TIMEOUT}s)...", flush=True)
+        try:
+            res = subprocess.run(
+                ["nmcli", "--wait", str(CONNECT_TIMEOUT), "connection", "up", CON_NAME],
+                capture_output=True,
+                text=True,
+                timeout=CONNECT_TIMEOUT + 10,
+            )
+        except subprocess.TimeoutExpired:
+            print(
+                f"[WARN] eduroam profile saved, but activation did not finish within "
+                f"{CONNECT_TIMEOUT}s.\n"
+                "       This usually means the EAP handshake is failing and NetworkManager\n"
+                "       is retrying. Check what it reported with:\n"
+                "         journalctl -u NetworkManager -u wpa_supplicant -b --since '5 min ago'"
+            )
+            return
+
         output = res.stderr.strip() or res.stdout.strip()
 
         if res.returncode == 0:
             print("[INFO] Connected to eduroam successfully.")
+            if self.ignore_certificate:
+                self.report_server_chain()
         elif "network could not be found" in output or "No network with SSID" in output:
             # Not in range; the passwd-file warning is also present but not the root cause.
             print(
@@ -431,6 +479,12 @@ def main():
     parser = argparse.ArgumentParser(description="Saxion eduroam Installer")
     parser.add_argument("-u", "--username", help="Saxion username")
     parser.add_argument("--silent", action="store_true", help="Run without GUI")
+    parser.add_argument(
+        "--ignore-certificate",
+        action="store_true",
+        help="Skip CA validation and print what the server served. Debugging only: "
+             "any access point named 'eduroam' is trusted and can harvest your password.",
+    )
     args = parser.parse_args()
 
     # Validate CLI-provided username before it can reach subprocess args.
@@ -443,7 +497,7 @@ def main():
         )
         initial_username = ""
 
-    installer = Installer(args.silent, initial_username)
+    installer = Installer(args.silent, initial_username, args.ignore_certificate)
     installer.install()
 
 

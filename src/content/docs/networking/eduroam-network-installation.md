@@ -36,9 +36,14 @@ script, plus `domain-suffix-match` (the modern replacement for the deprecated
 
 The script used to point at the system trust store, which meant any of the roughly 150
 public CAs your distribution ships could vouch for a server calling itself
-`ise.infra.saxion.net`. It now trusts only the chain Saxion publishes through eduroam
-CAT — USERTrust RSA Certification Authority and GEANT OV RSA CA 4 — which is what the
-official CAT installers do.
+`ise.infra.saxion.net`. It now trusts only the HARICA roots that Saxion's RADIUS server
+actually chains to — Hellenic Academic and Research Institutions RootCA 2015 and HARICA
+TLS RSA Root CA 2021 — which is what the official CAT installers do.
+
+GÉANT moved its Trusted Certificate Service to HARICA, so an earlier version of this
+script pinned the pre-migration USERTrust chain and every connection failed with
+`unknown CA`. If Saxion changes certificate authority again the same thing will happen;
+the script now says so explicitly instead of hanging.
 
 **Requirements:**
 - Python 3.10+
@@ -67,13 +72,34 @@ A Python script automates the full `nmcli` connection setup for Saxion:
 curl -LO https://zephyrus-linux.stensel.nl/scripts/saxion-eduroam.py
 
 # 2. Verify checksum
-echo "fad48d500af6eb90deec5e0e21ccf7cbaaac6678b5d3e8cb4f26d814c525e3d2  saxion-eduroam.py" | sha256sum -c
+echo "447a0979166cc801ba7406cc660b0403156532862ac031835291bb9d721f33e1  saxion-eduroam.py" | sha256sum -c
 
 # 3. Run
 python3 saxion-eduroam.py
 ```
 
-**SHA256:** `fad48d500af6eb90deec5e0e21ccf7cbaaac6678b5d3e8cb4f26d814c525e3d2`
+#### When the certificate stops matching
+
+The trusted chain is pinned inside the script, so it breaks the day Saxion
+changes certificate authority — which is exactly what happened in
+[#109](https://github.com/THectic-NL/Zephyrus-Linux/issues/109). If the script
+reports `unknown CA` or fails to authenticate, `--ignore-certificate` connects
+without validating and prints the chain the server actually served:
+
+```bash
+python3 saxion-eduroam.py --ignore-certificate
+```
+
+Copy the root it reports into `SAXION_CA_PEM`, open an issue with it, and
+reconnect without the flag.
+
+**Do not leave this on.** Without validation, any access point calling itself
+`eduroam` is trusted. It can terminate the TLS tunnel itself and capture the
+MSCHAPv2 exchange, which is crackable offline — that is your Saxion password.
+`domain-suffix-match` does not help here: it checks the name on a certificate
+nobody verified. Use the flag to diagnose, then reconnect properly.
+
+**SHA256:** `447a0979166cc801ba7406cc660b0403156532862ac031835291bb9d721f33e1`
 
 The script removes any existing eduroam profile, prompts for your **username** via a GUI dialog (zenity, kdialog, or yad) or terminal fallback, and activates the connection. Your password is never asked by the script; it is requested by your GNOME Keyring at connection time and stored securely, never in plaintext.
 
