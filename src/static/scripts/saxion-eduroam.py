@@ -26,6 +26,10 @@ REALM = "saxion.nl"
 SERVER_DOMAIN = "ise.infra.saxion.net"
 ANONYMOUS_ID = f"anonymous@{REALM}"
 
+# Support policy, not a technical floor: the code itself runs on older Pythons.
+# Everything current ships 3.11 or newer.
+MIN_PYTHON = (3, 11)
+
 # nmcli's default is 90s of silence, which looks like a hang. Cut it short.
 CONNECT_TIMEOUT = 45
 
@@ -37,26 +41,58 @@ CA_DIR = os.path.join(
 )
 CA_FILE = os.path.join(CA_DIR, "saxion-eduroam-ca.pem")
 
-# The roots ise.infra.saxion.net chains to. GEANT moved its cert service to
-# HARICA; this file used to pin the old USERTrust/"GEANT OV RSA CA 4" chain,
-# which the server stopped sending, so every connect died on "unknown CA"
-# (#109). Don't guess these -- read them off a real handshake:
+# WHAT THIS SCRIPT TRUSTS, AND WHERE IT COMES FROM
+#
+# Nothing here is invented, and nothing is trusted just because it showed up in
+# a handshake. Three sources, each doing one job:
+#
+#   1. cat.eduroam.org  -- the connection parameters. Server name, realm, EAP
+#      methods. Cross-checked against Saxion's CAT profile; they agree.
+#      NOT the CA: that profile still pins the pre-migration USERTrust chain,
+#      which is why the official installer cannot connect (issue #109).
+#   2. A live handshake  -- which roots are actually in use. Run without a
+#      pinned CA, wpa_supplicant reports the chain the server sends. That is
+#      what the server does, not what a profile claims it does.
+#   3. repo.harica.gr  -- the certificates themselves, from the CA operator
+#      that issued them. Their published SHA-1 fingerprints were checked
+#      against these bytes on 2026-08-31. All four matched.
+#
+# So: CAT says what to connect to, the handshake says which CA is in play, and
+# HARICA supplies the certificate. No single source is taken on faith.
+#
+# Re-checking is the same three steps. To read the live chain:
 #
 #   nmcli connection modify eduroam 802-1x.ca-cert ""
 #   nmcli connection up eduroam
 #   journalctl -u wpa_supplicant -b | grep CTRL-EVENT-EAP-PEER-CERT
 #
-#   HARICA RootCA 2015              A0:40:92:9A:02:CE:53:B4... expires 2040
-#   HARICA TLS RSA Root CA 2021     D9:5D:0E:8E:DA:79:52:5B... expires 2045
+# Identify a root by fingerprint, never by name. "HARICA TLS RSA Root CA 2021"
+# exists self-signed AND cross-signed by the 2015 root: same CN, different
+# certificate, different bytes. Pinning the wrong one silently fails.
 #
-# The first is what the server currently chains to; the second keeps this
-# working once GEANT drops the cross-signature. The GEANT TLS RSA 1
-# intermediate is not pinned -- the server sends it, and intermediates rotate
-# often enough to break us again.
+#   RSA -- what the server serves today
+#     A0:40:92:9A:02:CE:53:B4...  HARICA RootCA 2015            expires 2040
+#     D9:5D:0E:8E:DA:79:52:5B...  HARICA TLS RSA Root CA 2021   expires 2045
+#   ECC -- for when Saxion moves off RSA
+#     44:B5:45:AA:8A:25:E6:5A...  HARICA ECC RootCA 2015        expires 2040
+#     3F:99:CC:47:4A:CF:CE:4D...  HARICA TLS ECC Root CA 2021   expires 2045
 #
-# Yes, pinning breaks when Saxion switches CA. That is the trade: otherwise any
-# of ~150 public CAs can impersonate the RADIUS server, and PEAP/MSCHAPv2 hands
-# it a hash of the user's password.
+# Both roots of each pair are pinned on purpose. The server currently chains
+# through the cross-signed 2021 root up to the 2015 root, but HARICA publishes
+# that cross certificate as expiring 2029-08-31. After that the chain has to
+# terminate at the self-signed 2021 root, which is already pinned here, so that
+# transition is a non-event.
+#
+# The GEANT TLS RSA 1 intermediate is not pinned: the server sends it, and
+# intermediates rotate far more often than roots.
+#
+# All four are HARICA roots, so this trusts one CA operator. A system trust
+# store would accept roughly 150. That gap is the whole point: without pinning,
+# any of them could vouch for a server calling itself ise.infra.saxion.net, and
+# PEAP/MSCHAPv2 hands that server a hash of the user's password.
+#
+# Pinning does break when Saxion changes CA operator. When it does, the script
+# says so and prints the chain it saw, instead of hanging.
 SAXION_CA_PEM = """\
 -----BEGIN CERTIFICATE-----
 MIIGCzCCA/OgAwIBAgIBADANBgkqhkiG9w0BAQsFADCBpjELMAkGA1UEBhMCR1Ix
@@ -126,6 +162,38 @@ aPib8qXPMThcFarmlwDB31qlpzmq6YR/PFGoOtmUW4y/Twhx5duoXNTSpv4Ao8YW
 xw/ogM4cKGR0GQjTQuPOAF1/sdwTsOEFy9EgqoZ0njnnkf3/W9b3raYvAwtt41dU
 63ZTGI0RmLo=
 -----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIICwzCCAkqgAwIBAgIBADAKBggqhkjOPQQDAjCBqjELMAkGA1UEBhMCR1IxDzAN
+BgNVBAcTBkF0aGVuczFEMEIGA1UEChM7SGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJl
+c2VhcmNoIEluc3RpdHV0aW9ucyBDZXJ0LiBBdXRob3JpdHkxRDBCBgNVBAMTO0hl
+bGxlbmljIEFjYWRlbWljIGFuZCBSZXNlYXJjaCBJbnN0aXR1dGlvbnMgRUNDIFJv
+b3RDQSAyMDE1MB4XDTE1MDcwNzEwMzcxMloXDTQwMDYzMDEwMzcxMlowgaoxCzAJ
+BgNVBAYTAkdSMQ8wDQYDVQQHEwZBdGhlbnMxRDBCBgNVBAoTO0hlbGxlbmljIEFj
+YWRlbWljIGFuZCBSZXNlYXJjaCBJbnN0aXR1dGlvbnMgQ2VydC4gQXV0aG9yaXR5
+MUQwQgYDVQQDEztIZWxsZW5pYyBBY2FkZW1pYyBhbmQgUmVzZWFyY2ggSW5zdGl0
+dXRpb25zIEVDQyBSb290Q0EgMjAxNTB2MBAGByqGSM49AgEGBSuBBAAiA2IABJKg
+QehLgoRc4vgxEZmGZE4JJS+dQS8KrjVPdJWyUWRrjWvmP3CV8AVER6ZyOFB2lQJa
+jq4onvktTpnvLEhvTCUp6NFxW98dwXU3tNf6e3pCnGoKVlp8aQuqgAkkbH7BRqNC
+MEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAQYwHQYDVR0OBBYEFLQi
+C4KZJAEOnLvkDv2/+5cgk5kqMAoGCCqGSM49BAMCA2cAMGQCMGfOFmI4oqxiRaep
+lSTAGiecMjvAwNW6qef4BENThe5SId6d9SWDPp5YSy/XZxMOIQIwBeF1Ad5o7Sof
+TUwJCA3sS61kFyjndc5FZXIhF8siQQ6ME5g4mlRtm8rifOoCWCKR
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIICVDCCAdugAwIBAgIQZ3SdjXfYO2rbIvT/WeK/zjAKBggqhkjOPQQDAzBsMQsw
+CQYDVQQGEwJHUjE3MDUGA1UECgwuSGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJlc2Vh
+cmNoIEluc3RpdHV0aW9ucyBDQTEkMCIGA1UEAwwbSEFSSUNBIFRMUyBFQ0MgUm9v
+dCBDQSAyMDIxMB4XDTIxMDIxOTExMDExMFoXDTQ1MDIxMzExMDEwOVowbDELMAkG
+A1UEBhMCR1IxNzA1BgNVBAoMLkhlbGxlbmljIEFjYWRlbWljIGFuZCBSZXNlYXJj
+aCBJbnN0aXR1dGlvbnMgQ0ExJDAiBgNVBAMMG0hBUklDQSBUTFMgRUNDIFJvb3Qg
+Q0EgMjAyMTB2MBAGByqGSM49AgEGBSuBBAAiA2IABDgI/rGgltJ6rK9JOtDA4MM7
+KKrxcm1lAEeIhPyaJmuqS7psBAqIXhfyVYf8MLA04jRYVxqEU+kw2anylnTDUR9Y
+STHMmE5gEYd103KUkE+bECUqqHgtvpBBWJAVcqeht6NCMEAwDwYDVR0TAQH/BAUw
+AwEB/zAdBgNVHQ4EFgQUyRtTgRL+BNUW0aq8mm+3oJUZbsowDgYDVR0PAQH/BAQD
+AgGGMAoGCCqGSM49BAMDA2cAMGQCMBHervjcToiwqfAircJRQO9gcS3ujwLEXQNw
+SaSS6sUUiHCm0w2wqsosQJz76YJumgIwK0eaB8bRwoF8yguWGEEbo/QwCZ61IygN
+nxS2PFOiTAZpffpskcYqSUXm7LcT4Tps
+-----END CERTIFICATE-----
 """
 
 # Strict allowlist for valid Saxion usernames (prevents argument injection into nmcli).
@@ -154,11 +222,25 @@ class Installer:
         self.gui_tool = None if silent else self._detect_gui()
 
     def _detect_gui(self) -> str | None:
-        """Detects available GUI tools (zenity, kdialog, yad)."""
+        """
+        Pick a dialog tool that matches the desktop.
+
+        Order matters: zenity is GTK and kdialog is Qt, and plenty of KDE
+        installs have zenity pulled in as somebody's dependency. Picking it
+        first there gives a GTK dialog on a Qt desktop -- wrong fonts, wrong
+        theme, wrong everything.
+        """
         if not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
             return None
 
-        for tool in ["zenity", "kdialog", "yad"]:
+        desktop = (os.environ.get("XDG_CURRENT_DESKTOP", "")
+                   + os.environ.get("XDG_SESSION_DESKTOP", "")).upper()
+        if "KDE" in desktop or "PLASMA" in desktop or os.environ.get("KDE_FULL_SESSION"):
+            order = ["kdialog", "zenity", "yad"]
+        else:
+            order = ["zenity", "kdialog", "yad"]
+
+        for tool in order:
             if shutil.which(tool):
                 return tool
         return None
@@ -287,6 +369,48 @@ class Installer:
         if not self.silent:
             self.show_message(warning, True)
 
+    def diagnose_cert_failure(self) -> bool:
+        """
+        Say whether the last activation died on certificate validation, and if so
+        show what the server served.
+
+        Without this a stale pin looks like a hang: NetworkManager keeps retrying
+        and nothing on screen says the CA is the problem. That is exactly how #109
+        went unexplained for as long as it did.
+        """
+        errors = self._journal_lines("CERT-ERROR", "certificate verify failed",
+                                     "unknown CA", "Certificate verification failed")
+        if not errors:
+            return False
+
+        print("\n" + "=" * 70)
+        print("The server's certificate did not match the CA pinned in this script.")
+        print("=" * 70)
+        for line in errors[-4:]:
+            print(f"  {line}")
+        self.report_server_chain()
+        print(
+            "\nSaxion has most likely changed RADIUS certificate authority. Report the\n"
+            "chain above so this script can be updated. To connect meanwhile:\n"
+            f"    python3 {os.path.basename(sys.argv[0])} --ignore-certificate\n"
+            "which skips validation -- read the warning it prints before using it."
+        )
+        return True
+
+    def _journal_lines(self, *needles: str) -> list[str]:
+        """Recent wpa_supplicant lines matching any of the needles."""
+        try:
+            res = subprocess.run(
+                ["journalctl", "-u", "wpa_supplicant", "-b", "--no-pager",
+                 "--since", "-5m"],
+                capture_output=True, text=True, timeout=15,
+            )
+        except (OSError, subprocess.SubprocessError):
+            return []
+        return [ln.split("wpa_supplicant", 1)[-1].strip()
+                for ln in res.stdout.splitlines()
+                if any(n in ln for n in needles)]
+
     def report_server_chain(self):
         """Print the chain the server actually presented, to fix the pin with."""
         try:
@@ -389,6 +513,17 @@ class Installer:
             # Real MAC on purpose: Saxion blocks a MAC that looks like it is
             # scanning, and randomising would let that block be shrugged off.
             "wifi.cloned-mac-address", "permanent",
+            # This profile belongs to the person who ran the script, not to every
+            # account on the machine. Taken from the CAT installer.
+            "connection.permissions", f"user:{getpass.getuser()}",
+            # Bound how long NetworkManager sits on a stalled EAP exchange.
+            "802-1x.auth-timeout", "20",
+            # Off for now. Left on, NetworkManager starts connecting the moment
+            # the profile is added -- before the user has typed anything -- and
+            # that attempt sits in EAP-STARTED until it times out ~30s later,
+            # asking for the password a second time on the way. Turned back on
+            # after we connect ourselves below.
+            "connection.autoconnect", "no",
         ]
         if ca_path:
             cmd += ["802-1x.ca-cert", ca_path]
@@ -420,6 +555,20 @@ class Installer:
         # without the print below the script looks dead while nmcli waits.
         # --wait bounds nmcli, the subprocess timeout catches it ignoring that.
         print(f"[INFO] Connecting to {SSID} (up to {CONNECT_TIMEOUT}s)...", flush=True)
+
+        try:
+            self._activate()
+        finally:
+            # Whatever happened above, leave a profile that reconnects on its own
+            # like any other saved network.
+            subprocess.run(
+                ["nmcli", "connection", "modify", CON_NAME,
+                 "connection.autoconnect", "yes"],
+                capture_output=True,
+            )
+
+    def _activate(self):
+        """Bring the connection up and explain whatever nmcli reports."""
         try:
             res = subprocess.run(
                 ["nmcli", "--wait", str(CONNECT_TIMEOUT), "connection", "up", CON_NAME],
@@ -431,10 +580,14 @@ class Installer:
             print(
                 f"[WARN] eduroam profile saved, but activation did not finish within "
                 f"{CONNECT_TIMEOUT}s.\n"
-                "       This usually means the EAP handshake is failing and NetworkManager\n"
-                "       is retrying. Check what it reported with:\n"
-                "         journalctl -u NetworkManager -u wpa_supplicant -b --since '5 min ago'"
+                "       This usually means the EAP handshake is failing and\n"
+                "       NetworkManager is retrying."
             )
+            if not self.diagnose_cert_failure():
+                print(
+                    "       Check what it reported with:\n"
+                    "         journalctl -u NetworkManager -u wpa_supplicant -b --since '5 min ago'"
+                )
             return
 
         output = res.stderr.strip() or res.stdout.strip()
@@ -448,7 +601,7 @@ class Installer:
             print(
                 "[INFO] eduroam profile saved, but the network could not be reached right now.\n"
                 "       You are probably not in range of an eduroam access point.\n"
-                "       The profile is stored — connect to eduroam from your network settings when nearby."
+                "       The profile is stored. Connect to eduroam from your network settings when nearby."
             )
         elif (
             "Secrets were required" in output
@@ -469,12 +622,19 @@ class Installer:
         else:
             print(
                 "[WARN] eduroam profile saved, but automatic activation failed.\n"
-                "       You can connect manually via your network settings.\n"
                 f"       nmcli: {output}"
             )
+            if not self.diagnose_cert_failure():
+                print("       You can connect manually via your network settings.")
 
 
 def main():
+    if sys.version_info < MIN_PYTHON:
+        need = ".".join(str(n) for n in MIN_PYTHON)
+        have = ".".join(str(n) for n in sys.version_info[:3])
+        print(f"This script needs Python {need} or newer; this is {have}.",
+              file=sys.stderr)
+        sys.exit(1)
 
     parser = argparse.ArgumentParser(description="Saxion eduroam Installer")
     parser.add_argument("-u", "--username", help="Saxion username")
