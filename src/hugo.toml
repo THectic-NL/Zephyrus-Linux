@@ -2,18 +2,24 @@ baseURL = 'https://zephyrus-linux.thectic.nl/'
 title = 'Zephyrus Linux'
 defaultContentLanguage = 'en'
 enableRobotsTXT = true
-disableKinds = ['taxonomy', 'term']
+disableKinds = ['taxonomy', 'term', 'RSS']
 enableGitInfo = true
+
+# Hugo otherwise injects a tab-indented <meta name="generator"> into <head>,
+# which trips HTML linters and tells every visitor the exact Hugo version.
+disableHugoGeneratorInject = true
 
 [languages]
   [languages.en]
     label = 'English'
     weight = 1
     title = 'Zephyrus Linux'
+    locale = 'en-US'
   [languages.nl]
     label = 'Nederlands'
     weight = 2
     title = 'Zephyrus Linux'
+    locale = 'nl-NL'
 
 [menu]
   [[menu.main]]

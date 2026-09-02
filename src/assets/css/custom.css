@@ -1,4 +1,98 @@
-/* Calmer homepage styling */
+/* ── Shared THectic navbar lockup ───────────────────────────────────────────
+   Styles the markup in layouts/_partials/navbar-title.html. Kept as plain CSS,
+   not Tailwind utilities: Hextra ships a precompiled bundle and never reruns
+   Tailwind against the site's own templates, so a `hx:` class the theme does
+   not already use (gap-2.5, hover:opacity-80, ...) silently compiles to
+   nothing. This block is standardised across the THectic repos — keep it
+   together with navbar-title.html. */
+
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.brand-mark,
+.brand-title {
+  display: flex;
+  align-items: center;
+  transition: opacity 0.15s ease;
+}
+
+.brand-mark {
+  flex-shrink: 0;
+}
+
+.brand-mark:hover,
+.brand-title:hover {
+  opacity: 0.75;
+}
+
+.brand-title span {
+  font-weight: 800;
+  user-select: none;
+}
+
+/* GitHub-style hover card on the monogram tile: appears on hover and on
+   keyboard focus, after a short delay. */
+.brand-home {
+  position: relative;
+  display: inline-flex;
+}
+
+.brand-home-card {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  z-index: 30;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  line-height: 1;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #f6f8fa;
+  background: #1f2328;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: translateY(-0.25rem);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.brand-home-card::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 0.75rem;
+  border: 0.3125rem solid transparent;
+  border-bottom-color: #1f2328;
+}
+
+.brand-home:hover .brand-home-card,
+.brand-home:focus-within .brand-home-card {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.35s;
+}
+
+.dark .brand-home-card {
+  color: #1f2328;
+  background: #f6f8fa;
+}
+
+.dark .brand-home-card::before {
+  border-bottom-color: #f6f8fa;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-home-card {
+    transition: none;
+  }
+}
+
+/* ── Calmer homepage styling ────────────────────────────────────────────── */
 
 /* Reduce hero title size */
 .hx-hero-headline {
@@ -104,13 +198,10 @@
 }
 
 
-/* Language/theme controls live in the navbar — hide sidebar and footer duplicates */
+/* The footer's duplicate language/theme switches are dropped in
+   _partials/footer.html; this only handles the sidebar's copy on mobile.
+   Language and theme both live in the navbar. */
 .hextra-sidebar-container > [data-toggle-animation="show"] {
-  display: none !important;
-}
-.hextra-footer .hextra-language-switcher,
-.hextra-footer .hextra-theme-toggle,
-.hextra-footer hr {
   display: none !important;
 }
 
