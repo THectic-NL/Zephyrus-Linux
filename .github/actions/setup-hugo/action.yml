@@ -1,0 +1,60 @@
+# Copyright (C) 2026 Sten Tijhuis
+# SPDX-License-Identifier: MIT
+name: Set up Hugo
+description: >
+  Downloads a pinned Hugo extended release, verifies its checksum and puts it
+  on PATH. The version and the checksum live here and nowhere else, so the
+  build in quality.yml can never drift away from the build in deploy-bunny.yml.
+
+  Extended rather than plain: this site has no SCSS today and does not need it,
+  but every other Hugo site in the organisation runs extended, and extended is
+  a superset. One flavour across the organisation is worth more than the few
+  megabytes saved by running a build that behaves subtly differently here.
+
+inputs:
+  version:
+    description: Hugo version to install, without the leading "v".
+    required: false
+    # renovate: datasource=github-releases depName=gohugoio/hugo
+    default: "0.165.0"
+  sha256:
+    description: >
+      SHA-256 of hugo_extended_<version>_linux-amd64.tar.gz. Bump this together
+      with the version; the value is the matching line in the release's
+      hugo_<version>_checksums.txt:
+
+        curl -sSL https://github.com/gohugoio/hugo/releases/download/v<version>/hugo_<version>_checksums.txt \
+          | grep hugo_extended_<version>_linux-amd64.tar.gz
+
+      Mind the hugo_extended_ prefix: the plain hugo_ line is a different
+      archive with a different checksum.
+
+      You should not normally have to touch this by hand. Renovate cannot
+      compute a checksum, so update-checksums.yml recalculates it on Renovate's
+      pull requests and commits it back. Doing it manually is only needed when
+      the version is changed outside that flow.
+    required: false
+    default: "f43494894cdf4a8630a201d5c828051c77f523cc66bb3938b30806835470ac20"
+
+runs:
+  using: composite
+  steps:
+    # The release comes off the network, so nothing is executed before the
+    # checksum says it is the archive we pinned.
+    #
+    # --retry: the release CDN hands out an occasional 503, and without this a
+    # single one fails the whole build. curl retries 5xx and timeouts on its
+    # own; --retry-all-errors extends that to connection failures.
+    - name: Download and verify Hugo
+      shell: bash
+      env:
+        HUGO_VERSION: ${{ inputs.version }}
+        HUGO_SHA256: ${{ inputs.sha256 }}
+      run: |
+        curl -sSL --fail-with-body -o "${RUNNER_TEMP}/hugo.tar.gz" \
+          --retry 5 --retry-delay 3 --retry-all-errors \
+          "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.tar.gz"
+        echo "${HUGO_SHA256}  ${RUNNER_TEMP}/hugo.tar.gz" | sha256sum -c -
+        tar -xzf "${RUNNER_TEMP}/hugo.tar.gz" -C "${RUNNER_TEMP}" hugo
+        sudo install -m 0755 "${RUNNER_TEMP}/hugo" /usr/local/bin/hugo
+        hugo version

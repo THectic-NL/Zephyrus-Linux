@@ -1,0 +1,116 @@
+# Copyright (C) 2026 Sten Tijhuis
+# SPDX-License-Identifier: MIT
+name: Security
+
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main, development]
+  # Weekly scan, to catch new vulnerabilities in existing code.
+  schedule:
+    - cron: '0 5 * * 1'
+  # So Scorecard can be run on demand; it no longer runs on PRs.
+  workflow_dispatch:
+
+# No token needed; jobs that do ask for one explicitly.
+permissions: {}
+
+# Pushing to the same PR three times in a row started three full scans, and the
+# first two are already stale by then. On main do not cancel: there the run is
+# the record that the commit was scanned.
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  # Semgrep: SAST scanner for the templates, the bit of CSS and the Python
+  # script the site ships.
+  semgrep:
+    name: Semgrep SAST scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: semgrep/semgrep@sha256:67319956da3dcb58baf5b322899c15458e3963e7018a86aeeb5cd224e69cb77a
+    # Skip Renovate PRs: no token available there.
+    if: github.actor != 'dependabot[bot]' && github.actor != 'renovate[bot]'
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Exceptions live in .semgrepignore
+      - name: Run Semgrep scan
+        run: semgrep scan --config auto --error src/layouts/ src/assets/ src/static/scripts/
+
+  # Python: style and security on saxion-eduroam.py. Also a step in quality.yml
+  # on every push and PR; the value of the weekly re-run is that a newer bandit
+  # can flag something in a script that has not itself changed.
+  python-audit:
+    name: Python style and security
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14'
+
+      - name: Install flake8 and bandit
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 bandit
+
+      - name: Lint with flake8
+        run: flake8 src/static/scripts/ --max-line-length=120
+
+      - name: Security scan with bandit
+        run: bandit -r src/static/scripts/ -ll
+
+  # OpenSSF Scorecard: rates the repository's security hygiene -- branch
+  # protection, pinned dependencies, code review. Weekly and on main, not on
+  # every PR: it rates the repository and not the commit, so running it per PR
+  # spent a runner on an outcome that was the same anyway.
+  scorecard:
+    name: OpenSSF Scorecard
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    permissions:
+      security-events: write
+      id-token: write
+      contents: read
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run Scorecard analysis
+        uses: ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc # v2.4.4
+        continue-on-error: true
+        with:
+          results_file: scorecard.sarif
+          results_format: sarif
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_results: false
+
+      # The results show up on the repository's Security tab. Advanced Security
+      # is on organisation-wide, so this works on a private repository too.
+      - name: Upload results to GitHub Security
+        uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        continue-on-error: true
+        with:
+          sarif_file: scorecard.sarif
+          category: scorecard

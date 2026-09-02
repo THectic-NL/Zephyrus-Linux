@@ -52,7 +52,7 @@
       ]
     },
     {
-      "description": "Versions pinned by hand in the workflows. Not automerged: actionlint is pinned alongside a checksum that has to be updated in the same PR.",
+      "description": "Hugo, actionlint, lychee and zizmor, pinned by hand in the workflows and the setup-hugo action. Not automerged: Hugo, actionlint and lychee are also pinned by SHA-256, and that checksum has to be updated in the same PR (update-checksums.yml does this on Renovate's branches).",
       "matchManagers": [
         "custom.regex"
       ],
@@ -66,33 +66,10 @@
   "customManagers": [
     {
       "customType": "regex",
+      "description": "Tool versions pinned in workflows and composite actions, annotated with a `# renovate:` comment on the line above",
       "managerFilePatterns": [
-        "/^\\.github/workflows/.*\\.ya?ml$/"
-      ],
-      "matchStrings": [
-        "HUGO_VERSION:\\s*(?<currentValue>\\d+\\.\\d+\\.\\d+)"
-      ],
-      "depNameTemplate": "gohugoio/hugo",
-      "datasourceTemplate": "github-releases",
-      "versioningTemplate": "semver"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/^\\.github/workflows/.*\\.ya?ml$/"
-      ],
-      "matchStrings": [
-        "hugo-version:\\s*['\"]?(?<currentValue>\\d+\\.\\d+\\.\\d+)['\"]?"
-      ],
-      "depNameTemplate": "gohugoio/hugo",
-      "datasourceTemplate": "github-releases",
-      "versioningTemplate": "semver"
-    },
-    {
-      "customType": "regex",
-      "description": "Tool versions pinned in workflows, annotated with a `# renovate:` comment on the line above",
-      "managerFilePatterns": [
-        "/^\\.github/workflows/.*\\.ya?ml$/"
+        "/^\\.github/workflows/.*\\.ya?ml$/",
+        "/^\\.github/actions/.*/action\\.ya?ml$/"
       ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)(?: extractVersion=(?<extractVersion>\\S+))?\\s+[A-Za-z_]+: \"(?<currentValue>[^\"]+)\""

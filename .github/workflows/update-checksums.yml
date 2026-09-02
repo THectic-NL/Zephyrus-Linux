@@ -16,8 +16,8 @@ on:
     types: [opened, synchronize, reopened]
     branches: [main, development]
     paths:
-      - '.github/workflows/config-validation.yml'
-      - '.github/workflows/pr-checks.yml'
+      - '.github/actions/setup-hugo/action.yml'
+      - '.github/workflows/quality.yml'
       - '.github/scripts/update-tool-checksums.sh'
 
 permissions: {}
@@ -75,7 +75,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .github/workflows/config-validation.yml .github/workflows/pr-checks.yml
+          git add .github/actions/setup-hugo/action.yml .github/workflows/quality.yml
           if git diff --staged --quiet; then
             echo "Checksums are already up to date, nothing to commit."
           else

@@ -66,8 +66,8 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 readonly REPO_ROOT
 cd "$REPO_ROOT"
 
-readonly CONFIG_VALIDATION=".github/workflows/config-validation.yml"
-readonly PR_CHECKS=".github/workflows/pr-checks.yml"
+readonly HUGO_ACTION=".github/actions/setup-hugo/action.yml"
+readonly QUALITY=".github/workflows/quality.yml"
 
 # ── Reading and writing the pinned values ───────────────────────────────────
 
@@ -79,6 +79,18 @@ Get-KeyValue() {
 # Usage: Set-KeyValue <file> <KEY> <value>
 Set-KeyValue() {
     sed -i "s|^\([[:space:]]*$2:[[:space:]]*\"\)[^\"]*\"|\1$3\"|" "$1"
+}
+
+# Hugo's version and checksum are input defaults in the composite action, so
+# there is no key to match on. The version is the `default:` directly under the
+# renovate annotation; the checksum is the only `default:` holding 64 hex
+# characters.
+Get-HugoVersion() {
+    grep -A1 'depName=gohugoio/hugo' "$HUGO_ACTION" | sed -n 's/.*default: "\([^"]*\)".*/\1/p' | head -n1
+}
+
+Set-HugoSha() {
+    sed -i "s|^\([[:space:]]*default: \"\)[a-f0-9]\{64\}\"|\1$1\"|" "$HUGO_ACTION"
 }
 
 # ── Fetching and verifying ──────────────────────────────────────────────────
@@ -117,19 +129,26 @@ Get-PublishedHash() {
 
 # ── The tools ───────────────────────────────────────────────────────────────
 
-ACTIONLINT_VERSION="$(Get-KeyValue "$CONFIG_VALIDATION" ACTIONLINT_VERSION)"
-LYCHEE_VERSION="$(Get-KeyValue "$PR_CHECKS" LYCHEE_VERSION)"
+HUGO_VERSION="$(Get-HugoVersion)"
+ACTIONLINT_VERSION="$(Get-KeyValue "$QUALITY" ACTIONLINT_VERSION)"
+LYCHEE_VERSION="$(Get-KeyValue "$QUALITY" LYCHEE_VERSION)"
 
-for pair in "actionlint:$ACTIONLINT_VERSION" "lychee:$LYCHEE_VERSION"; do
+for pair in "Hugo:$HUGO_VERSION" "actionlint:$ACTIONLINT_VERSION" "lychee:$LYCHEE_VERSION"; do
     [[ -n "${pair#*:}" ]] || Stop-Script "Could not read the ${pair%%:*} version. Did the file layout change?"
 done
 
 Write-Log INFO "Versions found in the repository:"
+echo "  Hugo:        $HUGO_VERSION"
 echo "  actionlint:  $ACTIONLINT_VERSION"
 echo "  lychee:      $LYCHEE_VERSION"
 echo
 
 Write-Log INFO "Downloading and verifying against the published checksums..."
+
+HUGO_SHA256="$(Get-VerifiedHash "hugo.tar.gz" \
+    "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.tar.gz" \
+    "$(Get-PublishedHash "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_${HUGO_VERSION}_checksums.txt" "hugo_extended_${HUGO_VERSION}_linux-amd64.tar.gz")")"
+Write-Log SUCCESS "Hugo:       $HUGO_SHA256"
 
 ACTIONLINT_SHA256="$(Get-VerifiedHash "actionlint.tar.gz" \
     "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" \
@@ -150,9 +169,10 @@ if [[ "$APPLY" != true ]]; then
     fi
 fi
 
-Set-KeyValue "$CONFIG_VALIDATION" ACTIONLINT_SHA256 "$ACTIONLINT_SHA256"
-Set-KeyValue "$PR_CHECKS" LYCHEE_SHA256 "$LYCHEE_SHA256"
+Set-HugoSha "$HUGO_SHA256"
+Set-KeyValue "$QUALITY" ACTIONLINT_SHA256 "$ACTIONLINT_SHA256"
+Set-KeyValue "$QUALITY" LYCHEE_SHA256 "$LYCHEE_SHA256"
 
 Write-Log SUCCESS "Updated:"
-echo "  - $CONFIG_VALIDATION"
-echo "  - $PR_CHECKS"
+echo "  - $HUGO_ACTION"
+echo "  - $QUALITY"

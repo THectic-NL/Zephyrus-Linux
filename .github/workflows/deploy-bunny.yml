@@ -1,0 +1,93 @@
+# Copyright (C) 2026 Sten Tijhuis
+# SPDX-License-Identifier: MIT
+#
+# The deploy: build, sync to Bunny Storage, purge the Pull Zone cache.
+#
+# This replaced a GitHub Pages deploy. The site now lives in a Bunny Storage
+# zone and is served from the edge by a Pull Zone, the same as every other Hugo
+# site in the organisation.
+name: Deploy to Bunny.net
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - '.github/workflows/deploy-bunny.yml'
+      - '.github/actions/setup-hugo/**'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+# No token needed; the job that reads the checkout asks for read access itself.
+permissions: {}
+
+jobs:
+  deploy:
+    name: Build and deploy to Bunny Storage
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # This site pulls Hextra in as a Hugo Module (src/go.mod), so Hugo needs
+      # Go on PATH before it can build. The other repos in the organisation are
+      # not module sites and skip this step.
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: src/go.mod
+
+      # Pinned by version and checksum inside the action, so this build and the
+      # one in quality.yml always use the same Hugo.
+      - name: Set up Hugo
+        uses: ./.github/actions/setup-hugo
+
+      # No --baseURL: it lives in src/hugo.toml and belongs on one line only, so
+      # a domain change happens in one place. HUGO_ENVIRONMENT=production is what
+      # gives the live site the permissive robots.txt; see src/layouts/robots.txt.
+      - name: Build site
+        working-directory: src
+        env:
+          TZ: Europe/Amsterdam
+          HUGO_ENVIRONMENT: production
+        run: hugo --minify --gc
+
+      # An empty public/ would let the --delete below wipe the whole zone. That
+      # can only happen if the build is broken, and then a failed deploy is far
+      # better than an offline site.
+      - name: Check that the build produced a site
+        run: test -s src/public/index.html
+
+      - name: Sync to Bunny Storage (S3)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.BUNNY_STORAGE_ZONE }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BUNNY_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: de
+          STORAGE_ZONE: ${{ secrets.BUNNY_STORAGE_ZONE }}
+          STORAGE_ENDPOINT: ${{ secrets.BUNNY_STORAGE_ENDPOINT }}
+        run: |
+          aws s3 sync src/public/ "s3://${STORAGE_ZONE}/" \
+            --endpoint-url "${STORAGE_ENDPOINT}" \
+            --delete \
+            --no-progress
+
+      - name: Wait for storage replication
+        run: sleep 15
+
+      - name: Purge Bunny Pull Zone cache
+        env:
+          PULL_ZONE_ID: ${{ secrets.BUNNY_PULL_ZONE_ID }}
+          API_KEY: ${{ secrets.BUNNY_API_KEY }}
+        run: |
+          curl -sS --fail-with-body -X POST \
+            "https://api.bunny.net/pullzone/${PULL_ZONE_ID}/purgeCache" \
+            -H "AccessKey: ${API_KEY}" \
+            -H "Content-Type: application/json"

@@ -1,4 +1,4 @@
-baseURL = 'https://zephyrus-linux.stensel.nl/'
+baseURL = 'https://zephyrus-linux.thectic.nl/'
 title = 'Zephyrus Linux'
 defaultContentLanguage = 'en'
 enableRobotsTXT = true

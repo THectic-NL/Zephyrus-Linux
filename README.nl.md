@@ -4,7 +4,7 @@ Nederlands | [English](README.md)
 
 CachyOS op de ASUS ROG Zephyrus G16 GA605WV (2024). Mijn persoonlijke setup-log: wat werkte, wat niet, en hoe ik het heb opgelost.
 
-**Bekijk de volledige documentatiesite: [zephyrus-linux.stensel.nl](https://zephyrus-linux.stensel.nl/nl/)**
+**Bekijk de volledige documentatiesite: [zephyrus-linux.thectic.nl](https://zephyrus-linux.thectic.nl/nl/)**
 
 
 ## Over dit project
@@ -55,7 +55,7 @@ cd src
 hugo --gc --minify
 ```
 
-De output wordt geschreven naar `./src/public/`. Bij een push naar `main` bouwt GitHub Actions de site automatisch en deployt naar GitHub Pages.
+De output wordt geschreven naar `./src/public/`. Bij een push naar `main` bouwt GitHub Actions de site en deployt die naar Bunny.net (Storage-zone + Pull Zone) op [zephyrus-linux.thectic.nl](https://zephyrus-linux.thectic.nl/).
 
 
 ## Afbeeldingen

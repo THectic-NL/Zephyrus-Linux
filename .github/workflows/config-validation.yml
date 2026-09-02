@@ -15,9 +15,7 @@ on:
       - '.github/dependabot.yml'
       - '.github/dependabot.yaml'
       - '.github/scripts/check-renovate-patterns.py'
-      # Broader than the other repos: the actionlint job below covers every
-      # workflow, so every workflow change is relevant here.
-      - '.github/workflows/**'
+      - '.github/workflows/config-validation.yml'
   pull_request:
     branches: [main, development]
     paths:
@@ -26,9 +24,7 @@ on:
       - '.github/dependabot.yml'
       - '.github/dependabot.yaml'
       - '.github/scripts/check-renovate-patterns.py'
-      # Broader than the other repos: the actionlint job below covers every
-      # workflow, so every workflow change is relevant here.
-      - '.github/workflows/**'
+      - '.github/workflows/config-validation.yml'
   workflow_dispatch:
 
 permissions: {}
@@ -95,32 +91,3 @@ jobs:
           fi
           pipx install "check-jsonschema==${CHECK_JSONSCHEMA_VERSION}"
           check-jsonschema --builtin-schema vendor.dependabot "$config"
-
-      # De workflowbestanden zijn ook config. De andere repositories draaien
-      # actionlint vanuit hun quality-workflow; deze had geen equivalent, dus
-      # het hoort hier.
-      #
-      # Als stap en niet als eigen job: GitHub rekent per job en rondt naar
-      # boven af op een hele minuut. actionlint is in vijf seconden klaar en
-      # heeft dezelfde checkout nodig als de stappen hierboven, dus een eigen
-      # job kostte een volle minuut extra voor niets.
-      #
-      # Vanaf hier draait elke stap op !cancelled(), zodat één rode controle de
-      # andere niet verbergt. De job faalt alsnog zodra er iets fout is.
-      - name: Install actionlint
-        if: ${{ !cancelled() }}
-        env:
-          # renovate: datasource=github-releases depName=rhysd/actionlint
-          ACTIONLINT_VERSION: "1.7.12"
-          ACTIONLINT_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
-        run: |
-          curl -sSL --fail-with-body -o actionlint.tar.gz \
-            --retry 5 --retry-delay 3 --retry-all-errors \
-            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
-          echo "${ACTIONLINT_SHA256}  actionlint.tar.gz" | sha256sum -c -
-          tar -xzf actionlint.tar.gz actionlint
-          sudo install -m 0755 actionlint /usr/local/bin/actionlint
-
-      - name: Run actionlint
-        if: ${{ !cancelled() }}
-        run: actionlint -color

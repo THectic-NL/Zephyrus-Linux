@@ -1,0 +1,228 @@
+# Copyright (C) 2026 Sten Tijhuis
+# SPDX-License-Identifier: MIT
+name: Code quality
+
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main, development]
+
+# No token needed; jobs that do ask for one explicitly.
+permissions: {}
+
+# Pushing to the same PR three times in a row started three full runs, and the
+# first two are already stale by then. On main do not cancel: there the run is
+# the record that the commit passed the checks.
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  # Everything that needs the built site, in one job.
+  #
+  # Splitting the build, the translation check and the link check into separate
+  # jobs costs a runner and a Hugo setup each, and GitHub rounds every job up to
+  # a whole minute. Together they finish inside one.
+  site:
+    name: Build and check the site
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # fetch-depth: 0 for Hugo's .GitInfo and .Lastmod (enableGitInfo).
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Hextra is a Hugo Module (src/go.mod), so Hugo needs Go on PATH.
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: src/go.mod
+
+      - name: Set up Hugo
+        uses: ./.github/actions/setup-hugo
+
+      # Every step runs on !cancelled(), so a red markdown check does not hide
+      # the Hugo build. You want every failure in one run, not the second only
+      # after fixing the first. The job still fails as soon as anything does.
+
+      # A build that fails here is a broken deploy caught in time. --panicOnWarning
+      # is deliberately stricter than the deploy build: a new Hugo deprecation
+      # should block a merge, not a release that is already on its way.
+      - name: Build site
+        if: ${{ !cancelled() }}
+        working-directory: src
+        env:
+          HUGO_CACHEDIR: ${{ runner.temp }}/hugo_cache
+          HUGO_ENVIRONMENT: production
+          TZ: Europe/Amsterdam
+        run: hugo --gc --minify --printPathWarnings --panicOnWarning --baseURL "http://localhost/"
+
+      # Every English document must have a Dutch counterpart.
+      - name: Check every .md has a matching .nl.md
+        if: ${{ !cancelled() }}
+        run: |
+          missing=""
+          for en in src/content/docs/*.md; do
+            base="${en%.md}"
+            nl="${base}.nl.md"
+            # Skip files that are already .nl.md
+            [[ "$en" == *.nl.md ]] && continue
+            if [ ! -f "$nl" ]; then
+              missing="$missing\n  $en → $nl missing"
+            fi
+          done
+          if [ -n "$missing" ]; then
+            echo -e "::error::Missing Dutch translation(s):$missing"
+            exit 1
+          fi
+          echo "All docs have EN + NL versions."
+
+      # Images must be AVIF. The friendly "here is how to convert" comment lives
+      # in pr-checks.yml, which needs pull-requests: write; this is the hard
+      # gate, and it runs on push too.
+      - name: Check images are AVIF
+        if: ${{ !cancelled() }}
+        run: |
+          mapfile -t offenders < <(find src/static/images -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) | sort)
+          if [ "${#offenders[@]}" -gt 0 ]; then
+            for f in "${offenders[@]}"; do
+              echo "::error file=$f::Convert to AVIF before merging (see README → Image assets)"
+            done
+            exit 1
+          fi
+          echo "All images are AVIF."
+
+      # Installed by hand rather than through lycheeverse/lychee-action, which
+      # fetches its binary with a bare `curl -sfLO`: no retry, and no check on
+      # what comes back. Pinned version, verified checksum, retry.
+      - name: Install lychee
+        if: ${{ !cancelled() }}
+        env:
+          # extractVersion: lychee tags its releases as "lychee-v0.24.2", not
+          # "v0.24.2", so the default pattern does not read the version out.
+          # renovate: datasource=github-releases depName=lycheeverse/lychee extractVersion=^lychee-v(?<version>.+)$
+          LYCHEE_VERSION: "0.24.2"
+          # From the release's own lychee-x86_64-unknown-linux-gnu.tar.gz.sha256
+          LYCHEE_SHA256: "1f4e0ef7f6554a6ed33dd7ac144fb2e1bbed98598e7af973042fc5cd43951c9a"
+        run: |
+          curl -sSL --fail-with-body -o lychee.tar.gz \
+            --retry 5 --retry-delay 3 --retry-all-errors \
+            "https://github.com/lycheeverse/lychee/releases/download/lychee-v${LYCHEE_VERSION}/lychee-x86_64-unknown-linux-gnu.tar.gz"
+          echo "${LYCHEE_SHA256}  lychee.tar.gz" | sha256sum -c -
+          tar -xzf lychee.tar.gz lychee-x86_64-unknown-linux-gnu/lychee
+          sudo install -m 0755 lychee-x86_64-unknown-linux-gnu/lychee /usr/local/bin/lychee
+          lychee --version
+
+      # Reads src/public directly. --index-files: Hugo serves every page as
+      # <page>/index.html, and without this lychee stops at the directory, so a
+      # link to /docs/applications/ can never be checked for its #fragment. The
+      # glob is quoted on purpose: unquoted, bash expands it first and ** without
+      # globstar collapses to a single directory level.
+      - name: Check internal links
+        if: ${{ !cancelled() }}
+        run: |
+          lychee --offline --include-fragments --index-files index.html \
+            --root-dir "${GITHUB_WORKSPACE}/src/public" "src/public/**/*.html"
+
+  # Everything that has nothing to do with the built site: the Markdown, the
+  # workflow files, and the Python. Hugo is not needed for any of it.
+  #
+  # Every step runs on !cancelled(), so one red linter does not hide the others.
+  # The job still fails as soon as anything does.
+  repo:
+    name: Check the repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # For zizmor's SARIF upload below.
+      security-events: write
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # markdownlint: keeps content/ and the repo's own Markdown consistent.
+      - name: Run markdownlint
+        if: ${{ !cancelled() }}
+        uses: DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff # v24.2.0
+        with:
+          globs: |
+            src/content/**/*.md
+            *.md
+
+      # Pinned release plus checksum, rather than piping a script off a branch
+      # straight through bash.
+      - name: Install actionlint
+        if: ${{ !cancelled() }}
+        env:
+          # renovate: datasource=github-releases depName=rhysd/actionlint
+          ACTIONLINT_VERSION: "1.7.12"
+          ACTIONLINT_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+        run: |
+          curl -sSL --fail-with-body -o actionlint.tar.gz \
+            --retry 5 --retry-delay 3 --retry-all-errors \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          echo "${ACTIONLINT_SHA256}  actionlint.tar.gz" | sha256sum -c -
+          tar -xzf actionlint.tar.gz actionlint
+          sudo install -m 0755 actionlint /usr/local/bin/actionlint
+
+      # actionlint: syntax errors and wrong expressions in the workflows.
+      - name: Run actionlint
+        if: ${{ !cancelled() }}
+        run: actionlint -color
+
+      # zizmor: a linter on the same files as actionlint, only for security
+      # rather than syntax. pipx and not pip: the runner's system Python is
+      # externally managed (PEP 668), so a plain pip install aborts.
+      - name: Install zizmor
+        if: ${{ !cancelled() }}
+        env:
+          # renovate: datasource=pypi depName=zizmor
+          ZIZMOR_VERSION: "1.29.0"
+        run: pipx install "zizmor==${ZIZMOR_VERSION}"
+
+      - name: Run zizmor
+        if: ${{ !cancelled() }}
+        run: zizmor --format sarif . > zizmor.sarif || true
+
+      # The results show up on the repository's Security tab. Advanced Security
+      # is on organisation-wide, so this works on a private repository too.
+      - name: Upload zizmor results to GitHub Security
+        uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        with:
+          sarif_file: zizmor.sarif
+          category: zizmor
+
+      # ── Python: style and security ─────────────────────────────────────────
+      #
+      # src/static/scripts/ ships one script, saxion-eduroam.py, that visitors
+      # download and run. flake8 and bandit also get a weekly re-run in
+      # security.yml, where new rules can flag something in code that has not
+      # changed.
+      - name: Set up Python
+        if: ${{ !cancelled() }}
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14'
+
+      - name: Install flake8 and bandit
+        if: ${{ !cancelled() }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 bandit
+
+      - name: Lint with flake8
+        if: ${{ !cancelled() }}
+        run: flake8 src/static/scripts/ --max-line-length=120
+
+      - name: Security scan with bandit
+        if: ${{ !cancelled() }}
+        run: bandit -r src/static/scripts/ -ll
