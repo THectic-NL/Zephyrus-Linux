@@ -1,0 +1,15 @@
+{{- /* Distro switcher: expose this page's distribution metadata to
+       distro-switch.js, then load it. A single-distro page sets `distro` in
+       front matter; if it also lists its counterpart in `distro_pages`, the
+       switch navigates there instead of reloading. relref resolves the target
+       and fails the build on a typo. */ -}}
+{{- $page := . -}}
+{{- with .Params.distro -}}
+  <meta name="page-distro" content="{{ . }}" />
+{{- end -}}
+{{- with .Params.distro_pages -}}
+  {{- with .cachyos }}<meta name="distro-page-cachyos" content="{{ relref $page . }}" />{{ end -}}
+  {{- with .bazzite }}<meta name="distro-page-bazzite" content="{{ relref $page . }}" />{{ end -}}
+{{- end -}}
+{{- $js := resources.Get "js/distro-switch.js" | js.Build (dict "minify" hugo.IsProduction) | fingerprint -}}
+<script defer src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}"></script>

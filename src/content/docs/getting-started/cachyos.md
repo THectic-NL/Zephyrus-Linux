@@ -3,6 +3,10 @@ title: "CachyOS"
 weight: 1
 prev: docs/getting-started
 next: docs/getting-started/bazzite
+distro: cachyos
+distro_pages:
+  cachyos: /docs/getting-started/cachyos
+  bazzite: /docs/getting-started/bazzite
 ---
 
 CachyOS is an Arch-based distribution with hardware-specific optimizations, and it's what I run as my daily driver on the G16. This is the option for wanting the machine in your hands: you choose the kernel, the scheduler and every package, and you carry the maintenance that comes with that. If that trade doesn't appeal, read [Bazzite]({{< relref "/docs/getting-started/bazzite" >}}) instead before you install anything.

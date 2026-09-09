@@ -3,6 +3,10 @@ title: "Secure Boot on Bazzite"
 weight: 4
 prev: docs/hardware/secure-boot-cachyos
 next: docs/hardware/asusctl-rog-control
+distro: bazzite
+distro_pages:
+  cachyos: /docs/hardware/secure-boot-cachyos
+  bazzite: /docs/hardware/secure-boot-bazzite
 ---
 
 Bazzite boots with Secure Boot enabled. It uses shim, the Microsoft-signed bootloader that lets third-party systems boot under Secure Boot, so unlike CachyOS you don't have to turn Secure Boot off to install it and you don't have to enroll your own keys afterwards.

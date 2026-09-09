@@ -16,8 +16,6 @@ Ik heb ze allebei echt op deze laptop gedraaid, niet als weekendexperiment, en d
 
 Je wilt weten hoe het systeem in elkaar zit, en je hebt liever de mogelijkheid om iets te veranderen dan bescherming tegen het stukmaken ervan. Je kiest je eigen kernel, tunet de scheduler en installeert uit `pacman` of de AUR zonder iemand om toestemming te vragen. Daar staat tegenover dat het onderhoud van jou is: updates doe je bewust, en als er een misgaat repareer je hem met de hand.
 
-Dit is wat ik dagelijks draai.
-
 ### Kies Bazzite als je gamet, of als je juist níét wilt sleutelen
 
 Bazzite is voor gaming gebouwd — Steam, Proton en de controller-stack zitten in de image, geconfigureerd, nog voordat je voor het eerst inlogt. Het is ook het betere antwoord als sleutelen aan je OS geen hobby is: het systeem is read-only, updates komen als hele image binnen, en een slechte draai je terug vanuit het bootmenu. Het is echt moeilijk stuk te krijgen, en dat is precies de bedoeling.
@@ -48,6 +46,14 @@ Kernel 6.19 of nieuwer is het enige dat ze allebei nodig hebben. Daar is de `asu
 Dat werkt prima op deze laptop — niets hier is een waarschuwing ertegen. Alleen: na het testen van meerdere distributies op déze machine kwamen deze twee er duidelijk bovenuit, en dat zijn dus de twee die ik uit ervaring kan documenteren in plaats van van horen zeggen. Goed om te weten dat Bazzite onderhuids gewoon Fedora *is*, de atomic editie met de gaming- en hardware-onderdelen al in elkaar gezet, dus daarvoor kiezen betekent niet echt afscheid nemen van Fedora.
 
 Deze handleidingen geven alleen commando's voor CachyOS en Bazzite. Er is geen derde set om correct te houden.
+
+## Allebei bewegen ze, en ze wisselen elkaar af
+
+Ik heb er niet één gekozen en het daarbij gelaten. Ik heb ze allebei als dagelijks systeem op precies deze laptop gedraaid en ben meer dan eens heen en weer geswitcht — terwijl ik dit schrijf zit ik op Bazzite — en de eerlijke samenvatting is dat geen van beide lang voorop blijft lopen.
+
+Het gaat in golven. De ene maand landt er in Bazzite een kernel-bump of een Mesa-fix en is het de soepelste van de twee; een maand later levert CachyOS een scheduler-wijziging of een `asusctl`-update en klapt de voorsprong terug. Het gat is nooit groot en het houdt nooit aan, want de dingen die er echt toe doen worden sowieso ge-backport — een fix die in de kernel van de ene distributie of in mainline opduikt, zit meestal binnen een release of twee ook in de andere. Geef het een paar weken en ze lopen weer gelijk.
+
+Zit er dus niet te lang over te dubben. Kies degene waarvan de afwegingen hierboven passen bij hoe je de machine wilt gebruiken, niet degene die deze week twee patches voorloopt. Kom je er later achter dat je verkeerd koos, dan is overstappen een herinstallatie en een middag werk, en alles in deze handleidingen dekt allebei al.
 
 ## Hoe deze handleidingen zijn ingedeeld
 

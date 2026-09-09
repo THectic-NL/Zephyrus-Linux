@@ -3,6 +3,10 @@ title: "Bazzite"
 weight: 2
 prev: docs/getting-started/cachyos
 next: docs/getting-started/topgrade
+distro: bazzite
+distro_pages:
+  cachyos: /docs/getting-started/cachyos
+  bazzite: /docs/getting-started/bazzite
 ---
 
 Bazzite is a [Universal Blue](https://universal-blue.org/) image built on Fedora Atomic — plain Fedora underneath, with the gaming stack and the hardware pieces already assembled. Where CachyOS hands you a system you can take apart, Bazzite hands you a system that is deliberately hard to take apart, and correspondingly hard to break.

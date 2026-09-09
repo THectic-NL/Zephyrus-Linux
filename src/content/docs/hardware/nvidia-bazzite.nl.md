@@ -3,6 +3,10 @@ title: "NVIDIA Driver: Bazzite"
 weight: 2
 prev: docs/hardware/nvidia-cachyos
 next: docs/hardware/secure-boot-cachyos
+distro: bazzite
+distro_pages:
+  cachyos: /docs/hardware/nvidia-cachyos
+  bazzite: /docs/hardware/nvidia-bazzite
 ---
 
 De G16 heeft een NVIDIA RTX 4060 naast de AMD iGPU. Op Bazzite is de driver niets dat je installeert — hij is onderdeel van de image waarmee je opstart. Het werk hier bestaat dus uit de juiste image kiezen, één Secure Boot-sleutel inschrijven en twee energie-instellingen die deze laptop nodig heeft.

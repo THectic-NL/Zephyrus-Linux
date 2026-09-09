@@ -3,6 +3,10 @@ title: "NVIDIA Driver: CachyOS"
 weight: 1
 prev: docs/getting-started/topgrade
 next: docs/hardware/nvidia-bazzite
+distro: cachyos
+distro_pages:
+  cachyos: /docs/hardware/nvidia-cachyos
+  bazzite: /docs/hardware/nvidia-bazzite
 ---
 
 The G16 has an NVIDIA RTX 4060 alongside the AMD iGPU. The open-source Nouveau driver doesn't perform well on modern NVIDIA hardware, so proprietary drivers are necessary.

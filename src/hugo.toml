@@ -28,24 +28,29 @@ disableHugoGeneratorInject = true
     pageRef = '/docs'
     weight = 1
   [[menu.main]]
-    name = 'Search'
+    name = 'Distribution'
     weight = 2
+    [menu.main.params]
+      type = 'distro-switch'
+  [[menu.main]]
+    name = 'Search'
+    weight = 3
     [menu.main.params]
       type = 'search'
   [[menu.main]]
     name = 'GitHub'
-    weight = 3
+    weight = 4
     url = 'https://github.com/THectic-NL/Zephyrus-Linux'
     [menu.main.params]
       icon = 'github'
   [[menu.main]]
     name = 'Language'
-    weight = 4
+    weight = 5
     [menu.main.params]
       type = 'language-switch'
   [[menu.main]]
     name = 'Theme'
-    weight = 5
+    weight = 6
     [menu.main.params]
       type = 'theme-toggle'
 

@@ -1,0 +1,21 @@
+{{- /* The CachyOS/Bazzite switcher in the navbar. Rendered by the
+       `type = 'distro-switch'` menu item (see _partials/navbar.html).
+
+       It is a thin control over Hextra's synced tabs: every distro tab on the
+       site is named "CachyOS" or "Bazzite" in that order, so Hextra stores the
+       choice in localStorage["hextra-tab-CachyOS%2CBazzite"] as "0" or "1".
+       distro-switch.js writes that same key and reloads, which flips every tab
+       on every page at once. No server-side state, no duplicated content tree.
+
+       Pages that belong to one distribution set `distro` in front matter; a
+       page that also names its counterpart in `distro_pages` makes the switch
+       navigate there instead of reloading. */ -}}
+{{- $nl := eq .Site.Language.Lang "nl" -}}
+{{- $label := cond $nl "Distributie" "Distribution" -}}
+<div class="distro-switch hx:p-2" role="group" aria-label="{{ $label }}" data-distro-switch>
+  <span class="distro-switch-label" aria-hidden="true">{{ $label }}</span>
+  <span class="distro-switch-options">
+    <button type="button" class="distro-switch-option" data-distro="cachyos" aria-pressed="false">CachyOS</button>
+    <button type="button" class="distro-switch-option" data-distro="bazzite" aria-pressed="false">Bazzite</button>
+  </span>
+</div>

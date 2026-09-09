@@ -83,3 +83,42 @@ This site is bilingual (EN + NL). When updating content:
 
 - Edit both `src/content/docs/page.md` and `src/content/docs/page.nl.md`
 - Keep the structure and headings in sync between the two files
+
+---
+
+## CachyOS and Bazzite
+
+The guides cover two distributions. Most pages are shared, with a tab around the
+commands that differ:
+
+```markdown
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+...
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+...
+{{< /tab >}}
+{{< /tabs >}}
+```
+
+The tab names must be exactly `CachyOS` and `Bazzite`, in that order, on every
+page. The navbar distribution switcher and Hextra's tab syncing both key off
+that pair — a third name, a typo or a swapped order breaks the sync for the
+whole page.
+
+A topic that works so differently it needs a page per distribution:
+
+- Set `distro: cachyos` or `distro: bazzite` in the front matter.
+- If the other distribution has an equivalent page, add `distro_pages` so the
+  switcher jumps straight to it:
+
+  ```yaml
+  distro: cachyos
+  distro_pages:
+    cachyos: /docs/hardware/nvidia-cachyos
+    bazzite: /docs/hardware/nvidia-bazzite
+  ```
+
+- If it has no counterpart, put `{{< distro-note >}}` at the top of the body so
+  readers on the other distribution see why the page doesn't apply.

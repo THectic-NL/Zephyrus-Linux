@@ -3,6 +3,10 @@ title: "Secure Boot op CachyOS"
 weight: 3
 prev: docs/hardware/nvidia-bazzite
 next: docs/hardware/secure-boot-bazzite
+distro: cachyos
+distro_pages:
+  cachyos: /docs/hardware/secure-boot-cachyos
+  bazzite: /docs/hardware/secure-boot-bazzite
 ---
 
 Om CachyOS te installeren moet Secure Boot eerst uit. Anders dan Ubuntu of Bazzite gebruikt CachyOS geen shim, een door Microsoft ondertekende bootloader waarmee distributies van derden kunnen opstarten onder Secure Boot. Zonder shim blokkeert Secure Boot de CachyOS-bootloader bij het opstarten, waardoor het voor de installatie uitgeschakeld moet worden ([CachyOS installatiedocumentatie](https://wiki.cachyos.org/installation/installation_on_root/)).
