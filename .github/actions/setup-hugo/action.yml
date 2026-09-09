@@ -34,7 +34,7 @@ inputs:
       pull requests and commits it back. Doing it manually is only needed when
       the version is changed outside that flow.
     required: false
-    default: "f43494894cdf4a8630a201d5c828051c77f523cc66bb3938b30806835470ac20"
+    default: "0e39b901e3f919f1daae05c8ff64f0c14c8a348ef46886d63f8e6d1bb2653885"
 
 runs:
   using: composite
