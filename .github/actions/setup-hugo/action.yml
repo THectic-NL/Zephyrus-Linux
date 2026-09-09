@@ -16,7 +16,7 @@ inputs:
     description: Hugo version to install, without the leading "v".
     required: false
     # renovate: datasource=github-releases depName=gohugoio/hugo
-    default: "0.165.0"
+    default: "0.166.0"
   sha256:
     description: >
       SHA-256 of hugo_extended_<version>_linux-amd64.tar.gz. Bump this together
