@@ -50,12 +50,12 @@ jobs:
           non_avif=$(find src/static/images -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \) | wc -l)
           [ "$non_avif" -eq 0 ] && echo "images_ok=true" >> "$GITHUB_OUTPUT" || echo "images_ok=false" >> "$GITHUB_OUTPUT"
 
-          # EN/NL parity: every docs/*.md has a matching *.nl.md.
+          # EN/NL parity: every .md under src/content has a matching *.nl.md.
+          # find, not src/content/docs/*.md: the glob missed every subdirectory.
           bilingual_ok=true
-          for en in src/content/docs/*.md; do
-            [[ "$en" == *.nl.md ]] && continue
+          while IFS= read -r en; do
             [ -f "${en%.md}.nl.md" ] || bilingual_ok=false
-          done
+          done < <(find src/content -type f -name '*.md' ! -name '*.nl.md')
           echo "bilingual_ok=$bilingual_ok" >> "$GITHUB_OUTPUT"
 
       - name: Comment on non-AVIF images
