@@ -4,9 +4,6 @@ weight: 2
 prev: docs/cachyos/getting-started
 next: docs/cachyos/nvidia
 distro: cachyos
-distro_pages:
-  cachyos: /docs/cachyos/updates
-  bazzite: /docs/bazzite/updates
 ---
 
 De systeemupdate is één commando:

@@ -3,9 +3,6 @@ title: "Secure Boot"
 weight: 4
 prev: docs/bazzite/nvidia
 distro: bazzite
-distro_pages:
-  cachyos: /docs/cachyos/secure-boot
-  bazzite: /docs/bazzite/secure-boot
 ---
 
 Bazzite start op met Secure Boot aan. Het gebruikt shim, de door Microsoft ondertekende bootloader waarmee distributies van derden onder Secure Boot kunnen opstarten, dus anders dan bij CachyOS hoef je Secure Boot niet uit te zetten om te installeren en hoef je achteraf geen eigen sleutels in te schrijven.

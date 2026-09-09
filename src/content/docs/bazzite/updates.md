@@ -4,9 +4,6 @@ weight: 2
 prev: docs/bazzite/getting-started
 next: docs/bazzite/nvidia
 distro: bazzite
-distro_pages:
-  cachyos: /docs/cachyos/updates
-  bazzite: /docs/bazzite/updates
 ---
 
 An update on Bazzite is a whole new image, not a set of packages. It downloads in the background and takes effect on the next boot, so it can never leave you halfway through.

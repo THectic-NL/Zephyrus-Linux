@@ -38,7 +38,7 @@ toc: false
 | **iGPU** | AMD Radeon 890M |
 | **dGPU** | NVIDIA GeForce RTX 4060 Laptop (Max-Q) |
 | **OS** | CachyOS (Arch) — the guides also cover [Bazzite]({{< relref "/docs/bazzite/getting-started" >}}) |
-| **Kernel** | 7.0.12-1-cachyos |
+| **Kernel** | 7.2.4-1-cachyos |
 | **Display Server** | Wayland (GNOME 50) |
 | **CPU Scheduler** | scx_lavd (sched_ext) |
 | **Secure Boot** | Enabled |

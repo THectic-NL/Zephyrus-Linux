@@ -4,9 +4,6 @@ weight: 2
 prev: docs/bazzite/getting-started
 next: docs/bazzite/nvidia
 distro: bazzite
-distro_pages:
-  cachyos: /docs/cachyos/updates
-  bazzite: /docs/bazzite/updates
 ---
 
 Een update op Bazzite is een hele nieuwe image, geen set packages. Hij wordt op de achtergrond gedownload en werkt na de volgende herstart, dus hij kan je nooit halverwege laten stranden.

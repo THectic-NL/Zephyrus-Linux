@@ -445,7 +445,7 @@ This issue has since resolved itself. Steam now launches normally; the `__GL_CON
 ROG Control Center shows a warning that the `asus-armoury` kernel driver is not loaded. Some advanced features (PPT power limits, APU memory allocation, MUX switch control) are unavailable.
 
 **Cause:**
-The `asus-armoury` driver was merged into the Linux mainline kernel in version 6.19. This driver has been included from kernel 6.19 onwards; the current CachyOS kernel at the time of writing is 7.0.12-1-cachyos.
+The `asus-armoury` driver was merged into the Linux mainline kernel in version 6.19. This driver has been included from kernel 6.19 onwards; the current CachyOS kernel at the time of writing is 7.2.4-1-cachyos.
 
 **Fix:**
 Verify the driver is loaded:

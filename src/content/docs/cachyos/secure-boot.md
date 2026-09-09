@@ -3,9 +3,6 @@ title: "Secure Boot"
 weight: 4
 prev: docs/cachyos/nvidia
 distro: cachyos
-distro_pages:
-  cachyos: /docs/cachyos/secure-boot
-  bazzite: /docs/bazzite/secure-boot
 ---
 
 To install CachyOS, Secure Boot has to be off first. Unlike Ubuntu or Bazzite, CachyOS doesn't use shim, a Microsoft-signed bootloader that lets third-party systems boot under Secure Boot. Without it, Secure Boot blocks the CachyOS bootloader before it even starts, so it has to be disabled for installation ([CachyOS installation docs](https://wiki.cachyos.org/installation/installation_on_root/)).

@@ -4,9 +4,6 @@ weight: 1
 prev: docs/cachyos
 next: docs/cachyos/updates
 distro: cachyos
-distro_pages:
-  cachyos: /docs/cachyos/getting-started
-  bazzite: /docs/bazzite/getting-started
 ---
 
 CachyOS is een op Arch gebaseerde distributie met hardware-specifieke optimalisaties, en één van de twee die ik op de G16 als dagelijks systeem heb gedraaid. Dit is de optie voor wie de machine zelf in handen wil: je kiest de kernel, de scheduler en elk package, en het onderhoud dat daarbij hoort neem je erbij. Spreekt die ruil je niet aan, lees dan eerst [Bazzite]({{< relref "/docs/bazzite/getting-started" >}}) voordat je iets installeert.
@@ -21,29 +18,9 @@ CachyOS is een op Arch gebaseerde distributie met hardware-specifieke optimalisa
 
 ## Wat rolling hier betekent
 
-Packages komen binnen zodra upstream ze uitbrengt. Er is geen release om naar te upgraden en geen versienummer om op achter te lopen, maar er is ook niets dat een wijziging tegenhoudt — updaten is dus iets wat je bewust doet, niet iets wat je overkomt.
+Packages komen binnen zodra upstream ze uitbrengt. Er is geen release om naar te upgraden en geen versienummer om op achter te lopen, maar er is ook niets dat een wijziging tegenhoudt — `sudo pacman -Syu` is dus iets wat je bewust doet, niet iets wat je overkomt. Het systeem is volledig beschrijfbaar, dus een package is bruikbaar zodra het installeert; alleen een nieuwe kernel vraagt een herstart. Gaat een update mis, dan draai je hem met de hand terug — het belangrijkste praktische verschil met Bazzite, waar een slechte update één `rpm-ostree rollback` verderop ligt.
 
-```bash
-sudo pacman -Syu
-```
-
-Het systeem is volledig beschrijfbaar. `pacman` installeert in `/usr` en het package is bruikbaar zodra het klaar is; alleen een nieuwe kernel vraagt om een herstart.
-
-Gaat een update wél mis, dan draai je hem met de hand terug — het package downgraden vanuit de pacman-cache in `/var/cache/pacman/pkg/`, of vanuit het [Arch Linux Archive](https://wiki.archlinux.org/title/Arch_Linux_Archive). Handig om te weten vóórdat je het nodig hebt. Dit is het belangrijkste praktische verschil met Bazzite, waar een slechte update één `rpm-ostree rollback` verderop ligt.
-
-{{< callout type="info" >}}
-Alles in één keer bijwerken — pacman, de AUR, Flatpak en de rest — staat op de pagina [Topgrade]({{< relref "/docs/cachyos/updates" >}}).
-{{< /callout >}}
-
-## CachyOS Kernel Manager
-
-CachyOS wordt geleverd met de **CachyOS Kernel Manager** als voorgeïnstalleerde GUI-tool. Hiermee beheer je geïnstalleerde kernels en configureer je de `sched-ext` scheduler, het extensible scheduler framework van de Linux kernel waarmee een userspace-scheduler de standaard kan vervangen.
-
-Ik gebruik `scx_lavd` met het profiel ingesteld op **Auto**. LAVD (Latency-criticality Aware Virtual Deadline) is een scheduler die ontworpen is voor gemengde interactieve en compute-workloads, wat hem goed geschikt maakt voor een laptop die je zowel dagelijks als voor gaming gebruikt.
-
-![CachyOS Kernel Manager - Configure sched-ext met scx_lavd](/images/cachyos-kernel-manager-sched-ext.avif)
-
-De scheduler kan op elk moment worden gewijzigd zonder herstart.
+→ [Bijwerken]({{< relref "/docs/cachyos/updates" >}}) behandelt `pacman`, de kernel en de CachyOS Kernel Manager, en alles in één commando bijwerken met Topgrade.
 
 ## Secure Boot vóór het installeren
 

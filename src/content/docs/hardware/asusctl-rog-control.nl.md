@@ -12,10 +12,14 @@ De Zephyrus G16 heeft veel hardware-functies die op Linux niet zomaar werken: fa
 {{< /callout >}}
 
 **Pakketinformatie (op het moment van schrijven):**
-- `asusd` 6.3.8: achtergrondproces (backend) dat alle hardware-functies beheert
-- `asusctl` 6.3.8: CLI frontend voor fan curves, profielen, batterijlimiet, RGB, Slash LED, GPU-switching
-- `rog-control-center` 6.3.8: grafische frontend, onderdeel van de asusctl/asusd suite
-- Bron: [asus-linux releases](https://gitlab.com/asus-linux/asusctl/-/releases) · in de CachyOS/Arch-repos, en in [Terra](https://terra.fyralabs.com/) voor Fedora
+- `asusd` 6.4.0: achtergrondproces (backend) dat alle hardware-functies beheert
+- `asusctl` 6.4.0: CLI frontend voor fan curves, profielen, batterijlimiet, RGB, Slash LED, GPU-switching
+- `rog-control-center` 6.4.0: grafische frontend, onderdeel van de asusctl/asusd suite
+- Bron: [asusctl releases](https://github.com/OpenGamingCollective/asusctl/releases) · in de CachyOS/Arch-repos, en in [Terra](https://terra.fyralabs.com/) voor Fedora
+
+{{< callout type="info" >}}
+Het project is in 2026 verhuisd. De ontwikkeling zat vroeger in de `asus-linux`-organisatie op GitLab (nu gearchiveerd, read-only); `asusctl`, `asusd` en `rog-control-center` worden nu onderhouden onder het [Open Gaming Collective](https://github.com/OpenGamingCollective/asusctl) op GitHub. [asus-linux.org](https://asus-linux.org/) is nog steeds de projectsite. Oudere gidsen die naar `gitlab.com/asus-linux` of de `lukenukem`-COPR voor Fedora wijzen zijn verouderd.
+{{< /callout >}}
 
 
 ## Installatie
@@ -370,7 +374,7 @@ Bekende problemen en probleemoplossing voor asusctl & ROG Control Center staan o
 
 ### Kernel 6.19: asus-armoury driver in mainline Linux
 
-De `asus-armoury` driver is [gemerged in Linux 6.19](https://www.phoronix.com/news/ASUS-Armoury-Driver-Linux-6.19). Deze nieuwe `platform/x86` driver vervangt delen van de oudere `asus-wmi` met een schonere sysfs-gebaseerde API, waarmee o.a. paneelmodusschakeling, APU-geheugentoewijzing, PPT-tuning en meer mogelijk wordt direct vanuit de kernel. De driver is volledig door de community ontwikkeld door het [asus-linux team](https://asus-linux.org/), zonder enige betrokkenheid van ASUS zelf. Deze driver zit in elke CachyOS-kernel vanaf 6.19. De huidige kernel op het moment van schrijven is 7.0.12-1-cachyos.
+De `asus-armoury` driver is [gemerged in Linux 6.19](https://www.phoronix.com/news/ASUS-Armoury-Driver-Linux-6.19). Deze nieuwe `platform/x86` driver vervangt delen van de oudere `asus-wmi` met een schonere sysfs-gebaseerde API, waarmee o.a. paneelmodusschakeling, APU-geheugentoewijzing, PPT-tuning en meer mogelijk wordt direct vanuit de kernel. De driver is volledig door de community ontwikkeld door het [asus-linux team](https://asus-linux.org/), zonder enige betrokkenheid van ASUS zelf. Deze driver zit in elke CachyOS-kernel vanaf 6.19. De huidige kernel op het moment van schrijven is 7.2.4-1-cachyos.
 
 **Voor**: basale asusctl-bediening zonder Armoury-instellingen:
 
@@ -384,7 +388,7 @@ De `asus-armoury` driver is [gemerged in Linux 6.19](https://www.phoronix.com/ne
 
 ### Kernel 7.0: ASUS laptop quirks + nieuw AMDGPU-werk
 
-Kernel 7.0 is in april 2026 uitgebracht en CachyOS pakte het snel op. Voor deze ASUS ROG G16 bracht het wat beloofd was: betere AMDGPU-ondersteuning voor nieuwere RDNA 3.5-klasse IP blocks (GFX11.5.4) en verder NVIDIA-werk. De gaming-performance op de Radeon 890M is merkbaar verbeterd, ruwweg in lijn met de ~20% uplift die werd verwacht. Samen met de verbeteringen uit 6.19 draait deze hardware eindelijk zoals het hoort op Linux. De huidige CachyOS-kernel is 7.0.12-1-cachyos.
+Kernel 7.0 is in april 2026 uitgebracht en CachyOS pakte het snel op. Voor deze ASUS ROG G16 bracht het wat beloofd was: betere AMDGPU-ondersteuning voor nieuwere RDNA 3.5-klasse IP blocks (GFX11.5.4) en verder NVIDIA-werk. De gaming-performance op de Radeon 890M is merkbaar verbeterd, ruwweg in lijn met de ~20% uplift die werd verwacht. Samen met de verbeteringen uit 6.19 draait deze hardware eindelijk zoals het hoort op Linux. De huidige CachyOS-kernel is 7.2.4-1-cachyos.
 
 **Bronnen:** [Linus bevestigt Linux 7.0](https://www.phoronix.com/news/Linux-7.0-Is-Next) · [HID laptop quirks voor ASUS ROG modellen](https://www.phoronix.com/news/Linux-7.0-HID) · [Linux 7.0 DRM/AMDGPU updates](https://www.phoronix.com/news/Linux-7.0-Graphics-Drivers)
 
@@ -392,6 +396,6 @@ Kernel 7.0 is in april 2026 uitgebracht en CachyOS pakte het snel op. Voor deze 
 ## Aanvullende Bronnen
 
 - [asus-linux.org](https://asus-linux.org/): officiële projectsite
-- [asusctl GitLab](https://gitlab.com/asus-linux/asusctl): broncode en issue tracker
+- [asusctl op GitHub](https://github.com/OpenGamingCollective/asusctl): broncode en issue tracker
 - [CachyOS Wiki: ASUS](https://wiki.cachyos.org/): CachyOS-specifieke documentatie
 - NVIDIA driver setup en bekende problemen: [CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) · [Bazzite]({{< relref "/docs/bazzite/nvidia" >}})
