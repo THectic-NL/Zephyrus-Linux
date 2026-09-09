@@ -18,7 +18,7 @@ CachyOS is een op Arch gebaseerde distributie met hardware-specifieke optimalisa
 
 ## Wat rolling hier betekent
 
-Packages komen binnen zodra upstream ze uitbrengt. Er is geen release om naar te upgraden en geen versienummer om op achter te lopen, maar er is ook niets dat een wijziging tegenhoudt — `sudo pacman -Syu` is dus iets wat je bewust doet, niet iets wat je overkomt. Het systeem is volledig beschrijfbaar, dus een package is bruikbaar zodra het installeert; alleen een nieuwe kernel vraagt een herstart. Gaat een update mis, dan draai je hem met de hand terug — het belangrijkste praktische verschil met Bazzite, waar een slechte update één `rpm-ostree rollback` verderop ligt.
+Packages komen binnen zodra upstream ze uitbrengt. Er is geen release om naar te upgraden en geen versienummer om op achter te lopen, maar er is ook niets dat een wijziging tegenhoudt. `sudo pacman -Syu` is dus iets wat je bewust doet, niet iets wat je overkomt. Het systeem is volledig beschrijfbaar, dus een package is bruikbaar zodra het installeert, en alleen een nieuwe kernel vraagt een herstart. Gaat een update mis, dan draai je hem met de hand terug. Dat is het belangrijkste praktische verschil met Bazzite, waar een slechte update één `rpm-ostree rollback` verderop ligt.
 
 → [Bijwerken]({{< relref "/docs/cachyos/updates" >}}) behandelt `pacman`, de kernel en de CachyOS Kernel Manager, en alles in één commando bijwerken met Topgrade.
 

@@ -12,25 +12,27 @@ De systeemupdate is één commando:
 sudo pacman -Syu
 ```
 
-Het is een rolling distributie, dus dat *is* de update — er is geen release om naartoe te gaan. Alles wat `pacman` in `/usr` installeert is bruikbaar zodra het klaar is; alleen een nieuwe kernel vraagt een herstart.
+Het is een rolling distributie, dus dat is de update. Er is geen release om naartoe te gaan. Alles wat `pacman` in `/usr` installeert is bruikbaar zodra het klaar is, en alleen een nieuwe kernel vraagt een herstart.
 
-Breekt een update iets, dan draai je met de hand terug: herinstalleer het vorige package uit de cache in `/var/cache/pacman/pkg/`, of haal het uit het [Arch Linux Archive](https://archive.archlinux.org/). Goed om te weten voordat je het nodig hebt.
+Breekt een update iets, dan draai je hem met de hand terug. Herinstalleer het vorige package uit de cache in `/var/cache/pacman/pkg/`, of haal het uit het [Arch Linux Archive](https://archive.archlinux.org/). Handig om te weten voordat je het nodig hebt.
 
 ## De kernel
 
-CachyOS levert de **CachyOS Kernel Manager** als voorgeïnstalleerde GUI. Die beheert geïnstalleerde kernels en configureert de `sched-ext`-scheduler — het framework van de kernel om er een userspace-CPU-scheduler in te wisselen.
+CachyOS levert de **CachyOS Kernel Manager** als voorgeïnstalleerde GUI. Die beheert geïnstalleerde kernels en configureert de `sched-ext`-scheduler, het framework van de kernel om er een userspace-CPU-scheduler in te wisselen.
 
-Ik draai `scx_lavd` met het profiel op **Auto**. LAVD (Latency-criticality Aware Virtual Deadline) is gebouwd voor gemengde interactieve en compute-workloads, wat past bij een laptop voor zowel dagelijks werk als gaming. De scheduler kun je op elk moment wisselen zonder herstart.
+Ik draai `scx_lavd` met het profiel op **Auto**. LAVD (Latency-criticality Aware Virtual Deadline) is gebouwd voor gemengde interactieve en compute-workloads, wat past bij een laptop voor zowel dagelijks werk als gaming. Je kunt de scheduler op elk moment wisselen zonder herstart.
 
-![CachyOS Kernel Manager - sched-ext configureren met scx_lavd](/images/cachyos-kernel-manager-sched-ext.avif)
+![CachyOS Kernel Manager die sched-ext configureert met scx_lavd](/images/cachyos-kernel-manager-sched-ext.avif)
 
 ## De rest, in één keer
 
 Het systeem is maar een deel. Er zijn ook de Flatpaks, wat Homebrew in je home-map heeft gezet, de distrobox-containers, de firmware, en een handvol tools die zichzelf bijwerken. [Topgrade](https://github.com/topgrade-rs/topgrade) draait ze allemaal achter elkaar en vertelt je wat het gedaan heeft.
 
-Het is een gemak, geen package manager. Alles wat het doet kun je met de hand doen; de winst is dat je de Flatpaks niet meer drie weken vergeet.
+Het is een gemak, geen package manager. Alles wat het doet kun je met de hand doen. De winst is dat je de Flatpaks niet meer drie weken vergeet.
 
 ### Wat het hier draait
+
+Topgrade detecteert wat er op het systeem staat in plaats van dat je het vertelt. Op deze laptop komt dat ongeveer hierop neer:
 
 | Stap | Wat het draait |
 |---|---|
@@ -64,7 +66,7 @@ topgrade --disable firmware # sla een stap over voor deze run
 topgrade -y                 # niet vragen voor elke stap
 ```
 
-`--dry-run` is op een nieuwe installatie één keer de moeite waard — het print de gedetecteerde stappen, de snelste manier om te ontdekken dat het iets níét oppikt.
+Draai `--dry-run` één keer op een nieuwe installatie. Het print de gedetecteerde stappen, de snelste manier om te ontdekken dat het iets niet oppikt.
 
 ### Configuratie
 
@@ -93,5 +95,5 @@ arch_package_manager = "paru"
 ## Referenties
 
 - [Topgrade op GitHub](https://github.com/topgrade-rs/topgrade)
-- [Topgrade: configuratiereferentie](https://github.com/topgrade-rs/topgrade/blob/main/config.example.toml)
+- [Topgrade configuratiereferentie](https://github.com/topgrade-rs/topgrade/blob/main/config.example.toml)
 - [Arch Linux Archive](https://archive.archlinux.org/)

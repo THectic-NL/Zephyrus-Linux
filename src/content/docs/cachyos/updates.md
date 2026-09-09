@@ -12,23 +12,23 @@ The system update is one command:
 sudo pacman -Syu
 ```
 
-It's a rolling distribution, so that *is* the update — there is no release to move to. Everything `pacman` installs into `/usr` is usable the moment it finishes; only a new kernel needs a reboot.
+It's a rolling distribution, so that is the update. There is no release to move to. Everything `pacman` installs into `/usr` is usable the moment it finishes, and only a new kernel needs a reboot.
 
-If an update breaks something, you roll back by hand: reinstall the previous package from the cache in `/var/cache/pacman/pkg/`, or pull it from the [Arch Linux Archive](https://archive.archlinux.org/). Worth knowing before you need it.
+If an update breaks something, you roll it back by hand. Reinstall the previous package from the cache in `/var/cache/pacman/pkg/`, or pull it from the [Arch Linux Archive](https://archive.archlinux.org/). Worth knowing before you need it.
 
 ## The kernel
 
-CachyOS ships the **CachyOS Kernel Manager** as a pre-installed GUI. It manages installed kernels and configures the `sched-ext` scheduler — the kernel's framework for swapping in a userspace CPU scheduler.
+CachyOS ships the **CachyOS Kernel Manager** as a pre-installed GUI. It manages installed kernels and configures the `sched-ext` scheduler, the kernel's framework for swapping in a userspace CPU scheduler.
 
-I run `scx_lavd` with the profile set to **Auto**. LAVD (Latency-criticality Aware Virtual Deadline) is built for mixed interactive and compute workloads, which fits a laptop used for both daily work and gaming. The scheduler can be changed at any time without a reboot.
+I run `scx_lavd` with the profile set to **Auto**. LAVD (Latency-criticality Aware Virtual Deadline) is built for mixed interactive and compute workloads, which fits a laptop used for both daily work and gaming. You can change the scheduler at any time without a reboot.
 
-![CachyOS Kernel Manager - Configure sched-ext with scx_lavd](/images/cachyos-kernel-manager-sched-ext.avif)
+![CachyOS Kernel Manager configuring sched-ext with scx_lavd](/images/cachyos-kernel-manager-sched-ext.avif)
 
 ## Everything else, in one go
 
 The system is only part of it. There are also the Flatpaks, whatever Homebrew put in your home directory, the distrobox containers, the firmware, and a handful of tools that update themselves. [Topgrade](https://github.com/topgrade-rs/topgrade) runs all of them in sequence and tells you what it did.
 
-It's a convenience, not a package manager. Everything it does you could do by hand; the value is that you stop forgetting the Flatpaks for three weeks.
+It's a convenience, not a package manager. Everything it does you could do by hand. The value is that you stop forgetting the Flatpaks for three weeks.
 
 ### What it runs here
 
@@ -66,7 +66,7 @@ topgrade --disable firmware # skip a step for this run
 topgrade -y                 # don't ask before each step
 ```
 
-`--dry-run` is worth doing once on a new install — it prints the steps it detected, which is the quickest way to find out that it isn't picking something up.
+Run `--dry-run` once on a new install. It prints the steps it detected, which is the quickest way to find out that it isn't picking something up.
 
 ### Configuration
 
@@ -95,5 +95,5 @@ arch_package_manager = "paru"
 ## References
 
 - [Topgrade on GitHub](https://github.com/topgrade-rs/topgrade)
-- [Topgrade: configuration reference](https://github.com/topgrade-rs/topgrade/blob/main/config.example.toml)
+- [Topgrade configuration reference](https://github.com/topgrade-rs/topgrade/blob/main/config.example.toml)
 - [Arch Linux Archive](https://archive.archlinux.org/)

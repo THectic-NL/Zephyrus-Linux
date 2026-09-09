@@ -6,7 +6,7 @@ next: docs/bazzite/updates
 distro: bazzite
 ---
 
-Bazzite is een [Universal Blue](https://universal-blue.org/)-image gebouwd op Fedora Atomic — onderhuids gewoon Fedora, met de gaming-stack en de hardware-onderdelen al in elkaar gezet. Waar CachyOS je een systeem geeft dat je uit elkaar kunt halen, geeft Bazzite je een systeem dat bewust moeilijk uit elkaar te halen is, en daarmee ook moeilijk stuk te krijgen.
+Bazzite is een [Universal Blue](https://universal-blue.org/)-image gebouwd op Fedora Atomic. Onderhuids gewoon Fedora, met de gaming-stack en de hardware-onderdelen al in elkaar gezet. Waar CachyOS je een systeem geeft dat je uit elkaar kunt halen, geeft Bazzite je een systeem dat bewust moeilijk uit elkaar te halen is, en daarmee ook moeilijk stuk te krijgen.
 
 Daarmee is het de keuze voor twee soorten mensen: gamers, want Steam, Proton en de controller-stack zitten geconfigureerd in de image, en iedereen die zijn avonden liever niet aan het tweaken van een besturingssysteem besteedt.
 
@@ -28,7 +28,7 @@ Een update is geen verzameling packages maar een nieuwe image. Die wordt op de a
 ujust update
 ```
 
-Desktop-images werken zichzelf op de achtergrond bij, dus in de praktijk draai je dit zelden met de hand — vooral vanaf een TTY of via SSH. [Topgrade]({{< relref "/docs/bazzite/updates" >}}) kan dit samen met je Flatpaks, Homebrew en containers aansturen.
+Desktop-images werken zichzelf op de achtergrond bij, dus in de praktijk draai je dit zelden met de hand, vooral vanaf een TTY of via SSH. De pagina [Bijwerken]({{< relref "/docs/bazzite/updates" >}}) behandelt hoe je dit samen met je Flatpaks, Homebrew en containers aanstuurt.
 
 ### De vorige image blijft op schijf staan
 
@@ -50,7 +50,7 @@ rpm-ostree install <package>
 systemctl reboot
 ```
 
-Die herstart is niet optioneel — de laag wordt op de volgende image toegepast, niet op de draaiende. Precies daarom is layeren een laatste redmiddel en niet de standaard; zie [Software installeren](#software-installeren) hieronder.
+Die herstart is niet optioneel: de laag wordt op de volgende image toegepast, niet op de draaiende. Daarom is layeren een laatste redmiddel en niet de standaard. Zie [Software installeren](#software-installeren) hieronder.
 
 ### Home is `/var/home`
 
@@ -72,14 +72,14 @@ Bazzite publiceert een aparte image per desktop en per GPU-driver, en je kiest e
 
 | Image | Waarvoor |
 |---|---|
-| `bazzite-gnome-nvidia-open` | GNOME + de open NVIDIA-kernelmodules — **waar deze handleidingen van uitgaan** |
+| `bazzite-gnome-nvidia-open` | GNOME + de open NVIDIA-kernelmodules. **Waar deze handleidingen van uitgaan** |
 | `bazzite-nvidia-open` | Hetzelfde, maar met KDE Plasma in plaats van GNOME |
 | `bazzite-gnome-nvidia` | GNOME + de proprietary driver, voor kaarten van vóór Turing |
 | `bazzite-deck-gnome` | Start direct op in Steams Game Mode, voor handhelds en HTPC's |
 
 De `-nvidia-open`-images gebruiken NVIDIA's open kernelmodules, die elke kaart vanaf Turing ondersteunen. De RTX 4060 is Ada en valt daar dus onder; open is hier de juiste standaard.
 
-De rest van deze site is rond GNOME geschreven — de handleidingen voor [autologin]({{< relref "/docs/security/autologin" >}}) en de [YubiKey]({{< relref "/docs/security/yubikey" >}}) configureren GDM, en een aantal applicatie-aanpassingen zijn GNOME-extensies. KDE werkt prima, het is alleen niet wat deze pagina's beschrijven.
+De rest van deze site is rond GNOME geschreven. De handleidingen voor [autologin]({{< relref "/docs/security/autologin" >}}) en de [YubiKey]({{< relref "/docs/security/yubikey" >}}) configureren GDM, en een aantal applicatie-aanpassingen zijn GNOME-extensies. KDE werkt prima, het is alleen niet wat deze pagina's beschrijven.
 
 {{< callout type="info" >}}
 De ISO die je downloadt bepaalt alleen waar je begint. Later van desktop of driver wisselen is een rebase, geen herinstallatie.
@@ -92,7 +92,7 @@ rpm-ostree rebase ostree-image-signed:docker://ghcr.io/ublue-os/bazzite-gnome-nv
 systemctl reboot
 ```
 
-`ostree-image-signed:` controleert de handtekening van de image. Brengt een rebase je ergens waar je niet wilt zijn, dan staat de image waar je vandaan kwam er nog — `rpm-ostree rollback` en herstarten.
+`ostree-image-signed:` controleert de handtekening van de image. Brengt een rebase je ergens waar je niet wilt zijn, dan staat de image waar je vandaan kwam er nog. Draai `rpm-ostree rollback` en herstart.
 
 ## Secure Boot
 
@@ -143,7 +143,7 @@ Dit is het onderdeel dat op een atomic systeem het meeste werk doet. Op CachyOS 
 
 ### rpm-ostree-layering
 
-Laatste redmiddel, voor dingen die echt onderdeel van het systeem moeten zijn — een driver, een kernelmodule, een systeemdienst.
+Laatste redmiddel, voor dingen die echt onderdeel van het systeem moeten zijn: een driver, een kernelmodule, een systeemdienst.
 
 ```bash
 rpm-ostree install <package>

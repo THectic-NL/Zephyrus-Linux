@@ -88,8 +88,19 @@ This site is bilingual (EN + NL). When updating content:
 
 ## CachyOS and Bazzite
 
-The guides cover two distributions. Most pages are shared, with a tab around the
-commands that differ:
+The guides cover two distributions.
+
+**Pages that work fundamentally differently per distribution** live in
+`content/docs/cachyos/` and `content/docs/bazzite/`. The file names mirror each
+other (`cachyos/nvidia.md` has a `bazzite/nvidia.md`), because the navbar
+distribution switcher moves between them by swapping the path segment. Set
+`distro: cachyos` or `distro: bazzite` in the front matter of every page in
+those two trees, and add a matching page on the other side.
+
+**Everything that doesn't depend on the distribution** stays in the shared
+sections (`hardware/`, `security/`, `networking/`, `virtualization/`,
+`desktop/`, `gaming/`, plus `applications.md` and `known-issues.md`). Where a
+shared page has a step that differs only by package manager, use a tab:
 
 ```markdown
 {{< tabs >}}
@@ -103,22 +114,14 @@ commands that differ:
 ```
 
 The tab names must be exactly `CachyOS` and `Bazzite`, in that order, on every
-page. The navbar distribution switcher and Hextra's tab syncing both key off
-that pair — a third name, a typo or a swapped order breaks the sync for the
-whole page.
+page. Hextra syncs same-named tab groups through the browser, and the switcher
+writes that same key, so picking a distribution once follows through every
+shared page. A third name, a typo or a swapped order breaks the sync.
 
-A topic that works so differently it needs a page per distribution:
+For a one-line install command each side, `{{< install cachyos="sudo pacman -S
+foo" bazzite="flatpak install flathub org.example.Foo" >}}` is shorter than a
+tab and highlights the reader's distribution.
 
-- Set `distro: cachyos` or `distro: bazzite` in the front matter.
-- If the other distribution has an equivalent page, add `distro_pages` so the
-  switcher jumps straight to it:
-
-  ```yaml
-  distro: cachyos
-  distro_pages:
-    cachyos: /docs/hardware/nvidia-cachyos
-    bazzite: /docs/hardware/nvidia-bazzite
-  ```
-
-- If it has no counterpart, put `{{< distro-note >}}` at the top of the body so
-  readers on the other distribution see why the page doesn't apply.
+If a shared page only applies to one distribution, put `{{< distro-note >}}` at
+the top of the body (with `distro:` in the front matter) so readers on the
+other one see why.

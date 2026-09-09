@@ -18,7 +18,7 @@ CachyOS is an Arch-based distribution with hardware-specific optimizations, and 
 
 ## What rolling means here
 
-Packages arrive as upstream releases them. There is no release to upgrade to and no version number to be behind on, but there is also nothing holding a change back, so `sudo pacman -Syu` is something you run deliberately rather than something that happens to you. The system is fully writable, so a package is usable the moment it installs; only a new kernel needs a reboot. When an update goes wrong you roll it back by hand — the main practical difference with Bazzite, where a bad update is one `rpm-ostree rollback` away.
+Packages arrive as upstream releases them. There is no release to upgrade to and no version number to be behind on, but nothing holds a change back either. So `sudo pacman -Syu` is something you run deliberately rather than something that happens to you. The system is fully writable, so a package is usable the moment it installs, and only a new kernel needs a reboot. When an update goes wrong you roll it back by hand. That is the main practical difference with Bazzite, where a bad update is one `rpm-ostree rollback` away.
 
 → [Updating]({{< relref "/docs/cachyos/updates" >}}) covers `pacman`, the kernel and the CachyOS Kernel Manager, and keeping everything current in one command with Topgrade.
 

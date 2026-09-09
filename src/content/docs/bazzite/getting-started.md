@@ -6,7 +6,7 @@ next: docs/bazzite/updates
 distro: bazzite
 ---
 
-Bazzite is a [Universal Blue](https://universal-blue.org/) image built on Fedora Atomic — plain Fedora underneath, with the gaming stack and the hardware pieces already assembled. Where CachyOS hands you a system you can take apart, Bazzite hands you a system that is deliberately hard to take apart, and correspondingly hard to break.
+Bazzite is a [Universal Blue](https://universal-blue.org/) image built on Fedora Atomic. Plain Fedora underneath, with the gaming stack and the hardware pieces already assembled. Where CachyOS hands you a system you can take apart, Bazzite hands you a system that is deliberately hard to take apart, and correspondingly hard to break.
 
 That makes it the one to pick for two kinds of people: gamers, because Steam, Proton and the controller stack ship configured in the image, and anyone who would rather not spend evenings tweaking an operating system.
 
@@ -28,7 +28,7 @@ An update is not a set of packages, it's a new image. It's downloaded in the bac
 ujust update
 ```
 
-Desktop images update themselves in the background, so in practice you rarely run this by hand — mostly when you're on a TTY or over SSH. [Topgrade]({{< relref "/docs/bazzite/updates" >}}) can drive this together with your Flatpaks, Homebrew and containers.
+Desktop images update themselves in the background, so in practice you rarely run this by hand, mostly when you're on a TTY or over SSH. The [Updating]({{< relref "/docs/bazzite/updates" >}}) page covers driving this together with your Flatpaks, Homebrew and containers.
 
 ### The previous image stays on disk
 
@@ -50,7 +50,7 @@ rpm-ostree install <package>
 systemctl reboot
 ```
 
-The reboot isn't optional — the layer is applied to the next image, not the running one. That's exactly why layering is a last resort rather than the default; see [Installing software](#installing-software) below.
+The reboot isn't optional: the layer is applied to the next image, not the running one. That's why layering is a last resort rather than the default. See [Installing software](#installing-software) below.
 
 ### Home is `/var/home`
 
@@ -72,14 +72,14 @@ Bazzite publishes a separate image per desktop and per GPU driver, and you pick 
 
 | Image | For |
 |---|---|
-| `bazzite-gnome-nvidia-open` | GNOME + the open NVIDIA kernel modules — **what these guides assume** |
+| `bazzite-gnome-nvidia-open` | GNOME + the open NVIDIA kernel modules. **What these guides assume** |
 | `bazzite-nvidia-open` | The same, with KDE Plasma instead of GNOME |
 | `bazzite-gnome-nvidia` | GNOME + the proprietary driver, for pre-Turing cards |
 | `bazzite-deck-gnome` | Boots straight into Steam's Game Mode, for handhelds and HTPCs |
 
 The `-nvidia-open` images use NVIDIA's open kernel modules, which cover every card from Turing onwards. The RTX 4060 is Ada, so it qualifies, and open is the right default here.
 
-The rest of this site is written around GNOME — the [autologin]({{< relref "/docs/security/autologin" >}}) and [YubiKey]({{< relref "/docs/security/yubikey" >}}) guides configure GDM, and several application tweaks are GNOME extensions. KDE works fine, it's just not what these pages describe.
+The rest of this site is written around GNOME. The [autologin]({{< relref "/docs/security/autologin" >}}) and [YubiKey]({{< relref "/docs/security/yubikey" >}}) guides configure GDM, and several application tweaks are GNOME extensions. KDE works fine, it's just not what these pages describe.
 
 {{< callout type="info" >}}
 The ISO you download only decides where you start. Switching desktop or driver later is a rebase, not a reinstall.
@@ -92,7 +92,7 @@ rpm-ostree rebase ostree-image-signed:docker://ghcr.io/ublue-os/bazzite-gnome-nv
 systemctl reboot
 ```
 
-`ostree-image-signed:` verifies the image signature. If a rebase leaves you somewhere you don't want to be, the image you came from is still on disk — `rpm-ostree rollback` and reboot.
+`ostree-image-signed:` verifies the image signature. If a rebase leaves you somewhere you don't want to be, the image you came from is still on disk. Run `rpm-ostree rollback` and reboot.
 
 ## Secure Boot
 
@@ -143,7 +143,7 @@ This is the piece that does the most work on an atomic system. On CachyOS distro
 
 ### rpm-ostree layering
 
-Last resort, for things that genuinely have to be part of the system — a driver, a kernel module, a system service.
+Last resort, for things that genuinely have to be part of the system: a driver, a kernel module, a system service.
 
 ```bash
 rpm-ostree install <package>

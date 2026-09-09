@@ -116,7 +116,7 @@ sudo systemctl enable --now nvidia-powerd.service
 ```
 
 **Referentie:**
-- [NVIDIA Power Management Documentatie](https://download.nvidia.com/XFree86/Linux-x86_64/610.43.02/README/powermanagement.html)
+- [NVIDIA Power Management Documentatie](https://download.nvidia.com/XFree86/Linux-x86_64/610.57.04/README/powermanagement.html)
 
 {{% /steps %}}
 

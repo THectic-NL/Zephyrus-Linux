@@ -9,7 +9,7 @@ distro: cachyos
 The G16 has an NVIDIA RTX 4060 alongside the AMD iGPU. The open-source Nouveau driver doesn't perform well on modern NVIDIA hardware, so proprietary drivers are necessary.
 
 **Driver I'm running (at the time of writing):**
-- Version: 610.43.02
+- Version: 610.57.04
 - CUDA Version: 13.3
 
 ## There is nothing to install
@@ -85,7 +85,7 @@ sudo systemctl enable --now nvidia-powerd.service
 ```
 
 **Reference:**
-- [NVIDIA Power Management Documentation](https://download.nvidia.com/XFree86/Linux-x86_64/610.43.02/README/powermanagement.html)
+- [NVIDIA Power Management Documentation](https://download.nvidia.com/XFree86/Linux-x86_64/610.57.04/README/powermanagement.html)
 
 {{% /steps %}}
 
@@ -96,7 +96,7 @@ The driver is a DKMS module, so a kernel update triggers two things through pacm
 1. DKMS rebuilds the NVIDIA modules against the new kernel
 2. If you set up Secure Boot, sbctl re-signs the new kernel EFI image
 
-Neither needs manual intervention. What the kernel does *not* do is enforce module signatures, which is why the NVIDIA module keeps working while marking the kernel as tainted — see [Secure Boot on CachyOS]({{< relref "/docs/cachyos/secure-boot" >}}).
+Neither needs manual intervention. What the kernel does *not* do is enforce module signatures, which is why the NVIDIA module keeps working while marking the kernel as tainted. See [Secure Boot on CachyOS]({{< relref "/docs/cachyos/secure-boot" >}}).
 
 {{< callout type="info" >}}
 Known issues and troubleshooting for the NVIDIA driver are documented on the [Known Issues]({{< relref "/docs/known-issues" >}}) page.
