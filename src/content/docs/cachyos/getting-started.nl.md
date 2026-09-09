@@ -1,15 +1,15 @@
 ---
-title: "CachyOS"
+title: "Aan de slag"
 weight: 1
-prev: docs/getting-started
-next: docs/getting-started/bazzite
+prev: docs/cachyos
+next: docs/cachyos/updates
 distro: cachyos
 distro_pages:
-  cachyos: /docs/getting-started/cachyos
-  bazzite: /docs/getting-started/bazzite
+  cachyos: /docs/cachyos/getting-started
+  bazzite: /docs/bazzite/getting-started
 ---
 
-CachyOS is een op Arch gebaseerde distributie met hardware-specifieke optimalisaties, en het is wat ik als dagelijkse driver op de G16 draai. Dit is de optie voor wie de machine zelf in handen wil: je kiest de kernel, de scheduler en elk package, en het onderhoud dat daarbij hoort neem je erbij. Spreekt die ruil je niet aan, lees dan eerst [Bazzite]({{< relref "/docs/getting-started/bazzite" >}}) voordat je iets installeert.
+CachyOS is een op Arch gebaseerde distributie met hardware-specifieke optimalisaties, en één van de twee die ik op de G16 als dagelijks systeem heb gedraaid. Dit is de optie voor wie de machine zelf in handen wil: je kiest de kernel, de scheduler en elk package, en het onderhoud dat daarbij hoort neem je erbij. Spreekt die ruil je niet aan, lees dan eerst [Bazzite]({{< relref "/docs/bazzite/getting-started" >}}) voordat je iets installeert.
 
 ## Waarom CachyOS
 
@@ -32,7 +32,7 @@ Het systeem is volledig beschrijfbaar. `pacman` installeert in `/usr` en het pac
 Gaat een update wél mis, dan draai je hem met de hand terug — het package downgraden vanuit de pacman-cache in `/var/cache/pacman/pkg/`, of vanuit het [Arch Linux Archive](https://wiki.archlinux.org/title/Arch_Linux_Archive). Handig om te weten vóórdat je het nodig hebt. Dit is het belangrijkste praktische verschil met Bazzite, waar een slechte update één `rpm-ostree rollback` verderop ligt.
 
 {{< callout type="info" >}}
-Alles in één keer bijwerken — pacman, de AUR, Flatpak en de rest — staat op de pagina [Topgrade]({{< relref "/docs/getting-started/topgrade" >}}).
+Alles in één keer bijwerken — pacman, de AUR, Flatpak en de rest — staat op de pagina [Topgrade]({{< relref "/docs/cachyos/updates" >}}).
 {{< /callout >}}
 
 ## CachyOS Kernel Manager
@@ -49,7 +49,7 @@ De scheduler kan op elk moment worden gewijzigd zonder herstart.
 
 CachyOS gebruikt geen shim, dus Secure Boot moet **uit** staan voordat de installer wil opstarten. Daarna kun je het weer aanzetten met je eigen ondertekeningssleutels.
 
-→ [Secure Boot op CachyOS]({{< relref "/docs/hardware/secure-boot-cachyos" >}})
+→ [Secure Boot op CachyOS]({{< relref "/docs/cachyos/secure-boot" >}})
 
 ## Aanbevolen volgorde
 
@@ -61,8 +61,8 @@ Dit is de volgorde die logisch aanvoelde na een schone CachyOS-installatie:
 
 De NVIDIA-driver is al door de installer geconfigureerd, dus dit is vooral controleren. Stel daarna Secure Boot in met je eigen ondertekeningssleutels en configureer de ASUS ROG hardware-functies (fan curves, prestatieprofielen, GPU-switching).
 
-→ [NVIDIA Driver: CachyOS]({{< relref "/docs/hardware/nvidia-cachyos" >}})
-→ [Secure Boot op CachyOS]({{< relref "/docs/hardware/secure-boot-cachyos" >}})
+→ [NVIDIA Driver: CachyOS]({{< relref "/docs/cachyos/nvidia" >}})
+→ [Secure Boot op CachyOS]({{< relref "/docs/cachyos/secure-boot" >}})
 → [asusctl & ROG Control Center]({{< relref "/docs/hardware/asusctl-rog-control" >}})
 → [Kleurprofielen voor het scherm]({{< relref "/docs/hardware/color-profiles" >}})
 

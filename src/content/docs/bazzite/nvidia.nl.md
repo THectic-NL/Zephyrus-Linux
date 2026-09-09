@@ -1,12 +1,12 @@
 ---
-title: "NVIDIA Driver: Bazzite"
-weight: 2
-prev: docs/hardware/nvidia-cachyos
-next: docs/hardware/secure-boot-cachyos
+title: "NVIDIA-driver"
+weight: 3
+prev: docs/bazzite/updates
+next: docs/bazzite/secure-boot
 distro: bazzite
 distro_pages:
-  cachyos: /docs/hardware/nvidia-cachyos
-  bazzite: /docs/hardware/nvidia-bazzite
+  cachyos: /docs/cachyos/nvidia
+  bazzite: /docs/bazzite/nvidia
 ---
 
 De G16 heeft een NVIDIA RTX 4060 naast de AMD iGPU. Op Bazzite is de driver niets dat je installeert — hij is onderdeel van de image waarmee je opstart. Het werk hier bestaat dus uit de juiste image kiezen, één Secure Boot-sleutel inschrijven en twee energie-instellingen die deze laptop nodig heeft.
@@ -30,7 +30,7 @@ rpm-ostree rebase ostree-image-signed:docker://ghcr.io/ublue-os/bazzite-gnome-nv
 systemctl reboot
 ```
 
-Vervang `bazzite-gnome-nvidia-open` door `bazzite-nvidia-open` als je KDE wilt in plaats van GNOME. Zie [Bazzite]({{< relref "/docs/getting-started/bazzite" >}}) voor de volledige lijst met images en wat een rebase precies doet.
+Vervang `bazzite-gnome-nvidia-open` door `bazzite-nvidia-open` als je KDE wilt in plaats van GNOME. Zie [Bazzite]({{< relref "/docs/bazzite/getting-started" >}}) voor de volledige lijst met images en wat een rebase precies doet.
 
 ## Schrijf eerst de Secure Boot-sleutel in
 
@@ -40,7 +40,7 @@ De NVIDIA-kernelmodules zijn ondertekend met de sleutel van Universal Blue. Staa
 ujust enroll-secure-boot-key
 ```
 
-Het wachtwoord is `universalblue`. De volledige procedure, inclusief het blauwe MokManager-scherm: [Secure Boot op Bazzite]({{< relref "/docs/hardware/secure-boot-bazzite" >}}).
+Het wachtwoord is `universalblue`. De volledige procedure, inclusief het blauwe MokManager-scherm: [Secure Boot op Bazzite]({{< relref "/docs/bazzite/secure-boot" >}}).
 
 ## Verificatie Na Installatie
 

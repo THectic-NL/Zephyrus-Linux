@@ -95,7 +95,7 @@ Before blaming Game Mode, confirm the driver is healthy in a normal desktop sess
 nvidia-smi
 ```
 
-If that fails, fix it first — [NVIDIA on CachyOS]({{< relref "/docs/hardware/nvidia-cachyos" >}}) or [NVIDIA on Bazzite]({{< relref "/docs/hardware/nvidia-bazzite" >}}) — because none of this works on top of a driver that isn't loading.
+If that fails, fix it first — [NVIDIA on CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) or [NVIDIA on Bazzite]({{< relref "/docs/bazzite/nvidia" >}}) — because none of this works on top of a driver that isn't loading.
 
 ## Which to actually use
 

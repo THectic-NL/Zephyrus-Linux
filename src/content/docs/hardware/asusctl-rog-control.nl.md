@@ -1,7 +1,7 @@
 ---
 title: "asusctl & ROG Control Center"
-weight: 5
-prev: docs/hardware/secure-boot-bazzite
+weight: 1
+prev: docs/hardware
 next: docs/hardware/color-profiles
 ---
 
@@ -263,7 +263,7 @@ asusctl armoury set dgpu_disable 0
 
 > **Let op:** Na het wisselen van mode kan een herstart of uitloggen/inloggen vereist zijn.
 
-> **Belangrijk:** `nvidia-powerd.service` moet uitgeschakeld en **gemaskeerd** blijven op deze laptop. Het conflicteert met AMD ATPX power management en veroorzaakt soft lockups en reboot hangs (zwart scherm, backlights blijven aan). GPU-vermogensbeheer loopt via ATPX (via ACPI). Zie de NVIDIA-driverpagina voor jouw distributie — [CachyOS]({{< relref "/docs/hardware/nvidia-cachyos" >}}) of [Bazzite]({{< relref "/docs/hardware/nvidia-bazzite" >}}) — voor diagnosedetails en commando's.
+> **Belangrijk:** `nvidia-powerd.service` moet uitgeschakeld en **gemaskeerd** blijven op deze laptop. Het conflicteert met AMD ATPX power management en veroorzaakt soft lockups en reboot hangs (zwart scherm, backlights blijven aan). GPU-vermogensbeheer loopt via ATPX (via ACPI). Zie de NVIDIA-driverpagina voor jouw distributie — [CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) of [Bazzite]({{< relref "/docs/bazzite/nvidia" >}}) — voor diagnosedetails en commando's.
 
 {{% /details %}}
 
@@ -394,4 +394,4 @@ Kernel 7.0 is in april 2026 uitgebracht en CachyOS pakte het snel op. Voor deze 
 - [asus-linux.org](https://asus-linux.org/): officiële projectsite
 - [asusctl GitLab](https://gitlab.com/asus-linux/asusctl): broncode en issue tracker
 - [CachyOS Wiki: ASUS](https://wiki.cachyos.org/): CachyOS-specifieke documentatie
-- NVIDIA driver setup en bekende problemen: [CachyOS]({{< relref "/docs/hardware/nvidia-cachyos" >}}) · [Bazzite]({{< relref "/docs/hardware/nvidia-bazzite" >}})
+- NVIDIA driver setup en bekende problemen: [CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) · [Bazzite]({{< relref "/docs/bazzite/nvidia" >}})

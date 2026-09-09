@@ -1,6 +1,6 @@
 ---
 title: "Bekende Problemen"
-weight: 9
+weight: 10
 prev: docs/gaming/proton-slr
 ---
 
@@ -269,7 +269,7 @@ Hier wordt lokaal niets gebouwd, dus er zijn maar twee realistische oorzaken.
 rpm-ostree status
 ```
 
-Staat `nvidia-open` er niet in, dan is dat het hele probleem — zie [NVIDIA Driver: Bazzite]({{< relref "/docs/hardware/nvidia-bazzite" >}}) voor de rebase.
+Staat `nvidia-open` er niet in, dan is dat het hele probleem — zie [NVIDIA Driver: Bazzite]({{< relref "/docs/bazzite/nvidia" >}}) voor de rebase.
 
 **2. De Secure Boot-sleutel is niet ingeschreven.** De modules zijn ondertekend door Universal Blue; staat Secure Boot aan en ontbreekt de sleutel, dan weigeren ze stilzwijgend te laden:
 
@@ -292,7 +292,7 @@ Draai hier **geen** `akmods` of `dracut`. Gidsen die dat zeggen zijn geschreven 
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
 
-Met `sbctl` en je eigen sleutels dwingt de kernel geen modulehandtekeningen af, dus normaal komt dit niet voor. Gebeurt het toch, dan heb je nog een MOK-opzet van een eerdere installatie: reset die en doorloop [Secure Boot op CachyOS]({{< relref "/docs/hardware/secure-boot-cachyos" >}}) opnieuw.
+Met `sbctl` en je eigen sleutels dwingt de kernel geen modulehandtekeningen af, dus normaal komt dit niet voor. Gebeurt het toch, dan heb je nog een MOK-opzet van een eerdere installatie: reset die en doorloop [Secure Boot op CachyOS]({{< relref "/docs/cachyos/secure-boot" >}}) opnieuw.
 
 ```bash
 sudo mokutil --reset
@@ -477,7 +477,7 @@ Secure Boot aan plus geen `nvidia`-modules is het signaal. Oplossing:
 ujust enroll-secure-boot-key
 ```
 
-Herstart naar MokManager, **Enroll MOK** → **Continue** → **Yes**, wachtwoord `universalblue`. Zie [Secure Boot op Bazzite]({{< relref "/docs/hardware/secure-boot-bazzite" >}}).
+Herstart naar MokManager, **Enroll MOK** → **Continue** → **Yes**, wachtwoord `universalblue`. Zie [Secure Boot op Bazzite]({{< relref "/docs/bazzite/secure-boot" >}}).
 
 {{% /details %}}
 

@@ -1,6 +1,6 @@
 ---
 title: "Kleurprofielen voor het scherm"
-weight: 6
+weight: 2
 prev: docs/hardware/asusctl-rog-control
 next: docs/desktop/kde
 ---

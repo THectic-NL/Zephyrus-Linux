@@ -1,12 +1,12 @@
 ---
-title: "Bazzite"
-weight: 2
-prev: docs/getting-started/cachyos
-next: docs/getting-started/topgrade
+title: "Getting Started"
+weight: 1
+prev: docs/bazzite
+next: docs/bazzite/updates
 distro: bazzite
 distro_pages:
-  cachyos: /docs/getting-started/cachyos
-  bazzite: /docs/getting-started/bazzite
+  cachyos: /docs/cachyos/getting-started
+  bazzite: /docs/bazzite/getting-started
 ---
 
 Bazzite is a [Universal Blue](https://universal-blue.org/) image built on Fedora Atomic — plain Fedora underneath, with the gaming stack and the hardware pieces already assembled. Where CachyOS hands you a system you can take apart, Bazzite hands you a system that is deliberately hard to take apart, and correspondingly hard to break.
@@ -31,7 +31,7 @@ An update is not a set of packages, it's a new image. It's downloaded in the bac
 ujust update
 ```
 
-Desktop images update themselves in the background, so in practice you rarely run this by hand — mostly when you're on a TTY or over SSH. [Topgrade]({{< relref "/docs/getting-started/topgrade" >}}) can drive this together with your Flatpaks, Homebrew and containers.
+Desktop images update themselves in the background, so in practice you rarely run this by hand — mostly when you're on a TTY or over SSH. [Topgrade]({{< relref "/docs/bazzite/updates" >}}) can drive this together with your Flatpaks, Homebrew and containers.
 
 ### The previous image stays on disk
 
@@ -101,7 +101,7 @@ systemctl reboot
 
 Unlike CachyOS, Bazzite boots under Secure Boot without disabling it first, because it uses shim. It does need Universal Blue's key enrolled once, or the NVIDIA kernel modules won't load.
 
-→ [Secure Boot on Bazzite]({{< relref "/docs/hardware/secure-boot-bazzite" >}})
+→ [Secure Boot on Bazzite]({{< relref "/docs/bazzite/secure-boot" >}})
 
 ## Installing software
 
@@ -179,8 +179,8 @@ The ones that come up in these guides are `ujust update`, `ujust enroll-secure-b
 
 The NVIDIA driver is already in the image, so this is verification plus enrolling the Secure Boot key. Then the ASUS ROG hardware features, which need `asusctl` layered from the Terra repository.
 
-→ [NVIDIA Driver: Bazzite]({{< relref "/docs/hardware/nvidia-bazzite" >}})
-→ [Secure Boot on Bazzite]({{< relref "/docs/hardware/secure-boot-bazzite" >}})
+→ [NVIDIA Driver: Bazzite]({{< relref "/docs/bazzite/nvidia" >}})
+→ [Secure Boot on Bazzite]({{< relref "/docs/bazzite/secure-boot" >}})
 → [asusctl & ROG Control Center]({{< relref "/docs/hardware/asusctl-rog-control" >}})
 → [Display Color Profiles]({{< relref "/docs/hardware/color-profiles" >}})
 

@@ -113,7 +113,7 @@ systemctl reboot
 
 ### nvidia-smi (RTX 4060)
 
-Nothing to do. `nvidia-smi` ships with the driver on both — it's what the [NVIDIA]({{< relref "/docs/hardware/nvidia-cachyos" >}}) pages have you run to check the driver loaded. If Astra Monitor shows no NVIDIA section, the driver isn't loaded, and that's a driver problem rather than an extension one.
+Nothing to do. `nvidia-smi` ships with the driver on both — it's what the [NVIDIA]({{< relref "/docs/cachyos/nvidia" >}}) pages have you run to check the driver loaded. If Astra Monitor shows no NVIDIA section, the driver isn't loaded, and that's a driver problem rather than an extension one.
 
 ### Nethogs
 

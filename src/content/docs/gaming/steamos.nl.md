@@ -95,7 +95,7 @@ Voordat je Game Mode de schuld geeft: controleer in een gewone bureaubladsessie 
 nvidia-smi
 ```
 
-Mislukt dat, los dat dan eerst op — [NVIDIA op CachyOS]({{< relref "/docs/hardware/nvidia-cachyos" >}}) of [NVIDIA op Bazzite]({{< relref "/docs/hardware/nvidia-bazzite" >}}) — want niets hiervan werkt bovenop een driver die niet laadt.
+Mislukt dat, los dat dan eerst op — [NVIDIA op CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) of [NVIDIA op Bazzite]({{< relref "/docs/bazzite/nvidia" >}}) — want niets hiervan werkt bovenop een driver die niet laadt.
 
 ## Wat je in de praktijk moet nemen
 

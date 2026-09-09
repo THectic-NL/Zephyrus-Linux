@@ -1,21 +1,33 @@
-{{- /* The CachyOS/Bazzite switcher in the navbar. Rendered by the
+{{- /* CachyOS/Bazzite switcher in the navbar. Rendered by the
        `type = 'distro-switch'` menu item (see _partials/navbar.html).
 
-       It is a thin control over Hextra's synced tabs: every distro tab on the
-       site is named "CachyOS" or "Bazzite" in that order, so Hextra stores the
-       choice in localStorage["hextra-tab-CachyOS%2CBazzite"] as "0" or "1".
-       distro-switch.js writes that same key and reloads, which flips every tab
-       on every page at once. No server-side state, no duplicated content tree.
-
-       Pages that belong to one distribution set `distro` in front matter; a
-       page that also names its counterpart in `distro_pages` makes the switch
-       navigate there instead of reloading. */ -}}
+       A button showing the active distribution, opening a two-item menu.
+       distro-switch.js does the work: on a page under /docs/cachyos/ or
+       /docs/bazzite/ it swaps the segment and navigates to the mirrored
+       counterpart; on a shared page it stores the choice and re-filters the
+       sidebar. `<html data-distro>` is set before paint in custom/head-end.html
+       so the right option shows immediately. */ -}}
 {{- $nl := eq .Site.Language.Lang "nl" -}}
 {{- $label := cond $nl "Distributie" "Distribution" -}}
-<div class="distro-switch hx:p-2" role="group" aria-label="{{ $label }}" data-distro-switch>
-  <span class="distro-switch-label" aria-hidden="true">{{ $label }}</span>
-  <span class="distro-switch-options">
-    <button type="button" class="distro-switch-option" data-distro="cachyos" aria-pressed="false">CachyOS</button>
-    <button type="button" class="distro-switch-option" data-distro="bazzite" aria-pressed="false">Bazzite</button>
-  </span>
+<div class="distro-switch" data-distro-switch>
+  <button
+    type="button"
+    class="distro-switch-toggle"
+    aria-haspopup="menu"
+    aria-expanded="false"
+    aria-label="{{ $label }}"
+    title="{{ $label }}"
+  >
+    <span class="distro-switch-glyph" aria-hidden="true">
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M8 1.5 1.75 5 8 8.5 14.25 5 8 1.5Zm-6.25 5.7v3.6L8 14.5V10.8L1.75 7.2Zm12.5 0L8 10.8v3.7l6.25-3.7v-3.6Z"/></svg>
+    </span>
+    <span class="distro-switch-current" data-distro-current>CachyOS</span>
+    <span class="distro-switch-caret" aria-hidden="true">
+      <svg viewBox="0 0 10 6" width="10" height="6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span>
+  </button>
+  <ul class="distro-switch-menu" role="menu" hidden>
+    <li role="none"><button type="button" role="menuitem" class="distro-switch-option" data-distro="cachyos">CachyOS</button></li>
+    <li role="none"><button type="button" role="menuitem" class="distro-switch-option" data-distro="bazzite">Bazzite</button></li>
+  </ul>
 </div>

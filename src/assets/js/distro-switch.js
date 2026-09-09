@@ -1,107 +1,157 @@
 /*
- * Navbar CachyOS/Bazzite switcher.
+ * Navbar CachyOS/Bazzite switcher + distro-scoped sidebar.
  *
- * Hextra syncs same-named tab groups through localStorage: every distro tab on
- * the site is named "CachyOS" or "Bazzite" in that order, so the choice lives in
- * localStorage["hextra-tab-CachyOS%2CBazzite"] as "0" or "1". This writes that
- * key and reloads, which flips every synced tab on every page at once. The
- * companion "zephyrus-distro" key only exists so the control can show the right
- * option as active before any tab group has rendered.
+ * The docs split into docs/cachyos/** and docs/bazzite/** (mirrored file names)
+ * plus shared sections. `<html data-distro>` is set before paint in
+ * custom/head-end.html; this script wires the control and keeps the value in
+ * sync.
  *
- * A page that belongs to one distribution sets <meta name="page-distro">. If it
- * also names its counterpart in <meta name="distro-page-cachyos|bazzite">, the
- * switch navigates there instead of reloading in place.
+ *   - On a page under /docs/<distro>/…  the switch swaps the segment and
+ *     navigates to the counterpart (same file name in the other tree).
+ *   - On a shared page it stores the choice, updates <html data-distro> and
+ *     re-filters the sidebar in place — no navigation.
  */
 (function () {
   "use strict";
 
-  var TAB_KEY = "hextra-tab-CachyOS%2CBazzite";
   var PREF_KEY = "zephyrus-distro";
-  var ORDER = ["cachyos", "bazzite"];
+  var DISTROS = ["cachyos", "bazzite"];
+  var RE = /\/docs\/(cachyos|bazzite)\//;
 
-  function read(key) {
+  function read() {
     try {
-      return localStorage.getItem(key);
+      return localStorage.getItem(PREF_KEY);
     } catch (e) {
       return null;
     }
   }
 
-  function write(key, value) {
+  function store(distro) {
     try {
-      localStorage.setItem(key, value);
+      localStorage.setItem(PREF_KEY, distro);
+      /* Keep Hextra's synced tab groups in step: any {{< tabs >}} still named
+         CachyOS/Bazzite on a shared page follows the same choice. */
+      localStorage.setItem("hextra-tab-CachyOS%2CBazzite", String(DISTROS.indexOf(distro)));
     } catch (e) {
-      /* private mode, blocked storage: the tab default still applies */
+      /* private mode: the page still works, the choice just won't persist */
     }
   }
 
-  function currentDistro() {
-    var idx = parseInt(read(TAB_KEY), 10);
-    if (idx === 0 || idx === 1) {
-      return ORDER[idx];
-    }
-    return read(PREF_KEY) === "bazzite" ? "bazzite" : "cachyos";
+  function pageDistro() {
+    var m = location.pathname.match(RE);
+    return m ? m[1] : null;
   }
 
-  function meta(name) {
-    var el = document.querySelector('meta[name="' + name + '"]');
-    return el ? el.getAttribute("content") : null;
+  function current() {
+    return (
+      pageDistro() ||
+      (DISTROS.indexOf(read()) !== -1 ? read() : null) ||
+      document.documentElement.getAttribute("data-distro") ||
+      "cachyos"
+    );
   }
 
   function choose(distro) {
-    var idx = ORDER.indexOf(distro);
-    if (idx < 0) {
+    if (DISTROS.indexOf(distro) === -1 || distro === current()) {
+      closeMenu();
       return;
     }
-    write(TAB_KEY, String(idx));
-    write(PREF_KEY, distro);
+    store(distro);
 
-    var counterpart = meta("distro-page-" + distro);
-    if (counterpart && counterpart !== location.pathname) {
-      location.assign(counterpart);
-    } else {
-      location.reload();
+    var here = pageDistro();
+    if (here) {
+      location.assign(location.pathname.replace(RE, "/docs/" + distro + "/"));
+      return;
     }
+    document.documentElement.setAttribute("data-distro", distro);
+    decorate();
+    closeMenu();
   }
 
-  function decorate() {
-    var current = currentDistro();
+  /* ---- sidebar: drop the non-active distro section on shared pages ---- */
 
+  function filterSidebar(distro) {
+    var other = distro === "cachyos" ? "bazzite" : "cachyos";
     document
-      .querySelectorAll("[data-distro-switch] .distro-switch-option")
-      .forEach(function (btn) {
-        var active = btn.getAttribute("data-distro") === current;
-        btn.setAttribute("aria-pressed", active ? "true" : "false");
-        btn.classList.toggle("is-active", active);
+      .querySelectorAll('.hextra-sidebar-container a[href*="/docs/' + other + '/"]')
+      .forEach(function (a) {
+        var li = a.closest("li");
+        if (li) {
+          li.hidden = true;
+        }
       });
+    document
+      .querySelectorAll('.hextra-sidebar-container a[href*="/docs/' + distro + '/"]')
+      .forEach(function (a) {
+        var li = a.closest("li");
+        if (li) {
+          li.hidden = false;
+        }
+      });
+  }
 
-    var pageDistro = meta("page-distro");
-    document.querySelectorAll("[data-distro-note]").forEach(function (note) {
-      var noteFor = note.getAttribute("data-distro-note") || pageDistro;
-      note.classList.toggle("is-mismatch", noteFor !== current);
+  /* ---- control state ---- */
+
+  function decorate() {
+    var cur = current();
+
+    document.querySelectorAll("[data-distro-current]").forEach(function (el) {
+      el.textContent = cur === "bazzite" ? "Bazzite" : "CachyOS";
     });
+    document.querySelectorAll("[data-distro-switch] .distro-switch-option").forEach(function (btn) {
+      var on = btn.getAttribute("data-distro") === cur;
+      btn.classList.toggle("is-active", on);
+      btn.setAttribute("aria-current", on ? "true" : "false");
+    });
+    document.querySelectorAll("[data-distro-note]").forEach(function (note) {
+      note.classList.toggle("is-mismatch", note.getAttribute("data-distro-note") !== cur);
+    });
+
+    filterSidebar(cur);
+  }
+
+  /* ---- menu open/close ---- */
+
+  function menu() {
+    return document.querySelector("[data-distro-switch] .distro-switch-menu");
+  }
+  function toggleBtn() {
+    return document.querySelector("[data-distro-switch] .distro-switch-toggle");
+  }
+
+  function openMenu() {
+    var m = menu();
+    if (!m) return;
+    m.hidden = false;
+    toggleBtn().setAttribute("aria-expanded", "true");
+  }
+  function closeMenu() {
+    var m = menu();
+    if (!m) return;
+    m.hidden = true;
+    var b = toggleBtn();
+    if (b) b.setAttribute("aria-expanded", "false");
   }
 
   document.addEventListener("click", function (e) {
-    var btn =
-      e.target.closest &&
-      e.target.closest("[data-distro-switch] .distro-switch-option");
-    if (!btn) {
+    var t = e.target;
+    if (t.closest && t.closest("[data-distro-switch] .distro-switch-option")) {
+      e.preventDefault();
+      choose(t.closest(".distro-switch-option").getAttribute("data-distro"));
       return;
     }
-    e.preventDefault();
-    choose(btn.getAttribute("data-distro"));
+    if (t.closest && t.closest("[data-distro-switch] .distro-switch-toggle")) {
+      e.preventDefault();
+      var m = menu();
+      if (m && m.hidden) openMenu();
+      else closeMenu();
+      return;
+    }
+    closeMenu();
   });
 
   document.addEventListener("keydown", function (e) {
-    var btn =
-      e.target.closest &&
-      e.target.closest("[data-distro-switch] .distro-switch-option");
-    if (!btn || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) {
-      return;
-    }
-    e.preventDefault();
-    choose(btn.getAttribute("data-distro") === "cachyos" ? "bazzite" : "cachyos");
+    if (e.key === "Escape") closeMenu();
   });
 
   if (document.readyState === "loading") {

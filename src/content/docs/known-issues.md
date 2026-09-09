@@ -1,6 +1,6 @@
 ---
 title: "Known Issues"
-weight: 9
+weight: 10
 prev: docs/gaming/proton-slr
 ---
 
@@ -269,7 +269,7 @@ Nothing is built locally here, so there are only two realistic causes.
 rpm-ostree status
 ```
 
-If it doesn't contain `nvidia-open`, that's the whole problem — see [NVIDIA Driver: Bazzite]({{< relref "/docs/hardware/nvidia-bazzite" >}}) for the rebase.
+If it doesn't contain `nvidia-open`, that's the whole problem — see [NVIDIA Driver: Bazzite]({{< relref "/docs/bazzite/nvidia" >}}) for the rebase.
 
 **2. The Secure Boot key isn't enrolled.** The modules are signed by Universal Blue; with Secure Boot on and the key missing, they silently refuse to load:
 
@@ -292,7 +292,7 @@ Do **not** run `akmods` or `dracut` here. Guides that tell you to are written fo
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
 
-With `sbctl` and your own keys, the kernel does not enforce module signatures, so this shouldn't normally come up. If it does, you have a MOK-based setup from a previous install: reset it and go through [Secure Boot on CachyOS]({{< relref "/docs/hardware/secure-boot-cachyos" >}}) again.
+With `sbctl` and your own keys, the kernel does not enforce module signatures, so this shouldn't normally come up. If it does, you have a MOK-based setup from a previous install: reset it and go through [Secure Boot on CachyOS]({{< relref "/docs/cachyos/secure-boot" >}}) again.
 
 ```bash
 sudo mokutil --reset
@@ -477,7 +477,7 @@ Secure Boot enabled plus no `nvidia` modules is the signature. Fix:
 ujust enroll-secure-boot-key
 ```
 
-Reboot into MokManager, **Enroll MOK** → **Continue** → **Yes**, password `universalblue`. See [Secure Boot on Bazzite]({{< relref "/docs/hardware/secure-boot-bazzite" >}}).
+Reboot into MokManager, **Enroll MOK** → **Continue** → **Yes**, password `universalblue`. See [Secure Boot on Bazzite]({{< relref "/docs/bazzite/secure-boot" >}}).
 
 {{% /details %}}
 

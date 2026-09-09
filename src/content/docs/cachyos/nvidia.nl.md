@@ -1,12 +1,12 @@
 ---
-title: "NVIDIA Driver: CachyOS"
-weight: 1
-prev: docs/getting-started/topgrade
-next: docs/hardware/nvidia-bazzite
+title: "NVIDIA-driver"
+weight: 3
+prev: docs/cachyos/updates
+next: docs/cachyos/secure-boot
 distro: cachyos
 distro_pages:
-  cachyos: /docs/hardware/nvidia-cachyos
-  bazzite: /docs/hardware/nvidia-bazzite
+  cachyos: /docs/cachyos/nvidia
+  bazzite: /docs/bazzite/nvidia
 ---
 
 De G16 heeft een NVIDIA RTX 4060 naast de AMD iGPU. De open-source Nouveau driver werkt niet goed op moderne NVIDIA-hardware, dus proprietary drivers zijn nodig.
@@ -99,7 +99,7 @@ De driver is een DKMS-module, dus een kernelupdate zet via pacman-hooks twee din
 1. DKMS herbouwt de NVIDIA-modules tegen de nieuwe kernel
 2. Heb je Secure Boot ingesteld, dan ondertekent sbctl de nieuwe kernel-EFI-image opnieuw
 
-Geen van beide vraagt handmatig ingrijpen. Wat de kernel *niet* doet is modulehandtekeningen afdwingen, en daarom blijft de NVIDIA-module werken terwijl de kernel als tainted wordt gemarkeerd — zie [Secure Boot op CachyOS]({{< relref "/docs/hardware/secure-boot-cachyos" >}}).
+Geen van beide vraagt handmatig ingrijpen. Wat de kernel *niet* doet is modulehandtekeningen afdwingen, en daarom blijft de NVIDIA-module werken terwijl de kernel als tainted wordt gemarkeerd — zie [Secure Boot op CachyOS]({{< relref "/docs/cachyos/secure-boot" >}}).
 
 {{< callout type="info" >}}
 Bekende problemen en troubleshooting voor de NVIDIA-driver staan op de pagina [Bekende Problemen]({{< relref "/docs/known-issues" >}}).

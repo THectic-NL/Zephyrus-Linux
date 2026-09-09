@@ -1,15 +1,15 @@
 ---
-title: "CachyOS"
+title: "Getting Started"
 weight: 1
-prev: docs/getting-started
-next: docs/getting-started/bazzite
+prev: docs/cachyos
+next: docs/cachyos/updates
 distro: cachyos
 distro_pages:
-  cachyos: /docs/getting-started/cachyos
-  bazzite: /docs/getting-started/bazzite
+  cachyos: /docs/cachyos/getting-started
+  bazzite: /docs/bazzite/getting-started
 ---
 
-CachyOS is an Arch-based distribution with hardware-specific optimizations, and it's what I run as my daily driver on the G16. This is the option for wanting the machine in your hands: you choose the kernel, the scheduler and every package, and you carry the maintenance that comes with that. If that trade doesn't appeal, read [Bazzite]({{< relref "/docs/getting-started/bazzite" >}}) instead before you install anything.
+CachyOS is an Arch-based distribution with hardware-specific optimizations, and one of the two I've daily-driven on the G16. This is the option for wanting the machine in your hands: you choose the kernel, the scheduler and every package, and you carry the maintenance that comes with that. If that trade doesn't appeal, read [Bazzite]({{< relref "/docs/bazzite/getting-started" >}}) instead before you install anything.
 
 ## Why CachyOS
 
@@ -32,7 +32,7 @@ The system is fully writable. `pacman` installs into `/usr` and the package is u
 If an update does break something, you roll back by hand — downgrading the package from the pacman cache in `/var/cache/pacman/pkg/`, or from the [Arch Linux Archive](https://wiki.archlinux.org/title/Arch_Linux_Archive). Worth knowing before you need it. This is the main practical difference with Bazzite, where a bad update is one `rpm-ostree rollback` away.
 
 {{< callout type="info" >}}
-Keeping everything up to date in one go — pacman, the AUR, Flatpak and the rest — is covered on the [Topgrade]({{< relref "/docs/getting-started/topgrade" >}}) page.
+Keeping everything up to date in one go — pacman, the AUR, Flatpak and the rest — is covered on the [Topgrade]({{< relref "/docs/cachyos/updates" >}}) page.
 {{< /callout >}}
 
 ## CachyOS Kernel Manager
@@ -49,7 +49,7 @@ The scheduler can be changed at any time without a reboot.
 
 CachyOS doesn't use shim, so Secure Boot has to be **off** before the installer will boot. You can enable it again afterwards with your own signing keys.
 
-→ [Secure Boot on CachyOS]({{< relref "/docs/hardware/secure-boot-cachyos" >}})
+→ [Secure Boot on CachyOS]({{< relref "/docs/cachyos/secure-boot" >}})
 
 ## Recommended setup order
 
@@ -61,8 +61,8 @@ After a fresh CachyOS install, this is the order that made sense for me:
 
 The NVIDIA driver is already configured by the installer, so this is mostly verification. Then set up Secure Boot with your own signing keys and configure the ASUS ROG hardware features (fan curves, performance profiles, GPU switching).
 
-→ [NVIDIA Driver: CachyOS]({{< relref "/docs/hardware/nvidia-cachyos" >}})
-→ [Secure Boot on CachyOS]({{< relref "/docs/hardware/secure-boot-cachyos" >}})
+→ [NVIDIA Driver: CachyOS]({{< relref "/docs/cachyos/nvidia" >}})
+→ [Secure Boot on CachyOS]({{< relref "/docs/cachyos/secure-boot" >}})
 → [asusctl & ROG Control Center]({{< relref "/docs/hardware/asusctl-rog-control" >}})
 → [Display Color Profiles]({{< relref "/docs/hardware/color-profiles" >}})
 

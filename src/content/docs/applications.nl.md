@@ -1,6 +1,6 @@
 ---
 title: "Applicaties"
-weight: 5
+weight: 6
 prev: docs/security/yubikey
 next: docs/networking/eduroam-network-installation
 ---
