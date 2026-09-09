@@ -62,20 +62,22 @@ jobs:
           TZ: Europe/Amsterdam
         run: hugo --gc --minify --printPathWarnings --panicOnWarning --baseURL "http://localhost/"
 
-      # Every English document must have a Dutch counterpart.
+      # Every English document must have a Dutch counterpart. Walk the tree with
+      # find, not src/content/docs/*.md: that glob only saw the top directory, so
+      # everything under hardware/, security/, networking/, virtualization/ (and
+      # desktop/, gaming/) -- most of the pages -- could land without a
+      # translation and this step would say nothing.
       - name: Check every .md has a matching .nl.md
         if: ${{ !cancelled() }}
         run: |
           missing=""
-          for en in src/content/docs/*.md; do
-            base="${en%.md}"
-            nl="${base}.nl.md"
-            # Skip files that are already .nl.md
-            [[ "$en" == *.nl.md ]] && continue
+          while IFS= read -r en; do
+            nl="${en%.md}.nl.md"
             if [ ! -f "$nl" ]; then
               missing="$missing\n  $en → $nl missing"
+              echo "::error file=$en::Missing Dutch translation: $nl"
             fi
-          done
+          done < <(find src/content -type f -name '*.md' ! -name '*.nl.md' | sort)
           if [ -n "$missing" ]; then
             echo -e "::error::Missing Dutch translation(s):$missing"
             exit 1
