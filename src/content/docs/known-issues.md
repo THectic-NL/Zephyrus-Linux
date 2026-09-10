@@ -55,14 +55,19 @@ See the **Things I Wished Had Worked** section at the bottom of this page for th
 {{% details title="Screen brightness control doesn't work while running iGPU-only" closed="true" %}}
 
 **What's happening:**
-Screen brightness control doesn't respond — neither the Fn-key hotkeys nor the OS brightness slider do anything — whenever only the AMD Radeon 890M iGPU is active. This isn't something that breaks after switching modes; it doesn't work in this state to begin with.
+Screen brightness control doesn't respond — neither the Fn-key hotkeys nor the OS brightness slider do anything — whenever only the AMD Radeon 890M iGPU is active.
+
+**Root cause (confirmed upstream):** this is [asusctl#184](https://github.com/OpenGamingCollective/asusctl/issues/184): NVIDIA's kernel modules are still active when a queued GPU-mode change gets applied during shutdown, leaving brightness broken once the switch completes. A fix ("a bounded GPU teardown before the firmware write") is merged to asusctl's `main` branch. The project doesn't cut frequent version-numbered releases, though — distros package rolling snapshots of `main` under the same version string (`6.4.0` here regardless of distro or build date), so whether a given install has the fix depends on exactly when the package was last rebuilt from `main`, not on the version number it reports.
+
+**Related bug, can compound this:** [asusctl#318](https://github.com/OpenGamingCollective/asusctl/issues/318) — GPU-mode changes are written in a batch when the system shuts down. A harmless no-op write in that same batch (re-writing a value that's already set) makes the ASUS WMI firmware return an I/O error, and the way that error is handled aborts the *entire* batch — including the write that would have actually switched the mode. So a mode switch can silently fail to apply at all, not just leave brightness broken. Fixed via [PR #325](https://github.com/OpenGamingCollective/asusctl/pull/325), merged to `main`; same distro-packaging caveat applies.
 
 **Confirmed:**
 - Bazzite (Fedora 44, kernel 7.2.4), after switching to Integrated GPU mode via ROG Control Center
 - CachyOS (kernel 7.2.3-1-cachyos), on a fresh install with `asusctl` not even installed yet — the system defaults to iGPU-only, and brightness is already broken there
+- CachyOS, `asusctl armoury set dgpu_disable 1` (CLI) doesn't switch out of Hybrid either, and survives a reboot unchanged — consistent with #318's batch-write failure blocking the mode write regardless of whether it's requested via the GUI or the CLI
 
 **Workaround:**
-On Bazzite, switching back to Hybrid mode restores it, but only after an actual reboot — picking Hybrid in the dropdown alone doesn't bring it back. Not yet re-tested on CachyOS after installing asusctl and switching GPU modes there.
+None confirmed working on this hardware yet. Upstream's interim suggestion for the mode-switch-not-applying bug is falling back to `supergfxctl` — but that directly conflicts with this guide's own warning [above]({{< relref "/docs/hardware/asusctl-rog-control" >}}) that supergfxctl is unmaintained and a security risk, so weigh that trade-off yourself rather than treating it as a clean fix. The real fix is a newer asusctl build; worth checking whether a `-git`/rolling package is available that tracks `main` more closely than whatever channel shipped the current one.
 
 {{% /details %}}
 

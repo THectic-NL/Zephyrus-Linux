@@ -55,14 +55,19 @@ Zie de sectie **Dingen die ik graag werkend had gezien** onderaan deze pagina vo
 {{% details title="Schermhelderheid werkt niet zolang alleen de iGPU actief is" closed="true" %}}
 
 **Wat er gebeurt:**
-Schermhelderheid reageert nergens op — niet op de Fn-toetsen, niet op de OS-slider — zolang alleen de AMD Radeon 890M iGPU actief is. Dit is niet iets dat kapotgaat na het wisselen van mode; het werkt in deze staat sowieso niet.
+Schermhelderheid reageert nergens op — niet op de Fn-toetsen, niet op de OS-slider — zolang alleen de AMD Radeon 890M iGPU actief is.
+
+**Oorzaak (bevestigd upstream):** dit is [asusctl#184](https://github.com/OpenGamingCollective/asusctl/issues/184): NVIDIA's kernelmodules zijn nog actief op het moment dat een gequeuede GPU-modewissel tijdens shutdown wordt toegepast, waardoor de helderheid kapot achterblijft zodra de wissel voltooid is. Een fix ("a bounded GPU teardown before the firmware write") is gemerged naar de `main`-branch van asusctl. Dit project tagt echter zelden een nieuwe versie — distro's pakken rollende snapshots van `main` onder dezelfde versietekst (`6.4.0` hier, ongeacht distro of builddatum), dus of een installatie de fix heeft hangt af van wanneer het pakket voor het laatst vanaf `main` is gebouwd, niet van het gerapporteerde versienummer.
+
+**Gerelateerde bug, kan dit verergeren:** [asusctl#318](https://github.com/OpenGamingCollective/asusctl/issues/318) — GPU-modewijzigingen worden in een batch weggeschreven bij het afsluiten van het systeem. Een onschuldige no-op write in diezelfde batch (een waarde herschrijven die al zo staat) laat de ASUS WMI-firmware een I/O-fout teruggeven, en door hoe die fout wordt afgehandeld breekt dat de **hele** batch af — inclusief de write die de mode daadwerkelijk had moeten wisselen. Een modewissel kan dus stilletjes helemaal niet toegepast worden, niet alleen de helderheid kapotmaken. Gefixt via [PR #325](https://github.com/OpenGamingCollective/asusctl/pull/325), gemerged naar `main`; dezelfde distro-packaging-kanttekening geldt hier ook.
 
 **Bevestigd:**
 - Bazzite (Fedora 44, kernel 7.2.4), na het wisselen naar Integrated GPU-mode via ROG Control Center
 - CachyOS (kernel 7.2.3-1-cachyos), op een verse installatie zonder `asusctl` geïnstalleerd — het systeem staat standaard op iGPU-only, en de helderheid is daar al kapot
+- CachyOS, `asusctl armoury set dgpu_disable 1` (CLI) schakelt ook niet uit Hybrid, en overleeft een herstart ongewijzigd — consistent met de batch-write-fout uit #318 die de mode-write blokkeert, ongeacht of die via GUI of CLI wordt aangevraagd
 
 **Workaround:**
-Op Bazzite herstelt terugschakelen naar Hybrid mode het, maar alleen na een echte herstart — Hybrid opnieuw kiezen in de dropdown alleen is niet genoeg. Nog niet opnieuw getest op CachyOS na het installeren van asusctl en het wisselen van GPU-mode daar.
+Nog geen werkende gevonden op deze hardware. De upstream-suggestie voor de niet-toepassen-bug is terugvallen op `supergfxctl` — maar dat botst direct met de eigen waarschuwing [hierboven]({{< relref "/docs/hardware/asusctl-rog-control" >}}) op deze pagina dat supergfxctl onbeheerd is en een beveiligingsrisico vormt, dus weeg die afweging zelf voordat je het als schone fix behandelt. De echte oplossing is een nieuwere asusctl-build; de moeite waard om te checken of er een `-git`/rolling package beschikbaar is die `main` sneller volgt dan het kanaal waar de huidige vandaan komt.
 
 {{% /details %}}
 

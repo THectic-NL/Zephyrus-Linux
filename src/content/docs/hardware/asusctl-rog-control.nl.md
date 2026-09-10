@@ -255,7 +255,9 @@ GPU-switching wordt beheerd via ROG Control Center (GUI, tabblad **GPU Configura
 | Ultimate | dGPU stuurt het display rechtstreeks aan via de fysieke MUX. Hoogste NVIDIA-prestaties, geen iGPU-overhead — maar de AMD iGPU is niet beschikbaar zolang deze mode actief is. |
 
 {{< callout type="warning" >}}
-**Ultimate mode is nieuw op deze pagina.** Eerdere versies van deze gids noemden alleen Hybrid/Integrated via `dgpu_disable`, geschreven voordat de fysieke MUX en Ultimate mode op deze laptop bevestigd waren. Wisselen tussen alle drie modes via de GUI werkt zonder problemen. De CLI-property om naar Ultimate mode te wisselen is nog niet geverifieerd — behandel de `dgpu_disable`-commando's hieronder als alleen geldig voor Hybrid/Integrated totdat dit op het apparaat zelf is bevestigd.
+**Ultimate mode is nieuw op deze pagina.** Eerdere versies van deze gids noemden alleen Hybrid/Integrated via `dgpu_disable`, geschreven voordat de fysieke MUX en Ultimate mode op deze laptop bevestigd waren. De CLI-property om naar Ultimate mode te wisselen is nog niet geverifieerd — behandel de `dgpu_disable`-commando's hieronder als alleen geldig voor Hybrid/Integrated totdat dit op het apparaat zelf is bevestigd.
+
+**Modewisselingen kunnen stilletjes niet toegepast worden.** Een bekende upstream-bug (zie [Bekende Problemen]({{< relref "/docs/known-issues" >}})) kan de mode-write tijdens shutdown afbreken zonder dat je een foutmelding ziet — de dropdown toont na een herstart gewoon weer de oude mode, zowel vanuit de GUI als via `asusctl armoury`. Lijkt een wissel niet aan te slaan, dan is dit de meest waarschijnlijke oorzaak, niet iets fout aan jouw setup.
 {{< /callout >}}
 
 **Wisselen via GUI (ROG Control Center):**

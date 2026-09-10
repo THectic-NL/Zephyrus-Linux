@@ -255,7 +255,9 @@ GPU switching is managed via ROG Control Center (GUI, **GPU Configuration** tab)
 | Ultimate | dGPU drives the display directly via the physical MUX. Highest NVIDIA performance, no iGPU overhead — but the AMD iGPU is unavailable while active. |
 
 {{< callout type="warning" >}}
-**Ultimate mode is new to this page.** Earlier versions of this guide only listed Hybrid/Integrated via `dgpu_disable`, written before the physical MUX and Ultimate mode were confirmed on this laptop. Switching between all three modes through the GUI works without issue. The CLI property for switching into Ultimate mode hasn't been verified yet — treat the `dgpu_disable` commands below as covering only Hybrid/Integrated until that's confirmed on-device.
+**Ultimate mode is new to this page.** Earlier versions of this guide only listed Hybrid/Integrated via `dgpu_disable`, written before the physical MUX and Ultimate mode were confirmed on this laptop. The CLI property for switching into Ultimate mode hasn't been verified yet — treat the `dgpu_disable` commands below as covering only Hybrid/Integrated until that's confirmed on-device.
+
+**Mode switches can silently fail to apply.** A known upstream bug (see [Known Issues]({{< relref "/docs/known-issues" >}})) can abort the mode-switch write during shutdown with no error shown to you — the dropdown just shows the old mode again after reboot, from both the GUI and `asusctl armoury`. If a switch doesn't seem to take, that's the likely cause, not something wrong with your setup.
 {{< /callout >}}
 
 **Switch via GUI (ROG Control Center):**
