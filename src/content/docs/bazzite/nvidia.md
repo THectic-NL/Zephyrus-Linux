@@ -59,13 +59,13 @@ lsmod | grep nvidia
 
 If the modules are listed, the driver is loaded and functional. If they are not, and Secure Boot is on, enroll the key above before looking anywhere else.
 
-### Confirm the open modules are in use
+### Confirm the open module is in use
 
 ```bash
-modinfo nvidia | grep -i license
+cat /proc/driver/nvidia/version
 ```
 
-The open kernel modules report a dual `MIT/GPL` license, where the proprietary module reports `NVIDIA`.
+The first line reads `NVIDIA UNIX Open Kernel Module` on an `-nvidia-open` image. `modinfo nvidia | grep -i license` is another way to tell: the open module reports a dual `MIT/GPL` license, the closed one reports `NVIDIA`.
 
 {{% /steps %}}
 

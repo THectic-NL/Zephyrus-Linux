@@ -18,7 +18,7 @@ After installation, it's possible to re-enable it with your own signing keys usi
 
 ## Is it actually worth it?
 
-Secure Boot only covers the boot chain: firmware, bootloader, kernel. On this hardware, the chain ends with the NVIDIA driver loading as an unsigned DKMS module, which permanently taints the kernel. You've secured the front door and left the window open.
+Secure Boot only covers the boot chain: firmware, bootloader, kernel. On this hardware, the chain ends with the NVIDIA module loading out-of-tree and unsigned, which taints the kernel. You've secured the front door and left the window open.
 
 Then there's the Microsoft thing. Step 3 requires the `--microsoft` flag because without their UEFI CA certificates the GPU firmware won't load. So even with your own keys, you're still enrolling Microsoft's certificates into your own machine. That's a bit of a contradiction for something sold as "your own" chain of trust.
 
@@ -35,8 +35,8 @@ Running `fwupdmgr security` shows what passes and what doesn't. After enabling S
 |---|---|---|
 | UEFI Secure Boot | ✓ Pass | Fixed by this guide |
 | Encrypted RAM (HSI-4) | ✗ Not Supported | Hardware limitation: Ryzen AI 9 HX 370 does not implement AMD SME/TME |
-| Linux Kernel Verification | ✗ Tainted | Proprietary NVIDIA driver permanently taints the kernel (expected) |
-| Linux Kernel Lockdown | ✗ Not Enabled | Requires kernel lockdown mode, not covered here; conflicts with proprietary modules |
+| Linux Kernel Verification | ✗ Tainted | The out-of-tree NVIDIA module taints the kernel (expected) |
+| Linux Kernel Lockdown | ✗ Not Enabled | Requires kernel lockdown mode, not covered here; conflicts with out-of-tree modules |
 
 ![fwupdmgr security output showing HSI:3 with UEFI Secure Boot disabled](/images/secure-boot-hsi-report.avif)
 
@@ -195,7 +195,7 @@ GNOME Settings → Privacy & Security → Device Security also confirms it:
 
 UEFI Secure Boot only verifies the bootloader and kernel EFI image. The NVIDIA driver is loaded as a DKMS module by the kernel. In this configuration, the kernel does not enforce module signatures, so the NVIDIA module continues to work but the kernel is marked as tainted. Signing NVIDIA modules is therefore outside the scope of this guide.
 
-> Those who want to cryptographically enforce kernel modules must sign NVIDIA modules with the same key or avoid the proprietary driver.
+> Those who want to cryptographically enforce kernel modules must sign the NVIDIA modules with the same key, or use Nouveau instead.
 
 After a kernel update, pacman triggers both:
 1. sbctl's hook → re-signs the new kernel EFI image
@@ -203,7 +203,7 @@ After a kernel update, pacman triggers both:
 
 No manual intervention needed after updates.
 
-> **Kernel taint:** The proprietary NVIDIA driver will continue to taint the kernel. This shows as `Linux Kernel Verification: Tainted` in the HSI report. This is expected; it means non-open-source code is loaded, not that the system is compromised.
+> **Kernel taint:** The NVIDIA module keeps tainting the kernel. `nvidia-open` is GPL-compatible so it does not set the proprietary-module flag, but it is still out-of-tree, which sets the `O` flag. This shows as `Linux Kernel Verification: Tainted` in the HSI report. It means an out-of-tree module is loaded, not that the system is compromised.
 
 
 ## Remaining HSI Failures Explained
@@ -214,11 +214,11 @@ No manual intervention needed after updates.
 
 ### Linux Kernel Lockdown
 
-Kernel lockdown can be enabled by adding `lockdown=integrity` to kernel parameters. However, lockdown restricts unsigned kernel modules and certain privileged operations, and the proprietary NVIDIA driver would break under lockdown mode. Not something I'd recommend for day-to-day use on this hardware.
+Kernel lockdown can be enabled by adding `lockdown=integrity` to kernel parameters. However, lockdown restricts unsigned kernel modules and certain privileged operations, and the unsigned NVIDIA module would break under lockdown mode. Not something I'd recommend for day-to-day use on this hardware.
 
 ### Linux Kernel Verification (Tainted)
 
-Caused by the proprietary NVIDIA driver. Can't be resolved while using proprietary NVIDIA drivers. Not a security vulnerability.
+Caused by the out-of-tree NVIDIA module. Can't be resolved while the NVIDIA module is loaded. Not a security vulnerability.
 
 
 {{< callout type="info" >}}
