@@ -331,9 +331,16 @@
    for the reader's distribution; the shared sections stay. `<html data-distro>`
    is set before paint in custom/head-end.html, so this is flash-free.
    distro-switch.js also toggles [hidden] as a fallback and after an in-place
-   switch on a shared page. */
-html[data-distro="cachyos"] .hextra-sidebar-container li:has(> div a[href*="/docs/bazzite/"]),
-html[data-distro="bazzite"] .hextra-sidebar-container li:has(> div a[href*="/docs/cachyos/"]) {
+   switch on a shared page.
+
+   The `:has()` target is scoped to `div.hextra-sidebar-item` (an item's own
+   link) rather than any direct-child div: on mobile, Hextra wraps the whole
+   tree in one top-level "Guides" <li>, whose second direct-child div
+   (.hextra-sidebar-children) nests both distros several levels down. An
+   unscoped `> div a[href*=...]` matches that wrapper too — its children
+   contain a match somewhere — and hides the entire mobile menu. */
+html[data-distro="cachyos"] .hextra-sidebar-container li:has(> div.hextra-sidebar-item > a[href*="/docs/bazzite/"]),
+html[data-distro="bazzite"] .hextra-sidebar-container li:has(> div.hextra-sidebar-item > a[href*="/docs/cachyos/"]) {
   display: none;
 }
 
