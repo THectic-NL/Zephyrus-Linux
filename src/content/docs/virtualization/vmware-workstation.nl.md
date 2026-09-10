@@ -13,7 +13,9 @@ Zit je op Bazzite en wil je een Windows-VM, gebruik dan [Virt-Manager / KVM]({{<
 
 VMware Workstation werkt goed op CachyOS met wat initiële configuratie. De belangrijkste stappen zijn het installeren van het pakket uit de AUR, het herstellen van de DKMS-kernelmodules en het instellen van netwerken. Op GNOME 49 Wayland is ook een correctie voor toetsenbordovername nodig.
 
-**Pakket:** `vmware-workstation` 25H2u1-1 uit de [AUR](https://aur.archlinux.org/packages/vmware-workstation)
+**Pakket:** `vmware-workstation` (26H1u1 op het moment van schrijven) uit de [AUR](https://aur.archlinux.org/packages/vmware-workstation). Broadcom heeft de oude 17.x-nummering ingeruild voor een kalenderschema: 25H2, daarna 26H1.
+
+De AUR-PKGBUILD haalt de installer bij Broadcom vandaan. Loopt die een release achter, pak de Linux-`.bundle` dan zelf via [Broadcoms gratis downloads](https://support.broadcom.com/group/ecx/productdownloads?subfamily=VMware%20Workstation%20Pro&freeDownloads=true) (een gratis Broadcom-account is vereist) en draai `sudo sh VMware-Workstation-*.bundle`.
 
 ![VMware Workstation - hoofdvenster](/images/vmware-workstation-main.avif)
 
@@ -150,4 +152,5 @@ Laat de wijzigingen gelden door je GNOME-sessie te herstarten:
 ## Aanvullende bronnen
 
 - [AUR: vmware-workstation](https://aur.archlinux.org/packages/vmware-workstation)
+- [Broadcom: VMware Workstation Pro gratis downloads](https://support.broadcom.com/group/ecx/productdownloads?subfamily=VMware%20Workstation%20Pro&freeDownloads=true)
 - [Arch Wiki: VMware](https://wiki.archlinux.org/title/VMware)

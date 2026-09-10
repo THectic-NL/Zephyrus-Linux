@@ -13,7 +13,9 @@ If you're on Bazzite and want a Windows VM, use [Virt-Manager / KVM]({{< relref 
 
 VMware Workstation runs well on CachyOS with some initial setup. The main steps are installing the package from AUR, fixing the DKMS kernel modules, and configuring networking. On GNOME 49 Wayland there is also a keyboard grab fix required.
 
-**Package:** `vmware-workstation` 25H2u1-1 from [AUR](https://aur.archlinux.org/packages/vmware-workstation)
+**Package:** `vmware-workstation` (26H1u1 at the time of writing) from [AUR](https://aur.archlinux.org/packages/vmware-workstation). Broadcom dropped the old 17.x numbering for a calendar scheme: 25H2, then 26H1.
+
+The AUR PKGBUILD downloads the installer from Broadcom. If it lags a release behind, grab the Linux `.bundle` yourself from [Broadcom's free downloads](https://support.broadcom.com/group/ecx/productdownloads?subfamily=VMware%20Workstation%20Pro&freeDownloads=true) (a free Broadcom account is required) and run `sudo sh VMware-Workstation-*.bundle`.
 
 ![VMware Workstation - main window](/images/vmware-workstation-main.avif)
 
@@ -151,4 +153,5 @@ After restarting the session, the new XWayland keyboard grab settings will be ac
 ## Additional Resources
 
 - [AUR: vmware-workstation](https://aur.archlinux.org/packages/vmware-workstation)
+- [Broadcom: VMware Workstation Pro free downloads](https://support.broadcom.com/group/ecx/productdownloads?subfamily=VMware%20Workstation%20Pro&freeDownloads=true)
 - [Arch Wiki: VMware](https://wiki.archlinux.org/title/VMware)
