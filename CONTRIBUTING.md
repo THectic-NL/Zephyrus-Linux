@@ -77,6 +77,20 @@ Place converted images in `src/static/images/` and reference them as `/images/fi
 
 ---
 
+## Scripts and published checksums
+
+The guides publish a SHA-256 next to every script under `src/static/scripts/`, so readers can verify what they downloaded. That hash is part of the content and does not update itself — an edit to a script invalidates it, and `sha256sum -c` then fails for everyone following the guide.
+
+After changing a script, rewrite the published hashes:
+
+```bash
+.github/scripts/check-doc-checksums.sh --apply
+```
+
+Commit the content change along with the script. A pull request that leaves them out of sync fails the `Check published script checksums` step in the quality checks.
+
+---
+
 ## Language
 
 This site is bilingual (EN + NL). When updating content:
