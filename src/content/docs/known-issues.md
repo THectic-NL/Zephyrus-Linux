@@ -52,6 +52,39 @@ See the **Things I Wished Had Worked** section at the bottom of this page for th
 
 {{% /details %}}
 
+{{% details title="Screen brightness control doesn't work while running iGPU-only" closed="true" %}}
+
+**What's happening:**
+Screen brightness control doesn't respond when only the AMD Radeon 890M iGPU is active. Neither the Fn-key hotkeys nor the OS brightness slider do anything.
+
+**Root cause (confirmed upstream):** this is [asusctl#318](https://github.com/OpenGamingCollective/asusctl/issues/318). GPU-mode changes are written in a batch when the system shuts down. A harmless no-op write in that same batch (re-writing a value that's already set) makes the ASUS WMI firmware return an I/O error, and the way that error is handled aborts the *entire* batch, including the write that would have actually switched the mode. So a mode switch can silently fail to apply at all, and brightness can end up broken as a side effect of the half-applied state. A closely related fix landed the very next day, reordering the coupled writes so `gpu_mux_mode` and `dgpu_disable` apply in the right sequence relative to each other.
+
+Fixed upstream: commit `940dba87` ("Fixes #318", merged 2026-08-21) and the ordering fix, commit `e0abda4b` (merged 2026-08-22). Both landed six to seven days **after** the current `6.4.0` tag (2026-08-15), and no newer tag has been cut since. So neither fix is in any tagged release yet. Whether a given install has them depends on whether the distro's package was built from a `main` snapshot newer than 2026-08-22, not from the `6.4.0` tag itself, regardless of what version string it reports.
+
+**Ruled out by direct testing on this hardware, in order:**
+- Kernel parameters `nvidia.NVreg_EnableBacklightHandler=0` and `nvidia.NVreg_RegistryDwords=EnableBrightnessControl=0`. No effect.
+- A full, correct replication of asusd's own NVIDIA teardown (stop `nvidia-powerd`/`nvidia-persistenced`, then `modprobe -r nvidia_drm nvidia_modeset nvidia_uvm nvidia`, confirmed clean via `lsmod`) done from a TTY with the display manager's session released, *before* writing `dgpu_disable`. No effect. That teardown fix is already present in the installed `6.4.0` build (commits `8733b58f`/`b1f9a6fd`, merged July 2026, well before the `6.4.0` tag), so this wasn't a case of the fix being missing.
+- Writing directly to the only backlight interface this hardware has, `/sys/class/backlight/nvidia_wmi_ec_backlight/brightness`. The write succeeds (reads back the new value, no error) but has zero visible effect on the panel.
+
+That last point is the key one. This laptop has no `amdgpu`-native backlight device at all. `nvidia_wmi_ec_backlight` is the *only* entry under `/sys/class/backlight/`. It talks to the embedded controller over NVIDIA's WMI backlight GUID (`603E9613-EF25-4338-A3D0-C46177516DB7`) regardless of which GPU is actually driving the panel. With the dGPU fully powered off, that EC method appears to stop acting on writes at the firmware level, before any driver or userspace code gets a say. This looks like an ASUS firmware/EC design choice on the GA605WV, not a Linux driver bug. There's no obvious software layer left to fix.
+
+**Cross-platform note:** a similar-sounding report exists on Windows via [G-Helper on a 2023 Zephyrus G14 (GA402NI)](https://github.com/seerge/g-helper/issues/660). Brightness becomes uncontrollable around a GPU mode transition there too. The exact symptom (stuck at low brightness when switching *to* dGPU/performance mode, rather than fully uncontrollable in iGPU-only mode) and the hardware model both differ enough that it isn't confirmed to be the same mechanism, and no maintainer there has pinned the root cause either. Worth treating as "this class of MUX/EC-tied brightness issue isn't unique to Linux," not as proof of an identical bug.
+
+**Confirmed:**
+- Bazzite (Fedora 44, kernel 7.2.4), after switching to Integrated GPU mode via ROG Control Center
+- CachyOS (kernel 7.2.3-1-cachyos), on a fresh install with `asusctl` not even installed yet. The system defaults to iGPU-only, and brightness is already broken there
+- CachyOS, `asusctl armoury set dgpu_disable 1` (CLI) doesn't switch out of Hybrid either, and survives a reboot unchanged. Consistent with #318's batch-write failure blocking the mode write regardless of whether it's requested via the GUI or the CLI
+- CachyOS, after the full manual teardown-then-switch described above: the mode switch itself applies correctly (`nvidia-smi` fails as expected in Integrated), but brightness still doesn't respond
+
+**What does work:** switching back to Hybrid (`dgpu_disable` 1→0) restores both `nvidia-smi` and brightness, and does so live, without a reboot. Unlike every other mode transition tested. Re-enabling the dGPU seems to be a safe, hot-pluggable operation for this firmware; disabling it while its modules are in use is not, which likely explains why the EC logic only behaves correctly in that direction.
+
+**Workaround:**
+For getting the *mode switch itself* to apply reliably: write directly to the sysfs attribute that needs to change, bypassing asusd's buggy batched write entirely. See the firmware-attribute table in the "GPU mode switching" section of the [asusctl page]({{< relref "/docs/hardware/asusctl-rog-control" >}}) for the exact values and path. This does **not** restore brightness, per the testing above. Upstream's own interim suggestion for the mode-switch bug, falling back to `supergfxctl`, directly conflicts with this guide's own warning [above]({{< relref "/docs/hardware/asusctl-rog-control" >}}) that supergfxctl is unmaintained and a security risk. Weigh that trade-off yourself.
+
+For brightness itself, no software workaround is known. If Integrated mode's power savings matter more than screen brightness control, that's currently the trade-off. The only remaining lever is an ASUS BIOS/UEFI update that changes how the EC handles this (worth checking for one periodically), or reporting further upstream. This page's findings above are a reasonably complete write-up to start from.
+
+{{% /details %}}
+
 ## Resolved Issues
 
 The following issues are resolved. Some were fixed by kernel or driver updates, some through a configuration workaround, and some I honestly may have just been doing wrong myself. I kept them all here anyway since they might save someone else the same time.
@@ -454,6 +487,12 @@ lsmod | grep asus_armoury
 ```
 
 If it loads, reopen ROG Control Center; the warning should be gone and advanced features will be available.
+
+{{% /details %}}
+
+{{% details title="Performance profile 'Silent' shows as 'Quiet' in the GUI" closed="true" %}}
+
+The Fan Curves tab in ROG Control Center labels this profile **Quiet**. The CLI (`asusctl profile -P Silent`) still uses `Silent`, confirmed to still be the correct value. Just a cosmetic GUI relabel, not a renamed profile.
 
 {{% /details %}}
 

@@ -12,16 +12,19 @@ De Zephyrus G16 heeft veel hardware-functies die op Linux niet zomaar werken: fa
 {{< /callout >}}
 
 **Pakketinformatie (op het moment van schrijven):**
-- `asusd` 6.4.0: achtergrondproces (backend) dat alle hardware-functies beheert
-- `asusctl` 6.4.0: CLI frontend voor fan curves, profielen, batterijlimiet, RGB, Slash LED, GPU-switching
-- `rog-control-center` 6.4.0: grafische frontend, onderdeel van de asusctl/asusd suite
+- `asusctl` 6.4.0: CLI frontend voor fan curves, profielen, batterijlimiet, RGB, Slash LED, GPU-switching. Levert ook `asusd` mee, het achtergrondproces dat daadwerkelijk met de hardware praat, plus de bijbehorende systemd-service. Er is geen los `asusd`-pakket om te installeren: `pacman -Q asusd` / `rpm -q asusd` komt leeg terug terwijl de daemon er wel degelijk is.
+- `rog-control-center` 6.4.0: grafische frontend, communiceert met asusd
 - Bron: [asusctl releases](https://github.com/OpenGamingCollective/asusctl/releases) · in de CachyOS/Arch-repos, en in [Terra](https://terra.fyralabs.com/) voor Fedora
+
+{{< callout type="info" >}}
+Controleer wat er daadwerkelijk geïnstalleerd is met `asusctl info` (toont de asusctl-versie samen met gedetecteerde hardware) of `pacman -Q asusctl rog-control-center` / `rpm -q asusctl rog-control-center`.
+{{< /callout >}}
 
 {{< callout type="info" >}}
 Het project is in 2026 verhuisd. De ontwikkeling zat vroeger in de `asus-linux`-organisatie op GitLab (nu gearchiveerd, read-only); `asusctl`, `asusd` en `rog-control-center` worden nu onderhouden onder het [Open Gaming Collective](https://github.com/OpenGamingCollective/asusctl) op GitHub. [asus-linux.org](https://asus-linux.org/) is nog steeds de projectsite. Oudere gidsen die naar `gitlab.com/asus-linux` of de `lukenukem`-COPR voor Fedora wijzen zijn verouderd.
 {{< /callout >}}
 
-ROG Control Center omschrijft zichzelf, via het eigen **About**-tabblad, als "a powerful graphical interface for managing ASUS ROG, TUF, and ProArt laptops on Linux... the official GUI for the asusctl toolset." Het vereist momenteel kernel 6.19, wordt uitgebracht onder de MPL-2.0-licentie, en noemt een eigen work-in-progress-lijst (widget-theming, een CPU/GPU temp/fan-infobalk, Screenpad- en ROG Ally-specifieke instellingen) — de moeite waard om daar zelf te checken voordat je een ontbrekende functie als bug bestempelt.
+ROG Control Center omschrijft zichzelf, via het eigen **About**-tabblad, als "a powerful graphical interface for managing ASUS ROG, TUF, and ProArt laptops on Linux... the official GUI for the asusctl toolset." Het vereist momenteel kernel 6.19, wordt uitgebracht onder de MPL-2.0-licentie, en noemt een eigen work-in-progress-lijst (widget-theming, een CPU/GPU temp/fan-infobalk, Screenpad- en ROG Ally-specifieke instellingen). De moeite waard om daar zelf te checken voordat je een ontbrekende functie als bug bestempelt.
 
 ![ROG Control Center - About-tabblad](/images/rog-control-about.avif)
 
@@ -216,10 +219,6 @@ asusctl biedt drie prestatieprofielen die de CPU/GPU-vermogensgrenzen en het ven
 | `Balanced` | Standaard. Gematigd vermogen en geluid |
 | `Performance` | Maximaal CPU/GPU-vermogen, agressieve ventilatoren |
 
-{{< callout type="info" >}}
-Het tabblad Fan Curves in ROG Control Center noemt dit profiel momenteel **Quiet** in plaats van Silent. De CLI-waarde is voor zover geverifieerd nog steeds `Silent`; behandel het GUI-label als cosmetisch totdat dit anders is bevestigd.
-{{< /callout >}}
-
 **Profiel instellen:**
 ```bash
 asusctl profile -P Balanced
@@ -253,10 +252,20 @@ GPU-switching wordt beheerd via ROG Control Center (GUI, tabblad **GPU Configura
 |------|--------------|
 | Hybrid | Beide GPU's actief. NVIDIA verwerkt GPU-werklast, AMD stuurt het display aan. Het beste voor gaming. |
 | Integrated | Alleen AMD iGPU. Lager stroomverbruik, geen NVIDIA. Goed voor batterij. |
-| Ultimate | dGPU stuurt het display rechtstreeks aan via de fysieke MUX. Hoogste NVIDIA-prestaties, geen iGPU-overhead — maar de AMD iGPU is niet beschikbaar zolang deze mode actief is. |
+| Ultimate | dGPU stuurt het display rechtstreeks aan via de fysieke MUX. Hoogste NVIDIA-prestaties, geen iGPU-overhead, al is de AMD iGPU niet beschikbaar zolang deze mode actief is. |
 
 {{< callout type="warning" >}}
-**Ultimate mode is nieuw op deze pagina.** Eerdere versies van deze gids noemden alleen Hybrid/Integrated via `dgpu_disable`, geschreven voordat de fysieke MUX en Ultimate mode op deze laptop bevestigd waren. De CLI-property om naar Ultimate mode te wisselen is nog niet geverifieerd — behandel de `dgpu_disable`-commando's hieronder als alleen geldig voor Hybrid/Integrated totdat dit op het apparaat zelf is bevestigd. Dit betekent ook dat het "zwart scherm omdat Windows de MUX in dGPU-only mode liet staan"-probleem dat andere ASUS ROG-gidsen documenteren mogelijk ook op deze laptop voorkomt; nog niet bevestigd te reproduceren hier.
+**De drie modes komen neer op twee firmware-attributen**, `dgpu_disable` en `gpu_mux_mode`, beide onder `/sys/class/firmware-attributes/asus-armoury/attributes/<naam>/current_value`. Bevestigd tegen de broncode van asusd zelf (de testsuite van `asus-shutdown`) en gecontroleerd tegen de echte sysfs-waarden op deze hardware:
+
+| Mode | `dgpu_disable` | `gpu_mux_mode` |
+|------|------|------|
+| Ultimate | 0 | 0 |
+| Hybrid | 0 | 1 |
+| Integrated | 1 | 1 |
+
+Hybrid ↔ Integrated verandert alleen `dgpu_disable`; Ultimate is de enige mode die ook `gpu_mux_mode` omzet.
+
+**Modewisselingen kunnen stilletjes niet toegepast worden.** Een bekende upstream-bug (zie [Bekende Problemen]({{< relref "/docs/known-issues" >}})) kan de mode-write tijdens shutdown afbreken zonder dat je een foutmelding ziet. De dropdown toont na een herstart gewoon weer de oude mode, zowel vanuit de GUI als via `asusctl armoury`. Lijkt een wissel niet aan te slaan, dan is dit de meest waarschijnlijke oorzaak. Alleen het attribuut wegschrijven dat daadwerkelijk moet veranderen, rechtstreeks naar het sysfs-pad hierboven (buiten asusd om), omzeilt de bug. Nadeel: asusd/de GUI weten dan pas van de wijziging zodra ze weer bijtrekken.
 {{< /callout >}}
 
 **Wisselen via GUI (ROG Control Center):**
@@ -265,9 +274,9 @@ Open ROG Control Center en ga naar **GPU Configuration** in de zijbalk. Kies een
 
 ![ROG Control Center - GPU Configuration met Integrated/Ultimate/Hybrid](/images/rog-control-gpu-configuration.avif)
 
-> De dropdown toont altijd de huidige mode; wijzigingen worden pas na een herstart actief. Je kan (nog) niet live wisselen zoals Windows-tools als G-Helper dat doen.
+> De dropdown zelf zegt altijd dat wijzigingen een herstart nodig hebben. Bij direct sysfs-testen (zie [Bekende Problemen]({{< relref "/docs/known-issues" >}})) paste het weer inschakelen van de dGPU (→ Hybrid) daadwerkelijk live toe, zonder herstart; 'm uitschakelen (→ Integrated) niet. Of diezelfde asymmetrie ook geldt via dit normale GUI/asusd-pad is onbevestigd, want dat pad heeft zijn eigen bekende bug (hieronder) die kan voorkomen dat de wissel überhaupt wordt toegepast.
 
-**Wisselen via CLI (asusctl armoury) — alleen Hybrid en Integrated:**
+**Wisselen via CLI (asusctl armoury), alleen Hybrid en Integrated:**
 
 **Huidige dGPU status bekijken:**
 ```bash
@@ -286,7 +295,7 @@ asusctl armoury set dgpu_disable 0
 
 > **Let op:** Na het wisselen van mode kan een herstart of uitloggen/inloggen vereist zijn.
 
-> **Belangrijk:** `nvidia-powerd.service` moet uitgeschakeld en **gemaskeerd** blijven op deze laptop. Het conflicteert met AMD ATPX power management en veroorzaakt soft lockups en reboot hangs (zwart scherm, backlights blijven aan). GPU-vermogensbeheer loopt via ATPX (via ACPI). Zie de NVIDIA-driverpagina voor jouw distributie ([CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) of [Bazzite]({{< relref "/docs/bazzite/nvidia" >}})) voor diagnosedetails en commando's.
+> **Belangrijk:** Houd `nvidia-powerd.service` gemaskeerd op deze laptop, ongeacht de GPU-mode. Zie [Bekende Problemen]({{< relref "/docs/known-issues" >}}) voor waarom.
 
 {{% /details %}}
 
@@ -294,10 +303,10 @@ asusctl armoury set dgpu_disable 0
 
 ROG Control Center heeft een tabblad **App Settings** dat bepaalt hoe de app zelf draait, los van de hardwareconfiguratie:
 
-- **Run in background after closing** — houdt `asusd`/het tray-icoon actief als het venster gesloten wordt
-- **Start app in background (UI closed)** — geminimaliseerd naar de tray opstarten
+- **Run in background after closing**: houdt `asusd`/het tray-icoon actief als het venster gesloten wordt
+- **Start app in background (UI closed)**: geminimaliseerd naar de tray opstarten
 - **Enable system tray icon**
-- **Enable dGPU notifications** — toont een melding zodra de dGPU wordt gepauzeerd/hervat (dit is de "dGPU status changed: suspended"-melding die je ziet na het wisselen van GPU-mode of als de dGPU idle wordt)
+- **Enable dGPU notifications**: toont een melding zodra de dGPU wordt gepauzeerd/hervat (dit is de "dGPU status changed: suspended"-melding die je ziet na het wisselen van GPU-mode of als de dGPU idle wordt)
 
 ![ROG Control Center - App Settings](/images/rog-control-app-settings.avif)
 
