@@ -228,3 +228,14 @@ jobs:
       - name: Security scan with bandit
         if: ${{ !cancelled() }}
         run: bandit -r src/static/scripts/ -ll
+
+      # The SHA-256 a page publishes for a script must match the script we
+      # actually ship. The eduroam guide tells readers to verify their download
+      # against that hash, but nothing recomputed it when the script changed, so
+      # `sha256sum -c` failed for everyone following the guide (issue #104).
+      # update-checksums.yml does not cover this: it only runs on Renovate's
+      # pull requests and only for the pinned CI tools. Fails rather than
+      # committing back; the error names the --apply command.
+      - name: Check published script checksums
+        if: ${{ !cancelled() }}
+        run: .github/scripts/check-doc-checksums.sh
