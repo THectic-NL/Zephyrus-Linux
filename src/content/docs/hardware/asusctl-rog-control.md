@@ -274,7 +274,7 @@ Open ROG Control Center and go to **GPU Configuration** in the sidebar. Pick a m
 
 ![ROG Control Center - GPU Configuration showing Integrated/Ultimate/Hybrid](/images/rog-control-gpu-configuration.avif)
 
-> The dropdown always shows the current mode; changes only take effect after a reboot. You can't switch live yet, unlike Windows tools such as G-Helper.
+> The dropdown itself always says changes need a reboot. In direct sysfs testing (see [Known Issues]({{< relref "/docs/known-issues" >}})), re-enabling the dGPU (→ Hybrid) actually applied live, no reboot needed; disabling it (→ Integrated) did not. Whether the same asymmetry holds through this normal GUI/asusd path is unconfirmed, since that path has its own known bug (below) that can prevent the switch from applying at all.
 
 **Switch via CLI (asusctl armoury) — Hybrid and Integrated only:**
 

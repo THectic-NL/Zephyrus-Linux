@@ -274,7 +274,7 @@ Open ROG Control Center en ga naar **GPU Configuration** in de zijbalk. Kies een
 
 ![ROG Control Center - GPU Configuration met Integrated/Ultimate/Hybrid](/images/rog-control-gpu-configuration.avif)
 
-> De dropdown toont altijd de huidige mode; wijzigingen worden pas na een herstart actief. Je kan (nog) niet live wisselen zoals Windows-tools als G-Helper dat doen.
+> De dropdown zelf zegt altijd dat wijzigingen een herstart nodig hebben. Bij direct sysfs-testen (zie [Bekende Problemen]({{< relref "/docs/known-issues" >}})) paste het weer inschakelen van de dGPU (→ Hybrid) daadwerkelijk live toe, zonder herstart; 'm uitschakelen (→ Integrated) niet. Of diezelfde asymmetrie ook geldt via dit normale GUI/asusd-pad is onbevestigd, want dat pad heeft zijn eigen bekende bug (hieronder) die kan voorkomen dat de wissel überhaupt wordt toegepast.
 
 **Wisselen via CLI (asusctl armoury) — alleen Hybrid en Integrated:**
 
