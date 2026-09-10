@@ -21,6 +21,10 @@ The Zephyrus G16 has a lot of hardware features that don't work out of the box o
 The project moved in 2026. Development used to live in the `asus-linux` GitLab organisation (now archived, read-only); `asusctl`, `asusd` and `rog-control-center` are now maintained under the [Open Gaming Collective](https://github.com/OpenGamingCollective/asusctl) on GitHub. [asus-linux.org](https://asus-linux.org/) is still the project site. Older guides that point at `gitlab.com/asus-linux` or the `lukenukem` Fedora COPR are out of date.
 {{< /callout >}}
 
+ROG Control Center describes itself, via its own **About** tab, as "a powerful graphical interface for managing ASUS ROG, TUF, and ProArt laptops on Linux... the official GUI for the asusctl toolset." It currently requires kernel 6.19, ships under the MPL-2.0 license, and lists its own work-in-progress items (widget theming, a CPU/GPU temp/fan info bar, Screenpad and ROG Ally-specific settings) — worth checking there yourself before assuming a missing feature is a bug.
+
+![ROG Control Center - About tab](/images/rog-control-about.avif)
+
 
 ## Installation
 
@@ -198,6 +202,8 @@ asusctl slash --mode Spectrum
 asusctl slash -l 128
 ```
 
+![ROG Control Center - Slash Lighting](/images/rog-control-slash-lighting.avif)
+
 {{% /details %}}
 
 {{% details title="Performance profiles" closed="true" %}}
@@ -209,6 +215,10 @@ asusctl provides three performance profiles that control CPU/GPU power limits an
 | `Silent` | Low power, quiet fans, throttled performance |
 | `Balanced` | Default. Moderate power and noise |
 | `Performance` | Maximum CPU/GPU power, aggressive fans |
+
+{{< callout type="info" >}}
+The Fan Curves tab in ROG Control Center currently labels this same profile **Quiet** instead of Silent. The CLI value is still `Silent` as far as verified; treat the GUI label as cosmetic until confirmed otherwise.
+{{< /callout >}}
 
 **Set a profile:**
 ```bash
@@ -233,22 +243,31 @@ asusctl profile
 
 {{% details title="GPU mode switching (ROG Control Center / asusctl armoury)" closed="true" %}}
 
-The GA605WV has a hybrid GPU setup: the AMD Radeon 890M (iGPU) drives the internal display, and the NVIDIA RTX 4060 (dGPU) handles GPU workloads.
+The GA605WV has a hybrid GPU setup with a physical MUX switch: the AMD Radeon 890M (iGPU) and the NVIDIA RTX 4060 (dGPU) can each drive the internal display, not just the iGPU as earlier revisions of this page assumed.
 
-GPU switching is managed via ROG Control Center (GUI) or `asusctl armoury` (CLI), both of which interface directly with the `asus-armoury` kernel driver (available since kernel 6.19).
+GPU switching is managed via ROG Control Center (GUI, **GPU Configuration** tab) or `asusctl armoury` (CLI), both of which interface directly with the `asus-armoury` kernel driver (available since kernel 6.19).
+
+**Confirmed on this hardware, current ROG Control Center build:** the GPU Configuration tab exposes three modes:
 
 | Mode | Description |
 |------|-------------|
-| Hybrid (`dgpu_disable 0`) | Both GPUs active. NVIDIA handles GPU workloads, AMD drives the display. Best for gaming. |
-| Integrated (`dgpu_disable 1`) | Only AMD iGPU. Lower power consumption, no NVIDIA. Good for battery. |
+| Hybrid | Both GPUs active. NVIDIA handles GPU workloads, AMD drives the display. Best for gaming. |
+| Integrated | Only AMD iGPU. Lower power consumption, no NVIDIA. Good for battery. |
+| Ultimate | dGPU drives the display directly via the physical MUX. Highest NVIDIA performance, no iGPU overhead — but the AMD iGPU is unavailable while active. |
+
+{{< callout type="warning" >}}
+**Ultimate mode is new to this page.** Earlier versions of this guide only listed Hybrid/Integrated via `dgpu_disable`, written before the physical MUX and Ultimate mode were confirmed on this laptop. The CLI property for switching into Ultimate mode hasn't been verified yet — treat the `dgpu_disable` commands below as covering only Hybrid/Integrated until that's confirmed on-device. This also means the dual-boot "black screen because Windows left the MUX in dGPU-only mode" failure some other ASUS ROG guides document is plausible on this laptop too; not yet confirmed to reproduce here.
+{{< /callout >}}
 
 **Switch via GUI (ROG Control Center):**
 
-Open ROG Control Center (`rog-control-center`) and navigate to the GPU switching section to toggle between Hybrid and Integrated mode.
+Open ROG Control Center and go to **GPU Configuration** in the sidebar. Pick a mode from the **GPU mode** dropdown.
 
-![ROG Control Center - GPU switching](/images/rog-control-gpu-switching.avif)
+![ROG Control Center - GPU Configuration showing Integrated/Ultimate/Hybrid](/images/rog-control-gpu-configuration.avif)
 
-**Switch via CLI (asusctl armoury):**
+> The dropdown always shows the current mode; changes only take effect after a reboot. You can't switch live yet, unlike Windows tools such as G-Helper.
+
+**Switch via CLI (asusctl armoury) — Hybrid and Integrated only:**
 
 **Check current dGPU state:**
 ```bash
@@ -271,6 +290,21 @@ asusctl armoury set dgpu_disable 0
 
 {{% /details %}}
 
+{{% details title="App Settings (background & tray behavior)" closed="true" %}}
+
+ROG Control Center has an **App Settings** tab controlling how the app itself runs, separate from hardware configuration:
+
+- **Run in background after closing** — keep `asusd`/the tray icon alive when the window is closed
+- **Start app in background (UI closed)** — launch minimized to tray
+- **Enable system tray icon**
+- **Enable dGPU notifications** — pops up a notification when the dGPU is suspended/resumed (this is the "dGPU status changed: suspended" toast you'll see after switching GPU modes or letting the dGPU idle down)
+
+![ROG Control Center - App Settings](/images/rog-control-app-settings.avif)
+
+The app marks this tab **work in progress**; notifications in particular are incomplete.
+
+{{% /details %}}
+
 {{% details title="Keyboard RGB (Aura)" closed="true" %}}
 
 **Set keyboard backlight brightness (0–100):**
@@ -285,6 +319,8 @@ rog-control-center
 ```
 
 Navigate to the "Keyboard Aura" section for animation, color, and per-key configuration.
+
+![ROG Control Center - Keyboard Aura](/images/rog-control-keyboard-aura.avif)
 
 {{% /details %}}
 
@@ -307,6 +343,8 @@ asusctl fan-curve -m Balanced
 # Set a custom curve (8 temperature/speed pairs: temp:speed,temp:speed,...)
 asusctl fan-curve -m Balanced -D 30:0,40:10,50:30,60:50,70:70,80:85,90:100,100:100
 ```
+
+![ROG Control Center - Fan Curves](/images/rog-control-fan-curves.avif)
 
 > **Note:** Fan curve customization requires the `asus-armoury` kernel driver. On kernel < 6.19, the driver is not available and curves set in the GUI may not persist as expected. See the [Known Issues]({{< relref "/docs/known-issues" >}}) page for details.
 
