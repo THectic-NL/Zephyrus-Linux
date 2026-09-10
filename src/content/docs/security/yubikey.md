@@ -53,7 +53,7 @@ sudo systemctl enable --now pcscd.socket
 {{< /tab >}}
 {{< /tabs >}}
 
-Then install Yubico Authenticator — the Flatpak works on both distributions — and plug in the YubiKey. The app reads the TOTP credentials directly from the key.
+Then install Yubico Authenticator (the Flatpak works on both distributions) and plug in the YubiKey. The app reads the TOTP credentials directly from the key.
 
 ```bash
 flatpak install flathub com.yubico.yubioath
@@ -107,7 +107,7 @@ pamu2fcfg -n | sudo tee -a /etc/u2f_mappings
 ```
 
 {{< callout type="warning" >}}
-`~/.config/Yubico/u2f_keys` is where `pam_u2f` looks by default, and it's what the CachyOS tab uses. On Fedora-based systems SELinux confines what PAM may read out of a home directory, so a key file there tends to be silently ignored — the touch prompt never appears and you fall through to the password. `/etc/u2f_mappings` avoids the problem entirely.
+`~/.config/Yubico/u2f_keys` is where `pam_u2f` looks by default, and it's what the CachyOS tab uses. On Fedora-based systems SELinux confines what PAM may read out of a home directory, so a key file there tends to be silently ignored. The touch prompt never appears and you fall through to the password. `/etc/u2f_mappings` avoids the problem entirely.
 {{< /callout >}}
 
 {{< /tab >}}
@@ -190,7 +190,7 @@ Lock the screen with `Super+L` and touch the YubiKey to unlock.
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
-Do not hand-edit the files in `/etc/pam.d/` here. Fedora manages them with **authselect**, and the next `authselect apply-changes` — which an update can trigger on its own — puts back what it thinks should be there, taking your edits with it.
+Do not hand-edit the files in `/etc/pam.d/` here. Fedora manages them with **authselect**, and the next `authselect apply-changes`, which an update can trigger on its own, puts back what it thinks should be there and takes your edits with it.
 
 authselect ships a feature for exactly this:
 

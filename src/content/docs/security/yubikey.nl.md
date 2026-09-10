@@ -53,7 +53,7 @@ sudo systemctl enable --now pcscd.socket
 {{< /tab >}}
 {{< /tabs >}}
 
-Installeer vervolgens Yubico Authenticator — de Flatpak werkt op beide distributies — en sluit de YubiKey aan. De app leest de TOTP-credentials rechtstreeks van de key.
+Installeer vervolgens Yubico Authenticator (de Flatpak werkt op beide distributies) en sluit de YubiKey aan. De app leest de TOTP-credentials rechtstreeks van de key.
 
 ```bash
 flatpak install flathub com.yubico.yubioath
@@ -107,7 +107,7 @@ pamu2fcfg -n | sudo tee -a /etc/u2f_mappings
 ```
 
 {{< callout type="warning" >}}
-`~/.config/Yubico/u2f_keys` is waar `pam_u2f` standaard kijkt, en het is wat de CachyOS-tab gebruikt. Op Fedora-gebaseerde systemen beperkt SELinux wat PAM uit een home-map mag lezen, waardoor een sleutelbestand daar meestal stilzwijgend genegeerd wordt — de touch-prompt komt nooit en je valt terug op het wachtwoord. Met `/etc/u2f_mappings` speelt dat niet.
+`~/.config/Yubico/u2f_keys` is waar `pam_u2f` standaard kijkt, en het is wat de CachyOS-tab gebruikt. Op Fedora-gebaseerde systemen beperkt SELinux wat PAM uit een home-map mag lezen, waardoor een sleutelbestand daar meestal stilzwijgend genegeerd wordt. De touch-prompt komt nooit en je valt terug op het wachtwoord. Met `/etc/u2f_mappings` speelt dat niet.
 {{< /callout >}}
 
 {{< /tab >}}
@@ -190,7 +190,7 @@ Vergrendel het scherm met `Super+L` en raak de YubiKey aan om te ontgrendelen.
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
-Bewerk hier niet met de hand de bestanden in `/etc/pam.d/`. Fedora beheert ze met **authselect**, en de eerstvolgende `authselect apply-changes` — die een update ook zelf kan aanroepen — zet terug wat er volgens het profiel hoort te staan, inclusief het weggooien van jouw aanpassingen.
+Bewerk hier niet met de hand de bestanden in `/etc/pam.d/`. Fedora beheert ze met **authselect**, en de eerstvolgende `authselect apply-changes`, die een update ook zelf kan aanroepen, zet terug wat er volgens het profiel hoort te staan en gooit jouw aanpassingen weg.
 
 authselect heeft hier een kant-en-klare feature voor:
 

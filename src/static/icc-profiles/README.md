@@ -26,7 +26,7 @@ On Linux, color profiles can be installed either system-wide or per-user:
 
 ---
 
-## Zephyrus G16 (2024) GA605WV — Built-in Display
+## Zephyrus G16 (2024) GA605WV built-in display
 
 Factory-calibrated ICC profiles for the Zephyrus G16 GA605WV built-in display.
 
@@ -36,7 +36,7 @@ The GA605WV was shipped with different panels depending on the unit. The standar
 |---|---|---|---|---|
 | `104D158E` | Sharp | LQ160R1JW02 | IPS (ROG Nebula Display) | Verified via EDID on device |
 | `834C41AE` | Samsung | ATNA60DL04-0 | OLED | [LaptopMedia](https://laptopmedia.com/screen/atna60dl04-0-sdc41ae/) · [Linux Hardware](https://linux-hardware.org/?id=eisa:samsung-sdc41ae) |
-| `E5090C19` | Unknown | — | Unknown | Present in ASUS driver package; not yet publicly identified |
+| `E5090C19` | Unknown | n/a | Unknown | Present in ASUS driver package; not yet publicly identified |
 
 To check which panel your unit has:
 
@@ -83,7 +83,7 @@ Then activate in **GNOME Settings** → **Color Management** → select your dis
 
 ---
 
-## LS27B800TGUXEN - S80TB — Samsung ViewFinity S8 Thunderbolt
+## LS27B800TGUXEN - S80TB, Samsung ViewFinity S8 Thunderbolt
 
 Color profile for the Samsung ViewFinity S8 Thunderbolt (LS27B800TGUXEN) external monitor.
 

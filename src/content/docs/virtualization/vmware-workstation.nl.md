@@ -6,7 +6,7 @@ next: docs/gaming/steamos
 ---
 
 {{< callout type="warning" >}}
-**Deze pagina geldt alleen voor CachyOS.** VMware Workstation heeft eigen out-of-tree kernelmodules nodig (`vmmon`, `vmnet`) die door DKMS gebouwd worden, en de installer schrijft in `/usr`. Op Bazzite is `/usr` read-only en hoort de kernel bij de image, dus er is geen ondersteunde manier die een update overleeft — en bij elke image-update zouden de modules opnieuw gebouwd moeten worden tegen een kernel die je niet in de hand hebt.
+**Deze pagina geldt alleen voor CachyOS.** VMware Workstation heeft eigen out-of-tree kernelmodules nodig (`vmmon`, `vmnet`) die door DKMS gebouwd worden, en de installer schrijft in `/usr`. Op Bazzite is `/usr` read-only en hoort de kernel bij de image, dus er is geen ondersteunde manier die een update overleeft, en bij elke image-update zouden de modules opnieuw gebouwd moeten worden tegen een kernel die je niet in de hand hebt.
 
 Zit je op Bazzite en wil je een Windows-VM, gebruik dan [Virt-Manager / KVM]({{< relref "/docs/virtualization/vm-setup" >}}). Dezelfde hypervisor eronder, geen kernelmodules om te onderhouden, en `ujust setup-virtualization` zet het in één commando neer.
 {{< /callout >}}

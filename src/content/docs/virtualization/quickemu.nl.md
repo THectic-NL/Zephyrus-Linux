@@ -23,9 +23,9 @@ Er zijn vier manieren om iets anders dan Linux op deze laptop te draaien, en ze 
 | | Het beste voor | Niet voor |
 |---|---|---|
 | **Quickemu** | Wegwerp-VM's, een distributie proberen, een Windows-installatie die je volgende week weggooit | Een VM die je jarenlang tunet en houdt |
-| [Virt-Manager / KVM]({{< relref "/docs/virtualization/vm-setup" >}}) | De VM die je houdt — passthrough, snapshots, exacte apparaatcontrole | Even ergens naar kijken |
+| [Virt-Manager / KVM]({{< relref "/docs/virtualization/vm-setup" >}}) | De VM die je houdt: passthrough, snapshots, exacte apparaatcontrole | Even ergens naar kijken |
 | [WinBoat]({{< relref "/docs/virtualization/winboat" >}}) | Losse Windows-applicaties in je Linux-sessie | Een compleet Windows-bureaublad |
-| [VMware Workstation]({{< relref "/docs/virtualization/vmware-workstation" >}}) | Beste prestaties, makkelijkste interface (alleen CachyOS) | Bazzite — daar is geen ondersteunde route |
+| [VMware Workstation]({{< relref "/docs/virtualization/vmware-workstation" >}}) | Beste prestaties, makkelijkste interface (alleen CachyOS) | Bazzite (geen ondersteunde route) |
 
 Eronder zit dezelfde hypervisor als bij virt-manager, dus een Quickemu-VM is niet trager. Het is een andere voorkant, geen andere techniek.
 
@@ -48,7 +48,7 @@ rpm-ostree install quickemu
 systemctl reboot
 ```
 
-Heb je virtualisatie nog niet opgezet, doe dat dan eerst — dat haalt QEMU en libvirt binnen en zet je in de juiste groep:
+Heb je virtualisatie nog niet opgezet, doe dat dan eerst. Dat haalt QEMU en libvirt binnen en zet je in de juiste groep:
 
 ```bash
 ujust setup-virtualization
@@ -58,7 +58,7 @@ systemctl reboot
 Beide vanuit één herstart doen mag; layer ze desnoods in dezelfde `rpm-ostree install`.
 
 {{< callout type="info" >}}
-Een distrobox-container kan Quickemu ook draaien — `/dev/kvm` is daarbinnen beschikbaar — maar het VM-venster hoort dan bij de container, en bestandspaden worden dan snel verwarrend. Layeren is hier het minst vervelende antwoord.
+Een distrobox-container kan Quickemu ook draaien, want `/dev/kvm` is daarbinnen beschikbaar, maar het VM-venster hoort dan bij de container en bestandspaden worden snel verwarrend. Layeren is hier het minst vervelende antwoord.
 {{< /callout >}}
 
 {{< /tab >}}
@@ -94,7 +94,7 @@ Er opent een venster en de VM start op. Dat is de hele workflow.
 
 ### Weggooien als je klaar bent
 
-De VM is een map plus een configbestand. Verwijder allebei en hij is weg — geen libvirt-definitie die achterblijft, nergens iets geregistreerd:
+De VM is een map plus een configbestand. Verwijder allebei en hij is weg. Geen libvirt-definitie die achterblijft, nergens iets geregistreerd:
 
 ```bash
 rm -rf ubuntu-24.04 ubuntu-24.04.conf
@@ -113,7 +113,7 @@ quickget windows 11
 quickemu --vm windows-11.conf
 ```
 
-Alles op de pagina [Virt-Manager / KVM]({{< relref "/docs/virtualization/vm-setup" >}}) over Windows-licenties en ISO-keuzes geldt hier ook — de evaluatie-ISO, de Media Creation Tool en AtlasOS zijn allemaal gewoon ISO's, en Quickemu start ze allemaal op.
+Alles op de pagina [Virt-Manager / KVM]({{< relref "/docs/virtualization/vm-setup" >}}) over Windows-licenties en ISO-keuzes geldt hier ook. De evaluatie-ISO, de Media Creation Tool en AtlasOS zijn allemaal gewoon ISO's, en Quickemu start ze allemaal op.
 
 {{< callout type="warning" >}}
 `swtpm` moet aanwezig zijn voor het TPM 2.0-apparaat waar Windows 11 op controleert. Die zit in de CachyOS-packagelijst op de virt-manager-pagina, en in `ujust setup-virtualization` op Bazzite. Klaagt Windows Setup dat de pc niet aan de eisen voldoet, kijk daar dan naar.
@@ -131,7 +131,7 @@ gpu_accel="on"
 ```
 
 - **`cpu_cores` en `ram`.** Quickemu schat dit op basis van de host. De HX 370 heeft cores genoeg, maar de schatting laten staan is meestal prima.
-- **`gpu_accel`.** Gebruikt de AMD iGPU voor het beeld van de VM. Dat is wat je wilt — dezelfde redenering als het SPICE GL-stuk op de virt-manager-pagina. De RTX 4060 hoort geen VM-venster te tekenen.
+- **`gpu_accel`.** Gebruikt de AMD iGPU voor het beeld van de VM. Dat is wat je wilt, dezelfde redenering als het SPICE GL-stuk op de virt-manager-pagina. De RTX 4060 hoort geen VM-venster te tekenen.
 - **`disk_size`.** Groeit mee in plaats van vooraf te worden gereserveerd, dus royaal zijn kost niets tot het gebruikt wordt.
 
 ## Specifiek voor de G16
@@ -143,5 +143,5 @@ gpu_accel="on"
 ## Referenties
 
 - [Quickemu op GitHub](https://github.com/quickemu-project/quickemu)
-- [Quickgui](https://github.com/quickemu-project/quickgui) — een grafische voorkant voor Quickemu
+- [Quickgui](https://github.com/quickemu-project/quickgui), een grafische voorkant voor Quickemu
 - [QEMU-documentatie](https://www.qemu.org/docs/master/)

@@ -5,7 +5,7 @@ prev: docs/virtualization/vmware-workstation
 next: docs/gaming/proton-slr
 ---
 
-The console experience on the Steam Deck — boot straight into Steam, controller-driven, no desktop unless you ask for one — is a thing you can have on this laptop. What you can't have is SteamOS itself.
+You can have the Steam Deck console experience on this laptop: boot straight into Steam, controller-driven, no desktop unless you ask for one. What you can't have is SteamOS itself.
 
 This page is about that distinction, and about which of the two distributions gets you closest.
 
@@ -31,9 +31,9 @@ You keep a normal desktop and get the console experience on demand rather than a
 steam -gamepadui
 ```
 
-That's Steam's Game Mode interface — the same UI as the Deck's, in a window or fullscreen. Combined with a controller it covers most of what people actually want from SteamOS.
+That is Steam's Game Mode interface, the same UI as the Deck's, in a window or fullscreen. Combined with a controller it covers most of what people actually want from SteamOS.
 
-For the real thing — a gamescope session that replaces your desktop session, so the machine boots into Steam — look at what's in the CachyOS repos rather than following an out-of-date guide:
+For the real thing, a gamescope session that replaces your desktop session so the machine boots into Steam, look at what is in the CachyOS repos rather than an out-of-date guide:
 
 ```bash
 pacman -Ss gamescope
@@ -57,10 +57,10 @@ rpm-ostree rebase ostree-image-signed:docker://ghcr.io/ublue-os/bazzite-deck-gno
 systemctl reboot
 ```
 
-`bazzite-deck-gnome` gives GNOME as the desktop you drop out to; `bazzite-deck` gives KDE. There are NVIDIA variants of the deck images as well — check the [image list](https://github.com/ublue-os/bazzite) for the current names before rebasing.
+`bazzite-deck-gnome` gives GNOME as the desktop you drop out to; `bazzite-deck` gives KDE. There are NVIDIA variants of the deck images too. Check the [image list](https://github.com/ublue-os/bazzite) for the current names before rebasing.
 
 {{< callout type="warning" >}}
-**This is the least-travelled path on this laptop.** The deck images are aimed at handhelds, which are AMD-only and single-GPU. The G16 is a hybrid machine where the internal panel hangs off the Radeon 890M and the RTX 4060 renders, and gamescope has to be told which is which. Expect rough edges — external displays and the discrete GPU are where they show up.
+**This is the least-travelled path on this laptop.** The deck images are aimed at handhelds, which are AMD-only and single-GPU. The G16 is a hybrid machine where the internal panel hangs off the Radeon 890M and the RTX 4060 renders, and gamescope has to be told which is which. Expect rough edges around external displays and the discrete GPU.
 
 If you want a laptop that games well, stay on `bazzite-gnome-nvidia-open` and use Big Picture. If you want a console that happens to be a laptop, this is the route, and the previous image is still on disk when it doesn't work out:
 
@@ -70,7 +70,7 @@ systemctl reboot
 ```
 {{< /callout >}}
 
-You do not need a deck image to game well. The regular desktop images already ship Steam, Proton, gamescope, MangoHud and the controller stack, configured. The deck images only change how you *start* — the gaming itself is the same.
+You do not need a deck image to game well. The regular desktop images already ship Steam, Proton, gamescope, MangoHud and the controller stack, configured. The deck images only change how you *start*. The gaming itself is the same.
 
 {{< /tab >}}
 {{< /tabs >}}
@@ -79,7 +79,7 @@ You do not need a deck image to game well. The regular desktop images already sh
 
 Whichever route you take, the thing to understand on this laptop is which GPU is doing what.
 
-The internal display is wired to the AMD Radeon 890M. The RTX 4060 renders and hands frames over. That's normal for a gaming laptop and it's what `asusctl armoury` is switching between — see [asusctl & ROG Control Center]({{< relref "/docs/hardware/asusctl-rog-control" >}}).
+The internal display is wired to the AMD Radeon 890M. The RTX 4060 renders and hands frames over. That is normal for a gaming laptop, and it is what `asusctl armoury` switches between. See [asusctl & ROG Control Center]({{< relref "/docs/hardware/asusctl-rog-control" >}}).
 
 For a console-style session it matters because gamescope composites, and it needs to composite on the right device. Symptoms of getting it wrong:
 
@@ -95,7 +95,7 @@ Before blaming Game Mode, confirm the driver is healthy in a normal desktop sess
 nvidia-smi
 ```
 
-If that fails, fix it first — [NVIDIA on CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) or [NVIDIA on Bazzite]({{< relref "/docs/bazzite/nvidia" >}}) — because none of this works on top of a driver that isn't loading.
+If that fails, fix it first ([NVIDIA on CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) or [NVIDIA on Bazzite]({{< relref "/docs/bazzite/nvidia" >}})). None of this works on top of a driver that is not loading.
 
 ## Which to actually use
 
@@ -110,6 +110,6 @@ The middle row is the honest one: it's achievable, it's fun, and it is not a sup
 ## References
 
 - [Bazzite](https://bazzite.gg/)
-- [Bazzite on GitHub](https://github.com/ublue-os/bazzite) — current image names
+- [Bazzite on GitHub](https://github.com/ublue-os/bazzite), current image names
 - [gamescope](https://github.com/ValveSoftware/gamescope)
 - [SteamOS](https://store.steampowered.com/steamos)

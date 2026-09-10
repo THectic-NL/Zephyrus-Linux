@@ -9,7 +9,7 @@
  *   - On a page under /docs/<distro>/…  the switch swaps the segment and
  *     navigates to the counterpart (same file name in the other tree).
  *   - On a shared page it stores the choice, updates <html data-distro> and
- *     re-filters the sidebar in place — no navigation.
+ *     re-filters the sidebar in place, no navigation.
  */
 (function () {
   "use strict";

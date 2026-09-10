@@ -42,7 +42,7 @@ The WinBoat website also lists an AUR package (`winboat-bin`) for other Arch-bas
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
-WinBoat is not packaged for Fedora's repositories, and there is no Flatpak — the sandbox can't reach the Podman socket, which is the one thing WinBoat needs.
+WinBoat is not packaged for Fedora's repositories, and there is no Flatpak, because the sandbox can't reach the Podman socket, which is the one thing WinBoat needs.
 
 Podman itself is already in the image, so the **AppImage** from [winboat.app](https://winboat.app/) is the path of least resistance: nothing layered, nothing to reboot for, and it runs unsandboxed so it can talk to the socket.
 
@@ -51,7 +51,7 @@ chmod +x WinBoat-*.AppImage
 ./WinBoat-*.AppImage
 ```
 
-The project also publishes an `.rpm`. It would work through `rpm-ostree install`, but it means a layered package and a reboot for an application that doesn't need to be part of the system — and another reboot on every WinBoat release. The AppImage is the better fit here.
+The project also publishes an `.rpm`. It would work through `rpm-ostree install`, but it means a layered package and a reboot for an application that doesn't need to be part of the system, and another reboot on every WinBoat release. The AppImage is the better fit here.
 
 {{< /tab >}}
 {{< /tabs >}}

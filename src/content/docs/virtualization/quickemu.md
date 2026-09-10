@@ -23,9 +23,9 @@ There are four ways to run something that isn't Linux on this laptop, and they'r
 | | Best for | Not for |
 |---|---|---|
 | **Quickemu** | Throwaway VMs, trying a distribution, a Windows install you'll delete next week | A VM you tune and keep for years |
-| [Virt-Manager / KVM]({{< relref "/docs/virtualization/vm-setup" >}}) | The VM you keep — passthrough, snapshots, exact device control | A quick look at something |
+| [Virt-Manager / KVM]({{< relref "/docs/virtualization/vm-setup" >}}) | The VM you keep: passthrough, snapshots, exact device control | A quick look at something |
 | [WinBoat]({{< relref "/docs/virtualization/winboat" >}}) | Individual Windows applications in your Linux session | A full Windows desktop |
-| [VMware Workstation]({{< relref "/docs/virtualization/vmware-workstation" >}}) | Best performance, easiest UI (CachyOS only) | Bazzite — no supported path |
+| [VMware Workstation]({{< relref "/docs/virtualization/vmware-workstation" >}}) | Best performance, easiest UI (CachyOS only) | Bazzite (no supported path) |
 
 Same hypervisor underneath as virt-manager, so a Quickemu VM isn't slower. It's a different front end, not a different technology.
 
@@ -48,7 +48,7 @@ rpm-ostree install quickemu
 systemctl reboot
 ```
 
-If you haven't set up virtualization yet, do that first — it brings in QEMU and libvirt and puts you in the right group:
+If you have not set up virtualization yet, do that first. It brings in QEMU and libvirt and puts you in the right group:
 
 ```bash
 ujust setup-virtualization
@@ -58,7 +58,7 @@ systemctl reboot
 Running both from one reboot is fine; layer them in the same `rpm-ostree install` if you like.
 
 {{< callout type="info" >}}
-A distrobox container can run Quickemu too — `/dev/kvm` is available inside one — but the VM window then belongs to the container, and file paths get confusing fast. Layering is the less annoying answer here.
+A distrobox container can run Quickemu too, since `/dev/kvm` is available inside one, but the VM window then belongs to the container and file paths get confusing fast. Layering is the less annoying answer here.
 {{< /callout >}}
 
 {{< /tab >}}
@@ -94,7 +94,7 @@ A window opens and the VM boots. That's the whole workflow.
 
 ### Delete it when you're done
 
-The VM is a directory and a config file. Remove both and it's gone — no libvirt definition left behind, nothing registered anywhere:
+The VM is a directory and a config file. Remove both and it is gone. No libvirt definition left behind, nothing registered anywhere:
 
 ```bash
 rm -rf ubuntu-24.04 ubuntu-24.04.conf
@@ -113,7 +113,7 @@ quickget windows 11
 quickemu --vm windows-11.conf
 ```
 
-Everything on the [Virt-Manager / KVM]({{< relref "/docs/virtualization/vm-setup" >}}) page about Windows licensing and ISO choices applies here too — the evaluation ISO, the Media Creation Tool, and AtlasOS are all just ISOs, and Quickemu will boot any of them.
+Everything on the [Virt-Manager / KVM]({{< relref "/docs/virtualization/vm-setup" >}}) page about Windows licensing and ISO choices applies here too. The evaluation ISO, the Media Creation Tool and AtlasOS are all just ISOs, and Quickemu will boot any of them.
 
 {{< callout type="warning" >}}
 `swtpm` has to be present for the TPM 2.0 device Windows 11 checks for. It comes with the CachyOS package list on the virt-manager page, and with `ujust setup-virtualization` on Bazzite. If Windows setup complains the PC doesn't meet requirements, that's the thing to check.
@@ -131,7 +131,7 @@ gpu_accel="on"
 ```
 
 - **`cpu_cores` and `ram`.** Quickemu guesses from the host. The HX 370 has cores to spare, but leaving the guess alone is usually right.
-- **`gpu_accel`.** Uses the AMD iGPU for the VM's display. That's what you want — the same reasoning as the SPICE GL section on the virt-manager page. The RTX 4060 is not what should be drawing a VM window.
+- **`gpu_accel`.** Uses the AMD iGPU for the VM's display. That is what you want, the same reasoning as the SPICE GL section on the virt-manager page. The RTX 4060 is not what should be drawing a VM window.
 - **`disk_size`.** Grows as needed rather than being allocated up front, so being generous costs nothing until it's used.
 
 ## On the G16 specifically
@@ -143,5 +143,5 @@ gpu_accel="on"
 ## References
 
 - [Quickemu on GitHub](https://github.com/quickemu-project/quickemu)
-- [Quickgui](https://github.com/quickemu-project/quickgui) — a graphical front end for Quickemu
+- [Quickgui](https://github.com/quickemu-project/quickgui), a graphical front end for Quickemu
 - [QEMU documentation](https://www.qemu.org/docs/master/)

@@ -24,7 +24,7 @@ Nothing on this page is distribution-specific except where a profile is allowed 
 
 | Location | Scope |
 |---|---|
-| `~/.local/share/icc/` | Current user only — **use this** |
+| `~/.local/share/icc/` | Current user only. **Use this** |
 | `/usr/local/share/color/icc/` | System-wide. `/usr/local` is a symlink to `/var/usrlocal` on an atomic system, so it survives image updates and is writable |
 
 Layering a profile into the image with `rpm-ostree` would work but is the wrong tool: these are data files for your account, not part of the system.

@@ -39,7 +39,7 @@ Native packages bieden betere performance en systeemintegratie. Flatpaks ruilen 
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
-Vier plekken, en de volgorde telt hier zwaarder dan op CachyOS — het is Bazzites eigen voorkeursvolgorde, van meest naar minst aanbevolen:
+Vier plekken, en de volgorde telt hier zwaarder dan op CachyOS. Het is Bazzites eigen voorkeursvolgorde, van meest naar minst aanbevolen:
 
 1. **[Flathub](https://flathub.org/)**: de belangrijkste manier om grafische applicaties te installeren. `flatpak install flathub <app-id>`. Bazzite levert **Bazaar** mee als grafische store.
 
@@ -47,7 +47,7 @@ Vier plekken, en de volgorde telt hier zwaarder dan op CachyOS — het is Bazzit
 
 3. **[Distrobox](https://distrobox.it/)**: voor alles wat een echte package manager nodig heeft, en voor ontwikkelomgevingen. `distrobox enter <container>` en daarbinnen de package manager van die container. `distrobox-export --app <package>` zet een grafische app uit de container in je menu op de host.
 
-4. **`rpm-ostree`-layering**: laatste redmiddel, voor wat onderdeel van het systeem moet zijn — drivers, kernelmodules, PAM-modules, systeemdiensten. Vraagt een herstart, en elk gelaagd package wordt opnieuw toegepast op elke nieuwe image.
+4. **`rpm-ostree`-layering**: laatste redmiddel, voor wat onderdeel van het systeem moet zijn: drivers, kernelmodules, PAM-modules, systeemdiensten. Vraagt een herstart, en elk gelaagd package wordt opnieuw toegepast op elke nieuwe image.
 
 **Wat kies je?**
 
@@ -198,7 +198,7 @@ wsf disable
 [libinput-config](https://github.com/lz42/libinput-config) van lz42 is een systeembrede workaround die bouwen uit de broncode vereist en root-toegang nodig heeft. Gebruik dit als wayland-scroll-factor niet werkt voor jouw setup.
 
 {{< callout type="warning" >}}
-**Alleen CachyOS.** Dit installeert in `/usr`, en dat is op Bazzite read-only. Daar is geen nette manier voor — gebruik wayland-scroll-factor hierboven, dat binnen je home-map blijft.
+**Alleen CachyOS.** Dit installeert in `/usr`, en dat is op Bazzite read-only. Daar is geen nette manier voor. Gebruik wayland-scroll-factor hierboven, dat binnen je home-map blijft.
 {{< /callout >}}
 
 **Installatie (eenmalig):**
@@ -265,7 +265,7 @@ sudo pacman -S brave-bin
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
-Van Brave Origin bestaat geen Fedora-pakket, dus op Bazzite wordt het gewone Brave. Brave publiceert een eigen RPM-repository, maar een browser hoeft geen onderdeel van de systeem-image te zijn — neem de Flatpak:
+Van Brave Origin bestaat geen Fedora-pakket, dus op Bazzite wordt het gewone Brave. Brave publiceert een eigen RPM-repository, maar een browser hoeft geen onderdeel van de systeem-image te zijn, dus neem de Flatpak:
 
 ```bash
 flatpak install flathub com.brave.Browser
@@ -496,7 +496,7 @@ flatpak install flathub com.vscodium.codium
 ```
 
 {{< callout type="info" >}}
-De Flatpak draait in een sandbox, en bij een editor telt dat zwaarder dan bij de meeste applicaties: extensies die een toolchain aanroepen zien het bestandssysteem van de sandbox en niet dat van jou. Ontwikkel je tegen tools op de host, draai VS Code dan vanuit een distrobox-container en exporteer hem met `distrobox-export --app code` — dat is op een atomic systeem de gebruikelijke opzet.
+De Flatpak draait in een sandbox, en bij een editor telt dat zwaarder dan bij de meeste applicaties: extensies die een toolchain aanroepen zien het bestandssysteem van de sandbox en niet dat van jou. Ontwikkel je tegen tools op de host, draai VS Code dan vanuit een distrobox-container en exporteer hem met `distrobox-export --app code`. Dat is op een atomic systeem de gebruikelijke opzet.
 {{< /callout >}}
 
 {{< /tab >}}
@@ -569,7 +569,7 @@ sudo ln -s /opt/Archi/Archi /usr/local/bin/archi
 ```
 
 {{< callout type="info" >}}
-**Op Bazzite** werken het uitpakken en de symlink ongewijzigd: `/opt` en `/usr/local` zijn op een atomic systeem symlinks naar `/var/opt` en `/var/usrlocal`, dus allebei beschrijfbaar en bestand tegen image-updates. De desktop entry hieronder is de uitzondering — `/usr/share/applications` is read-only. Zet hem in `~/.local/share/applications/archi.desktop`, zonder `sudo`.
+**Op Bazzite** werken het uitpakken en de symlink ongewijzigd: `/opt` en `/usr/local` zijn op een atomic systeem symlinks naar `/var/opt` en `/var/usrlocal`, dus allebei beschrijfbaar en bestand tegen image-updates. De desktop entry hieronder is de uitzondering, want `/usr/share/applications` is read-only. Zet hem in `~/.local/share/applications/archi.desktop`, zonder `sudo`.
 {{< /callout >}}
 
 Desktop entry aanmaken zodat Archi in GNOME verschijnt:
@@ -647,7 +647,7 @@ sudo pacman -S steam
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
-Niets te installeren. Steam is onderdeel van de image — gaming is waar Bazzite omheen gebouwd is, en het wordt geconfigureerd meegeleverd, met de Proton- en controller-onderdelen al op hun plek.
+Niets te installeren. Steam is onderdeel van de image. Gaming is waar Bazzite omheen gebouwd is, en het wordt geconfigureerd meegeleverd, met de Proton- en controller-onderdelen al op hun plek.
 
 ```bash
 which steam
