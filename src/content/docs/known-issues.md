@@ -15,13 +15,13 @@ Most of what's here is about the hardware and applies whichever distribution you
 {{% details title="WinBoat: container fails to start" closed="true" %}}
 
 **What's happening:**
-WinBoat regularly gets stuck in an endless startup loop. The Podman container keeps trying to start but never succeeds, even after waiting indefinitely. The UI shows "WinBoat Guest API - Offline" and "Container - Exited". This is not limited to the first install; it happens on subsequent starts as well.
+On v0.9.0 WinBoat regularly got stuck in an endless startup loop. The Podman container kept trying to start but never succeeded, even after waiting indefinitely. The UI showed "WinBoat Guest API - Offline" and "Container - Exited". It was not limited to the first install; it happened on subsequent starts too.
 
 **Workaround:**
-Resetting WinBoat and going through the initial configuration again gets it running again. This is not a sustainable fix.
+Resetting WinBoat and going through the initial configuration again gets it running. Not a sustainable fix.
 
 **Status:**
-Open — tracked as [#106](https://github.com/THectic-NL/Zephyrus-Linux/issues/106). WinBoat is in beta and the project acknowledges instability. See the [WinBoat page]({{< relref "/docs/virtualization/winboat" >}}) for more context.
+Much improved on v0.9.2, which bumps the underlying `dockur/windows` image from 5.14 to 6.05. Still seen occasionally, so tracked as [#106](https://github.com/THectic-NL/Zephyrus-Linux/issues/106). See the [WinBoat page]({{< relref "/docs/virtualization/winboat" >}}) for more context.
 
 {{% /details %}}
 
@@ -34,7 +34,7 @@ When WinBoat does start and you open a Windows application like Word, the window
 None found.
 
 **Status:**
-Open — tracked as [#107](https://github.com/THectic-NL/Zephyrus-Linux/issues/107). Beta limitation.
+Open, tracked as [#107](https://github.com/THectic-NL/Zephyrus-Linux/issues/107). Beta limitation.
 
 {{% /details %}}
 
@@ -46,7 +46,7 @@ Enrolling the YubiKey as a FIDO2 LUKS unlock key succeeds, but at boot `systemd-
 Tried with `token-timeout=30` in crypttab and `rd.udev.settle-timeout=10` as a kernel parameter, both on systemd 259. Neither helped.
 
 **Status:**
-Still unresolved — tracked as [#108](https://github.com/THectic-NL/Zephyrus-Linux/issues/108). Not sure if this is a real hardware/firmware timing issue, something specific to this machine, or a misconfiguration on my end. Possibly revisiting later. For now, the YubiKey is used for `sudo` and the GNOME lock screen instead.
+Still unresolved, tracked as [#108](https://github.com/THectic-NL/Zephyrus-Linux/issues/108). Not sure if this is a real hardware/firmware timing issue, something specific to this machine, or a misconfiguration on my end. Possibly revisiting later. For now, the YubiKey is used for `sudo` and the GNOME lock screen instead.
 
 See the **Things I Wished Had Worked** section at the bottom of this page for the full context.
 

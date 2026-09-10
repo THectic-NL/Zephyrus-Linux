@@ -15,13 +15,13 @@ Het meeste hier gaat over de hardware en geldt op welke distributie je ook draai
 {{% details title="WinBoat: container start niet op" closed="true" %}}
 
 **Wat er gebeurt:**
-WinBoat raakt regelmatig verstrikt in een eindeloze opstartronde. De Podman-container blijft proberen op te starten maar slaagt daar nooit in, ook niet na eindeloos wachten. De UI toont "WinBoat Guest API - Offline" en "Container - Exited". Dit is niet beperkt tot de eerste installatie; het treedt ook op bij latere starts.
+Op v0.9.0 raakte WinBoat regelmatig verstrikt in een eindeloze opstartronde. De Podman-container bleef proberen op te starten maar slaagde daar nooit in, ook niet na eindeloos wachten. De UI toonde "WinBoat Guest API - Offline" en "Container - Exited". Het was niet beperkt tot de eerste installatie; het trad ook op bij latere starts.
 
 **Workaround:**
-WinBoat resetten en de initiële configuratie opnieuw doorlopen zorgt dat het weer werkt. Dit is geen duurzame oplossing.
+WinBoat resetten en de initiële configuratie opnieuw doorlopen zorgt dat het weer werkt. Geen duurzame oplossing.
 
 **Status:**
-Open — bijgehouden als [#106](https://github.com/THectic-NL/Zephyrus-Linux/issues/106). WinBoat is in beta en het project erkent de instabiliteit. Zie de [WinBoat-pagina]({{< relref "/docs/virtualization/winboat" >}}) voor meer context.
+Flink verbeterd op v0.9.2, dat de onderliggende `dockur/windows`-image van 5.14 naar 6.05 tilt. Nog af en toe gezien, dus bijgehouden als [#106](https://github.com/THectic-NL/Zephyrus-Linux/issues/106). Zie de [WinBoat-pagina]({{< relref "/docs/virtualization/winboat" >}}) voor meer context.
 
 {{% /details %}}
 
@@ -34,7 +34,7 @@ Als WinBoat wel opstart en je opent een Windows-app zoals Word, dan kruipt het v
 Geen gevonden.
 
 **Status:**
-Open — bijgehouden als [#107](https://github.com/THectic-NL/Zephyrus-Linux/issues/107). Beta-beperking.
+Open, bijgehouden als [#107](https://github.com/THectic-NL/Zephyrus-Linux/issues/107). Beta-beperking.
 
 {{% /details %}}
 
@@ -46,7 +46,7 @@ Het inschrijven van de YubiKey als FIDO2 LUKS-ontgrendelsleutel lukt, maar bij h
 Geprobeerd met `token-timeout=30` in crypttab en `rd.udev.settle-timeout=10` als kernelparameter, beide op systemd 259. Geen van beide hielp.
 
 **Status:**
-Nog steeds onopgelost — bijgehouden als [#108](https://github.com/THectic-NL/Zephyrus-Linux/issues/108). Onduidelijk of dit een echt hardware/firmware timingprobleem is, iets specifiek voor dit apparaat, of een configuratiefout van mijn kant. Mogelijk later nog een keer opgepakt. Voorlopig gebruik ik de YubiKey voor `sudo` en de GNOME-schermvergrendeling.
+Nog steeds onopgelost, bijgehouden als [#108](https://github.com/THectic-NL/Zephyrus-Linux/issues/108). Onduidelijk of dit een echt hardware/firmware timingprobleem is, iets specifiek voor dit apparaat, of een configuratiefout van mijn kant. Mogelijk later nog een keer opgepakt. Voorlopig gebruik ik de YubiKey voor `sudo` en de GNOME-schermvergrendeling.
 
 Zie de sectie **Dingen die ik graag werkend had gezien** onderaan deze pagina voor de volledige context.
 
