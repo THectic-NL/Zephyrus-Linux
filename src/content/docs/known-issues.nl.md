@@ -52,16 +52,17 @@ Zie de sectie **Dingen die ik graag werkend had gezien** onderaan deze pagina vo
 
 {{% /details %}}
 
-{{% details title="Integrated GPU-mode: schermhelderheid reageert niet meer" closed="true" %}}
+{{% details title="Schermhelderheid werkt niet zolang alleen de iGPU actief is" closed="true" %}}
 
 **Wat er gebeurt:**
-Na het wisselen naar Integrated GPU-mode (ROG Control Center → GPU Configuration) reageert de schermhelderheid helemaal niet meer — zowel de Fn-toetsen als de OS-slider doen niets.
+Schermhelderheid reageert nergens op — niet op de Fn-toetsen, niet op de OS-slider — zolang alleen de AMD Radeon 890M iGPU actief is. Dit is niet iets dat kapotgaat na het wisselen van mode; het werkt in deze staat sowieso niet.
+
+**Bevestigd:**
+- Bazzite (Fedora 44, kernel 7.2.4), na het wisselen naar Integrated GPU-mode via ROG Control Center
+- CachyOS (kernel 7.2.3-1-cachyos), op een verse installatie zonder `asusctl` geïnstalleerd — het systeem staat standaard op iGPU-only, en de helderheid is daar al kapot
 
 **Workaround:**
-Terugschakelen naar Hybrid mode. Dit vereist een echte herstart om effect te hebben; de helderheid komt niet terug door alleen Hybrid opnieuw te kiezen in de dropdown.
-
-**Status:**
-Bevestigd op Bazzite (Fedora 44, kernel 7.2.4). Nog niet getest op CachyOS.
+Op Bazzite herstelt terugschakelen naar Hybrid mode het, maar alleen na een echte herstart — Hybrid opnieuw kiezen in de dropdown alleen is niet genoeg. Nog niet opnieuw getest op CachyOS na het installeren van asusctl en het wisselen van GPU-mode daar.
 
 {{% /details %}}
 

@@ -52,16 +52,17 @@ See the **Things I Wished Had Worked** section at the bottom of this page for th
 
 {{% /details %}}
 
-{{% details title="Integrated GPU mode: brightness control stops responding" closed="true" %}}
+{{% details title="Screen brightness control doesn't work while running iGPU-only" closed="true" %}}
 
 **What's happening:**
-After switching to Integrated GPU mode (ROG Control Center → GPU Configuration), screen brightness control stops responding entirely — both the Fn-key hotkeys and the OS brightness slider do nothing.
+Screen brightness control doesn't respond — neither the Fn-key hotkeys nor the OS brightness slider do anything — whenever only the AMD Radeon 890M iGPU is active. This isn't something that breaks after switching modes; it doesn't work in this state to begin with.
+
+**Confirmed:**
+- Bazzite (Fedora 44, kernel 7.2.4), after switching to Integrated GPU mode via ROG Control Center
+- CachyOS (kernel 7.2.3-1-cachyos), on a fresh install with `asusctl` not even installed yet — the system defaults to iGPU-only, and brightness is already broken there
 
 **Workaround:**
-Switch back to Hybrid mode. This needs an actual reboot to take effect; brightness doesn't come back just by picking Hybrid again in the dropdown.
-
-**Status:**
-Confirmed on Bazzite (Fedora 44, kernel 7.2.4). Not yet tested on CachyOS.
+On Bazzite, switching back to Hybrid mode restores it, but only after an actual reboot — picking Hybrid in the dropdown alone doesn't bring it back. Not yet re-tested on CachyOS after installing asusctl and switching GPU modes there.
 
 {{% /details %}}
 
