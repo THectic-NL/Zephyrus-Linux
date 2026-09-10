@@ -255,9 +255,17 @@ GPU switching is managed via ROG Control Center (GUI, **GPU Configuration** tab)
 | Ultimate | dGPU drives the display directly via the physical MUX. Highest NVIDIA performance, no iGPU overhead — but the AMD iGPU is unavailable while active. |
 
 {{< callout type="warning" >}}
-**Ultimate mode is new to this page.** Earlier versions of this guide only listed Hybrid/Integrated via `dgpu_disable`, written before the physical MUX and Ultimate mode were confirmed on this laptop. The CLI property for switching into Ultimate mode hasn't been verified yet — treat the `dgpu_disable` commands below as covering only Hybrid/Integrated until that's confirmed on-device.
+**The three modes map to two firmware attributes**, `dgpu_disable` and `gpu_mux_mode`, both under `/sys/class/firmware-attributes/asus-armoury/attributes/<name>/current_value`. Confirmed against asusd's own source (the `asus-shutdown` test suite) and cross-checked against this hardware's actual sysfs values:
 
-**Mode switches can silently fail to apply.** A known upstream bug (see [Known Issues]({{< relref "/docs/known-issues" >}})) can abort the mode-switch write during shutdown with no error shown to you — the dropdown just shows the old mode again after reboot, from both the GUI and `asusctl armoury`. If a switch doesn't seem to take, that's the likely cause, not something wrong with your setup.
+| Mode | `dgpu_disable` | `gpu_mux_mode` |
+|------|------|------|
+| Ultimate | 0 | 0 |
+| Hybrid | 0 | 1 |
+| Integrated | 1 | 1 |
+
+Hybrid ↔ Integrated only ever changes `dgpu_disable`; Ultimate is the only mode that also flips `gpu_mux_mode`.
+
+**Mode switches can silently fail to apply.** A known upstream bug (see [Known Issues]({{< relref "/docs/known-issues" >}})) can abort the mode-switch write during shutdown with no error shown to you — the dropdown just shows the old mode again after reboot, whether you switched from the GUI or `asusctl armoury`. If a switch doesn't seem to take, that's the likely cause. Writing only the attribute that actually needs to change directly to its sysfs path above (bypassing asusd entirely) sidesteps the bug, at the cost of asusd/the GUI not knowing about the change until it catches up.
 {{< /callout >}}
 
 **Switch via GUI (ROG Control Center):**

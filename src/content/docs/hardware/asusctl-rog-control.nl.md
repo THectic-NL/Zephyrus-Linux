@@ -255,9 +255,17 @@ GPU-switching wordt beheerd via ROG Control Center (GUI, tabblad **GPU Configura
 | Ultimate | dGPU stuurt het display rechtstreeks aan via de fysieke MUX. Hoogste NVIDIA-prestaties, geen iGPU-overhead — maar de AMD iGPU is niet beschikbaar zolang deze mode actief is. |
 
 {{< callout type="warning" >}}
-**Ultimate mode is nieuw op deze pagina.** Eerdere versies van deze gids noemden alleen Hybrid/Integrated via `dgpu_disable`, geschreven voordat de fysieke MUX en Ultimate mode op deze laptop bevestigd waren. De CLI-property om naar Ultimate mode te wisselen is nog niet geverifieerd — behandel de `dgpu_disable`-commando's hieronder als alleen geldig voor Hybrid/Integrated totdat dit op het apparaat zelf is bevestigd.
+**De drie modes komen neer op twee firmware-attributen**, `dgpu_disable` en `gpu_mux_mode`, beide onder `/sys/class/firmware-attributes/asus-armoury/attributes/<naam>/current_value`. Bevestigd tegen de broncode van asusd zelf (de testsuite van `asus-shutdown`) en gecontroleerd tegen de echte sysfs-waarden op deze hardware:
 
-**Modewisselingen kunnen stilletjes niet toegepast worden.** Een bekende upstream-bug (zie [Bekende Problemen]({{< relref "/docs/known-issues" >}})) kan de mode-write tijdens shutdown afbreken zonder dat je een foutmelding ziet — de dropdown toont na een herstart gewoon weer de oude mode, zowel vanuit de GUI als via `asusctl armoury`. Lijkt een wissel niet aan te slaan, dan is dit de meest waarschijnlijke oorzaak, niet iets fout aan jouw setup.
+| Mode | `dgpu_disable` | `gpu_mux_mode` |
+|------|------|------|
+| Ultimate | 0 | 0 |
+| Hybrid | 0 | 1 |
+| Integrated | 1 | 1 |
+
+Hybrid ↔ Integrated verandert alleen `dgpu_disable`; Ultimate is de enige mode die ook `gpu_mux_mode` omzet.
+
+**Modewisselingen kunnen stilletjes niet toegepast worden.** Een bekende upstream-bug (zie [Bekende Problemen]({{< relref "/docs/known-issues" >}})) kan de mode-write tijdens shutdown afbreken zonder dat je een foutmelding ziet — de dropdown toont na een herstart gewoon weer de oude mode, zowel vanuit de GUI als via `asusctl armoury`. Lijkt een wissel niet aan te slaan, dan is dit de meest waarschijnlijke oorzaak. Alleen het attribuut wegschrijven dat daadwerkelijk moet veranderen, rechtstreeks naar het sysfs-pad hierboven (buiten asusd om), omzeilt de bug — ten koste van dat asusd/de GUI de wijziging niet meekrijgt totdat het weer bijtrekt.
 {{< /callout >}}
 
 **Wisselen via GUI (ROG Control Center):**
