@@ -47,6 +47,8 @@ Both packages come straight from the repos and everything works out of the box. 
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
+When you generate your download on [bazzite.gg](https://bazzite.gg/), use the hardware picker and select **ASUS Laptop** under "What hardware are you using?" instead of a generic desktop option. It tailors the recommended image and setup steps to this hardware.
+
 Don't layer `asusctl`/`rog-control-center` into the image yourself with `rpm-ostree install`. `asusd` is a system daemon with a kernel-facing job, which is normally a case for layering, but Bazzite ships its own maintained install path for it:
 
 ```bash

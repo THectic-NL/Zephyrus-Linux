@@ -47,6 +47,8 @@ Beide packages komen direct uit de repos en alles werkt meteen. Geen kernel patc
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
+Gebruik bij het genereren van je download op [bazzite.gg](https://bazzite.gg/) de hardwarekiezer en selecteer **ASUS Laptop** bij "What hardware are you using?" in plaats van een generieke desktop-optie. Dat stemt de aanbevolen image en installatiestappen af op deze hardware.
+
 Layer `asusctl`/`rog-control-center` niet zelf in de image met `rpm-ostree install`. `asusd` is een systeemdaemon die tegen de kernel aan praat, normaal gesproken juist een reden om wél te layeren, maar Bazzite heeft daar een eigen onderhouden installatiepad voor:
 
 ```bash
