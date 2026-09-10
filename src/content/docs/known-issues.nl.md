@@ -264,6 +264,8 @@ sudo reboot
 **Achtergrond:**
 Op laptops met AMD iGPU + NVIDIA dGPU regelt het ATPX-framework (via ACPI) welke GPU actief is. `nvidia-powerd` probeert zelfstandig power decisions te nemen, wat conflicteert met ATPX. De `NVreg_PreserveVideoMemoryAllocations=1`-parameter voorkomt dat VRAM verloren gaat tijdens power-overgangen, en `nvidia-drm.fbdev=1` zorgt voor een schonere framebuffer-overdracht.
 
+**Update: upstream gefixt.** Dit conflict is verdwenen sinds een kernel ergens tussen 6.16 en 6.17 (exacte commit niet achterhaald). `nvidia-powerd` draait sindsdien al maanden ongemaskeerd zonder ook maar één lockup. De maskeer-workaround hierboven is niet meer nodig op een actuele kernel; zie [NVIDIA-driver: CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) voor de huidige aanpak. Laten staan voor wie nog op een oudere kernel zit en dit tegenkomt.
+
 {{% /details %}}
 
 
