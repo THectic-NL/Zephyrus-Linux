@@ -48,7 +48,7 @@ jobs:
       # Pinned by version and checksum inside the action, so this build and the
       # one in quality.yml always use the same Hugo.
       - name: Set up Hugo
-        uses: ./.github/actions/setup-hugo
+        uses: $/.github/actions/setup-hugo
 
       # No --baseURL: it lives in src/hugo.toml and belongs on one line only, so
       # a domain change happens in one place. HUGO_ENVIRONMENT=production is what
