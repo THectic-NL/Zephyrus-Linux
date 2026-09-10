@@ -18,7 +18,7 @@ Na de installatie kun je Secure Boot opnieuw inschakelen met eigen ondertekening
 
 ## Is het de moeite waard?
 
-Secure Boot dekt alleen de opstartcyclus: firmware, bootloader, kernel. Op deze hardware eindigt die keten met de NVIDIA-driver die als niet-ondertekende DKMS-module laadt, waardoor de kernel permanent tainted is. Je hebt de voordeur beveiligd en het raam opengezet.
+Secure Boot dekt alleen de opstartcyclus: firmware, bootloader, kernel. Op deze hardware eindigt die keten met de NVIDIA-module die out-of-tree en niet-ondertekend laadt, waardoor de kernel tainted is. Je hebt de voordeur beveiligd en het raam opengezet.
 
 Dan is er nog het Microsoft-aspect. Stap 3 vereist de `--microsoft`-vlag, want zonder de UEFI CA-certificaten van Microsoft laadt de GPU-firmware niet. Je schrijft dus de sleutels van Microsoft in op je eigen machine, ook al gebruik je "eigen" sleutels. Dat is een beetje tegenstrijdig voor iets wat als jouw eigen vertrouwensketen wordt verkocht.
 
@@ -36,7 +36,7 @@ Het uitvoeren van `fwupdmgr security` toont wat slaagt en wat niet. Na het insch
 | UEFI Secure Boot | ✓ Pass | Opgelost door deze handleiding |
 | Encrypted RAM (HSI-4) | ✗ Not Supported | Hardwarebeperking: Ryzen AI 9 HX 370 implementeert AMD SME/TME niet |
 | Linux Kernel Verification | ✗ Tainted | Proprietary NVIDIA-driver vervuilt de kernel permanent (verwacht gedrag) |
-| Linux Kernel Lockdown | ✗ Not Enabled | Vereist kernel lockdown-modus, niet behandeld hier; conflicteert met proprietary modules |
+| Linux Kernel Lockdown | ✗ Not Enabled | Vereist kernel lockdown-modus, niet behandeld hier; conflicteert met out-of-tree modules |
 
 ![fwupdmgr security uitvoer met HSI:3 en UEFI Secure Boot uitgeschakeld](/images/secure-boot-hsi-report.avif)
 
@@ -195,7 +195,7 @@ GNOME Instellingen → Privacy & Beveiliging → Apparaatbeveiliging bevestigt o
 
 UEFI Secure Boot verifieert alleen de bootloader en het kernel-EFI-image. De NVIDIA-driver wordt als DKMS-module door de kernel geladen. In deze configuratie staat de kernel module-signatures niet af te dwingen, waardoor de NVIDIA-module blijft werken, maar de kernel als tainted wordt gemarkeerd. Extra module-signing voor NVIDIA valt daarom buiten de scope van deze handleiding.
 
-> Wie ook kernelmodules cryptografisch wil afdwingen, moet NVIDIA-modules met dezelfde sleutel signen of de proprietary driver vermijden.
+> Wie ook kernelmodules cryptografisch wil afdwingen, moet de NVIDIA-modules met dezelfde sleutel signen, of Nouveau gebruiken.
 
 Na een kernelupdate activeert pacman beide:
 1. sbctl-hook → ondertekent het nieuwe kernel EFI-image opnieuw
@@ -203,7 +203,7 @@ Na een kernelupdate activeert pacman beide:
 
 Na updates is geen handmatige actie nodig.
 
-> **Kernelvervuiling:** De proprietary NVIDIA-driver zal de kernel blijven vervuilen. Dit verschijnt als `Linux Kernel Verification: Tainted` in het HSI-rapport. Dit is verwacht; het betekent dat niet-open-source code is geladen, niet dat het systeem is aangetast.
+> **Kernelvervuiling:** De NVIDIA-module blijft de kernel taint geven. `nvidia-open` is GPL-compatibel en zet dus niet de proprietary-module-vlag, maar hij is nog steeds out-of-tree, wat de `O`-vlag zet. Dit verschijnt als `Linux Kernel Verification: Tainted` in het HSI-rapport. Het betekent dat een out-of-tree module is geladen, niet dat het systeem is aangetast.
 
 
 ## Overgebleven HSI-fouten uitgelegd
@@ -214,11 +214,11 @@ Na updates is geen handmatige actie nodig.
 
 ### Linux Kernel Lockdown
 
-Kernel lockdown kan worden ingeschakeld door `lockdown=integrity` toe te voegen aan de kernelparameters. Lockdown beperkt echter niet-ondertekende kernelmodules en bepaalde bevoorrechte bewerkingen, en de proprietary NVIDIA-driver zou niet werken onder lockdown-modus. Niet iets wat ik zou aanraden voor dagelijks gebruik op deze hardware.
+Kernel lockdown kan worden ingeschakeld door `lockdown=integrity` toe te voegen aan de kernelparameters. Lockdown beperkt echter niet-ondertekende kernelmodules en bepaalde bevoorrechte bewerkingen, en de niet-ondertekende NVIDIA-module zou niet werken onder lockdown-modus. Niet iets wat ik zou aanraden voor dagelijks gebruik op deze hardware.
 
 ### Linux Kernel Verification (Tainted)
 
-Veroorzaakt door de proprietary NVIDIA-driver. Kan niet worden opgelost zolang proprietary NVIDIA-drivers worden gebruikt. Dit is geen beveiligingslek.
+Veroorzaakt door de out-of-tree NVIDIA-module. Kan niet worden opgelost zolang de NVIDIA-module geladen is. Dit is geen beveiligingslek.
 
 
 {{< callout type="info" >}}

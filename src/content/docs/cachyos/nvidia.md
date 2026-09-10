@@ -6,7 +6,7 @@ next: docs/cachyos/secure-boot
 distro: cachyos
 ---
 
-The G16 has an NVIDIA RTX 4060 alongside the AMD iGPU. The open-source Nouveau driver doesn't perform well on modern NVIDIA hardware, so proprietary drivers are necessary.
+The G16 has an NVIDIA RTX 4060 alongside the AMD iGPU. The RTX 4060 is Ada, so it runs on NVIDIA's open kernel modules (`nvidia-open`), which CachyOS installs by default. This is not Nouveau, and it is not something you set up.
 
 **Driver I'm running (at the time of writing):**
 - Version: 610.57.04
@@ -14,23 +14,29 @@ The G16 has an NVIDIA RTX 4060 alongside the AMD iGPU. The open-source Nouveau d
 
 ## There is nothing to install
 
-CachyOS automatically detects your hardware during installation and sets up the NVIDIA driver without any manual steps. No selection required; by the time the installer finishes, the driver is already active and fully configured.
+CachyOS detects the card during installation and sets up `nvidia-open` with no manual steps. By the time the installer finishes, the driver is active and configured.
 
-That covers the driver itself. What's left is confirming it loaded, and two power management settings that are specific to this laptop and are *not* set for you.
+That covers the driver. What's left is confirming it loaded, enrolling a Secure Boot key if you run Secure Boot, and two power settings that are specific to this laptop and are *not* set for you.
 
 ## Post-Installation Verification
 
 {{% steps %}}
 
-### Verify NVIDIA driver
+### Confirm the open module is loaded
 
-Check the driver status:
+```bash
+cat /proc/driver/nvidia/version
+```
+
+The first line reads `NVIDIA UNIX Open Kernel Module` on `nvidia-open`. The closed module says `NVIDIA UNIX x86_64 Kernel Module` instead.
+
+### Check the driver and CUDA version
 
 ```bash
 nvidia-smi
 ```
 
-You should see the NVIDIA driver and CUDA versions listed.
+Lists the driver and CUDA versions, and confirms the card is seen.
 
 ### Check loaded kernel modules
 
@@ -38,7 +44,7 @@ You should see the NVIDIA driver and CUDA versions listed.
 lsmod | grep nvidia
 ```
 
-If the modules are listed, the driver is loaded and functional.
+If the modules are listed, the driver is loaded. If they are not and Secure Boot is on, sort out [Secure Boot]({{< relref "/docs/cachyos/secure-boot" >}}) before looking anywhere else.
 
 {{% /steps %}}
 
