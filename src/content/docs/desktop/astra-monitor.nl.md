@@ -5,22 +5,22 @@ prev: docs/hardware/color-profiles
 next: docs/security/autologin
 ---
 
-[Astra Monitor](https://github.com/AstraExt/astra-monitor) is een GNOME Shell-extensie die CPU, geheugen, schijf, netwerk en GPU in de bovenbalk zet, met een uitklapmenu voor de details. Op een laptop met twee GPU's en een fan curve waar je echt om geeft, is het permanent zien van die cijfers nuttiger dan het klinkt.
+[Astra Monitor](https://github.com/AstraExt/astra-monitor) is een GNOME Shell-extensie die CPU, geheugen, schijf, netwerk en GPU in de bovenbalk zet, met een uitklapmenu voor de details.
 
-De reden dat dit een eigen pagina verdient en geen regel op de applicatiepagina, is dat het op deze machine **beide** GPU's naast elkaar uitleest — de Radeon 890M en de RTX 4060 — en dat is precies wat je wilt als je probeert vast te stellen of iets daadwerkelijk op de discrete kaart draait.
+Het krijgt een eigen pagina omdat het op deze machine beide GPU's naast elkaar uitleest, de Radeon 890M en de RTX 4060. Dat is wat je wilt als je nagaat of iets echt op de discrete kaart draait.
 
 ## Vereisten
 
-GNOME Shell 45 of nieuwer, dus beide distributies zoals hier beschreven zijn prima.
+GNOME Shell 45 of nieuwer, dus beide distributies hier zijn prima.
 
-De extensie werkt zonder enige dependency. Alles hieronder is optioneel en elk onderdeel ontsluit één specifieke uitlezing — bepaal vooraf wat je wilt, zeker op Bazzite waar elk onderdeel je een herstart kost.
+De extensie heeft geen harde dependencies. Alles hieronder is optioneel en voegt één uitlezing toe. Bepaal vooraf wat je wilt, zeker op Bazzite waar elk onderdeel je een herstart kost.
 
-| Dependency | Levert je | De moeite waard op de G16? |
+| Dependency | Levert je | Op de G16 |
 |---|---|---|
-| **Libgtop** | Nauwkeuriger CPU-, geheugen- en procesdata | Ja — dit is degene om te installeren |
-| **amdgpu_top** | Uitlezen van de Radeon 890M | Ja, als je iGPU-cijfers wilt |
+| **Libgtop** | Nauwkeuriger CPU-, geheugen- en procesdata | Installeren |
+| **amdgpu_top** | Uitlezen van de Radeon 890M | Installeren als je iGPU-cijfers wilt |
 | **nvidia-smi** | Uitlezen van de RTX 4060 | Zit al bij de NVIDIA-driver |
-| **Nethogs** | Netwerkgebruik per proces | Alleen als je netwerk per proces wilt |
+| **Nethogs** | Netwerkgebruik per proces | Alleen als je netwerk per proces nodig hebt |
 
 ## De extensie installeren
 
@@ -51,7 +51,7 @@ flatpak install flathub com.mattjakeman.ExtensionManager
 Open hem, zoek op "Astra Monitor" en installeer. Of installeer via [extensions.gnome.org](https://extensions.gnome.org/extension/6682/astra-monitor/) in een browser.
 
 {{< callout type="info" >}}
-GNOME-extensies staan in `~/.local/share/gnome-shell/extensions/`, dus in je home-map en niet in de image. De extensie zelf overleeft image-updates en rebases dus zonder layering — alleen de optionele dependencies hieronder raken het systeem aan.
+GNOME-extensies staan in `~/.local/share/gnome-shell/extensions/`, dus in je home-map en niet in de image. De extensie zelf overleeft image-updates en rebases zonder layering. Alleen de optionele dependencies hieronder raken het systeem aan.
 {{< /callout >}}
 
 {{< /tab >}}
@@ -61,7 +61,7 @@ GNOME-extensies staan in `~/.local/share/gnome-shell/extensions/`, dus in je hom
 
 ### Libgtop
 
-Degene om te installeren. Zonder valt de extensie terug op het rechtstreeks lezen van `/proc`, wat werkt maar hem minder te bieden heeft.
+Zonder valt de extensie terug op het rechtstreeks lezen van `/proc`, wat werkt maar hem minder te bieden heeft.
 
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
@@ -73,20 +73,20 @@ sudo pacman -S libgtop
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
-Kijk eerst — GNOME gebruikt libgtop zelf, dus vaak zit hij al in de image:
+GNOME gebruikt libgtop zelf, dus kijk eerst:
 
 ```bash
 rpm -q libgtop2
 ```
 
-Zit hij er niet in, dan is dit een systeembibliotheek die de extensie via GObject introspection laadt, dus moet hij gelaagd worden:
+Zit hij er niet in, dan moet hij gelaagd worden. De extensie laadt hem via GObject introspection, dus je hebt het package nodig met de typelib:
 
 ```bash
 rpm-ostree install libgtop2-devel
 systemctl reboot
 ```
 
-Het `-devel`-package is wat upstream documenteert: daar zit de introspection-typelib in die de extensie nodig heeft, niet alleen headers.
+Het `-devel`-package is wat upstream documenteert. Daar zit de introspection-typelib in die de extensie nodig heeft, niet alleen headers.
 
 {{< /tab >}}
 {{< /tabs >}}
@@ -113,11 +113,11 @@ systemctl reboot
 
 ### nvidia-smi (RTX 4060)
 
-Niets te doen. `nvidia-smi` komt op allebei mee met de driver — het is wat je op de [NVIDIA]({{< relref "/docs/cachyos/nvidia" >}})-pagina's draait om te controleren of de driver geladen is. Laat Astra Monitor geen NVIDIA-sectie zien, dan is de driver niet geladen, en dat is een driverprobleem en geen extensieprobleem.
+Niets te doen. `nvidia-smi` komt op allebei mee met de driver. Laat Astra Monitor geen NVIDIA-sectie zien, dan is de driver niet geladen, en dat is een driverprobleem en geen extensieprobleem. Zie de [NVIDIA]({{< relref "/docs/cachyos/nvidia" >}})-pagina.
 
 ### Nethogs
 
-Netwerkcijfers per proces. Het heeft verhoogde rechten nodig om verkeer te inspecteren, en dat is goed om te weten voordat je het installeert.
+Netwerkcijfers per proces. Het heeft verhoogde rechten nodig om verkeer te inspecteren.
 
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
@@ -141,15 +141,14 @@ systemctl reboot
 
 Open de instellingen van de extensie via Extension Manager, of via het tandwiel in het uitklapmenu.
 
-- **Zet uit wat je niet bekijkt.** Standaard staan de meeste sensoren aan. Op een laptopscherm is er geen ruimte voor allemaal, en elke sensor is een poll-interval.
-- **Stel het update-interval per sensor in.** De standaard is vaak genoeg om in `powertop` op te duiken. De schijf- en netwerksensor naar een paar seconden zetten kost je niets wat je merkt.
-- **Kies welke GPU de primaire is** onder het GPU-onderdeel. Met twee kaarten moet de balk kiezen; de RTX 4060 is de interessantste als je wilt weten of een game of CUDA-taak daar ook echt terechtkwam.
-- **Compacte modus** als je meer extensies in de balk hebt staan — de standaardindeling is breed.
+- **Zet sensoren uit die je niet bekijkt.** Standaard staan de meeste aan. Elke sensor is een poll-interval, en op een laptopscherm is er toch geen ruimte voor allemaal.
+- **Zet de schijf- en netwerksensor trager.** Een paar seconden is voor die twee prima en duikt minder op in `powertop`.
+- **Kies de primaire GPU** onder het GPU-onderdeel. Met twee kaarten moet de balk er één kiezen. De RTX 4060 is meestal degene die je wilt zien.
+- **Compacte modus** als je meer extensies in de balk hebt. De standaardindeling is breed.
 
 {{< callout type="warning" >}}
-Een monitor in de bovenbalk pollt per definitie continu, dus gratis is het op accu niet. Ben je op zoek naar idle-verbruik, dan is dit een van de eerste dingen om met `powertop` te controleren, naast het [`asusctl`-energieprofiel]({{< relref "/docs/hardware/asusctl-rog-control" >}}).
+Een monitor in de bovenbalk pollt continu, dus gratis is het op accu niet. Ben je op zoek naar idle-verbruik, controleer dit dan met `powertop` naast het [`asusctl`-energieprofiel]({{< relref "/docs/hardware/asusctl-rog-control" >}}).
 {{< /callout >}}
-
 
 ## Referenties
 

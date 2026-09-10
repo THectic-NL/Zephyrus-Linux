@@ -24,7 +24,7 @@ Niets op deze pagina is distributie-specifiek, behalve waar een profiel mag staa
 
 | Locatie | Bereik |
 |---|---|
-| `~/.local/share/icc/` | Alleen de huidige gebruiker — **gebruik deze** |
+| `~/.local/share/icc/` | Alleen de huidige gebruiker. **Gebruik deze** |
 | `/usr/local/share/color/icc/` | Systeembreed. `/usr/local` is op een atomic systeem een symlink naar `/var/usrlocal`, dus het overleeft image-updates en is beschrijfbaar |
 
 Een profiel met `rpm-ostree` in de image layeren zou werken, maar is het verkeerde gereedschap: dit zijn databestanden voor jouw account, geen onderdeel van het systeem.

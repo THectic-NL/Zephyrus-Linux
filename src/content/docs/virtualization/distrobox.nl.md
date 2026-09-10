@@ -7,7 +7,7 @@ next: docs/virtualization/vmware-workstation
 
 [Distrobox](https://distrobox.it/) draait de userspace van een andere distributie in een container die strak met je sessie verweven is: dezelfde home-map, dezelfde gebruiker, hetzelfde X/Wayland-scherm, en applicaties kunnen naar het menu van je host geëxporteerd worden. Eronder zit [Podman]({{< relref "/docs/virtualization/podman" >}}).
 
-Het is geen VM en geen sandbox. Een distrobox-container deelt je home-map en draait als jou — het is een manier om aan de *packages van een andere distributie* te komen, niet om iets van jezelf af te schermen.
+Het is geen VM en geen sandbox. Een distrobox-container deelt je home-map en draait als jou. Het is een manier om aan de *packages van een andere distributie* te komen, niet om iets van jezelf af te schermen.
 
 Hoeveel dit uitmaakt hangt volledig af van welke distributie je draait.
 
@@ -21,7 +21,7 @@ Af en toe nuttig. Je kunt er maanden zonder.
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
-Basisinfrastructuur. `/usr` is read-only, layeren is een laatste redmiddel en kost een herstart, en Homebrew dekt maar zoveel — dus als je een echte package manager nodig hebt, ís distrobox het antwoord. Het staat derde in Bazzites eigen voorkeursvolgorde, boven layeren, en in de praktijk draagt het het meeste ontwikkelwerk.
+Basisinfrastructuur. `/usr` is read-only, layeren is een laatste redmiddel en kost een herstart, en Homebrew dekt maar zoveel, dus als je een echte package manager nodig hebt, ís distrobox het antwoord. Het staat derde in Bazzites eigen voorkeursvolgorde, boven layeren, en in de praktijk draagt het het meeste ontwikkelwerk.
 
 Kom je van een gewone distributie, dan is dit de gewoonte om aan te leren. "Ik installeer het gewoon even op de host" is het instinct om af te leren.
 
@@ -58,7 +58,7 @@ distrobox create --name arch --image archlinux:latest
 distrobox enter arch
 ```
 
-De eerste keer binnenkomen duurt even — je gebruiker wordt in de container aangemaakt en de home-map wordt gekoppeld. Daarna is het gewoon een shell.
+De eerste keer binnenkomen duurt even terwijl je gebruiker in de container wordt aangemaakt en de home-map wordt gekoppeld. Daarna is het gewoon een shell.
 
 Images die de moeite waard zijn:
 
@@ -72,7 +72,7 @@ Images die de moeite waard zijn:
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
 
-Een Arch-container is hier grotendeels overbodig — je zit al op Arch. Grijp liever naar Ubuntu of Debian; dáár verdient distrobox op deze distributie zijn plek.
+Een Arch-container is hier grotendeels overbodig, want je zit al op Arch. Grijp liever naar Ubuntu of Debian; dáár verdient distrobox op deze distributie zijn plek.
 
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
@@ -116,7 +116,7 @@ distrobox stop <naam>
 distrobox rm -f <naam>
 ```
 
-Containers zijn bedoeld om weg te gooien. Komt er een in een toestand die je niet kunt verklaren, gooi hem dan weg en maak een nieuwe — dat is goedkoper dan debuggen, en je home-map blijft hoe dan ook ongemoeid.
+Containers zijn bedoeld om weg te gooien. Komt er een in een toestand die je niet kunt verklaren, gooi hem dan weg en maak een nieuwe. Dat is goedkoper dan debuggen, en je home-map blijft hoe dan ook ongemoeid.
 
 {{< callout type="warning" >}}
 Omdat de home-map gedeeld is, kan een container in je dotfiles schrijven. Een container die `~/.bashrc` herschrijft, of een taal-toolchain die in `~/.local` installeert, raakt daarmee ook de host en elke andere container. Het is de meest voorkomende verrassing bij distrobox, en een gevolg van het ontwerp, geen bug.
@@ -127,7 +127,7 @@ Houd projectstatus binnen de projectmap en wees bewust met alles wat naar `~` sc
 ## Specifiek op Bazzite
 
 - **`/var/home`.** Je home-map is `/var/home/<gebruiker>` met `/home` als symlink daarnaartoe. Distrobox gaat daar goed mee om, maar een script binnen een container dat `/home/<gebruiker>` hardcodeert misschien niet. "Bestaat niet" binnen een container terwijl het er buiten duidelijk wél is: dit is waarom.
-- **Wat op de host hoort.** Alles wat de kernel of de inlogsessie moet laden — drivers, kernelmodules, PAM-modules, systeemdiensten — kan niet uit een container komen. Daar is layeren voor, en daarom zijn [`asusctl`]({{< relref "/docs/hardware/asusctl-rog-control" >}}) en `pam-u2f` gelaagd en niet gecontaineriseerd.
+- **Wat op de host hoort.** Alles wat de kernel of de inlogsessie moet laden (drivers, kernelmodules, PAM-modules, systeemdiensten) kan niet uit een container komen. Daar is layeren voor, en daarom zijn [`asusctl`]({{< relref "/docs/hardware/asusctl-rog-control" >}}) en `pam-u2f` gelaagd en niet gecontaineriseerd.
 - **Eerst Homebrew voor kale CLI-tools.** Is een tool één binary zonder systeemintegratie, dan is `brew install` eenvoudiger dan een container. Distrobox is voor als je de package manager van een distributie nodig hebt, niet voor elk commandline-programma.
 
 ## Referenties
