@@ -1,7 +1,7 @@
 ---
 title: "Hardware & Drivers"
-weight: 2
+weight: 3
 toc: false
 ---
 
-Guides for NVIDIA drivers, Secure Boot, and ASUS ROG hardware features on the Zephyrus G16.
+ASUS ROG hardware features and display colour profiles for the Zephyrus G16. The NVIDIA driver and Secure Boot are per-distribution and live under CachyOS and Bazzite.

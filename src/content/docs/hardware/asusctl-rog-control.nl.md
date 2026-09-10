@@ -1,20 +1,25 @@
 ---
 title: "asusctl & ROG Control Center"
-weight: 3
-next: docs/security/autologin
+weight: 1
+prev: docs/hardware
+next: docs/hardware/color-profiles
 ---
 
-De Zephyrus G16 heeft veel hardware-functies die op Linux niet zomaar werken: fan curves, performance-profielen, de Slash LED op het deksel, GPU-switching, batterijlaadlimiet. Op deze pagina staat hoe ik dat allemaal werkend heb gekregen met asusctl en de tools van het ASUS Linux-project. Op CachyOS zijn deze tools direct beschikbaar vanuit de package repos.
+De Zephyrus G16 heeft veel hardware-functies die op Linux niet zomaar werken: fan curves, performance-profielen, de Slash LED op het deksel, GPU-switching, batterijlaadlimiet. Op deze pagina staat hoe ik dat allemaal werkend heb gekregen met asusctl en de tools van het ASUS Linux-project. Alles onder de installatiestap is op beide distributies identiek — het is dezelfde daemon die dezelfde hardware uitleest. Alleen het installeren verschilt.
 
 {{< callout type="warning" >}}
 **supergfxctl is verlaten.** Kom je gidsen tegen die `supergfxctl` of `supergfxd` noemen voor GPU-switching op ASUS-laptops: gebruik ze niet. Het project wordt niet meer onderhouden en vormt een beveiligingsrisico. Alles wat het vroeger deed zit nu in `asusctl` en ROG Control Center, die actief worden bijgehouden door het asus-linux team.
 {{< /callout >}}
 
 **Pakketinformatie (op het moment van schrijven):**
-- `asusd` 6.3.8: achtergrondproces (backend) dat alle hardware-functies beheert
-- `asusctl` 6.3.8: CLI frontend voor fan curves, profielen, batterijlimiet, RGB, Slash LED, GPU-switching
-- `rog-control-center` 6.3.8: grafische frontend, onderdeel van de asusctl/asusd suite
-- Bron: [asus-linux releases](https://gitlab.com/asus-linux/asusctl/-/releases) · beschikbaar in CachyOS/Arch repos
+- `asusd` 6.4.0: achtergrondproces (backend) dat alle hardware-functies beheert
+- `asusctl` 6.4.0: CLI frontend voor fan curves, profielen, batterijlimiet, RGB, Slash LED, GPU-switching
+- `rog-control-center` 6.4.0: grafische frontend, onderdeel van de asusctl/asusd suite
+- Bron: [asusctl releases](https://github.com/OpenGamingCollective/asusctl/releases) · in de CachyOS/Arch-repos, en in [Terra](https://terra.fyralabs.com/) voor Fedora
+
+{{< callout type="info" >}}
+Het project is in 2026 verhuisd. De ontwikkeling zat vroeger in de `asus-linux`-organisatie op GitLab (nu gearchiveerd, read-only); `asusctl`, `asusd` en `rog-control-center` worden nu onderhouden onder het [Open Gaming Collective](https://github.com/OpenGamingCollective/asusctl) op GitHub. [asus-linux.org](https://asus-linux.org/) is nog steeds de projectsite. Oudere gidsen die naar `gitlab.com/asus-linux` of de `lukenukem`-COPR voor Fedora wijzen zijn verouderd.
+{{< /callout >}}
 
 
 ## Installatie
@@ -23,16 +28,55 @@ De Zephyrus G16 heeft veel hardware-functies die op Linux niet zomaar werken: fa
 
 ### asusctl en ROG Control Center installeren
 
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
 ```bash
 sudo pacman -S asusctl rog-control-center
 ```
 
-Dit installeert:
+Beide packages komen direct uit de repos en alles werkt meteen. Geen kernel patches of diepe systeemconfiguratie vereist.
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+`asusd` is een systeemdaemon die tegen de kernel aan praat, dus dit is een van de weinige gevallen waarin layeren het juiste antwoord is en niet het laatste redmiddel. Hij zit niet in Fedora's eigen repositories; de ASUS Linux-packages staan in [Terra](https://terra.fyralabs.com/).
+
+Voeg de Terra-repository toe en layer daarna de packages:
+
+```bash
+curl -fsSL https://github.com/terrapkg/subatomic-repos/raw/main/terra.repo | pkexec tee /etc/yum.repos.d/terra.repo
+rpm-ostree install terra-release
+systemctl reboot
+```
+
+```bash
+rpm-ostree install asusctl rog-control-center
+systemctl reboot
+```
+
+Twee keer herstarten, want een gelaagd package wordt op de volgende image toegepast en niet op de draaiende.
+
+{{< callout type="warning" >}}
+Kijk eerst voordat je layert. Bazzite-images voor ASUS-handhelds leveren `asusctl` al mee, en een package layeren dat in de image zit is een conflict en geen upgrade:
+
+```bash
+rpm -q asusctl
+ujust
+```
+
+Staat `asusctl` er al, of noemt `ujust` een ASUS-recept, gebruik dat dan.
+{{< /callout >}}
+
+De oudere `lukenukem/asus-linux`-COPR waar de meeste gidsen naar wijzen wordt niet meer onderhouden — gebruik Terra.
+
+{{< /tab >}}
+{{< /tabs >}}
+
+Hiermee krijg je:
 - `asusd`: het achtergrondproces (backend) dat alle ASUS hardware-functies beheert
 - `asusctl`: CLI-frontend die communiceert met asusd
 - `rog-control-center`: grafische frontend die communiceert met asusd
-
-Op CachyOS is dit alles wat je nodig hebt; beide packages zijn direct beschikbaar vanuit de repos en alles werkt meteen. Geen kernel patches of diepe systeemconfiguratie vereist.
 
 ### Services activeren
 
@@ -63,9 +107,31 @@ Board name: GA605WV
 
 Handige tools voor hardwaremonitoring naast asusctl:
 
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
 ```bash
 sudo pacman -S nvtop powertop s-tui lm_sensors i2c-tools
 ```
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+Dit zijn commandline-tools, dus Homebrew of een distrobox-container is er de juiste plek voor, niet de image:
+
+```bash
+brew install nvtop powertop s-tui
+```
+
+`lm_sensors` en `i2c-tools` lezen hardware rechtstreeks uit en horen op de host thuis. `lm_sensors` is er meestal al; layer `i2c-tools` als je het nodig hebt:
+
+```bash
+rpm-ostree install i2c-tools
+systemctl reboot
+```
+
+{{< /tab >}}
+{{< /tabs >}}
 
 | Package | Beschrijving |
 |---------|--------------|
@@ -201,7 +267,7 @@ asusctl armoury set dgpu_disable 0
 
 > **Let op:** Na het wisselen van mode kan een herstart of uitloggen/inloggen vereist zijn.
 
-> **Belangrijk:** `nvidia-powerd.service` moet uitgeschakeld en **gemaskeerd** blijven op deze laptop. Het conflicteert met AMD ATPX power management en veroorzaakt soft lockups en reboot hangs (zwart scherm, backlights blijven aan). GPU-vermogensbeheer loopt via ATPX (via ACPI). Zie de [NVIDIA Driver Installatie Guide]({{< relref "/docs/hardware/nvidia-driver-installation" >}}) voor diagnosedetails en commando's.
+> **Belangrijk:** `nvidia-powerd.service` moet uitgeschakeld en **gemaskeerd** blijven op deze laptop. Het conflicteert met AMD ATPX power management en veroorzaakt soft lockups en reboot hangs (zwart scherm, backlights blijven aan). GPU-vermogensbeheer loopt via ATPX (via ACPI). Zie de NVIDIA-driverpagina voor jouw distributie — [CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) of [Bazzite]({{< relref "/docs/bazzite/nvidia" >}}) — voor diagnosedetails en commando's.
 
 {{% /details %}}
 
@@ -308,7 +374,7 @@ Bekende problemen en probleemoplossing voor asusctl & ROG Control Center staan o
 
 ### Kernel 6.19: asus-armoury driver in mainline Linux
 
-De `asus-armoury` driver is [gemerged in Linux 6.19](https://www.phoronix.com/news/ASUS-Armoury-Driver-Linux-6.19). Deze nieuwe `platform/x86` driver vervangt delen van de oudere `asus-wmi` met een schonere sysfs-gebaseerde API, waarmee o.a. paneelmodusschakeling, APU-geheugentoewijzing, PPT-tuning en meer mogelijk wordt direct vanuit de kernel. De driver is volledig door de community ontwikkeld door het [asus-linux team](https://asus-linux.org/), zonder enige betrokkenheid van ASUS zelf. Deze driver zit in elke CachyOS-kernel vanaf 6.19. De huidige kernel op het moment van schrijven is 7.0.12-1-cachyos.
+De `asus-armoury` driver is [gemerged in Linux 6.19](https://www.phoronix.com/news/ASUS-Armoury-Driver-Linux-6.19). Deze nieuwe `platform/x86` driver vervangt delen van de oudere `asus-wmi` met een schonere sysfs-gebaseerde API, waarmee o.a. paneelmodusschakeling, APU-geheugentoewijzing, PPT-tuning en meer mogelijk wordt direct vanuit de kernel. De driver is volledig door de community ontwikkeld door het [asus-linux team](https://asus-linux.org/), zonder enige betrokkenheid van ASUS zelf. Deze driver zit in elke CachyOS-kernel vanaf 6.19. De huidige kernel op het moment van schrijven is 7.2.4-1-cachyos.
 
 **Voor**: basale asusctl-bediening zonder Armoury-instellingen:
 
@@ -322,7 +388,7 @@ De `asus-armoury` driver is [gemerged in Linux 6.19](https://www.phoronix.com/ne
 
 ### Kernel 7.0: ASUS laptop quirks + nieuw AMDGPU-werk
 
-Kernel 7.0 is in april 2026 uitgebracht en CachyOS pakte het snel op. Voor deze ASUS ROG G16 bracht het wat beloofd was: betere AMDGPU-ondersteuning voor nieuwere RDNA 3.5-klasse IP blocks (GFX11.5.4) en verder NVIDIA-werk. De gaming-performance op de Radeon 890M is merkbaar verbeterd, ruwweg in lijn met de ~20% uplift die werd verwacht. Samen met de verbeteringen uit 6.19 draait deze hardware eindelijk zoals het hoort op Linux. De huidige CachyOS-kernel is 7.0.12-1-cachyos.
+Kernel 7.0 is in april 2026 uitgebracht en CachyOS pakte het snel op. Voor deze ASUS ROG G16 bracht het wat beloofd was: betere AMDGPU-ondersteuning voor nieuwere RDNA 3.5-klasse IP blocks (GFX11.5.4) en verder NVIDIA-werk. De gaming-performance op de Radeon 890M is merkbaar verbeterd, ruwweg in lijn met de ~20% uplift die werd verwacht. Samen met de verbeteringen uit 6.19 draait deze hardware eindelijk zoals het hoort op Linux. De huidige CachyOS-kernel is 7.2.4-1-cachyos.
 
 **Bronnen:** [Linus bevestigt Linux 7.0](https://www.phoronix.com/news/Linux-7.0-Is-Next) · [HID laptop quirks voor ASUS ROG modellen](https://www.phoronix.com/news/Linux-7.0-HID) · [Linux 7.0 DRM/AMDGPU updates](https://www.phoronix.com/news/Linux-7.0-Graphics-Drivers)
 
@@ -330,6 +396,6 @@ Kernel 7.0 is in april 2026 uitgebracht en CachyOS pakte het snel op. Voor deze 
 ## Aanvullende Bronnen
 
 - [asus-linux.org](https://asus-linux.org/): officiële projectsite
-- [asusctl GitLab](https://gitlab.com/asus-linux/asusctl): broncode en issue tracker
+- [asusctl op GitHub](https://github.com/OpenGamingCollective/asusctl): broncode en issue tracker
 - [CachyOS Wiki: ASUS](https://wiki.cachyos.org/): CachyOS-specifieke documentatie
-- [NVIDIA Driver Installatie Guide]({{< relref "/docs/hardware/nvidia-driver-installation" >}}): NVIDIA driver setup en bekende problemen
+- NVIDIA driver setup en bekende problemen: [CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) · [Bazzite]({{< relref "/docs/bazzite/nvidia" >}})

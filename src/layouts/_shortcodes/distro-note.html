@@ -1,0 +1,26 @@
+{{- /* Banner for a page that only applies to one distribution.
+
+       Usage: {{< distro-note >}} on a page whose front matter sets
+       `distro: cachyos` or `distro: bazzite`, or {{< distro-note for="bazzite" >}}
+       to name it inline.
+
+       distro-switch.js adds .is-mismatch (and reveals .distro-note-hint) when
+       the reader's selected distribution is the other one. */ -}}
+{{- $page := .Page -}}
+{{- $distro := .Get "for" | default $page.Params.distro -}}
+{{- $names := dict "cachyos" "CachyOS" "bazzite" "Bazzite" -}}
+{{- $name := index $names $distro -}}
+{{- if not $name -}}
+  {{- errorf "distro-note in %q: set `distro: cachyos|bazzite` in front matter, or pass for=\"…\"" $page.File.Path -}}
+{{- end -}}
+{{- $other := cond (eq $distro "cachyos") "Bazzite" "CachyOS" -}}
+{{- $nl := eq $page.Language.Lang "nl" -}}
+<div class="distro-note" data-distro-note="{{ $distro }}">
+{{- if $nl -}}
+  Deze pagina gaat specifiek over <strong>{{ $name }}</strong>.
+  <span class="distro-note-hint"> Je hebt nu {{ $other }} geselecteerd in de navigatiebalk.</span>
+{{- else -}}
+  This page is specific to <strong>{{ $name }}</strong>.
+  <span class="distro-note-hint"> You currently have {{ $other }} selected in the navbar.</span>
+{{- end -}}
+</div>

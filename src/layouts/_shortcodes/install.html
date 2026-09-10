@@ -1,0 +1,16 @@
+{{- /* Two package-install commands on a shared page, without a tab widget.
+
+       {{< install cachyos="sudo pacman -S solaar" bazzite="flatpak install flathub io.github.pwr_solaar.solaar" >}}
+
+       The row for the reader's selected distribution is highlighted (CSS, keyed
+       on <html data-distro>). Either side may be a full command or a short
+       note. */ -}}
+{{- $cachyos := .Get "cachyos" -}}
+{{- $bazzite := .Get "bazzite" -}}
+{{- if or (not $cachyos) (not $bazzite) -}}
+  {{- errorf "install shortcode in %q needs both cachyos= and bazzite=" .Page.File.Path -}}
+{{- end -}}
+<div class="install-block">
+  <div class="install-row" data-for="cachyos"><span class="install-distro">CachyOS</span> <code>{{ $cachyos }}</code></div>
+  <div class="install-row" data-for="bazzite"><span class="install-distro">Bazzite</span> <code>{{ $bazzite }}</code></div>
+</div>

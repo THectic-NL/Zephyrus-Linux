@@ -2,18 +2,20 @@
 
 Nederlands | [English](README.md)
 
-CachyOS op de ASUS ROG Zephyrus G16 GA605WV (2024). Mijn persoonlijke setup-log: wat werkte, wat niet, en hoe ik het heb opgelost.
+Linux op de ASUS ROG Zephyrus G16 GA605WV (2024). Mijn persoonlijke setup-log voor de twee distributies die ik erop draai, CachyOS en Bazzite: wat werkte, wat niet, en hoe ik het heb opgelost.
 
 **Bekijk de volledige documentatiesite: [zephyrus-linux.thectic.nl](https://zephyrus-linux.thectic.nl/nl/)**
 
 
 ## Over dit project
 
-Dit is mijn persoonlijke setup-log voor CachyOS op deze laptop. Ik ben geen software-engineer of developer: gewoon iemand die naar Linux is overgestapt en daarna tegen van alles aanliep wat niet meteen werkte. Ik heb alles opgeschreven zodat anderen niet hetzelfde hoeven uitzoeken als ik.
+Dit is mijn persoonlijke setup-log voor deze laptop. Ik ben geen developer, gewoon iemand die naar Linux is overgestapt en daarna tegen van alles aanliep wat niet meteen werkte. Ik heb alles opgeschreven zodat anderen dat niet hoeven uitzoeken.
+
+De handleidingen dekken CachyOS (Arch) en Bazzite (Fedora Atomic). Ik heb ze allebei als dagelijks systeem gedraaid en wissel ertussen; op dit moment zit ik op Bazzite. De [Aan de slag](https://zephyrus-linux.thectic.nl/nl/docs/)-pagina legt de keuze uit, en een switcher bovenaan elke pagina brengt je tussen de twee sets handleidingen.
 
 Ik ben nog actief aan het testen en experimenteren: dingen kunnen veranderen, kapot gaan of achteraf onjuist blijken. Alles wat hier staat is gebaseerd op mijn eigen ervaring en is op eigen risico.
 
-Ik ben niet gelieerd aan, goedgekeurd door, of handelend namens ASUS, NVIDIA, Microsoft, CachyOS, of enig ander bedrijf of project dat hier wordt genoemd.
+Ik ben niet gelieerd aan, goedgekeurd door, of handelend namens ASUS, NVIDIA, Microsoft, CachyOS, Universal Blue, of enig ander bedrijf of project dat hier wordt genoemd.
 
 ![Systeeminformatie-overzicht](src/static/images/system-info.avif)
 
@@ -75,7 +77,7 @@ cd src/static/images
 for f in *.png; do avifenc -q 80 -s 6 "$f" "${f%.png}.avif" && rm "$f"; done
 ```
 
-- `-q 80`: 80% kwaliteit (schaal 0–100, 100 = verliesvrij)
+- `-q 80`: 80% kwaliteit (schaal 0-100, 100 = verliesvrij)
 - `-s 6`: encodersnelheid (0 = beste compressie, 10 = snelst)
 
 
@@ -83,8 +85,9 @@ for f in *.png; do avifenc -q 80 -s 6 "$f" "${f%.png}.avif" && rm "$f"; done
 
 Dit project zou niet bestaan zonder het werk van deze mensen en communities:
 
-- **[ASUS Linux community](https://asus-linux.org/)**: Het project achter `asusctl` en `rog-control-center`. Luke Jones heeft hier een grote drijvende kracht achter geweest, maar ook andere bijdragers hebben kernel patches ingediend, waarvan velen inmiddels in mainline Linux zijn gemerged, waardoor moderne ASUS ROG laptops echt bruikbaar zijn op Linux.
-- **[CachyOS](https://cachyos.org/)**: De distributie die deze setup aandrijft. CachyOS is een op Arch gebaseerde distro met uitgebreide hardware-specifieke optimalisaties: een verbeterde scheduler (BORE/EEVDF), beter energiebeheer, ondersteuning voor dynamische verversingsfrequentie, en ingebouwde drivers voor zowel de AMD iGPU als de NVIDIA dGPU, inclusief geïntegreerde GPU-switching. Van alle distributies die ik getest heb (waaronder Fedora, dat dicht in de buurt kwam), is CachyOS veruit de sterkste op dit apparaat.
+- **[ASUS Linux community](https://asus-linux.org/)**: Het project achter `asusctl` en `rog-control-center`, tegenwoordig onderhouden onder het [Open Gaming Collective](https://github.com/OpenGamingCollective/asusctl). Luke Jones is hier een grote drijvende kracht achter geweest, en ook andere bijdragers hebben kernel patches ingediend, waarvan velen inmiddels in mainline Linux zijn gemerged, waardoor moderne ASUS ROG laptops echt bruikbaar zijn op Linux.
+- **[CachyOS](https://cachyos.org/)**: Een op Arch gebaseerde distributie met uitgebreide hardware-specifieke tuning: een verbeterde scheduler (BORE/EEVDF), beter energiebeheer, ondersteuning voor dynamische verversingsfrequentie, en ingebouwde drivers voor zowel de AMD iGPU als de NVIDIA dGPU, inclusief geïntegreerde GPU-switching. Een van de twee distributies die deze handleidingen dekken.
+- **[Bazzite / Universal Blue](https://universal-blue.org/)**: De mensen die de atomic Fedora-images maken waarop deze laptop goed draait, en die veel van de patches hebben bijgedragen die hem beter laten presteren. De andere distributie die deze handleidingen dekken.
 - **[Foxboron/sbctl](https://github.com/Foxboron/sbctl)**: Beheertool voor Secure Boot-sleutels, gebruikt voor het inschrijven van eigen sleutels en het ondertekenen van de kernel en EFI-binaries. Onmisbaar voor het actief houden van Secure Boot met een aangepaste kernel.
 - **[sched-ext / scx_lavd](https://github.com/sched-ext/scx)**: Het Linux scheduler-extensibiliteitsframework achter de `scx_lavd` CPU-scheduler. Uitstekende latentie en responsiviteit voor desktop- en gamingworkloads.
 - **[lz42/libinput-config](https://github.com/lz42/libinput-config)**: Kernel-niveau workaround voor de ontbrekende scroll speed-instelling in GNOME/Wayland, door libinput-events te onderscheppen vóór de compositor ze verwerkt.
