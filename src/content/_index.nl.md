@@ -37,8 +37,8 @@ toc: false
 | **RAM** | 32 GB LPDDR5 |
 | **iGPU** | AMD Radeon 890M |
 | **dGPU** | NVIDIA GeForce RTX 4060 Laptop (Max-Q) |
-| **OS** | CachyOS (Arch) |
-| **Kernel** | 7.0.12-1-cachyos |
+| **OS** | Bazzite (Fedora Atomic) op dit moment; ook gedocumenteerd voor [CachyOS]({{< relref "/docs/cachyos/getting-started" >}}) (Arch) |
+| **Kernel** | 7.2.4-1-cachyos |
 | **Display Server** | Wayland (GNOME 50) |
 | **CPU Scheduler** | scx_lavd (sched_ext) |
 | **Secure Boot** | Ingeschakeld |

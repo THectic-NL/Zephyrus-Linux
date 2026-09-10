@@ -1,0 +1,25 @@
+{{- /* Distro switcher. Set <html data-distro> before paint so the scoped
+       sidebar and the switcher's active option render right the first time:
+       from the URL on a /docs/<distro>/ page, otherwise from the stored choice
+       (default cachyos). Then expose this page's `distro` for {{< distro-note >}}
+       and load the control script. */ -}}
+<script>
+  (function () {
+    var d = "cachyos";
+    try {
+      var m = location.pathname.match(/\/docs\/(cachyos|bazzite)\//);
+      if (m) {
+        d = m[1];
+      } else {
+        var s = localStorage.getItem("zephyrus-distro");
+        if (s === "cachyos" || s === "bazzite") d = s;
+      }
+    } catch (e) {}
+    document.documentElement.setAttribute("data-distro", d);
+  })();
+</script>
+{{- with .Params.distro }}
+<meta name="page-distro" content="{{ . }}" />
+{{- end }}
+{{- $js := resources.Get "js/distro-switch.js" | js.Build (dict "minify" hugo.IsProduction) | fingerprint -}}
+<script defer src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}"></script>

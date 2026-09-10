@@ -1,6 +1,7 @@
 ---
 title: "WinBoat: Windows via Podman Container"
 weight: 3
+prev: docs/virtualization/quickemu
 next: docs/virtualization/podman
 ---
 
@@ -19,9 +20,10 @@ Het project noemt dit de laatste 0.9-release: alleen onderhoud en beveiliging, o
 
 ## Installatie
 
-{{< callout type="info" >}}
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
 Sinds de [CachyOS-release van maart 2026](https://cachyos.org/blog/2603-march-release/) bevat **CachyOS Hello** een knop om WinBoat direct te installeren en in te schakelen. Nieuwe gebruikers kunnen de handmatige stappen hieronder overslaan en de welkomst-app gebruiken.
-{{< /callout >}}
 
 ![CachyOS Hello: Install Winboat-knop onder Utilities](/images/cachyos-hello-winboat.avif)
 
@@ -36,6 +38,23 @@ Packagebron: [packages.cachyos.org/winboat](https://packages.cachyos.org/package
 Op de WinBoat-website staat ook een AUR-package (`winboat-bin`) voor andere Arch-gebaseerde distro's. Op CachyOS is het gewoon via de repo.
 
 ![WinBoat downloadpagina met Arch/AUR-installatieopties](/images/winboat-download.avif)
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+WinBoat zit niet in de repositories van Fedora en er is geen Flatpak — de sandbox komt niet bij de Podman-socket, en dat is juist het enige wat WinBoat nodig heeft.
+
+Podman zelf zit al in de image, dus de **AppImage** van [winboat.app](https://winboat.app/) is de weg van de minste weerstand: niets te layeren, nergens voor te herstarten, en hij draait zonder sandbox zodat hij bij de socket kan.
+
+```bash
+chmod +x WinBoat-*.AppImage
+./WinBoat-*.AppImage
+```
+
+Het project publiceert ook een `.rpm`. Die zou via `rpm-ostree install` werken, maar dat betekent een gelaagd package en een herstart voor een applicatie die geen onderdeel van het systeem hoeft te zijn — en nog een herstart bij elke WinBoat-release. De AppImage past hier beter.
+
+{{< /tab >}}
+{{< /tabs >}}
 
 
 ## Setup

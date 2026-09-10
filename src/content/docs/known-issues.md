@@ -1,10 +1,12 @@
 ---
 title: "Known Issues"
-weight: 7
-prev: docs/virtualization/vmware-workstation
+weight: 10
+prev: docs/gaming/proton-slr
 ---
 
 Central reference for hardware and software issues on the ASUS ROG Zephyrus G16 GA605WV. Active issues are listed first. Resolved issues are kept as reference at the bottom.
+
+Most of what's here is about the hardware and applies whichever distribution you run. Where a fix differs, the entry has a CachyOS and a Bazzite tab.
 
 ## Active Issues
 
@@ -13,13 +15,13 @@ Central reference for hardware and software issues on the ASUS ROG Zephyrus G16 
 {{% details title="WinBoat: container fails to start" closed="true" %}}
 
 **What's happening:**
-WinBoat regularly gets stuck in an endless startup loop. The Podman container keeps trying to start but never succeeds, even after waiting indefinitely. The UI shows "WinBoat Guest API - Offline" and "Container - Exited". This is not limited to the first install; it happens on subsequent starts as well.
+On v0.9.0 WinBoat regularly got stuck in an endless startup loop. The Podman container kept trying to start but never succeeded, even after waiting indefinitely. The UI showed "WinBoat Guest API - Offline" and "Container - Exited". It was not limited to the first install; it happened on subsequent starts too.
 
 **Workaround:**
-Resetting WinBoat and going through the initial configuration again gets it running again. This is not a sustainable fix.
+Resetting WinBoat and going through the initial configuration again gets it running. Not a sustainable fix.
 
 **Status:**
-Improved on v0.9.2. Seen frequently on v0.9.0; far less common since. Not something I would call solved. v0.9.2 bumps the underlying `dockur/windows` image from 5.14 to 6.05, which may be related. See the [WinBoat page]({{< relref "/docs/virtualization/winboat" >}}) for more context.
+Much improved on v0.9.2, which bumps the underlying `dockur/windows` image from 5.14 to 6.05. Still seen occasionally, so tracked as [#106](https://github.com/THectic-NL/Zephyrus-Linux/issues/106). See the [WinBoat page]({{< relref "/docs/virtualization/winboat" >}}) for more context.
 
 {{% /details %}}
 
@@ -32,7 +34,7 @@ When WinBoat does start and you open a Windows application like Word, the window
 None found.
 
 **Status:**
-Open. Beta limitation.
+Open, tracked as [#107](https://github.com/THectic-NL/Zephyrus-Linux/issues/107). Beta limitation.
 
 {{% /details %}}
 
@@ -44,7 +46,7 @@ Enrolling the YubiKey as a FIDO2 LUKS unlock key succeeds, but at boot `systemd-
 Tried with `token-timeout=30` in crypttab and `rd.udev.settle-timeout=10` as a kernel parameter, both on systemd 259. Neither helped.
 
 **Status:**
-Still unresolved. Not sure if this is a real hardware/firmware timing issue, something specific to this machine, or a misconfiguration on my end. Possibly revisiting later. For now, the YubiKey is used for `sudo` and the GNOME lock screen instead.
+Still unresolved, tracked as [#108](https://github.com/THectic-NL/Zephyrus-Linux/issues/108). Not sure if this is a real hardware/firmware timing issue, something specific to this machine, or a misconfiguration on my end. Possibly revisiting later. For now, the YubiKey is used for `sudo` and the GNOME lock screen instead.
 
 See the **Things I Wished Had Worked** section at the bottom of this page for the full context.
 
@@ -232,63 +234,113 @@ On laptops with AMD iGPU + NVIDIA dGPU, the ATPX framework (via ACPI) controls w
 
 ## NVIDIA Driver
 
-> These entries apply primarily to the Fedora installation path. CachyOS users are not affected; the driver is pre-configured during installation.
+> Neither distribution asks you to install the driver by hand: CachyOS configures it during installation, Bazzite ships it inside the image. So when the driver is missing, the cause is almost never the driver itself.
 
-{{% details title="nvidia-smi: command not found or fails" closed="true" %}}
+{{% details title="nvidia-smi: command not found, or the modules aren't loaded" closed="true" %}}
 
-Check if NVIDIA modules are loaded:
+Start the same way on both:
+
 ```bash
 lsmod | grep nvidia
-```
-
-Check system logs for errors:
-```bash
 sudo journalctl -b | grep nvidia
 ```
 
-Rebuild kernel modules:
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+The driver is a DKMS module, so this usually means the rebuild against the current kernel failed. Check and force it:
+
 ```bash
-sudo akmods --force
-sudo dracut --force
+sudo dkms status
+sudo dkms autoinstall
 sudo reboot
 ```
+
+If the build itself fails, the kernel headers for the running kernel are the thing to check — `linux-cachyos-headers` has to match the kernel you actually booted.
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+Nothing is built locally here, so there are only two realistic causes.
+
+**1. You're not on an NVIDIA image.** Check the ref:
+
+```bash
+rpm-ostree status
+```
+
+If it doesn't contain `nvidia-open`, that's the whole problem — see [NVIDIA Driver: Bazzite]({{< relref "/docs/bazzite/nvidia" >}}) for the rebase.
+
+**2. The Secure Boot key isn't enrolled.** The modules are signed by Universal Blue; with Secure Boot on and the key missing, they silently refuse to load:
+
+```bash
+mokutil --sb-state
+ujust enroll-secure-boot-key
+```
+
+Do **not** run `akmods` or `dracut` here. Guides that tell you to are written for conventional Fedora; on an atomic image they do nothing useful and can leave you with a broken initramfs.
+
+{{< /tab >}}
+{{< /tabs >}}
 
 {{% /details %}}
 
-{{% details title="MOK enrollment: 'Key was rejected by service'" closed="true" %}}
+{{% details title="'Key was rejected by service' when loading the module" closed="true" %}}
 
-If you receive the error `modprobe: ERROR: could not insert 'nvidia': Key was rejected by service`, the kernel modules were built before MOK enrollment completed.
+`modprobe: ERROR: could not insert 'nvidia': Key was rejected by service` means Secure Boot is on and the module is signed with a key the firmware doesn't trust.
 
-Solution:
-```bash
-# Rebuild modules after MOK enrollment
-sudo akmods --force
-sudo dracut --force
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
 
-# Reboot
-sudo reboot
-```
+With `sbctl` and your own keys, the kernel does not enforce module signatures, so this shouldn't normally come up. If it does, you have a MOK-based setup from a previous install: reset it and go through [Secure Boot on CachyOS]({{< relref "/docs/cachyos/secure-boot" >}}) again.
 
-To reset MOK if needed:
 ```bash
 sudo mokutil --reset
 ```
 
-Reboot and attempt enrollment again.
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+The Universal Blue key isn't enrolled, or the enrollment didn't complete:
+
+```bash
+ujust enroll-secure-boot-key
+```
+
+Reboot, choose **Enroll MOK** → **Continue** → **Yes**, and enter `universalblue`. MokManager shows nothing while you type — that's expected, not a broken keyboard.
+
+If you need to start over:
+
+```bash
+sudo mokutil --reset
+```
+
+{{< /tab >}}
+{{< /tabs >}}
 
 {{% /details %}}
 
 {{% details title="Kernel module build failures" closed="true" %}}
 
-Ensure kernel headers match running kernel:
+**CachyOS only.** On Bazzite nothing is built locally — the kernel and the NVIDIA modules ship together in the image, which is exactly why this failure mode doesn't exist there.
+
+Make sure the headers match the running kernel:
+
 ```bash
-sudo dnf install kernel-devel
+uname -r
+sudo pacman -S linux-cachyos-headers
 ```
 
-Force rebuild:
+Then force the rebuild:
+
 ```bash
-sudo akmods --force
-sudo dracut --force
+sudo dkms autoinstall
+```
+
+The build log names the real cause:
+
+```bash
+sudo cat /var/lib/dkms/nvidia/*/build/make.log
 ```
 
 {{% /details %}}
@@ -393,7 +445,7 @@ This issue has since resolved itself. Steam now launches normally; the `__GL_CON
 ROG Control Center shows a warning that the `asus-armoury` kernel driver is not loaded. Some advanced features (PPT power limits, APU memory allocation, MUX switch control) are unavailable.
 
 **Cause:**
-The `asus-armoury` driver was merged into the Linux mainline kernel in version 6.19. This driver has been included from kernel 6.19 onwards; the current CachyOS kernel at the time of writing is 7.0.12-1-cachyos.
+The `asus-armoury` driver was merged into the Linux mainline kernel in version 6.19. This driver has been included from kernel 6.19 onwards; the current CachyOS kernel at the time of writing is 7.2.4-1-cachyos.
 
 **Fix:**
 Verify the driver is loaded:
@@ -408,7 +460,28 @@ If it loads, reopen ROG Control Center; the warning should be gone and advanced 
 
 ## Secure Boot
 
-{{% details title="sbctl status still shows 'Setup Mode: Disabled' after clearing keys" closed="true" %}}
+{{% details title="Bazzite: no GPU acceleration after installing, everything else works" closed="true" %}}
+
+The most common Bazzite issue on this laptop, and it doesn't look like a Secure Boot problem at all — the desktop comes up, it's just software-rendered and `nvidia-smi` fails.
+
+Secure Boot is on and Universal Blue's key was never enrolled, so the NVIDIA modules refuse to load:
+
+```bash
+mokutil --sb-state
+lsmod | grep nvidia
+```
+
+Secure Boot enabled plus no `nvidia` modules is the signature. Fix:
+
+```bash
+ujust enroll-secure-boot-key
+```
+
+Reboot into MokManager, **Enroll MOK** → **Continue** → **Yes**, password `universalblue`. See [Secure Boot on Bazzite]({{< relref "/docs/bazzite/secure-boot" >}}).
+
+{{% /details %}}
+
+{{% details title="CachyOS: sbctl status still shows 'Setup Mode: Disabled' after clearing keys" closed="true" %}}
 
 Some ASUS UEFI versions require the platform key (PK) to be explicitly deleted before Setup Mode activates.
 
@@ -421,7 +494,7 @@ After rebooting, `sudo sbctl status` should show Setup Mode: Enabled.
 
 {{% /details %}}
 
-{{% details title="System does not boot after enabling Secure Boot" closed="true" %}}
+{{% details title="CachyOS: system does not boot after enabling Secure Boot" closed="true" %}}
 
 If the system doesn't boot after enabling Secure Boot, one or more EFI files weren't signed.
 
