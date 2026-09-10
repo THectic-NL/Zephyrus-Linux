@@ -47,35 +47,21 @@ Both packages come straight from the repos and everything works out of the box. 
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
-`asusd` is a system daemon with a kernel-facing job, so this is one of the few cases where layering is the right answer rather than a last resort. It isn't in Fedora's own repositories; the ASUS Linux packages live in [Terra](https://terra.fyralabs.com/).
+When you generate your download on [bazzite.gg](https://bazzite.gg/), use the hardware picker and select **ASUS Laptop** under "What hardware are you using?" instead of a generic desktop option. It tailors the recommended image and setup steps to this hardware.
 
-Add the Terra repository, then layer the packages:
-
-```bash
-curl -fsSL https://github.com/terrapkg/subatomic-repos/raw/main/terra.repo | pkexec tee /etc/yum.repos.d/terra.repo
-rpm-ostree install terra-release
-systemctl reboot
-```
+Don't layer `asusctl`/`rog-control-center` into the image yourself with `rpm-ostree install`. `asusd` is a system daemon with a kernel-facing job, which is normally a case for layering, but Bazzite ships its own maintained install path for it:
 
 ```bash
-rpm-ostree install asusctl rog-control-center
-systemctl reboot
+ujust asus install
 ```
 
-Two reboots, because a layered package is applied to the next image rather than the running one.
+Installs `asusctl-linux` and `rog-control-center-linux` as Homebrew casks and enables the required services right away. No image layering, no reboot. The same install/uninstall toggle also shows up as "asusctl & ROG Control Center" in the first-boot setup wizard (yafti), if you'd rather turn it on there.
 
 {{< callout type="warning" >}}
-Check before you layer. Bazzite images built for ASUS handhelds already ship `asusctl`, and layering a package that's in the image is a conflict rather than an upgrade:
-
-```bash
-rpm -q asusctl
-ujust
-```
-
-If `asusctl` is already there, or `ujust` lists an ASUS recipe, use that instead.
+Already layered `asusctl`/`rog-control-center` from an older guide, including an earlier version of this page? `ujust asus install` detects the layered packages, offers to remove them for you, then installs the Homebrew version in their place.
 {{< /callout >}}
 
-The older `lukenukem/asus-linux` COPR that most guides point at is no longer maintained. Use Terra.
+Older guides (including an earlier version of this page) point at the Terra repo or the unmaintained `lukenukem/asus-linux` COPR for these packages. Neither is needed for this anymore.
 
 {{< /tab >}}
 {{< /tabs >}}
