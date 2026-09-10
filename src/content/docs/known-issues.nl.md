@@ -52,6 +52,19 @@ Zie de sectie **Dingen die ik graag werkend had gezien** onderaan deze pagina vo
 
 {{% /details %}}
 
+{{% details title="Integrated GPU-mode: schermhelderheid reageert niet meer" closed="true" %}}
+
+**Wat er gebeurt:**
+Na het wisselen naar Integrated GPU-mode (ROG Control Center → GPU Configuration) reageert de schermhelderheid helemaal niet meer — zowel de Fn-toetsen als de OS-slider doen niets.
+
+**Workaround:**
+Terugschakelen naar Hybrid mode. Dit vereist een echte herstart om effect te hebben; de helderheid komt niet terug door alleen Hybrid opnieuw te kiezen in de dropdown.
+
+**Status:**
+Bevestigd op Bazzite (Fedora 44, kernel 7.2.4). Nog niet getest op CachyOS.
+
+{{% /details %}}
+
 ## Opgeloste Problemen
 
 De volgende problemen zijn opgelost. Sommige zijn verholpen door kernel- of driver-updates, andere via een configuratiewijziging, en eerlijk gezegd heb ik een aantal dingen misschien gewoon zelf fout gedaan. Ik heb ze hier toch bewaard, want misschien bespaar ik iemand anders dezelfde zoektocht.
@@ -454,6 +467,12 @@ lsmod | grep asus_armoury
 ```
 
 Als hij laadt, heropen ROG Control Center; de melding zou verdwenen moeten zijn en geavanceerde functies zijn beschikbaar.
+
+{{% /details %}}
+
+{{% details title="Prestatieprofiel 'Silent' heet 'Quiet' in de GUI" closed="true" %}}
+
+Het tabblad Fan Curves in ROG Control Center noemt dit profiel **Quiet**. De CLI (`asusctl profile -P Silent`) gebruikt nog steeds `Silent`, bevestigd nog steeds de juiste waarde. Puur een cosmetische GUI-herbenaming, geen omgedoopt profiel.
 
 {{% /details %}}
 

@@ -216,10 +216,6 @@ asusctl biedt drie prestatieprofielen die de CPU/GPU-vermogensgrenzen en het ven
 | `Balanced` | Standaard. Gematigd vermogen en geluid |
 | `Performance` | Maximaal CPU/GPU-vermogen, agressieve ventilatoren |
 
-{{< callout type="info" >}}
-Het tabblad Fan Curves in ROG Control Center noemt dit profiel momenteel **Quiet** in plaats van Silent. De CLI-waarde is voor zover geverifieerd nog steeds `Silent`; behandel het GUI-label als cosmetisch totdat dit anders is bevestigd.
-{{< /callout >}}
-
 **Profiel instellen:**
 ```bash
 asusctl profile -P Balanced
@@ -256,7 +252,7 @@ GPU-switching wordt beheerd via ROG Control Center (GUI, tabblad **GPU Configura
 | Ultimate | dGPU stuurt het display rechtstreeks aan via de fysieke MUX. Hoogste NVIDIA-prestaties, geen iGPU-overhead — maar de AMD iGPU is niet beschikbaar zolang deze mode actief is. |
 
 {{< callout type="warning" >}}
-**Ultimate mode is nieuw op deze pagina.** Eerdere versies van deze gids noemden alleen Hybrid/Integrated via `dgpu_disable`, geschreven voordat de fysieke MUX en Ultimate mode op deze laptop bevestigd waren. De CLI-property om naar Ultimate mode te wisselen is nog niet geverifieerd — behandel de `dgpu_disable`-commando's hieronder als alleen geldig voor Hybrid/Integrated totdat dit op het apparaat zelf is bevestigd. Dit betekent ook dat het "zwart scherm omdat Windows de MUX in dGPU-only mode liet staan"-probleem dat andere ASUS ROG-gidsen documenteren mogelijk ook op deze laptop voorkomt; nog niet bevestigd te reproduceren hier.
+**Ultimate mode is nieuw op deze pagina.** Eerdere versies van deze gids noemden alleen Hybrid/Integrated via `dgpu_disable`, geschreven voordat de fysieke MUX en Ultimate mode op deze laptop bevestigd waren. Wisselen tussen alle drie modes via de GUI werkt zonder problemen. De CLI-property om naar Ultimate mode te wisselen is nog niet geverifieerd — behandel de `dgpu_disable`-commando's hieronder als alleen geldig voor Hybrid/Integrated totdat dit op het apparaat zelf is bevestigd.
 {{< /callout >}}
 
 **Wisselen via GUI (ROG Control Center):**
@@ -286,7 +282,7 @@ asusctl armoury set dgpu_disable 0
 
 > **Let op:** Na het wisselen van mode kan een herstart of uitloggen/inloggen vereist zijn.
 
-> **Belangrijk:** `nvidia-powerd.service` moet uitgeschakeld en **gemaskeerd** blijven op deze laptop. Het conflicteert met AMD ATPX power management en veroorzaakt soft lockups en reboot hangs (zwart scherm, backlights blijven aan). GPU-vermogensbeheer loopt via ATPX (via ACPI). Zie de NVIDIA-driverpagina voor jouw distributie ([CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) of [Bazzite]({{< relref "/docs/bazzite/nvidia" >}})) voor diagnosedetails en commando's.
+> **Belangrijk:** Houd `nvidia-powerd.service` gemaskeerd op deze laptop, ongeacht de GPU-mode — zie [Bekende Problemen]({{< relref "/docs/known-issues" >}}) voor waarom.
 
 {{% /details %}}
 

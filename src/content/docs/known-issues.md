@@ -52,6 +52,19 @@ See the **Things I Wished Had Worked** section at the bottom of this page for th
 
 {{% /details %}}
 
+{{% details title="Integrated GPU mode: brightness control stops responding" closed="true" %}}
+
+**What's happening:**
+After switching to Integrated GPU mode (ROG Control Center → GPU Configuration), screen brightness control stops responding entirely — both the Fn-key hotkeys and the OS brightness slider do nothing.
+
+**Workaround:**
+Switch back to Hybrid mode. This needs an actual reboot to take effect; brightness doesn't come back just by picking Hybrid again in the dropdown.
+
+**Status:**
+Confirmed on Bazzite (Fedora 44, kernel 7.2.4). Not yet tested on CachyOS.
+
+{{% /details %}}
+
 ## Resolved Issues
 
 The following issues are resolved. Some were fixed by kernel or driver updates, some through a configuration workaround, and some I honestly may have just been doing wrong myself. I kept them all here anyway since they might save someone else the same time.
@@ -454,6 +467,12 @@ lsmod | grep asus_armoury
 ```
 
 If it loads, reopen ROG Control Center; the warning should be gone and advanced features will be available.
+
+{{% /details %}}
+
+{{% details title="Performance profile 'Silent' shows as 'Quiet' in the GUI" closed="true" %}}
+
+The Fan Curves tab in ROG Control Center labels this profile **Quiet**. The CLI (`asusctl profile -P Silent`) still uses `Silent`, confirmed to still be the correct value. Just a cosmetic GUI relabel, not a renamed profile.
 
 {{% /details %}}
 

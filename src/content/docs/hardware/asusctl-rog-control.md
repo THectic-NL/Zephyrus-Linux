@@ -216,10 +216,6 @@ asusctl provides three performance profiles that control CPU/GPU power limits an
 | `Balanced` | Default. Moderate power and noise |
 | `Performance` | Maximum CPU/GPU power, aggressive fans |
 
-{{< callout type="info" >}}
-The Fan Curves tab in ROG Control Center currently labels this same profile **Quiet** instead of Silent. The CLI value is still `Silent` as far as verified; treat the GUI label as cosmetic until confirmed otherwise.
-{{< /callout >}}
-
 **Set a profile:**
 ```bash
 asusctl profile -P Balanced
@@ -256,7 +252,7 @@ GPU switching is managed via ROG Control Center (GUI, **GPU Configuration** tab)
 | Ultimate | dGPU drives the display directly via the physical MUX. Highest NVIDIA performance, no iGPU overhead — but the AMD iGPU is unavailable while active. |
 
 {{< callout type="warning" >}}
-**Ultimate mode is new to this page.** Earlier versions of this guide only listed Hybrid/Integrated via `dgpu_disable`, written before the physical MUX and Ultimate mode were confirmed on this laptop. The CLI property for switching into Ultimate mode hasn't been verified yet — treat the `dgpu_disable` commands below as covering only Hybrid/Integrated until that's confirmed on-device. This also means the dual-boot "black screen because Windows left the MUX in dGPU-only mode" failure some other ASUS ROG guides document is plausible on this laptop too; not yet confirmed to reproduce here.
+**Ultimate mode is new to this page.** Earlier versions of this guide only listed Hybrid/Integrated via `dgpu_disable`, written before the physical MUX and Ultimate mode were confirmed on this laptop. Switching between all three modes through the GUI works without issue. The CLI property for switching into Ultimate mode hasn't been verified yet — treat the `dgpu_disable` commands below as covering only Hybrid/Integrated until that's confirmed on-device.
 {{< /callout >}}
 
 **Switch via GUI (ROG Control Center):**
@@ -286,7 +282,7 @@ asusctl armoury set dgpu_disable 0
 
 > **Note:** A reboot or logout/login may be required after switching modes.
 
-> **Important:** `nvidia-powerd.service` must remain disabled and **masked** on this laptop. It conflicts with AMD ATPX power management and causes soft lockups and reboot hangs (black screen, backlights stay on). GPU power is managed via ATPX (via ACPI). See the NVIDIA driver page for your distribution ([CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) or [Bazzite]({{< relref "/docs/bazzite/nvidia" >}})) for diagnosis details and commands.
+> **Important:** Keep `nvidia-powerd.service` masked on this laptop regardless of GPU mode — see [Known Issues]({{< relref "/docs/known-issues" >}}) for why.
 
 {{% /details %}}
 
