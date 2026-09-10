@@ -28,6 +28,10 @@ CachyOS gebruikt geen shim, dus Secure Boot moet **uit** staan voordat de instal
 
 → [Secure Boot op CachyOS]({{< relref "/docs/cachyos/secure-boot" >}})
 
+## Bureaublad
+
+Deze handleidingen zijn geschreven voor GNOME op Wayland, versies 49 en 50 op het moment van schrijven. KDE wordt niet behandeld. Zie de [GNOME]({{< relref "/docs/desktop" >}})-sectie voor wat er verandert als je Plasma draait.
+
 ## Aanbevolen volgorde
 
 Dit is de volgorde die logisch aanvoelde na een schone CachyOS-installatie:

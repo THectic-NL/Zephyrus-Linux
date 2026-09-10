@@ -73,13 +73,12 @@ Bazzite publishes a separate image per desktop and per GPU driver, and you pick 
 | Image | For |
 |---|---|
 | `bazzite-gnome-nvidia-open` | GNOME + the open NVIDIA kernel modules. **What these guides assume** |
-| `bazzite-nvidia-open` | The same, with KDE Plasma instead of GNOME |
 | `bazzite-gnome-nvidia` | GNOME + the proprietary driver, for pre-Turing cards |
 | `bazzite-deck-gnome` | Boots straight into Steam's Game Mode, for handhelds and HTPCs |
 
 The `-nvidia-open` images use NVIDIA's open kernel modules, which cover every card from Turing onwards. The RTX 4060 is Ada, so it qualifies, and open is the right default here.
 
-The rest of this site is written around GNOME. The [autologin]({{< relref "/docs/security/autologin" >}}) and [YubiKey]({{< relref "/docs/security/yubikey" >}}) guides configure GDM, and several application tweaks are GNOME extensions. KDE works fine, it's just not what these pages describe.
+These guides are written around GNOME (49 and 50 at the time of writing) and only cover GNOME. The [autologin]({{< relref "/docs/security/autologin" >}}) and [YubiKey]({{< relref "/docs/security/yubikey" >}}) guides configure GDM, and several application tweaks are GNOME extensions.
 
 {{< callout type="info" >}}
 The ISO you download only decides where you start. Switching desktop or driver later is a rebase, not a reinstall.

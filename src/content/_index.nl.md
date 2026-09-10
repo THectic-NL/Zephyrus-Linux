@@ -39,7 +39,7 @@ toc: false
 | **dGPU** | NVIDIA GeForce RTX 4060 Laptop (Max-Q) |
 | **OS** | Bazzite (Fedora Atomic) op dit moment; ook gedocumenteerd voor [CachyOS]({{< relref "/docs/cachyos/getting-started" >}}) (Arch) |
 | **Kernel** | 7.2.4-1-cachyos |
-| **Display Server** | Wayland (GNOME 50) |
+| **Bureaublad** | GNOME 49 en 50 op Wayland (KDE niet behandeld) |
 | **CPU Scheduler** | scx_lavd (sched_ext) |
 | **Secure Boot** | Ingeschakeld |
 

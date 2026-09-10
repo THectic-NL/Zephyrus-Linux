@@ -2,7 +2,7 @@
 title: "Display Color Profiles"
 weight: 2
 prev: docs/hardware/asusctl-rog-control
-next: docs/desktop/kde
+next: docs/desktop/astra-monitor
 ---
 
 ASUS factory-calibrates the panel in every GA605WV and ships the profiles through its Windows driver package. Nothing applies them on Linux, so both the built-in display and an external Samsung ViewFinity are left on their defaults until you install the profiles by hand.

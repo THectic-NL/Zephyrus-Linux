@@ -14,7 +14,7 @@ Na het ontgrendelen van de schijf met LUKS bij het opstarten wilde ik niet nog e
 
 
 {{< callout type="info" >}}
-Niets op deze pagina is distributie-specifiek. GDM leest op allebei hetzelfde `/etc/gdm/custom.conf`, en `/etc` is op Bazzite ook beschrijfbaar, dus geen layering en geen herstart behalve die hieronder. De uitzondering is een KDE-image: die gebruikt SDDM in plaats van GDM en regelt autologin ergens anders.
+Niets op deze pagina is distributie-specifiek. GDM leest op allebei hetzelfde `/etc/gdm/custom.conf`, en `/etc` is op Bazzite ook beschrijfbaar, dus geen layering en geen herstart behalve die hieronder.
 {{< /callout >}}
 
 ## Configuratie
