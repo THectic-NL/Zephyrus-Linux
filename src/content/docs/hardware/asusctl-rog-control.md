@@ -12,7 +12,7 @@ The Zephyrus G16 has a lot of hardware features that don't work out of the box o
 {{< /callout >}}
 
 **Package Information (at the time of writing):**
-- `asusctl` 6.4.0: CLI frontend for fan curves, profiles, battery limit, RGB, Slash LED, GPU switching. Also ships `asusd`, the background daemon that actually talks to the hardware, and its systemd service — there's no separate `asusd` package to install, `pacman -Q asusd` / `rpm -q asusd` will come back empty even though the daemon is very much there.
+- `asusctl` 6.4.0: CLI frontend for fan curves, profiles, battery limit, RGB, Slash LED, GPU switching. Also ships `asusd`, the background daemon that actually talks to the hardware, and its systemd service. There's no separate `asusd` package to install: `pacman -Q asusd` / `rpm -q asusd` will come back empty even though the daemon is very much there.
 - `rog-control-center` 6.4.0: graphical frontend, communicates with asusd
 - Source: [asusctl releases](https://github.com/OpenGamingCollective/asusctl/releases) · in the CachyOS/Arch repos, and in [Terra](https://terra.fyralabs.com/) for Fedora
 
@@ -24,7 +24,7 @@ Verify what's actually installed with `asusctl info` (prints the asusctl version
 The project moved in 2026. Development used to live in the `asus-linux` GitLab organisation (now archived, read-only); `asusctl`, `asusd` and `rog-control-center` are now maintained under the [Open Gaming Collective](https://github.com/OpenGamingCollective/asusctl) on GitHub. [asus-linux.org](https://asus-linux.org/) is still the project site. Older guides that point at `gitlab.com/asus-linux` or the `lukenukem` Fedora COPR are out of date.
 {{< /callout >}}
 
-ROG Control Center describes itself, via its own **About** tab, as "a powerful graphical interface for managing ASUS ROG, TUF, and ProArt laptops on Linux... the official GUI for the asusctl toolset." It currently requires kernel 6.19, ships under the MPL-2.0 license, and lists its own work-in-progress items (widget theming, a CPU/GPU temp/fan info bar, Screenpad and ROG Ally-specific settings) — worth checking there yourself before assuming a missing feature is a bug.
+ROG Control Center describes itself, via its own **About** tab, as "a powerful graphical interface for managing ASUS ROG, TUF, and ProArt laptops on Linux... the official GUI for the asusctl toolset." It currently requires kernel 6.19, ships under the MPL-2.0 license, and lists its own work-in-progress items (widget theming, a CPU/GPU temp/fan info bar, Screenpad and ROG Ally-specific settings). Worth checking there yourself before assuming a missing feature is a bug.
 
 ![ROG Control Center - About tab](/images/rog-control-about.avif)
 
@@ -252,7 +252,7 @@ GPU switching is managed via ROG Control Center (GUI, **GPU Configuration** tab)
 |------|-------------|
 | Hybrid | Both GPUs active. NVIDIA handles GPU workloads, AMD drives the display. Best for gaming. |
 | Integrated | Only AMD iGPU. Lower power consumption, no NVIDIA. Good for battery. |
-| Ultimate | dGPU drives the display directly via the physical MUX. Highest NVIDIA performance, no iGPU overhead — but the AMD iGPU is unavailable while active. |
+| Ultimate | dGPU drives the display directly via the physical MUX. Highest NVIDIA performance, no iGPU overhead, though the AMD iGPU is unavailable while active. |
 
 {{< callout type="warning" >}}
 **The three modes map to two firmware attributes**, `dgpu_disable` and `gpu_mux_mode`, both under `/sys/class/firmware-attributes/asus-armoury/attributes/<name>/current_value`. Confirmed against asusd's own source (the `asus-shutdown` test suite) and cross-checked against this hardware's actual sysfs values:
@@ -265,7 +265,7 @@ GPU switching is managed via ROG Control Center (GUI, **GPU Configuration** tab)
 
 Hybrid ↔ Integrated only ever changes `dgpu_disable`; Ultimate is the only mode that also flips `gpu_mux_mode`.
 
-**Mode switches can silently fail to apply.** A known upstream bug (see [Known Issues]({{< relref "/docs/known-issues" >}})) can abort the mode-switch write during shutdown with no error shown to you — the dropdown just shows the old mode again after reboot, whether you switched from the GUI or `asusctl armoury`. If a switch doesn't seem to take, that's the likely cause. Writing only the attribute that actually needs to change directly to its sysfs path above (bypassing asusd entirely) sidesteps the bug, at the cost of asusd/the GUI not knowing about the change until it catches up.
+**Mode switches can silently fail to apply.** A known upstream bug (see [Known Issues]({{< relref "/docs/known-issues" >}})) can abort the mode-switch write during shutdown with no error shown to you. The dropdown just shows the old mode again after reboot, whether you switched from the GUI or `asusctl armoury`. If a switch doesn't seem to take, that's the likely cause. Writing only the attribute that actually needs to change directly to its sysfs path above (bypassing asusd entirely) sidesteps the bug, at the cost of asusd/the GUI not knowing about the change until it catches up.
 {{< /callout >}}
 
 **Switch via GUI (ROG Control Center):**
@@ -276,7 +276,7 @@ Open ROG Control Center and go to **GPU Configuration** in the sidebar. Pick a m
 
 > The dropdown itself always says changes need a reboot. In direct sysfs testing (see [Known Issues]({{< relref "/docs/known-issues" >}})), re-enabling the dGPU (→ Hybrid) actually applied live, no reboot needed; disabling it (→ Integrated) did not. Whether the same asymmetry holds through this normal GUI/asusd path is unconfirmed, since that path has its own known bug (below) that can prevent the switch from applying at all.
 
-**Switch via CLI (asusctl armoury) — Hybrid and Integrated only:**
+**Switch via CLI (asusctl armoury), Hybrid and Integrated only:**
 
 **Check current dGPU state:**
 ```bash
@@ -295,7 +295,7 @@ asusctl armoury set dgpu_disable 0
 
 > **Note:** A reboot or logout/login may be required after switching modes.
 
-> **Important:** Keep `nvidia-powerd.service` masked on this laptop regardless of GPU mode — see [Known Issues]({{< relref "/docs/known-issues" >}}) for why.
+> **Important:** Keep `nvidia-powerd.service` masked on this laptop regardless of GPU mode. See [Known Issues]({{< relref "/docs/known-issues" >}}) for why.
 
 {{% /details %}}
 
@@ -303,10 +303,10 @@ asusctl armoury set dgpu_disable 0
 
 ROG Control Center has an **App Settings** tab controlling how the app itself runs, separate from hardware configuration:
 
-- **Run in background after closing** — keep `asusd`/the tray icon alive when the window is closed
-- **Start app in background (UI closed)** — launch minimized to tray
+- **Run in background after closing**: keep `asusd`/the tray icon alive when the window is closed
+- **Start app in background (UI closed)**: launch minimized to tray
 - **Enable system tray icon**
-- **Enable dGPU notifications** — pops up a notification when the dGPU is suspended/resumed (this is the "dGPU status changed: suspended" toast you'll see after switching GPU modes or letting the dGPU idle down)
+- **Enable dGPU notifications**: pops up a notification when the dGPU is suspended/resumed (this is the "dGPU status changed: suspended" toast you'll see after switching GPU modes or letting the dGPU idle down)
 
 ![ROG Control Center - App Settings](/images/rog-control-app-settings.avif)
 
