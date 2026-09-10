@@ -47,35 +47,21 @@ Beide packages komen direct uit de repos en alles werkt meteen. Geen kernel patc
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
-`asusd` is een systeemdaemon die tegen de kernel aan praat, dus dit is een van de weinige gevallen waarin layeren het juiste antwoord is en niet het laatste redmiddel. Hij zit niet in Fedora's eigen repositories; de ASUS Linux-packages staan in [Terra](https://terra.fyralabs.com/).
+Gebruik bij het genereren van je download op [bazzite.gg](https://bazzite.gg/) de hardwarekiezer en selecteer **ASUS Laptop** bij "What hardware are you using?" in plaats van een generieke desktop-optie. Dat stemt de aanbevolen image en installatiestappen af op deze hardware.
 
-Voeg de Terra-repository toe en layer daarna de packages:
-
-```bash
-curl -fsSL https://github.com/terrapkg/subatomic-repos/raw/main/terra.repo | pkexec tee /etc/yum.repos.d/terra.repo
-rpm-ostree install terra-release
-systemctl reboot
-```
+Layer `asusctl`/`rog-control-center` niet zelf in de image met `rpm-ostree install`. `asusd` is een systeemdaemon die tegen de kernel aan praat, normaal gesproken juist een reden om wél te layeren, maar Bazzite heeft daar een eigen onderhouden installatiepad voor:
 
 ```bash
-rpm-ostree install asusctl rog-control-center
-systemctl reboot
+ujust asus install
 ```
 
-Twee keer herstarten, want een gelaagd package wordt op de volgende image toegepast en niet op de draaiende.
+Installeert `asusctl-linux` en `rog-control-center-linux` als Homebrew-casks en zet meteen de benodigde services aan. Geen image-layering, geen reboot. Dezelfde install/uninstall-toggle staat ook in de first-boot setup wizard (yafti), onder "asusctl & ROG Control Center", als je hem liever daar aanzet.
 
 {{< callout type="warning" >}}
-Kijk eerst voordat je layert. Bazzite-images voor ASUS-handhelds leveren `asusctl` al mee, en een package layeren dat in de image zit is een conflict en geen upgrade:
-
-```bash
-rpm -q asusctl
-ujust
-```
-
-Staat `asusctl` er al, of noemt `ujust` een ASUS-recept, gebruik dat dan.
+Had je `asusctl`/`rog-control-center` al gelayerd via een oudere gids, inclusief een eerdere versie van deze pagina? `ujust asus install` herkent de gelayerde packages, biedt aan om ze voor je te verwijderen, en installeert daarna de Homebrew-versie in hun plaats.
 {{< /callout >}}
 
-De oudere `lukenukem/asus-linux`-COPR waar de meeste gidsen naar wijzen wordt niet meer onderhouden. Gebruik Terra.
+Oudere gidsen (inclusief een eerdere versie van deze pagina) wijzen voor deze packages naar de Terra-repo of de niet meer onderhouden `lukenukem/asus-linux`-COPR. Geen van beide is hier nog voor nodig.
 
 {{< /tab >}}
 {{< /tabs >}}
