@@ -41,7 +41,7 @@ sudo pacman -S podman podman-docker podman-desktop
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
-`podman` and `podman-docker` are already in the image — Podman is the container runtime the whole system is built on, so there is nothing to install and nothing to reboot for:
+`podman` and `podman-docker` are already in the image. Podman is the container runtime the whole system is built on, so there is nothing to install and nothing to reboot for:
 
 ```bash
 podman --version

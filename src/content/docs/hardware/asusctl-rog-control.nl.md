@@ -5,7 +5,7 @@ prev: docs/hardware
 next: docs/hardware/color-profiles
 ---
 
-De Zephyrus G16 heeft veel hardware-functies die op Linux niet zomaar werken: fan curves, performance-profielen, de Slash LED op het deksel, GPU-switching, batterijlaadlimiet. Op deze pagina staat hoe ik dat allemaal werkend heb gekregen met asusctl en de tools van het ASUS Linux-project. Alles onder de installatiestap is op beide distributies identiek — het is dezelfde daemon die dezelfde hardware uitleest. Alleen het installeren verschilt.
+De Zephyrus G16 heeft veel hardware-functies die op Linux niet zomaar werken: fan curves, performance-profielen, de Slash LED op het deksel, GPU-switching, batterijlaadlimiet. Op deze pagina staat hoe ik dat allemaal werkend heb gekregen met asusctl en de tools van het ASUS Linux-project. Alles onder de installatiestap is op beide distributies identiek, want het is dezelfde daemon die dezelfde hardware uitleest. Alleen het installeren verschilt.
 
 {{< callout type="warning" >}}
 **supergfxctl is verlaten.** Kom je gidsen tegen die `supergfxctl` of `supergfxd` noemen voor GPU-switching op ASUS-laptops: gebruik ze niet. Het project wordt niet meer onderhouden en vormt een beveiligingsrisico. Alles wat het vroeger deed zit nu in `asusctl` en ROG Control Center, die actief worden bijgehouden door het asus-linux team.
@@ -68,7 +68,7 @@ ujust
 Staat `asusctl` er al, of noemt `ujust` een ASUS-recept, gebruik dat dan.
 {{< /callout >}}
 
-De oudere `lukenukem/asus-linux`-COPR waar de meeste gidsen naar wijzen wordt niet meer onderhouden — gebruik Terra.
+De oudere `lukenukem/asus-linux`-COPR waar de meeste gidsen naar wijzen wordt niet meer onderhouden. Gebruik Terra.
 
 {{< /tab >}}
 {{< /tabs >}}
@@ -267,7 +267,7 @@ asusctl armoury set dgpu_disable 0
 
 > **Let op:** Na het wisselen van mode kan een herstart of uitloggen/inloggen vereist zijn.
 
-> **Belangrijk:** `nvidia-powerd.service` moet uitgeschakeld en **gemaskeerd** blijven op deze laptop. Het conflicteert met AMD ATPX power management en veroorzaakt soft lockups en reboot hangs (zwart scherm, backlights blijven aan). GPU-vermogensbeheer loopt via ATPX (via ACPI). Zie de NVIDIA-driverpagina voor jouw distributie — [CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) of [Bazzite]({{< relref "/docs/bazzite/nvidia" >}}) — voor diagnosedetails en commando's.
+> **Belangrijk:** `nvidia-powerd.service` moet uitgeschakeld en **gemaskeerd** blijven op deze laptop. Het conflicteert met AMD ATPX power management en veroorzaakt soft lockups en reboot hangs (zwart scherm, backlights blijven aan). GPU-vermogensbeheer loopt via ATPX (via ACPI). Zie de NVIDIA-driverpagina voor jouw distributie ([CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) of [Bazzite]({{< relref "/docs/bazzite/nvidia" >}})) voor diagnosedetails en commando's.
 
 {{% /details %}}
 

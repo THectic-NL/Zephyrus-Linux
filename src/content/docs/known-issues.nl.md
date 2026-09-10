@@ -256,7 +256,7 @@ sudo dkms autoinstall
 sudo reboot
 ```
 
-Mislukt de build zelf, kijk dan naar de kernelheaders van de draaiende kernel — `linux-cachyos-headers` moet overeenkomen met de kernel waarmee je daadwerkelijk bent opgestart.
+Mislukt de build zelf, kijk dan naar de kernelheaders van de draaiende kernel. `linux-cachyos-headers` moet overeenkomen met de kernel waarmee je daadwerkelijk bent opgestart.
 
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
@@ -269,7 +269,7 @@ Hier wordt lokaal niets gebouwd, dus er zijn maar twee realistische oorzaken.
 rpm-ostree status
 ```
 
-Staat `nvidia-open` er niet in, dan is dat het hele probleem — zie [NVIDIA Driver: Bazzite]({{< relref "/docs/bazzite/nvidia" >}}) voor de rebase.
+Staat `nvidia-open` er niet in, dan is dat het hele probleem. Zie [NVIDIA Driver: Bazzite]({{< relref "/docs/bazzite/nvidia" >}}) voor de rebase.
 
 **2. De Secure Boot-sleutel is niet ingeschreven.** De modules zijn ondertekend door Universal Blue; staat Secure Boot aan en ontbreekt de sleutel, dan weigeren ze stilzwijgend te laden:
 
@@ -307,7 +307,7 @@ De sleutel van Universal Blue is niet ingeschreven, of de inschrijving is niet a
 ujust enroll-secure-boot-key
 ```
 
-Herstart, kies **Enroll MOK** → **Continue** → **Yes** en voer `universalblue` in. MokManager toont niets terwijl je typt — dat hoort zo, je toetsenbord is niet stuk.
+Herstart, kies **Enroll MOK** → **Continue** → **Yes** en voer `universalblue` in. MokManager toont niets terwijl je typt. Dat hoort zo, je toetsenbord is niet stuk.
 
 Wil je opnieuw beginnen:
 
@@ -322,7 +322,7 @@ sudo mokutil --reset
 
 {{% details title="Kernelmodule build-fouten" closed="true" %}}
 
-**Alleen CachyOS.** Op Bazzite wordt lokaal niets gebouwd — de kernel en de NVIDIA-modules zitten samen in de image, en precies daarom bestaat deze fout daar niet.
+**Alleen CachyOS.** Op Bazzite wordt lokaal niets gebouwd. De kernel en de NVIDIA-modules zitten samen in de image, en daarom bestaat deze fout daar niet.
 
 Zorg dat de headers overeenkomen met de draaiende kernel:
 
@@ -462,7 +462,7 @@ Als hij laadt, heropen ROG Control Center; de melding zou verdwenen moeten zijn 
 
 {{% details title="Bazzite: geen GPU-versnelling na het installeren, verder werkt alles" closed="true" %}}
 
-Het meest voorkomende Bazzite-probleem op deze laptop, en het ziet er helemaal niet uit als een Secure Boot-probleem — het bureaublad komt op, alleen software-gerenderd, en `nvidia-smi` mislukt.
+Het meest voorkomende Bazzite-probleem op deze laptop, en het ziet er helemaal niet uit als een Secure Boot-probleem. Het bureaublad komt op, alleen software-gerenderd, en `nvidia-smi` mislukt.
 
 Secure Boot staat aan en de sleutel van Universal Blue is nooit ingeschreven, dus de NVIDIA-modules weigeren te laden:
 

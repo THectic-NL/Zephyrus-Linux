@@ -5,7 +5,7 @@ prev: docs/virtualization/vmware-workstation
 next: docs/gaming/proton-slr
 ---
 
-De console-ervaring van de Steam Deck — direct opstarten in Steam, met een controller, geen bureaublad tenzij je erom vraagt — kun je op deze laptop hebben. Wat je niet kunt hebben is SteamOS zelf.
+De console-ervaring van de Steam Deck kun je op deze laptop hebben: direct opstarten in Steam, met een controller, geen bureaublad tenzij je erom vraagt. Wat je niet kunt hebben is SteamOS zelf.
 
 Deze pagina gaat over dat onderscheid, en over welke van de twee distributies je er het dichtst bij brengt.
 
@@ -31,9 +31,9 @@ Je houdt een normaal bureaublad en krijgt de console-ervaring op afroep in plaat
 steam -gamepadui
 ```
 
-Dat is Steams Game Mode-interface — dezelfde UI als op de Deck, in een venster of schermvullend. In combinatie met een controller dekt dat het meeste van wat mensen eigenlijk van SteamOS willen.
+Dat is Steams Game Mode-interface, dezelfde UI als op de Deck, in een venster of schermvullend. In combinatie met een controller dekt dat het meeste van wat mensen eigenlijk van SteamOS willen.
 
-Voor het echte werk — een gamescope-sessie die je bureaubladsessie vervangt, zodat de machine in Steam opstart — kijk wat er in de CachyOS-repos zit in plaats van een verouderde gids te volgen:
+Voor het echte werk, een gamescope-sessie die je bureaubladsessie vervangt zodat de machine in Steam opstart, kijk wat er in de CachyOS-repos zit in plaats van een verouderde gids:
 
 ```bash
 pacman -Ss gamescope
@@ -57,10 +57,10 @@ rpm-ostree rebase ostree-image-signed:docker://ghcr.io/ublue-os/bazzite-deck-gno
 systemctl reboot
 ```
 
-`bazzite-deck-gnome` geeft GNOME als bureaublad om naar uit te stappen; `bazzite-deck` geeft KDE. Er zijn ook NVIDIA-varianten van de deck-images — controleer de [imagelijst](https://github.com/ublue-os/bazzite) op de actuele namen voordat je rebaset.
+`bazzite-deck-gnome` geeft GNOME als bureaublad om naar uit te stappen; `bazzite-deck` geeft KDE. Er zijn ook NVIDIA-varianten van de deck-images. Controleer de [imagelijst](https://github.com/ublue-os/bazzite) op de actuele namen voordat je rebaset.
 
 {{< callout type="warning" >}}
-**Dit is op deze laptop de minst betreden route.** De deck-images mikken op handhelds, en die zijn AMD-only met één GPU. De G16 is een hybride machine waarbij het interne paneel aan de Radeon 890M hangt en de RTX 4060 rendert, en gamescope moet verteld worden wat wat is. Reken op ruwe randjes — externe schermen en de discrete GPU zijn waar ze opduiken.
+**Dit is op deze laptop de minst betreden route.** De deck-images mikken op handhelds, en die zijn AMD-only met één GPU. De G16 is een hybride machine waarbij het interne paneel aan de Radeon 890M hangt en de RTX 4060 rendert, en gamescope moet verteld worden wat wat is. Reken op ruwe randjes rond externe schermen en de discrete GPU.
 
 Wil je een laptop die goed gamet, blijf dan op `bazzite-gnome-nvidia-open` en gebruik Big Picture. Wil je een console die toevallig een laptop is, dan is dit de route, en de vorige image staat er nog als het tegenvalt:
 
@@ -70,7 +70,7 @@ systemctl reboot
 ```
 {{< /callout >}}
 
-Je hebt geen deck-image nodig om goed te kunnen gamen. De gewone desktop-images leveren Steam, Proton, gamescope, MangoHud en de controller-stack al geconfigureerd mee. De deck-images veranderen alleen hoe je *begint* — het gamen zelf is hetzelfde.
+Je hebt geen deck-image nodig om goed te kunnen gamen. De gewone desktop-images leveren Steam, Proton, gamescope, MangoHud en de controller-stack al geconfigureerd mee. De deck-images veranderen alleen hoe je *begint*. Het gamen zelf is hetzelfde.
 
 {{< /tab >}}
 {{< /tabs >}}
@@ -79,7 +79,7 @@ Je hebt geen deck-image nodig om goed te kunnen gamen. De gewone desktop-images 
 
 Welke route je ook kiest, op deze laptop moet je begrijpen welke GPU wat doet.
 
-Het interne scherm hangt aan de AMD Radeon 890M. De RTX 4060 rendert en geeft frames door. Dat is normaal voor een gaming-laptop en het is waar `asusctl armoury` tussen schakelt — zie [asusctl & ROG Control Center]({{< relref "/docs/hardware/asusctl-rog-control" >}}).
+Het interne scherm hangt aan de AMD Radeon 890M. De RTX 4060 rendert en geeft frames door. Dat is normaal voor een gaming-laptop, en het is waar `asusctl armoury` tussen schakelt. Zie [asusctl & ROG Control Center]({{< relref "/docs/hardware/asusctl-rog-control" >}}).
 
 Voor een console-achtige sessie is dat belangrijk omdat gamescope composit, en dat op het juiste apparaat moet doen. Symptomen als het misgaat:
 
@@ -95,7 +95,7 @@ Voordat je Game Mode de schuld geeft: controleer in een gewone bureaubladsessie 
 nvidia-smi
 ```
 
-Mislukt dat, los dat dan eerst op — [NVIDIA op CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) of [NVIDIA op Bazzite]({{< relref "/docs/bazzite/nvidia" >}}) — want niets hiervan werkt bovenop een driver die niet laadt.
+Mislukt dat, los dat dan eerst op ([NVIDIA op CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) of [NVIDIA op Bazzite]({{< relref "/docs/bazzite/nvidia" >}})). Niets hiervan werkt bovenop een driver die niet laadt.
 
 ## Wat je in de praktijk moet nemen
 
@@ -110,6 +110,6 @@ De middelste regel is de eerlijke: het kan, het is leuk, en het is geen onderste
 ## Referenties
 
 - [Bazzite](https://bazzite.gg/)
-- [Bazzite op GitHub](https://github.com/ublue-os/bazzite) — actuele imagenamen
+- [Bazzite op GitHub](https://github.com/ublue-os/bazzite), actuele imagenamen
 - [gamescope](https://github.com/ValveSoftware/gamescope)
 - [SteamOS](https://store.steampowered.com/steamos)
