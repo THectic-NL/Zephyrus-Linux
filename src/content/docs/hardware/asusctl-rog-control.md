@@ -12,10 +12,13 @@ The Zephyrus G16 has a lot of hardware features that don't work out of the box o
 {{< /callout >}}
 
 **Package Information (at the time of writing):**
-- `asusd` 6.4.0: background daemon (backend) that manages all hardware features
-- `asusctl` 6.4.0: CLI frontend for fan curves, profiles, battery limit, RGB, Slash LED, GPU switching
-- `rog-control-center` 6.4.0: graphical frontend, part of the asusctl/asusd suite
+- `asusctl` 6.4.0: CLI frontend for fan curves, profiles, battery limit, RGB, Slash LED, GPU switching. Also ships `asusd`, the background daemon that actually talks to the hardware, and its systemd service — there's no separate `asusd` package to install, `pacman -Q asusd` / `rpm -q asusd` will come back empty even though the daemon is very much there.
+- `rog-control-center` 6.4.0: graphical frontend, communicates with asusd
 - Source: [asusctl releases](https://github.com/OpenGamingCollective/asusctl/releases) · in the CachyOS/Arch repos, and in [Terra](https://terra.fyralabs.com/) for Fedora
+
+{{< callout type="info" >}}
+Verify what's actually installed with `asusctl info` (prints the asusctl version alongside detected hardware) or `pacman -Q asusctl rog-control-center` / `rpm -q asusctl rog-control-center`.
+{{< /callout >}}
 
 {{< callout type="info" >}}
 The project moved in 2026. Development used to live in the `asus-linux` GitLab organisation (now archived, read-only); `asusctl`, `asusd` and `rog-control-center` are now maintained under the [Open Gaming Collective](https://github.com/OpenGamingCollective/asusctl) on GitHub. [asus-linux.org](https://asus-linux.org/) is still the project site. Older guides that point at `gitlab.com/asus-linux` or the `lukenukem` Fedora COPR are out of date.
