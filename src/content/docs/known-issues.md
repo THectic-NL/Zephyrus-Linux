@@ -256,7 +256,7 @@ sudo dkms autoinstall
 sudo reboot
 ```
 
-If the build itself fails, the kernel headers for the running kernel are the thing to check — `linux-cachyos-headers` has to match the kernel you actually booted.
+If the build itself fails, the kernel headers for the running kernel are the thing to check. `linux-cachyos-headers` has to match the kernel you actually booted.
 
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
@@ -269,7 +269,7 @@ Nothing is built locally here, so there are only two realistic causes.
 rpm-ostree status
 ```
 
-If it doesn't contain `nvidia-open`, that's the whole problem — see [NVIDIA Driver: Bazzite]({{< relref "/docs/bazzite/nvidia" >}}) for the rebase.
+If it doesn't contain `nvidia-open`, that's the whole problem. See [NVIDIA Driver: Bazzite]({{< relref "/docs/bazzite/nvidia" >}}) for the rebase.
 
 **2. The Secure Boot key isn't enrolled.** The modules are signed by Universal Blue; with Secure Boot on and the key missing, they silently refuse to load:
 
@@ -307,7 +307,7 @@ The Universal Blue key isn't enrolled, or the enrollment didn't complete:
 ujust enroll-secure-boot-key
 ```
 
-Reboot, choose **Enroll MOK** → **Continue** → **Yes**, and enter `universalblue`. MokManager shows nothing while you type — that's expected, not a broken keyboard.
+Reboot, choose **Enroll MOK** → **Continue** → **Yes**, and enter `universalblue`. MokManager shows nothing while you type. That's expected, not a broken keyboard.
 
 If you need to start over:
 
@@ -322,7 +322,7 @@ sudo mokutil --reset
 
 {{% details title="Kernel module build failures" closed="true" %}}
 
-**CachyOS only.** On Bazzite nothing is built locally — the kernel and the NVIDIA modules ship together in the image, which is exactly why this failure mode doesn't exist there.
+**CachyOS only.** On Bazzite nothing is built locally. The kernel and the NVIDIA modules ship together in the image, which is why this failure mode doesn't exist there.
 
 Make sure the headers match the running kernel:
 
@@ -462,7 +462,7 @@ If it loads, reopen ROG Control Center; the warning should be gone and advanced 
 
 {{% details title="Bazzite: no GPU acceleration after installing, everything else works" closed="true" %}}
 
-The most common Bazzite issue on this laptop, and it doesn't look like a Secure Boot problem at all — the desktop comes up, it's just software-rendered and `nvidia-smi` fails.
+The most common Bazzite issue on this laptop, and it doesn't look like a Secure Boot problem at all. The desktop comes up, it's just software-rendered and `nvidia-smi` fails.
 
 Secure Boot is on and Universal Blue's key was never enrolled, so the NVIDIA modules refuse to load:
 

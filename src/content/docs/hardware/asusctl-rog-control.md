@@ -5,7 +5,7 @@ prev: docs/hardware
 next: docs/hardware/color-profiles
 ---
 
-The Zephyrus G16 has a lot of hardware features that don't work out of the box on Linux: fan curves, performance profiles, the Slash LED on the lid, GPU switching, battery charge limiting. This page documents how I got all of it working using asusctl and the ASUS Linux project tools. Everything below the installation step is identical on both distributions — it's the same daemon reading the same hardware. Only getting it installed differs.
+The Zephyrus G16 has a lot of hardware features that don't work out of the box on Linux: fan curves, performance profiles, the Slash LED on the lid, GPU switching, battery charge limiting. This page documents how I got all of it working using asusctl and the ASUS Linux project tools. Everything below the installation step is identical on both distributions, since it's the same daemon reading the same hardware. Only getting it installed differs.
 
 {{< callout type="warning" >}}
 **supergfxctl is abandoned.** If you come across guides that mention `supergfxctl` or `supergfxd` for GPU switching on ASUS laptops: don't use them. The project is unmaintained and poses security risks. Everything it used to handle is now part of `asusctl` and ROG Control Center, which are actively maintained by the asus-linux team.
@@ -68,7 +68,7 @@ ujust
 If `asusctl` is already there, or `ujust` lists an ASUS recipe, use that instead.
 {{< /callout >}}
 
-The older `lukenukem/asus-linux` COPR that most guides point at is no longer maintained — use Terra.
+The older `lukenukem/asus-linux` COPR that most guides point at is no longer maintained. Use Terra.
 
 {{< /tab >}}
 {{< /tabs >}}
@@ -267,7 +267,7 @@ asusctl armoury set dgpu_disable 0
 
 > **Note:** A reboot or logout/login may be required after switching modes.
 
-> **Important:** `nvidia-powerd.service` must remain disabled and **masked** on this laptop. It conflicts with AMD ATPX power management and causes soft lockups and reboot hangs (black screen, backlights stay on). GPU power is managed via ATPX (via ACPI). See the NVIDIA driver page for your distribution — [CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) or [Bazzite]({{< relref "/docs/bazzite/nvidia" >}}) — for diagnosis details and commands.
+> **Important:** `nvidia-powerd.service` must remain disabled and **masked** on this laptop. It conflicts with AMD ATPX power management and causes soft lockups and reboot hangs (black screen, backlights stay on). GPU power is managed via ATPX (via ACPI). See the NVIDIA driver page for your distribution ([CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) or [Bazzite]({{< relref "/docs/bazzite/nvidia" >}})) for diagnosis details and commands.
 
 {{% /details %}}
 

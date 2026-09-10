@@ -75,7 +75,7 @@ sudo systemctl enable --now libvirtd
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
-De QEMU- en libvirt-backend zit niet in de image en moet dus gelaagd worden — en Bazzite heeft een recept dat het layeren, het groepslidmaatschap en de service in één keer regelt:
+De QEMU- en libvirt-backend zit niet in de image en moet dus gelaagd worden. Bazzite heeft een recept dat het layeren, het groepslidmaatschap en de service in één keer regelt:
 
 **1. Voer het setup-recept uit:**
 ```bash
@@ -98,7 +98,7 @@ systemctl is-enabled libvirtd
 ```
 
 {{< callout type="info" >}}
-Dat `virt-manager` een ISO uit je home-map niet kan openen komt hier voor. libvirt draait onder SELinux-confinement en `/home` is een symlink naar `/var/home`, wat het beleid niet altijd volgt. ISO's in `/var/lib/libvirt/images/` zetten — wat de VirtIO-stap hieronder toch al doet — omzeilt dat.
+Dat `virt-manager` een ISO uit je home-map niet kan openen komt hier voor. libvirt draait onder SELinux-confinement en `/home` is een symlink naar `/var/home`, wat het beleid niet altijd volgt. ISO's in `/var/lib/libvirt/images/` zetten, wat de VirtIO-stap hieronder toch al doet, omzeilt dat.
 {{< /callout >}}
 
 {{< /tab >}}

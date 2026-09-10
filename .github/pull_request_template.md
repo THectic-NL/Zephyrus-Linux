@@ -6,16 +6,16 @@
 
 <!-- Check all that apply -->
 
-- [ ] `feat` — new page or feature
-- [ ] `fix` — bug fix (broken link, incorrect command, layout issue)
-- [ ] `content` — update or improve existing content
-- [ ] `docs` — changes to CONTRIBUTING, README, or meta documentation
-- [ ] `chore` — maintenance (dependencies, config, CI/CD)
-- [ ] `refactor` — restructuring without content changes
-- [ ] `style` — formatting, whitespace, typos
-- [ ] `revert` — reverting a previous commit
+- [ ] `feat`: new page or feature
+- [ ] `fix`: bug fix (broken link, incorrect command, layout issue)
+- [ ] `content`: update or improve existing content
+- [ ] `docs`: changes to CONTRIBUTING, README, or meta documentation
+- [ ] `chore`: maintenance (dependencies, config, CI/CD)
+- [ ] `refactor`: restructuring without content changes
+- [ ] `style`: formatting, whitespace, typos
+- [ ] `revert`: reverting a previous commit
 
-> [PR title and commit types must follow these standards — view the contributing guide](https://github.com/THectic-NL/Zephyrus-Linux/blob/main/CONTRIBUTING.md#commit-messages)
+> [PR title and commit types must follow these standards, see the contributing guide](https://github.com/THectic-NL/Zephyrus-Linux/blob/main/CONTRIBUTING.md#commit-messages)
 
 ## Checklist
 

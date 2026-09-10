@@ -6,7 +6,7 @@ next: docs/gaming/steamos
 ---
 
 {{< callout type="warning" >}}
-**This page is CachyOS only.** VMware Workstation needs its own out-of-tree kernel modules (`vmmon`, `vmnet`) built by DKMS, and its installer writes into `/usr`. On Bazzite `/usr` is read-only and the kernel comes with the image, so there is no supported way to do this that survives an update — and every image update would need the modules rebuilt against a kernel you don't control.
+**This page is CachyOS only.** VMware Workstation needs its own out-of-tree kernel modules (`vmmon`, `vmnet`) built by DKMS, and its installer writes into `/usr`. On Bazzite `/usr` is read-only and the kernel comes with the image, so there is no supported way to do this that survives an update, and every image update would need the modules rebuilt against a kernel you don't control.
 
 If you're on Bazzite and want a Windows VM, use [Virt-Manager / KVM]({{< relref "/docs/virtualization/vm-setup" >}}) instead. Same hypervisor underneath, no kernel modules to maintain, and `ujust setup-virtualization` sets it up in one command.
 {{< /callout >}}
