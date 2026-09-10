@@ -21,6 +21,10 @@ De Zephyrus G16 heeft veel hardware-functies die op Linux niet zomaar werken: fa
 Het project is in 2026 verhuisd. De ontwikkeling zat vroeger in de `asus-linux`-organisatie op GitLab (nu gearchiveerd, read-only); `asusctl`, `asusd` en `rog-control-center` worden nu onderhouden onder het [Open Gaming Collective](https://github.com/OpenGamingCollective/asusctl) op GitHub. [asus-linux.org](https://asus-linux.org/) is nog steeds de projectsite. Oudere gidsen die naar `gitlab.com/asus-linux` of de `lukenukem`-COPR voor Fedora wijzen zijn verouderd.
 {{< /callout >}}
 
+ROG Control Center omschrijft zichzelf, via het eigen **About**-tabblad, als "a powerful graphical interface for managing ASUS ROG, TUF, and ProArt laptops on Linux... the official GUI for the asusctl toolset." Het vereist momenteel kernel 6.19, wordt uitgebracht onder de MPL-2.0-licentie, en noemt een eigen work-in-progress-lijst (widget-theming, een CPU/GPU temp/fan-infobalk, Screenpad- en ROG Ally-specifieke instellingen) — de moeite waard om daar zelf te checken voordat je een ontbrekende functie als bug bestempelt.
+
+![ROG Control Center - About-tabblad](/images/rog-control-about.avif)
+
 
 ## Installatie
 
@@ -198,6 +202,8 @@ asusctl slash --mode Spectrum
 asusctl slash -l 128
 ```
 
+![ROG Control Center - Slash Lighting](/images/rog-control-slash-lighting.avif)
+
 {{% /details %}}
 
 {{% details title="Prestatieprofielen" closed="true" %}}
@@ -209,6 +215,10 @@ asusctl biedt drie prestatieprofielen die de CPU/GPU-vermogensgrenzen en het ven
 | `Silent` | Laag vermogen, stille ventilatoren, beperkte prestaties |
 | `Balanced` | Standaard. Gematigd vermogen en geluid |
 | `Performance` | Maximaal CPU/GPU-vermogen, agressieve ventilatoren |
+
+{{< callout type="info" >}}
+Het tabblad Fan Curves in ROG Control Center noemt dit profiel momenteel **Quiet** in plaats van Silent. De CLI-waarde is voor zover geverifieerd nog steeds `Silent`; behandel het GUI-label als cosmetisch totdat dit anders is bevestigd.
+{{< /callout >}}
 
 **Profiel instellen:**
 ```bash
@@ -233,22 +243,31 @@ asusctl profile
 
 {{% details title="GPU mode switching (ROG Control Center / asusctl armoury)" closed="true" %}}
 
-De GA605WV heeft een hybride GPU-setup: de AMD Radeon 890M (iGPU) stuurt het interne display aan en de NVIDIA RTX 4060 (dGPU) verwerkt GPU-werklast.
+De GA605WV heeft een hybride GPU-setup mét een fysieke MUX-switch: zowel de AMD Radeon 890M (iGPU) als de NVIDIA RTX 4060 (dGPU) kunnen het interne display aansturen, niet alleen de iGPU zoals eerdere versies van deze pagina aannamen.
 
-GPU-switching wordt beheerd via ROG Control Center (GUI) of `asusctl armoury` (CLI), die direct communiceren met de `asus-armoury` kernel driver (beschikbaar vanaf kernel 6.19).
+GPU-switching wordt beheerd via ROG Control Center (GUI, tabblad **GPU Configuration**) of `asusctl armoury` (CLI), die direct communiceren met de `asus-armoury` kernel driver (beschikbaar vanaf kernel 6.19).
+
+**Bevestigd op deze hardware, huidige ROG Control Center build:** het tabblad GPU Configuration biedt drie modes:
 
 | Mode | Beschrijving |
 |------|--------------|
-| Hybrid (`dgpu_disable 0`) | Beide GPU's actief. NVIDIA verwerkt GPU-werklast, AMD stuurt het display aan. Het beste voor gaming. |
-| Integrated (`dgpu_disable 1`) | Alleen AMD iGPU. Lager stroomverbruik, geen NVIDIA. Goed voor batterij. |
+| Hybrid | Beide GPU's actief. NVIDIA verwerkt GPU-werklast, AMD stuurt het display aan. Het beste voor gaming. |
+| Integrated | Alleen AMD iGPU. Lager stroomverbruik, geen NVIDIA. Goed voor batterij. |
+| Ultimate | dGPU stuurt het display rechtstreeks aan via de fysieke MUX. Hoogste NVIDIA-prestaties, geen iGPU-overhead — maar de AMD iGPU is niet beschikbaar zolang deze mode actief is. |
+
+{{< callout type="warning" >}}
+**Ultimate mode is nieuw op deze pagina.** Eerdere versies van deze gids noemden alleen Hybrid/Integrated via `dgpu_disable`, geschreven voordat de fysieke MUX en Ultimate mode op deze laptop bevestigd waren. De CLI-property om naar Ultimate mode te wisselen is nog niet geverifieerd — behandel de `dgpu_disable`-commando's hieronder als alleen geldig voor Hybrid/Integrated totdat dit op het apparaat zelf is bevestigd. Dit betekent ook dat het "zwart scherm omdat Windows de MUX in dGPU-only mode liet staan"-probleem dat andere ASUS ROG-gidsen documenteren mogelijk ook op deze laptop voorkomt; nog niet bevestigd te reproduceren hier.
+{{< /callout >}}
 
 **Wisselen via GUI (ROG Control Center):**
 
-Open ROG Control Center (`rog-control-center`) en navigeer naar de GPU-switching sectie om te wisselen tussen de Hybrid- en Integrated-modus.
+Open ROG Control Center en ga naar **GPU Configuration** in de zijbalk. Kies een mode via de **GPU mode**-dropdown.
 
-![ROG Control Center - GPU switching](/images/rog-control-gpu-switching.avif)
+![ROG Control Center - GPU Configuration met Integrated/Ultimate/Hybrid](/images/rog-control-gpu-configuration.avif)
 
-**Wisselen via CLI (asusctl armoury):**
+> De dropdown toont altijd de huidige mode; wijzigingen worden pas na een herstart actief. Je kan (nog) niet live wisselen zoals Windows-tools als G-Helper dat doen.
+
+**Wisselen via CLI (asusctl armoury) — alleen Hybrid en Integrated:**
 
 **Huidige dGPU status bekijken:**
 ```bash
@@ -271,6 +290,21 @@ asusctl armoury set dgpu_disable 0
 
 {{% /details %}}
 
+{{% details title="App-instellingen (achtergrond- en tray-gedrag)" closed="true" %}}
+
+ROG Control Center heeft een tabblad **App Settings** dat bepaalt hoe de app zelf draait, los van de hardwareconfiguratie:
+
+- **Run in background after closing** — houdt `asusd`/het tray-icoon actief als het venster gesloten wordt
+- **Start app in background (UI closed)** — geminimaliseerd naar de tray opstarten
+- **Enable system tray icon**
+- **Enable dGPU notifications** — toont een melding zodra de dGPU wordt gepauzeerd/hervat (dit is de "dGPU status changed: suspended"-melding die je ziet na het wisselen van GPU-mode of als de dGPU idle wordt)
+
+![ROG Control Center - App Settings](/images/rog-control-app-settings.avif)
+
+De app markeert dit tabblad zelf als **work in progress**; met name de notificaties zijn nog niet compleet.
+
+{{% /details %}}
+
 {{% details title="Toetsenbord RGB (Aura)" closed="true" %}}
 
 **Toetsenbordverlichting helderheid aanpassen:**
@@ -285,6 +319,8 @@ rog-control-center
 ```
 
 Ga naar de sectie "Keyboard Aura" voor animatie, kleur en per-toets configuratie.
+
+![ROG Control Center - Keyboard Aura](/images/rog-control-keyboard-aura.avif)
 
 {{% /details %}}
 
@@ -307,6 +343,8 @@ asusctl fan-curve -m Balanced
 # Aangepaste curve instellen (8 temperatuur/snelheid paren: temp:speed,temp:speed,...)
 asusctl fan-curve -m Balanced -D 30:0,40:10,50:30,60:50,70:70,80:85,90:100,100:100
 ```
+
+![ROG Control Center - Fan Curves](/images/rog-control-fan-curves.avif)
 
 > **Let op:** Fan curve aanpassing vereist de `asus-armoury` kernel driver. Op kernel < 6.19 is de driver niet beschikbaar en worden curves die je in de GUI instelt mogelijk niet correct opgeslagen. Zie de pagina [Bekende Problemen]({{< relref "/docs/known-issues" >}}) voor details.
 
