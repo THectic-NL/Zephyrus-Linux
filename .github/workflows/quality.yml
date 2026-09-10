@@ -44,7 +44,7 @@ jobs:
           go-version-file: src/go.mod
 
       - name: Set up Hugo
-        uses: $/.github/actions/setup-hugo
+        uses: ./.github/actions/setup-hugo
 
       # Every step runs on !cancelled(), so a red markdown check does not hide
       # the Hugo build. You want every failure in one run, not the second only
