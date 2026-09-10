@@ -6,7 +6,7 @@ next: docs/bazzite/secure-boot
 distro: bazzite
 ---
 
-The G16 has an NVIDIA RTX 4060 alongside the AMD iGPU. On Bazzite the driver is not something you install — it is part of the image you booted. Which means the work here is picking the right image, enrolling one Secure Boot key, and two power settings this laptop needs.
+The G16 has an NVIDIA RTX 4060 alongside the AMD iGPU. On Bazzite the driver is not something you install. It is part of the image you booted, so the work here is picking the right image, enrolling one Secure Boot key, and two power settings this laptop needs.
 
 {{< callout type="warning" >}}
 If you came here looking for RPM Fusion, `akmod-nvidia`, `akmods --force` and a MOK enrollment screen: none of that applies. That is the procedure for conventional Fedora. On an atomic image it is at best redundant and at worst breaks your next update.
@@ -31,7 +31,7 @@ Swap `bazzite-gnome-nvidia-open` for `bazzite-nvidia-open` if you want KDE inste
 
 ## Enroll the Secure Boot key first
 
-The NVIDIA kernel modules are signed with Universal Blue's key. With Secure Boot on and that key not enrolled, the modules refuse to load and you land in a session without acceleration — which looks exactly like a broken driver.
+The NVIDIA kernel modules are signed with Universal Blue's key. With Secure Boot on and that key not enrolled, the modules refuse to load and you land in a session without acceleration, which looks exactly like a broken driver.
 
 ```bash
 ujust enroll-secure-boot-key
@@ -122,7 +122,7 @@ sudo systemctl enable --now nvidia-powerd.service
 
 ## Kernel and driver updates
 
-There is nothing to rebuild. The kernel and the NVIDIA modules are built into the image together and are tested against each other before it's published, which is the main reason this page is so much shorter than its CachyOS counterpart. You don't choose the driver version either — it moves when the image moves.
+There is nothing to rebuild. The kernel and the NVIDIA modules are built into the image together and are tested against each other before it's published, which is the main reason this page is so much shorter than its CachyOS counterpart. You don't choose the driver version either; it moves when the image moves.
 
 If an image update does break the GPU, the previous one is still on disk:
 

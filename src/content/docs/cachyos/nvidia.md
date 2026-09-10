@@ -75,7 +75,7 @@ sudo systemctl stop nvidia-powerd.service
 sudo systemctl mask nvidia-powerd.service
 ```
 
-Masking creates a symlink to `/dev/null`, preventing any process — including a driver update through `pacman` — from re-enabling the service.
+Masking creates a symlink to `/dev/null`, preventing any process, including a driver update through `pacman`, from re-enabling the service.
 
 **If you want to try re-enabling it later** (e.g., after a kernel or driver update that may fix the ATPX conflict):
 

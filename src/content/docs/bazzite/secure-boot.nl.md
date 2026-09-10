@@ -28,7 +28,7 @@ Bij de volgende start verschijnt het blauwe **MOK Management**-scherm:
 5. Herstart
 
 {{< callout type="warning" >}}
-MokManager laat tijdens het typen van het wachtwoord helemaal niets zien — geen puntjes, geen sterretjes. Het lijkt alsof het toetsenbord niet werkt. Dat werkt wel; typ het in en druk op enter.
+MokManager laat tijdens het typen van het wachtwoord helemaal niets zien, geen puntjes, geen sterretjes. Het lijkt alsof het toetsenbord niet werkt. Dat werkt wel. Typ het in en druk op enter.
 {{< /callout >}}
 
 ## Als Bazzite niet wil installeren met Secure Boot aan
@@ -81,7 +81,7 @@ Of de sleutel echt aangekomen is, controleer je het beste met datgene wat hem no
 lsmod | grep nvidia
 ```
 
-Laden de NVIDIA-modules met Secure Boot aan, dan is de sleutel ingeschreven. Laden ze niet, dan is dat niet zo — en dat is verreweg de meest voorkomende oorzaak van een Bazzite-installatie zonder GPU-versnelling.
+Laden de NVIDIA-modules met Secure Boot aan, dan is de sleutel ingeschreven. Laden ze niet, dan is dat niet zo, en dat is de meest voorkomende oorzaak van een Bazzite-installatie zonder GPU-versnelling.
 
 ```bash
 fwupdmgr security
@@ -91,7 +91,7 @@ De regel **UEFI Secure Boot** onder HSI-1 hoort nu **Enabled** te tonen. GNOME I
 
 ## Waarom hier geen eigen sleutels
 
-Op CachyOS is `sbctl` het interessante deel: de firmwaresleutels wissen, je eigen sleutels maken en de bootloader en kernel zelf ondertekenen. Dat kan hier niet op een manier die blijft werken, want de images zijn niet van jou — elke update vervangt de kernel en de bootloader door ondertekende artefacten van Universal Blue.
+Op CachyOS is `sbctl` het interessante deel: de firmwaresleutels wissen, je eigen sleutels maken en de bootloader en kernel zelf ondertekenen. Dat kan hier niet op een manier die blijft werken, want de images zijn niet van jou. Elke update vervangt de kernel en de bootloader door ondertekende artefacten van Universal Blue.
 
 De route naar een volledig eigen vertrouwensketen op een atomic systeem is je eigen image bouwen en ondertekenen, en dat is een ander project dan deze laptop inrichten. [secureblue](https://github.com/secureblue/secureblue) is waar je dan moet kijken.
 

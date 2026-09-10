@@ -7,7 +7,7 @@ distro: bazzite
 
 Bazzite boots with Secure Boot enabled. It uses shim, the Microsoft-signed bootloader that lets third-party systems boot under Secure Boot, so unlike CachyOS you don't have to turn Secure Boot off to install it and you don't have to enroll your own keys afterwards.
 
-What you do have to do is enroll Universal Blue's key once. Without it, the kernel modules that aren't part of stock Fedora — the NVIDIA modules first among them — refuse to load.
+What you do have to do is enroll Universal Blue's key once. Without it, the kernel modules that aren't part of stock Fedora, the NVIDIA modules first among them, refuse to load.
 
 > **Result:** UEFI Secure Boot passes with the stock configuration. The overall HSI score stays at **HSI:3!**, for the same hardware reason as on CachyOS: the Encrypted RAM check at HSI-4 isn't supported by this CPU.
 
@@ -28,7 +28,7 @@ On the next boot the blue **MOK Management** screen appears:
 5. Reboot
 
 {{< callout type="warning" >}}
-MokManager shows nothing at all while you type the password — no dots, no asterisks. It looks like the keyboard isn't working. It is; type it and press enter.
+MokManager shows nothing at all while you type the password, no dots, no asterisks. It looks like the keyboard isn't working. It is. Type it and press enter.
 {{< /callout >}}
 
 ## If Bazzite won't install with Secure Boot on
@@ -81,7 +81,7 @@ That the key actually took is best confirmed by the thing that needed it:
 lsmod | grep nvidia
 ```
 
-If the NVIDIA modules are loaded with Secure Boot on, the key is enrolled. If they aren't, it isn't — that is the single most common cause of a Bazzite install with no GPU acceleration.
+If the NVIDIA modules are loaded with Secure Boot on, the key is enrolled. If they aren't, it isn't. That is the most common cause of a Bazzite install with no GPU acceleration.
 
 ```bash
 fwupdmgr security
@@ -91,7 +91,7 @@ The **UEFI Secure Boot** line under HSI-1 should show **Enabled**. GNOME Setting
 
 ## Why not your own keys
 
-On CachyOS the interesting part is `sbctl`: clear the firmware keys, generate your own, sign the bootloader and kernel yourself. You can't do that here in any way that survives, because you don't own the images — every update replaces the kernel and the bootloader with signed artifacts built by Universal Blue.
+On CachyOS the interesting part is `sbctl`: clear the firmware keys, generate your own, sign the bootloader and kernel yourself. You can't do that here in any way that survives, because you don't own the images. Every update replaces the kernel and the bootloader with signed artifacts built by Universal Blue.
 
 The way to a fully self-owned chain of trust on an atomic system is to build and sign your own image, which is a different project from configuring this laptop. [secureblue](https://github.com/secureblue/secureblue) is where to look if that's what you want.
 

@@ -6,7 +6,7 @@ next: docs/bazzite/secure-boot
 distro: bazzite
 ---
 
-De G16 heeft een NVIDIA RTX 4060 naast de AMD iGPU. Op Bazzite is de driver niets dat je installeert — hij is onderdeel van de image waarmee je opstart. Het werk hier bestaat dus uit de juiste image kiezen, één Secure Boot-sleutel inschrijven en twee energie-instellingen die deze laptop nodig heeft.
+De G16 heeft een NVIDIA RTX 4060 naast de AMD iGPU. Op Bazzite is de driver niets dat je installeert. Hij is onderdeel van de image waarmee je opstart, dus het werk hier bestaat uit de juiste image kiezen, één Secure Boot-sleutel inschrijven en twee energie-instellingen die deze laptop nodig heeft.
 
 {{< callout type="warning" >}}
 Als je hier kwam voor RPM Fusion, `akmod-nvidia`, `akmods --force` en een MOK-inschrijfscherm: dat is hier allemaal niet van toepassing. Dat is de procedure voor gewoon Fedora. Op een atomic image is het op zijn best overbodig en op zijn slechtst breekt het je volgende update.
@@ -31,7 +31,7 @@ Vervang `bazzite-gnome-nvidia-open` door `bazzite-nvidia-open` als je KDE wilt i
 
 ## Schrijf eerst de Secure Boot-sleutel in
 
-De NVIDIA-kernelmodules zijn ondertekend met de sleutel van Universal Blue. Staat Secure Boot aan en is die sleutel niet ingeschreven, dan weigeren de modules te laden en beland je in een sessie zonder versnelling — wat er precies uitziet als een kapotte driver.
+De NVIDIA-kernelmodules zijn ondertekend met de sleutel van Universal Blue. Staat Secure Boot aan en is die sleutel niet ingeschreven, dan weigeren de modules te laden en beland je in een sessie zonder versnelling, wat er precies uitziet als een kapotte driver.
 
 ```bash
 ujust enroll-secure-boot-key
@@ -122,7 +122,7 @@ sudo systemctl enable --now nvidia-powerd.service
 
 ## Kernel- en driverupdates
 
-Er valt niets te herbouwen. De kernel en de NVIDIA-modules worden samen in de image gebouwd en tegen elkaar getest voordat die wordt gepubliceerd, en dat is de belangrijkste reden dat deze pagina zoveel korter is dan zijn CachyOS-tegenhanger. Je kiest de driverversie ook niet zelf — die beweegt mee met de image.
+Er valt niets te herbouwen. De kernel en de NVIDIA-modules worden samen in de image gebouwd en tegen elkaar getest voordat die wordt gepubliceerd, en dat is de belangrijkste reden dat deze pagina zoveel korter is dan zijn CachyOS-tegenhanger. Je kiest de driverversie ook niet zelf; die beweegt mee met de image.
 
 Gaat de GPU toch stuk na een image-update, dan staat de vorige er nog:
 
