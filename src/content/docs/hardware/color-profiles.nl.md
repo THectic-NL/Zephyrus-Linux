@@ -2,7 +2,7 @@
 title: "Kleurprofielen voor het scherm"
 weight: 2
 prev: docs/hardware/asusctl-rog-control
-next: docs/desktop/kde
+next: docs/desktop/astra-monitor
 ---
 
 ASUS kalibreert het paneel van elke GA605WV in de fabriek en levert de profielen mee in het Windows-driverpakket. Op Linux past niets ze toe, dus zowel het ingebouwde scherm als een externe Samsung ViewFinity blijft op de standaardinstelling staan totdat je de profielen met de hand installeert.

@@ -1,7 +1,7 @@
 ---
 title: "Astra Monitor"
-weight: 2
-prev: docs/desktop/kde
+weight: 1
+prev: docs/hardware/color-profiles
 next: docs/security/autologin
 ---
 
@@ -150,9 +150,6 @@ Open the extension's settings from Extension Manager, or from the dropdown's gea
 A panel monitor polls continuously by definition, so it is not free on battery. If you're chasing idle drain, this is one of the first things to check with `powertop`, alongside the [`asusctl` power profile]({{< relref "/docs/hardware/asusctl-rog-control" >}}).
 {{< /callout >}}
 
-## On KDE Plasma
-
-Not applicable — it's a GNOME Shell extension. Plasma has system monitor widgets built in; add one to the panel from the widget list. See [KDE Plasma]({{< relref "/docs/desktop/kde" >}}).
 
 ## References
 

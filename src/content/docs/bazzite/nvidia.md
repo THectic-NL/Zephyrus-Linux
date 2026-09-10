@@ -27,7 +27,7 @@ rpm-ostree rebase ostree-image-signed:docker://ghcr.io/ublue-os/bazzite-gnome-nv
 systemctl reboot
 ```
 
-Swap `bazzite-gnome-nvidia-open` for `bazzite-nvidia-open` if you want KDE instead of GNOME. See [Bazzite]({{< relref "/docs/bazzite/getting-started" >}}) for the full image list and what a rebase does.
+See [Bazzite]({{< relref "/docs/bazzite/getting-started" >}}) for the full image list and what a rebase does. These guides assume a `-gnome-` image.
 
 ## Enroll the Secure Boot key first
 

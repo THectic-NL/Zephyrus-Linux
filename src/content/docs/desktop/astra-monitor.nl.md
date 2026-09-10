@@ -1,7 +1,7 @@
 ---
 title: "Astra Monitor"
-weight: 2
-prev: docs/desktop/kde
+weight: 1
+prev: docs/hardware/color-profiles
 next: docs/security/autologin
 ---
 
@@ -150,9 +150,6 @@ Open de instellingen van de extensie via Extension Manager, of via het tandwiel 
 Een monitor in de bovenbalk pollt per definitie continu, dus gratis is het op accu niet. Ben je op zoek naar idle-verbruik, dan is dit een van de eerste dingen om met `powertop` te controleren, naast het [`asusctl`-energieprofiel]({{< relref "/docs/hardware/asusctl-rog-control" >}}).
 {{< /callout >}}
 
-## Op KDE Plasma
-
-Niet van toepassing — het is een GNOME Shell-extensie. Plasma heeft ingebouwde systeemmonitor-widgets; voeg er een toe aan de balk via de widgetlijst. Zie [KDE Plasma]({{< relref "/docs/desktop/kde" >}}).
 
 ## Referenties
 

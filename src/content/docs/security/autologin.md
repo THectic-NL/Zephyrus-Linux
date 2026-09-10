@@ -13,7 +13,7 @@ After unlocking the disk with LUKS at boot, I didn't want to type a second passw
 
 
 {{< callout type="info" >}}
-Nothing on this page is distribution-specific. GDM reads the same `/etc/gdm/custom.conf` on both, and `/etc` is writable on Bazzite too, so no layering and no reboot beyond the one below. The exception is a KDE image, which uses SDDM rather than GDM and configures autologin elsewhere.
+Nothing on this page is distribution-specific. GDM reads the same `/etc/gdm/custom.conf` on both, and `/etc` is writable on Bazzite too, so no layering and no reboot beyond the one below.
 {{< /callout >}}
 
 ## Configuration
