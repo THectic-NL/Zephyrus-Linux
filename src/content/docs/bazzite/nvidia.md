@@ -92,27 +92,23 @@ These services prevent GPU state issues after suspend/resume cycles. Check first
 systemctl is-enabled nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service
 ```
 
-### Mask `nvidia-powerd` permanently
+### `nvidia-powerd`: no longer needs masking
 
-The `nvidia-powerd.service` manages NVIDIA Dynamic Boost, which shifts extra wattage (~5-15W) from the CPU to the GPU during heavy GPU loads. While useful on Intel-based laptops, it conflicts with AMD ATPX power management on the Zephyrus G16 and causes soft lockups and "GPU has fallen off the bus" errors.
+The `nvidia-powerd.service` manages NVIDIA Dynamic Boost, which shifts extra wattage (~5-15W) from the CPU to the GPU during heavy GPU loads. For a while, on a kernel somewhere between 6.16 and 6.17, it conflicted with AMD's ATPX power management on this laptop's iGPU+dGPU combo: the two fought over GPU power state, which could turn either GPU off and caused soft lockups and "GPU has fallen off the bus" errors. Masking the service was the standing workaround; see the [full writeup]({{< relref "/docs/known-issues" >}}) on the Known Issues page for the original symptoms.
 
-On this laptop, GPU power is managed via ATPX (AMD-driven via ACPI). The NVIDIA suspend/hibernate/resume services handle power states correctly without `nvidia-powerd`.
+That conflict is fixed upstream now (exact commit not pinned down). `nvidia-powerd` has been running unmasked for months without a single lockup, so there's no reason to give up Dynamic Boost anymore.
 
-**What you lose by disabling it:** Minimal. Slightly fewer FPS during heavy GPU workloads. The ~5-15W Dynamic Boost is not worth the instability on AMD ATPX hardware.
-
-```bash
-sudo systemctl disable nvidia-powerd.service
-sudo systemctl stop nvidia-powerd.service
-sudo systemctl mask nvidia-powerd.service
-```
-
-The mask is a symlink to `/dev/null` in `/etc/systemd/system`, so a new image can ship the unit enabled and it still won't start.
-
-**If you want to try re-enabling it later** (e.g., after a kernel or driver update that may fix the ATPX conflict):
+**If you masked it following an older version of this guide, or you're still on an old kernel:**
 
 ```bash
 sudo systemctl unmask nvidia-powerd.service
 sudo systemctl enable --now nvidia-powerd.service
+```
+
+If that brings the soft lockups back, your kernel predates the fix; mask it again and update:
+
+```bash
+sudo systemctl mask --now nvidia-powerd.service
 ```
 
 **Reference:**

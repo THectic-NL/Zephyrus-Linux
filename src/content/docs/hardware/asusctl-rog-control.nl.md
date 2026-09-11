@@ -281,7 +281,7 @@ asusctl armoury set dgpu_disable 0
 
 > **Let op:** Na het wisselen van mode kan een herstart of uitloggen/inloggen vereist zijn.
 
-> **Belangrijk:** Houd `nvidia-powerd.service` gemaskeerd op deze laptop, ongeacht de GPU-mode. Zie [Bekende Problemen]({{< relref "/docs/known-issues" >}}) voor waarom.
+> **Let op:** `nvidia-powerd.service` hoeft op deze laptop niet meer gemaskeerd te blijven — het ATPX-conflict dat dit nodig maakte is upstream gefixt. Zie [NVIDIA-driver: CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) voor de huidige aanpak en [Bekende Problemen]({{< relref "/docs/known-issues" >}}) voor de geschiedenis.
 
 {{% /details %}}
 

@@ -92,27 +92,23 @@ Deze services voorkomen GPU state problemen na suspend/resume cycli. Controleer 
 systemctl is-enabled nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service
 ```
 
-### Maskeer `nvidia-powerd` permanent
+### `nvidia-powerd`: hoeft niet meer gemaskeerd
 
-De `nvidia-powerd.service` beheert NVIDIA Dynamic Boost, waarmee extra wattage (~5-15W) van de CPU naar de GPU geschoven wordt tijdens zware GPU-belasting. Hoewel nuttig op Intel-gebaseerde laptops, conflicteert het met AMD ATPX power management op de Zephyrus G16 en veroorzaakt soft lockups en "GPU has fallen off the bus" fouten.
+De `nvidia-powerd.service` beheert NVIDIA Dynamic Boost, waarmee extra wattage (~5-15W) van de CPU naar de GPU geschoven wordt tijdens zware GPU-belasting. Een tijdlang, op een kernel ergens tussen 6.16 en 6.17, conflicteerde dit met AMD's ATPX power management bij de combinatie van iGPU en dGPU in deze laptop: die twee gingen ruzie maken over de GPU-energiestatus, wat de ene of de andere GPU kon uitzetten en soft lockups en "GPU has fallen off the bus"-fouten veroorzaakte. Maskeren van de service was de staande workaround; zie de [volledige uitleg]({{< relref "/docs/known-issues" >}}) op de pagina Bekende Problemen voor de oorspronkelijke symptomen.
 
-Op deze laptop wordt GPU-vermogensbeheer geregeld via ATPX (AMD-gestuurd via ACPI). De NVIDIA suspend/hibernate/resume services beheren power states correct zonder `nvidia-powerd`.
+Dat conflict is inmiddels upstream gefixt (exacte commit niet achterhaald). `nvidia-powerd` draait al maanden ongemaskeerd zonder ook maar één lockup, dus er is geen reden meer om Dynamic Boost te laten liggen.
 
-**Wat je verliest door het uit te zetten:** Minimaal. Iets minder FPS bij zware GPU workloads. De ~5-15W Dynamic Boost is de instabiliteit niet waard op AMD ATPX hardware.
-
-```bash
-sudo systemctl disable nvidia-powerd.service
-sudo systemctl stop nvidia-powerd.service
-sudo systemctl mask nvidia-powerd.service
-```
-
-Het masker is een symlink naar `/dev/null` in `/etc/systemd/system`, dus ook als een nieuwe image de unit ingeschakeld meelevert, start hij niet.
-
-**Als je het later opnieuw wilt proberen** (bijv. na een kernel- of driver-update die het ATPX-conflict mogelijk verhelpt):
+**Heb je het gemaskeerd naar aanleiding van een oudere versie van deze guide, of draai je nog een oude kernel?**
 
 ```bash
 sudo systemctl unmask nvidia-powerd.service
 sudo systemctl enable --now nvidia-powerd.service
+```
+
+Komen de soft lockups hiermee terug, dan dateert je kernel van vóór de fix; maskeer opnieuw en update eerst:
+
+```bash
+sudo systemctl mask --now nvidia-powerd.service
 ```
 
 **Referentie:**
