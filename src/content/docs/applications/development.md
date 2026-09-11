@@ -7,21 +7,24 @@ next: docs/applications/gaming-media
 
 ### Git & GitHub CLI
 
+Install both version control and GitHub's command-line interface to manage repositories, PRs, and issues from the terminal.
+
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
 
-Both are available in CachyOS repositories:
+Both are in CachyOS repositories:
 
 ```bash
 sudo pacman -S git github-cli
 ```
 
-Git is available in the core repo; GitHub CLI is in `cachyos-extra` or `extra`.
+- `git` is in the core repo (usually pre-installed)
+- `github-cli` is in `cachyos-extra` or `extra`
 
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
-`git` is already in the image. Install GitHub CLI via Homebrew (CLI tool rather than layering):
+`git` is already in the image. For GitHub CLI, use Homebrew (CLI tool, no layering needed):
 
 ```bash
 brew install gh
@@ -30,13 +33,40 @@ brew install gh
 {{< /tab >}}
 {{< /tabs >}}
 
-After installing, authenticate GitHub CLI:
+**Authenticate with GitHub:**
+
+After installing, log in to your GitHub account:
 
 ```bash
 gh auth login
 ```
 
-This opens a browser flow to connect your GitHub account.
+This opens a browser-based authentication flow. You'll be asked:
+1. What account type (GitHub.com or GitHub Enterprise)
+2. Whether to use HTTPS or SSH
+3. Whether to authenticate `git` with your GitHub credentials
+
+Choose **HTTPS** for simplicity (GitHub CLI handles credentials via `git credential helper`). If you already use SSH keys, SSH also works fine.
+
+**Verify setup:**
+
+```bash
+gh auth status
+```
+
+Shows your authenticated account and which protocol is configured.
+
+**Common `gh` commands:**
+
+- `gh repo create` — create a new repository
+- `gh pr list` — list pull requests
+- `gh pr view <number>` — view a specific PR
+- `gh pr checkout <number>` — check out a PR branch locally
+- `gh issue list` — list open issues
+- `gh issue create` — create a new issue
+- `gh release create <tag>` — create a release
+
+For full reference, run `gh --help` or visit [cli.github.com](https://cli.github.com).
 
 ### Visual Studio Code
 
