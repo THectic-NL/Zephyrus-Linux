@@ -195,13 +195,15 @@ In Kleopatra, vouw je sleutel uit, klik rechts op een subsleutel en selecteer "C
 **Configureer Git om het te gebruiken:**
 
 ```bash
-git config --global user.name "Sten T."
-git config --global user.email "your-email@example.com"
-git config --global user.signingkey FB7273DE88E0E759
+git config --global user.name "Je Naam"
+git config --global user.email "je-email@example.com"
+git config --global user.signingkey JE_GPG_SLEUTEL_ID
 git config --global commit.gpgsign true
 git config --global tag.gpgsign true
 git config --global gpg.program gpg
 ```
+
+Vervang `JE_GPG_SLEUTEL_ID` met de 16-teken hex ID van je sleutel's fingerprint.
 
 Controleer je configuratie:
 
