@@ -281,8 +281,6 @@ asusctl armoury set dgpu_disable 0
 
 > **Let op:** Na het wisselen van mode kan een herstart of uitloggen/inloggen vereist zijn.
 
-> **Belangrijk:** Houd `nvidia-powerd.service` gemaskeerd op deze laptop, ongeacht de GPU-mode. Zie [Bekende Problemen]({{< relref "/docs/known-issues" >}}) voor waarom.
-
 {{% /details %}}
 
 {{% details title="App-instellingen (achtergrond- en tray-gedrag)" closed="true" %}}

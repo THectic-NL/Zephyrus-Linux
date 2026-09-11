@@ -71,7 +71,7 @@ The first line reads `NVIDIA UNIX Open Kernel Module` on an `-nvidia-open` image
 
 ## Power Management
 
-These two settings are about this laptop, not about the driver, so they apply here exactly as they do on CachyOS. `systemctl` writes to `/etc`, which is yours on an atomic system, so both survive image updates.
+This setting is about this laptop, not about the driver, so it applies here exactly as it does on CachyOS. `systemctl` writes to `/etc`, which is yours on an atomic system, so it survives image updates.
 
 {{% steps %}}
 
@@ -91,32 +91,6 @@ These services prevent GPU state issues after suspend/resume cycles. Check first
 ```bash
 systemctl is-enabled nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service
 ```
-
-### Mask `nvidia-powerd` permanently
-
-The `nvidia-powerd.service` manages NVIDIA Dynamic Boost, which shifts extra wattage (~5-15W) from the CPU to the GPU during heavy GPU loads. While useful on Intel-based laptops, it conflicts with AMD ATPX power management on the Zephyrus G16 and causes soft lockups and "GPU has fallen off the bus" errors.
-
-On this laptop, GPU power is managed via ATPX (AMD-driven via ACPI). The NVIDIA suspend/hibernate/resume services handle power states correctly without `nvidia-powerd`.
-
-**What you lose by disabling it:** Minimal. Slightly fewer FPS during heavy GPU workloads. The ~5-15W Dynamic Boost is not worth the instability on AMD ATPX hardware.
-
-```bash
-sudo systemctl disable nvidia-powerd.service
-sudo systemctl stop nvidia-powerd.service
-sudo systemctl mask nvidia-powerd.service
-```
-
-The mask is a symlink to `/dev/null` in `/etc/systemd/system`, so a new image can ship the unit enabled and it still won't start.
-
-**If you want to try re-enabling it later** (e.g., after a kernel or driver update that may fix the ATPX conflict):
-
-```bash
-sudo systemctl unmask nvidia-powerd.service
-sudo systemctl enable --now nvidia-powerd.service
-```
-
-**Reference:**
-- [NVIDIA Power Management Documentation](https://download.nvidia.com/XFree86/Linux-x86_64/610.57.04/README/powermanagement.html)
 
 {{% /steps %}}
 
