@@ -40,87 +40,96 @@ This opens a browser flow to connect your GitHub account.
 
 ### Visual Studio Code
 
-Three package variants are available on Arch/CachyOS, which can be confusing — they have similar names but different purposes:
+Three package variants are available on Arch/CachyOS — they have similar names but fundamentally different purposes:
 
-| Package | Source | What it is | Marketplace | Extension limits |
+| Package | Source | What it is | Marketplace | Key difference |
 |---------|--------|-----------|-------------|------------------|
-| `code` | CachyOS extra repo | Code - OSS: open-source build, no Microsoft branding or telemetry | Open VSX | Missing proprietary extensions |
-| `vscodium` | CachyOS repo | Independent OSS build, same as Code - OSS, different marketplace | Open VSX | Missing proprietary extensions |
-| `visual-studio-code-bin` | AUR | Official Microsoft binary, unchanged | Microsoft | Full access (Copilot, Remote SSH, etc.) |
+| `code` | CachyOS extra repo | Code - OSS: open-source build from VS Code source | Open VSX | Microsoft branding and telemetry removed |
+| `vscodium` | CachyOS repo | Independent OSS build, same source, different foundation | Open VSX | Community alternative to Code - OSS |
+| `visual-studio-code-bin` | AUR | Official Microsoft binary, unmodified | Microsoft | Full proprietary extensions, Settings Sync via Microsoft account |
 
-**Key difference:** The package name `code` in the CachyOS/Arch repo is **not** Microsoft's build — it's the OSS variant. The actual Microsoft build is `visual-studio-code-bin` from the AUR.
+**Critical: Package name doesn't mean Microsoft.** The default `code` package in CachyOS/Arch repos is **not** Microsoft's build—it's the open-source variant. To get Microsoft's official build with full marketplace access, you need `visual-studio-code-bin` from the AUR.
 
 #### Why the difference matters
 
-**Code - OSS and VSCodium** miss Microsoft's proprietary extensions due to licensing:
-- **GitHub Copilot** — Microsoft-exclusive AI assistant
-- **Remote - SSH** — seamless remote development
-- **Dev Containers / Remote - Containers** — containerized development environments
-- **C/C++ Tools** — optimized C/C++ support
-- **Pylance** — Python language server
+**Missing proprietary extensions in Code - OSS and VSCodium:**
 
-If your workflow needs these (remote development, containers, specialized language tooling), the Microsoft build is the pragmatic choice.
+Microsoft's licensing terms prohibit the inclusion of proprietary extensions in open-source builds. These extensions are only available in the official Microsoft Marketplace:
 
-**Settings Sync:** Microsoft build syncs directly via Microsoft/GitHub account. OSS builds need manual configuration with a third-party sync provider.
+- **GitHub Copilot** — AI-powered code completion (Microsoft-exclusive)
+- **Remote - SSH** — develop on remote machines as if local
+- **Dev Containers / Remote - Containers** — seamless containerized development
+- **C/C++ Tools** — Microsoft's optimized C/C++ language support
+- **Pylance** — Python language server with type hints and intelligent completions
 
-**Configuration:** Both OSS and Microsoft variants use the same config directory (`~/.config/Code`), so switching between packages preserves your settings and extensions.
+If your workflow relies on any of these—especially remote development, containerized environments, or language-specific tooling—the Microsoft build is the pragmatic choice.
+
+**Settings Sync:**
+- **Microsoft build:** Syncs via Microsoft/GitHub account, cross-device sync works out of the box
+- **OSS builds:** Settings Sync unavailable; requires manual configuration with third-party services
+
+**Portable config:** Both OSS and Microsoft variants read `~/.config/Code`, so you can switch between packages and keep your settings and extensions intact.
+
+#### Installation & Switching
 
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
 
-**Switch to the Microsoft build (recommended for full extension support):**
+**Install the Microsoft build (recommended for full feature parity):**
 
-1. Remove the open-source variant:
+1. If you have the OSS build installed, remove it:
    ```bash
    sudo pacman -R code
    ```
 
-2. Install an AUR helper if not already present:
+2. Ensure you have an AUR helper. CachyOS usually ships with `paru` pre-installed:
    ```bash
-   sudo pacman -S paru
+   sudo pacman -Syu paru
    ```
 
-3. Install the Microsoft build:
+3. Install from AUR:
    ```bash
    paru -S visual-studio-code-bin
    ```
 
-This builds locally from a PKGBUILD (re-packaging the official binary, not source compilation). Paru displays the PKGBUILD for review before building — an important security advantage over helpers that skip this step.
+This downloads and re-packages the official Microsoft binary locally. Paru shows the PKGBUILD for review before building—a security advantage over helpers that skip this step.
 
-**Staying on the open-source build:**
-
-If you prefer the OSS variant, install `code` from the CachyOS extra repo or `vscodium` as an alternative:
+**Or stay with the open-source variant:**
 
 ```bash
-sudo pacman -S code
+sudo pacman -S code       # Code - OSS from CachyOS extra
 # or
-sudo pacman -S vscodium
+sudo pacman -S vscodium   # VSCodium from CachyOS repo
 ```
 
-Existing settings and extensions persist when you install the Microsoft build later, since both use the same config directory.
+Both keep your existing settings when you later switch to the Microsoft build.
 
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
-**Microsoft build:**
+**Install Microsoft's build:**
 
 ```bash
 flatpak install flathub com.visualstudio.code
 ```
 
-**Open-source builds:**
+**Or choose an open-source build:**
 
-- **Code - OSS:** `flatpak install flathub com.visualstudio.code.oss`
-- **VSCodium:** `flatpak install flathub com.vscodium.codium`
+```bash
+flatpak install flathub com.visualstudio.code.oss    # Code - OSS
+flatpak install flathub com.vscodium.codium          # VSCodium
+```
 
 {{< callout type="info" >}}
-**Flatpak sandboxing note:** The Flatpak is sandboxed, which matters for an editor: extensions that run toolchains see the sandbox's filesystem, not yours. If you develop against tools installed on the host system, run VS Code from a distrobox container instead:
+**Flatpak sandboxing:** The Flatpak sandbox restricts what extensions can access. Extensions that invoke external toolchains (compilers, linters, language servers on your host) see only the sandbox's filesystem, not yours.
+
+**Workaround on Bazzite:** Run VS Code from a distrobox container instead:
 
 ```bash
 distrobox-export --app code
 ```
 
-This runs VS Code with access to the tools of the host while keeping the container's isolation. It's the standard setup on atomic systems.
+This gives extensions access to host tools while maintaining the container's isolation. It's the standard pattern on atomic systems.
 {{< /callout >}}
 
 {{< /tab >}}
