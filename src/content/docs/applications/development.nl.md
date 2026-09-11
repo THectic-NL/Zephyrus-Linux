@@ -7,21 +7,24 @@ next: docs/applications/gaming-media
 
 ### Git & GitHub CLI
 
+Installeer zowel versiebeheer als GitHub's command-line interface om repositories, PR's en issues vanuit de terminal te beheren.
+
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
 
-Beide zijn beschikbaar in CachyOS-repositories:
+Beide zijn in CachyOS-repositories:
 
 ```bash
 sudo pacman -S git github-cli
 ```
 
-Git is in de core repo; GitHub CLI is in `cachyos-extra` of `extra`.
+- `git` is in de core repo (meestal pre-geïnstalleerd)
+- `github-cli` is in `cachyos-extra` of `extra`
 
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
-`git` zit al in de image. Installeer GitHub CLI via Homebrew (CLI-tool in plaats van layering):
+`git` zit al in de image. Voor GitHub CLI gebruik je Homebrew (CLI-tool, geen layering nodig):
 
 ```bash
 brew install gh
@@ -30,13 +33,40 @@ brew install gh
 {{< /tab >}}
 {{< /tabs >}}
 
-Na installatie, authenticeer GitHub CLI:
+**Authenticeer je bij GitHub:**
+
+Na installatie log je in op je GitHub-account:
 
 ```bash
 gh auth login
 ```
 
-Dit opent een browser-flow om je GitHub-account te verbinden.
+Dit opent een browser-gebaseerde authenticatiestroom. Je wordt gevraagd:
+1. Welk accounttype (GitHub.com of GitHub Enterprise)
+2. Of je HTTPS of SSH wilt gebruiken
+3. Of je `git` wilt authenticeren met je GitHub-credentials
+
+Kies **HTTPS** voor eenvoud (GitHub CLI handelt credentials af via `git credential helper`). Als je al SSH-sleutels gebruikt, werkt SSH ook prima.
+
+**Controleer setup:**
+
+```bash
+gh auth status
+```
+
+Toont je geverifieerde account en welk protocol is geconfigureerd.
+
+**Veel voorkomende `gh` commando's:**
+
+- `gh repo create` — create een nieuwe repository
+- `gh pr list` — list pull requests
+- `gh pr view <number>` — bekijk een specifieke PR
+- `gh pr checkout <number>` — check out een PR-branch lokaal
+- `gh issue list` — list open issues
+- `gh issue create` — create een nieuwe issue
+- `gh release create <tag>` — create een release
+
+Voor volledig referentie, voer `gh --help` uit of bezoek [cli.github.com](https://cli.github.com).
 
 ### Visual Studio Code
 
