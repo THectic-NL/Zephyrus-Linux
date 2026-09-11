@@ -195,13 +195,15 @@ In Kleopatra, expand your key, right-click any subkey, and select "Copy fingerpr
 **Configure Git to use it:**
 
 ```bash
-git config --global user.name "Sten T."
+git config --global user.name "Your Name"
 git config --global user.email "your-email@example.com"
-git config --global user.signingkey FB7273DE88E0E759
+git config --global user.signingkey YOUR_GPG_KEY_ID
 git config --global commit.gpgsign true
 git config --global tag.gpgsign true
 git config --global gpg.program gpg
 ```
+
+Replace `YOUR_GPG_KEY_ID` with the 16-character hex ID from your key's fingerprint.
 
 Verify your configuration:
 
