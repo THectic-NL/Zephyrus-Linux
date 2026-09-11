@@ -1,0 +1,262 @@
+---
+title: "Development"
+weight: 3
+prev: docs/applications/productivity
+next: docs/applications/gaming-media
+---
+
+### Git & GitHub CLI
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+Beide zijn beschikbaar in CachyOS-repositories:
+
+```bash
+sudo pacman -S git github-cli
+```
+
+Git is in de core repo; GitHub CLI is in `cachyos-extra` of `extra`.
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+`git` zit al in de image. Installeer GitHub CLI via Homebrew (CLI-tool in plaats van layering):
+
+```bash
+brew install gh
+```
+
+{{< /tab >}}
+{{< /tabs >}}
+
+Na installatie, authenticeer GitHub CLI:
+
+```bash
+gh auth login
+```
+
+Dit opent een browser-flow om je GitHub-account te verbinden.
+
+### Visual Studio Code
+
+Er zijn drie package-varianten beschikbaar op Arch/CachyOS, wat verwarrend kan zijn — ze hebben vergelijkbare namen maar verschillende doeleinden:
+
+| Package | Bron | Wat het is | Marketplace | Extensie-beperkingen |
+|---------|------|-----------|-------------|----------------------|
+| `code` | CachyOS extra-repo | Code - OSS: open-source build zonder Microsoft-branding of telemetrie | Open VSX | Proprietary extensies ontbreken |
+| `vscodium` | CachyOS-repo | Onafhankelijke OSS-build, zelfde basis als Code - OSS, ander marketplaceplatform | Open VSX | Proprietary extensies ontbreken |
+| `visual-studio-code-bin` | AUR | Officiële Microsoft-binary, ongewijzigd | Microsoft | Volledige toegang (Copilot, Remote SSH, etc.) |
+
+**Belangrijk:** De package-naam `code` in de CachyOS/Arch-repo is **niet** de Microsoft-build — dat is de OSS-variant. De daadwerkelijke Microsoft-build is `visual-studio-code-bin` vanuit de AUR.
+
+#### Waarom het verschil ertoe doet
+
+**Code - OSS en VSCodium** missen Microsoft's proprietary extensies vanwege licentievoorwaarden:
+- **GitHub Copilot** — Microsoft-exclusive AI-assistent
+- **Remote - SSH** — naadloze remote-ontwikkeling
+- **Dev Containers / Remote - Containers** — containergebaseerde ontwikkelomgevingen
+- **C/C++ Tools** — geoptimaliseerde C/C++-ondersteuning
+- **Pylance** — Python language server
+
+Als je workflow deze nodig heeft (remote development, containers, gespecialiseerde taalondersteuning), is de Microsoft-build de pragmatische keus.
+
+**Settings Sync:** Microsoft-build synchroniseert rechtstreeks via Microsoft/GitHub-account. OSS-builds vereisen handmatige configuratie met een externe sync-provider.
+
+**Configuratie:** Zowel OSS als Microsoft-variant gebruiken dezelfde config-directory (`~/.config/Code`), dus het wisselen tussen packages behoudt je instellingen en extensies.
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+**Overstappen op de Microsoft-build (aanbevolen voor volledige extensie-ondersteuning):**
+
+1. Verwijder de open-source variant:
+   ```bash
+   sudo pacman -R code
+   ```
+
+2. Installeer een AUR-helper als deze nog niet aanwezig is:
+   ```bash
+   sudo pacman -S paru
+   ```
+
+3. Installeer de Microsoft-build:
+   ```bash
+   paru -S visual-studio-code-bin
+   ```
+
+Dit bouwt lokaal vanaf een PKGBUILD (herpackaging van het officiële binary, geen source-compilatie). Paru toont de PKGBUILD ter review voor het bouwen — een belangrijk voordeel op het gebied van beveiliging ten opzichte van helpers die deze stap overslaan.
+
+**Blijven bij de open-source build:**
+
+Kies je toch voor de OSS-variant, installeer `code` vanuit de CachyOS extra-repo of `vscodium` als alternatief:
+
+```bash
+sudo pacman -S code
+# of
+sudo pacman -S vscodium
+```
+
+Bestaande instellingen en extensies blijven behouden als je later overgaat op de Microsoft-build, omdat beide dezelfde config-directory gebruiken.
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+**Microsoft-build:**
+
+```bash
+flatpak install flathub com.visualstudio.code
+```
+
+**Open-source builds:**
+
+- **Code - OSS:** `flatpak install flathub com.visualstudio.code.oss`
+- **VSCodium:** `flatpak install flathub com.vscodium.codium`
+
+{{< callout type="info" >}}
+**Sandbox-opmerking:** De Flatpak draait in een sandbox, wat voor een editor zwaarder weegt dan voor de meeste applicaties: extensies die toolchains aanroepen zien het bestandssysteem van de sandbox en niet dat van jou. Ontwikkel je tegen tools die op het hostsysteem zijn geïnstalleerd, draai VS Code dan vanuit een distrobox-container:
+
+```bash
+distrobox-export --app code
+```
+
+Dit voert VS Code uit met toegang tot de tools van de host terwijl de isolatie van de container behouden blijft. Dit is de standaard opzet op atomic systemen.
+{{< /callout >}}
+
+{{< /tab >}}
+{{< /tabs >}}
+
+### Kleopatra & GPG commit signing
+
+Ik onderteken mijn Git commits en tags met een GPG-sleutel. Kleopatra maakt het aanmaken en beheren van sleutels makkelijk via een GUI. Het is ook handig om je GPG-sleutels op één plek te houden en subsleutels te beheren.
+
+Installeer Kleopatra eerst, maak dan je sleutels daarin aan of importeer ze.
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+```bash
+sudo pacman -S kleopatra
+```
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+```bash
+flatpak install flathub org.kde.kleopatra
+```
+
+{{< /tab >}}
+{{< /tabs >}}
+
+**Je sleutel-ID vinden in Kleopatra:**
+
+In Kleopatra, vouw je sleutel uit, klik rechts op een subsleutel en selecteer "Copy fingerprint". De laatste 16 tekens zijn je sleutel-ID.
+
+**Configureer Git om het te gebruiken:**
+
+```bash
+git config --global user.name "Sten T."
+git config --global user.email "your-email@example.com"
+git config --global user.signingkey FB7273DE88E0E759
+git config --global commit.gpgsign true
+git config --global tag.gpgsign true
+git config --global gpg.program gpg
+```
+
+Controleer je configuratie:
+
+```bash
+git config --global --list | grep -E "user.name|user.email|user.signingkey|commit.gpgsign"
+```
+
+**In VS Code:**
+
+Na Git-configuratie met GPG ondertekenen commits in VS Code's source control UI automatisch je geconfigureerde sleutel. Geen aanvullende instelling nodig in VS Code.
+
+### Archi (ArchiMate modeling tool)
+
+[Archi](https://www.archimatetool.com/) is een gratis ArchiMate modeling tool. Het Linux package is een draagbare archive zonder installer. Om het in GNOME met een icoon te laten zien, moet je de bestanden zelf plaatsen en handmatig een desktop entry creëren.
+
+{{< callout type="info" >}}
+Archi's download pagina waarschuwt voor mogelijke UI-problemen op Wayland. In mijn ervaring draait het prima op GNOME 50 Wayland.
+{{< /callout >}}
+
+![Archi download pagina - Linux versie met Wayland notitie](/images/archi-download.avif)
+
+```bash
+# Download en extract
+cd /tmp
+curl -L https://github.com/archimatetool/archi.io/releases/download/5.9.0/Archi-Linux64-5.9.0.tgz | tar -xz
+
+# Verplaats naar /opt
+sudo mv Archi-Linux64-5.9.0/Archi /opt/
+
+# Cleanup
+rm -rf Archi-Linux64-5.9.0
+cd ~
+
+# Maak symlink zodat je 'archi' kunt aanroepen vanuit de terminal
+sudo ln -s /opt/Archi/Archi /usr/local/bin/archi
+```
+
+{{< callout type="info" >}}
+**Op Bazzite** de extractie en symlink werken ongewijzigd: `/opt` en `/usr/local` zijn symlinks naar `/var/opt` en `/var/usrlocal` op een atomic systeem, dus beide zijn beschrijfbaar en overleven image updates. De desktop entry hieronder is de uitzondering, omdat `/usr/share/applications` read-only is. Plaats hem in `~/.local/share/applications/archi.desktop` in plaats daarvan, zonder `sudo`.
+{{< /callout >}}
+
+Maak een desktop entry zodat Archi in GNOME verschijnt:
+```bash
+sudo nano /usr/share/applications/archi.desktop
+```
+
+```ini
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Archi
+Comment=ArchiMate Modelling Tool
+Exec=/opt/Archi/Archi
+Icon=__ICON__
+Terminal=false
+Categories=Development;IDE;
+StartupWMClass=Archi
+```
+
+Vervang `__ICON__` met het werkelijke pad (het bevat een build-timestamp die per release verandert):
+
+```bash
+find /opt/Archi/plugins -name "app-128.png" | head -1
+```
+
+Na opslaan verschijnt Archi in de GNOME app launcher:
+
+![Archi in de GNOME application launcher](/images/archi-launcher.avif)
+
+![Archi draait op Wayland met GNOME 50](/images/archi-running.avif)
+
+### Podman & Podman Desktop
+
+Voor container workloads gebruik ik Podman in plaats van Docker. Podman is daemonless, draait containers rootless standaard, en levert een Docker-compatibele CLI zodat bestaande workflows blijven werken. `podman-docker` vervangt het `docker` package volledig.
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+Alle drie de packages zijn beschikbaar in de CachyOS repositories: [podman](https://packages.cachyos.org/package/cachyos-extra-znver4/x86_64_v4/podman), [podman-docker](https://packages.cachyos.org/package/cachyos-extra-znver4/x86_64_v4/podman-docker), [podman-desktop](https://packages.cachyos.org/package/extra/x86_64/podman-desktop).
+
+```bash
+sudo pacman -S podman podman-docker podman-desktop
+```
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+`podman` en `podman-docker` zitten al in de image; alleen Podman Desktop ontbreekt:
+
+```bash
+flatpak install flathub io.podman_desktop.PodmanDesktop
+```
+
+{{< /tab >}}
+{{< /tabs >}}
+
+Voor de volledige setup (inclusief registry-configuratie en verbinding met Docker Hub en GitHub), zie [Podman & Podman Desktop]({{< relref "/docs/virtualization/podman" >}}) in de Virtualization sectie.
