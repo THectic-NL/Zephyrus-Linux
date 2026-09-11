@@ -40,87 +40,96 @@ Dit opent een browser-flow om je GitHub-account te verbinden.
 
 ### Visual Studio Code
 
-Er zijn drie package-varianten beschikbaar op Arch/CachyOS, wat verwarrend kan zijn — ze hebben vergelijkbare namen maar verschillende doeleinden:
+Er zijn drie package-varianten beschikbaar op Arch/CachyOS — ze hebben vergelijkbare namen maar fundamenteel verschillende doeleinden:
 
-| Package | Bron | Wat het is | Marketplace | Extensie-beperkingen |
+| Package | Bron | Wat het is | Marketplace | Belangrijk verschil |
 |---------|------|-----------|-------------|----------------------|
-| `code` | CachyOS extra-repo | Code - OSS: open-source build zonder Microsoft-branding of telemetrie | Open VSX | Proprietary extensies ontbreken |
-| `vscodium` | CachyOS-repo | Onafhankelijke OSS-build, zelfde basis als Code - OSS, ander marketplaceplatform | Open VSX | Proprietary extensies ontbreken |
-| `visual-studio-code-bin` | AUR | Officiële Microsoft-binary, ongewijzigd | Microsoft | Volledige toegang (Copilot, Remote SSH, etc.) |
+| `code` | CachyOS extra-repo | Code - OSS: open-source build van VS Code source | Open VSX | Microsoft branding en telemetrie verwijderd |
+| `vscodium` | CachyOS-repo | Onafhankelijke OSS-build, zelfde source, ander fundament | Open VSX | Community-alternatief voor Code - OSS |
+| `visual-studio-code-bin` | AUR | Officiële Microsoft-binary, ongewijzigd | Microsoft | Volledige proprietary extensies, Settings Sync via Microsoft-account |
 
-**Belangrijk:** De package-naam `code` in de CachyOS/Arch-repo is **niet** de Microsoft-build — dat is de OSS-variant. De daadwerkelijke Microsoft-build is `visual-studio-code-bin` vanuit de AUR.
+**Kritiek: Packagenaam betekent niet Microsoft.** De standaard `code` package in CachyOS/Arch repos is **niet** de Microsoft-build—het is de open-source variant. Voor Microsoft's officiële build met volledige marketplace-toegang heb je `visual-studio-code-bin` uit de AUR nodig.
 
 #### Waarom het verschil ertoe doet
 
-**Code - OSS en VSCodium** missen Microsoft's proprietary extensies vanwege licentievoorwaarden:
-- **GitHub Copilot** — Microsoft-exclusive AI-assistent
-- **Remote - SSH** — naadloze remote-ontwikkeling
-- **Dev Containers / Remote - Containers** — containergebaseerde ontwikkelomgevingen
-- **C/C++ Tools** — geoptimaliseerde C/C++-ondersteuning
-- **Pylance** — Python language server
+**Ontbrekende proprietary extensies in Code - OSS en VSCodium:**
 
-Als je workflow deze nodig heeft (remote development, containers, gespecialiseerde taalondersteuning), is de Microsoft-build de pragmatische keus.
+Microsoft's licentievoorwaarden verbieden de opname van proprietary extensies in open-source builds. Deze extensies zijn alleen beschikbaar in de officiële Microsoft Marketplace:
 
-**Settings Sync:** Microsoft-build synchroniseert rechtstreeks via Microsoft/GitHub-account. OSS-builds vereisen handmatige configuratie met een externe sync-provider.
+- **GitHub Copilot** — AI-aangedreven code completion (Microsoft-exclusief)
+- **Remote - SSH** — op afstand machines ontwikkelen alsof ze lokaal zijn
+- **Dev Containers / Remote - Containers** — naadloze containergebaseerde ontwikkeling
+- **C/C++ Tools** — Microsoft's geoptimaliseerde C/C++-ondersteuning
+- **Pylance** — Python language server met type hints en intelligente aanvullingen
 
-**Configuratie:** Zowel OSS als Microsoft-variant gebruiken dezelfde config-directory (`~/.config/Code`), dus het wisselen tussen packages behoudt je instellingen en extensies.
+Als je workflow afhankelijk is van deze—vooral remote development, containerized omgevingen of taalspecifieke tooling—is de Microsoft-build de pragmatische keus.
+
+**Settings Sync:**
+- **Microsoft-build:** Synchroniseert via Microsoft/GitHub-account, cross-device sync werkt out of the box
+- **OSS-builds:** Settings Sync niet beschikbaar; vereist handmatige configuratie met third-party services
+
+**Draagbare config:** Zowel OSS als Microsoft-variant lezen `~/.config/Code`, dus je kunt wisselen tussen packages en je instellingen en extensies behouden.
+
+#### Installatie & Wisselen
 
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
 
-**Overstappen op de Microsoft-build (aanbevolen voor volledige extensie-ondersteuning):**
+**Installeer de Microsoft-build (aanbevolen voor volledige feature-pariteit):**
 
-1. Verwijder de open-source variant:
+1. Als je de OSS-build hebt, verwijder deze:
    ```bash
    sudo pacman -R code
    ```
 
-2. Installeer een AUR-helper als deze nog niet aanwezig is:
+2. Zorg dat je een AUR-helper hebt. CachyOS levert meestal `paru` pre-geïnstalleerd:
    ```bash
-   sudo pacman -S paru
+   sudo pacman -Syu paru
    ```
 
-3. Installeer de Microsoft-build:
+3. Installeer vanuit de AUR:
    ```bash
    paru -S visual-studio-code-bin
    ```
 
-Dit bouwt lokaal vanaf een PKGBUILD (herpackaging van het officiële binary, geen source-compilatie). Paru toont de PKGBUILD ter review voor het bouwen — een belangrijk voordeel op het gebied van beveiliging ten opzichte van helpers die deze stap overslaan.
+Dit downloadt en herpackages het officiële Microsoft-binary lokaal. Paru toont de PKGBUILD ter review voor het bouwen—een voordeel op het gebied van beveiliging ten opzichte van helpers die deze stap overslaan.
 
-**Blijven bij de open-source build:**
-
-Kies je toch voor de OSS-variant, installeer `code` vanuit de CachyOS extra-repo of `vscodium` als alternatief:
+**Of blijf bij de open-source variant:**
 
 ```bash
-sudo pacman -S code
+sudo pacman -S code       # Code - OSS uit CachyOS extra
 # of
-sudo pacman -S vscodium
+sudo pacman -S vscodium   # VSCodium uit CachyOS repo
 ```
 
-Bestaande instellingen en extensies blijven behouden als je later overgaat op de Microsoft-build, omdat beide dezelfde config-directory gebruiken.
+Beide behouden je bestaande instellingen als je later naar de Microsoft-build overschakelt.
 
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
-**Microsoft-build:**
+**Installeer Microsoft's build:**
 
 ```bash
 flatpak install flathub com.visualstudio.code
 ```
 
-**Open-source builds:**
+**Of kies een open-source build:**
 
-- **Code - OSS:** `flatpak install flathub com.visualstudio.code.oss`
-- **VSCodium:** `flatpak install flathub com.vscodium.codium`
+```bash
+flatpak install flathub com.visualstudio.code.oss    # Code - OSS
+flatpak install flathub com.vscodium.codium          # VSCodium
+```
 
 {{< callout type="info" >}}
-**Sandbox-opmerking:** De Flatpak draait in een sandbox, wat voor een editor zwaarder weegt dan voor de meeste applicaties: extensies die toolchains aanroepen zien het bestandssysteem van de sandbox en niet dat van jou. Ontwikkel je tegen tools die op het hostsysteem zijn geïnstalleerd, draai VS Code dan vanuit een distrobox-container:
+**Flatpak sandboxing:** De Flatpak sandbox beperkt wat extensies kunnen benaderen. Extensies die externe toolchains aanroepen (compilers, linters, language servers op je host) zien alleen het bestandssysteem van de sandbox, niet dat van jou.
+
+**Workaround op Bazzite:** Voer VS Code uit vanuit een distrobox-container:
 
 ```bash
 distrobox-export --app code
 ```
 
-Dit voert VS Code uit met toegang tot de tools van de host terwijl de isolatie van de container behouden blijft. Dit is de standaard opzet op atomic systemen.
+Dit geeft extensies toegang tot host-tools terwijl de isolatie van de container behouden blijft. Dit is het standaardpatroon op atomic systemen.
 {{< /callout >}}
 
 {{< /tab >}}
