@@ -71,7 +71,7 @@ De eerste regel zegt `NVIDIA UNIX Open Kernel Module` op een `-nvidia-open`-imag
 
 ## Energiebeheer
 
-Deze twee instellingen gaan over deze laptop en niet over de driver, dus ze gelden hier precies zoals op CachyOS. `systemctl` schrijft naar `/etc`, en dat is op een atomic systeem van jou, dus beide overleven image-updates.
+Deze instelling gaat over deze laptop en niet over de driver, dus die geldt hier precies zoals op CachyOS. `systemctl` schrijft naar `/etc`, en dat is op een atomic systeem van jou, dus dat overleeft image-updates.
 
 {{% steps %}}
 
@@ -91,32 +91,6 @@ Deze services voorkomen GPU state problemen na suspend/resume cycli. Controleer 
 ```bash
 systemctl is-enabled nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service
 ```
-
-### Maskeer `nvidia-powerd` permanent
-
-De `nvidia-powerd.service` beheert NVIDIA Dynamic Boost, waarmee extra wattage (~5-15W) van de CPU naar de GPU geschoven wordt tijdens zware GPU-belasting. Hoewel nuttig op Intel-gebaseerde laptops, conflicteert het met AMD ATPX power management op de Zephyrus G16 en veroorzaakt soft lockups en "GPU has fallen off the bus" fouten.
-
-Op deze laptop wordt GPU-vermogensbeheer geregeld via ATPX (AMD-gestuurd via ACPI). De NVIDIA suspend/hibernate/resume services beheren power states correct zonder `nvidia-powerd`.
-
-**Wat je verliest door het uit te zetten:** Minimaal. Iets minder FPS bij zware GPU workloads. De ~5-15W Dynamic Boost is de instabiliteit niet waard op AMD ATPX hardware.
-
-```bash
-sudo systemctl disable nvidia-powerd.service
-sudo systemctl stop nvidia-powerd.service
-sudo systemctl mask nvidia-powerd.service
-```
-
-Het masker is een symlink naar `/dev/null` in `/etc/systemd/system`, dus ook als een nieuwe image de unit ingeschakeld meelevert, start hij niet.
-
-**Als je het later opnieuw wilt proberen** (bijv. na een kernel- of driver-update die het ATPX-conflict mogelijk verhelpt):
-
-```bash
-sudo systemctl unmask nvidia-powerd.service
-sudo systemctl enable --now nvidia-powerd.service
-```
-
-**Referentie:**
-- [NVIDIA Power Management Documentatie](https://download.nvidia.com/XFree86/Linux-x86_64/610.57.04/README/powermanagement.html)
 
 {{% /steps %}}
 
