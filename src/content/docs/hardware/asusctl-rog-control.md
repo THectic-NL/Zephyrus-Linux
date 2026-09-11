@@ -281,8 +281,6 @@ asusctl armoury set dgpu_disable 0
 
 > **Note:** A reboot or logout/login may be required after switching modes.
 
-> **Note:** `nvidia-powerd.service` no longer needs to stay masked on this laptop — the ATPX conflict that made it necessary is fixed upstream. See [NVIDIA Driver: CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) for the current guidance and [Known Issues]({{< relref "/docs/known-issues" >}}) for the history.
-
 {{% /details %}}
 
 {{% details title="App Settings (background & tray behavior)" closed="true" %}}
