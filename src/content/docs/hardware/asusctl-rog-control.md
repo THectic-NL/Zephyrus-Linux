@@ -71,13 +71,16 @@ This gives you:
 - `asusctl`: CLI frontend that communicates with asusd
 - `rog-control-center`: graphical frontend that communicates with asusd
 
-### Enable services
+### Confirm asusd is running
 
+Don't enable `asusd.service` yourself. It ships as a `static` unit with no `[Install]` section, so `systemctl enable` has nothing to do. On this hardware family (the udev rule matches ROG, Zephyrus, TUF, Strix and a few others), `99-asusd.rules` starts it automatically once the `asus-nb-wmi` kernel driver loads, and on Bazzite `ujust asus install` already enabled what it needs. [Upstream documents this directly](https://opengamingcollective.github.io/asusctl/distributions/arch.html): "the service doesn't need to be enabled and is not supposed to be."
+
+Confirm it's actually running:
 ```bash
-sudo systemctl enable --now asusd.service
+systemctl status asusd.service
 ```
 
-Reboot to ensure all services start correctly:
+Reboot if you just installed it, so the driver, udev rule, and daemon all initialize cleanly together:
 ```bash
 sudo reboot
 ```
@@ -222,7 +225,17 @@ asusctl profile --next
 asusctl profile
 ```
 
-> **Note:** Profile switching requires `power-profiles-daemon` to be running. See the installation steps above.
+{{< callout type="warning" >}}
+**Don't run `power-profiles-daemon` or `tuned` alongside asusd.** asusd manages performance profiles and CPU EPP directly through the `platform_profile` ACPI interface, and a competing daemon writing to the same interface causes race conditions. [Upstream recommends](https://opengamingcollective.github.io/asusctl/distributions/arch.html) picking one:
+
+```bash
+sudo systemctl mask --now power-profiles-daemon.service
+# or, if you use tuned instead:
+sudo systemctl mask --now tuned.service tuned-ppd.service
+```
+
+`mask`, not `disable`: the same reasoning as the `nvidia-powerd` conflict in [Known Issues]({{< relref "/docs/known-issues" >}}), a plain `disable` can get silently re-activated. If you'd rather keep the external daemon and let it own profile switching instead, turn off asusd's own management by setting `platform_profile_linked_epp`, `change_platform_profile_on_battery`, and `change_platform_profile_on_ac` to `false` in `/etc/asusd/asusd.ron`.
+{{< /callout >}}
 
 {{% /details %}}
 
@@ -428,5 +441,6 @@ Kernel 7.0 shipped in April 2026 and CachyOS picked it up fast. For this ASUS RO
 
 - [asus-linux.org](https://asus-linux.org/): official project site
 - [asusctl on GitHub](https://github.com/OpenGamingCollective/asusctl): source code and issue tracker
+- Upstream installation docs: [Arch](https://opengamingcollective.github.io/asusctl/distributions/arch.html) · [Bazzite](https://opengamingcollective.github.io/asusctl/distributions/bazzite.html) · [Fedora Atomic](https://opengamingcollective.github.io/asusctl/distributions/fedora-atomic.html)
 - [CachyOS Wiki: ASUS](https://wiki.cachyos.org/): CachyOS-specific documentation
 - NVIDIA driver setup and known issues: [CachyOS]({{< relref "/docs/cachyos/nvidia" >}}) · [Bazzite]({{< relref "/docs/bazzite/nvidia" >}})
