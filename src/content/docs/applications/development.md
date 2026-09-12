@@ -58,13 +58,13 @@ Shows your authenticated account and which protocol is configured.
 
 **Common `gh` commands:**
 
-- `gh repo create` — create a new repository
-- `gh pr list` — list pull requests
-- `gh pr view <number>` — view a specific PR
-- `gh pr checkout <number>` — check out a PR branch locally
-- `gh issue list` — list open issues
-- `gh issue create` — create a new issue
-- `gh release create <tag>` — create a release
+- `gh repo create`: create a new repository
+- `gh pr list`: list pull requests
+- `gh pr view <number>`: view a specific PR
+- `gh pr checkout <number>`: check out a PR branch locally
+- `gh issue list`: list open issues
+- `gh issue create`: create a new issue
+- `gh release create <tag>`: create a release
 
 For full reference, run `gh --help` or visit [cli.github.com](https://cli.github.com).
 
@@ -118,7 +118,7 @@ Same Flatpak sandbox caveat as VS Code: Git hooks run inside the sandbox and can
 
 ### Visual Studio Code
 
-Three package variants are available on Arch/CachyOS — they have similar names but fundamentally different purposes:
+Three package variants are available on Arch/CachyOS, with similar names but fundamentally different purposes:
 
 | Package | Source | What it is | Marketplace | Key difference |
 |---------|--------|-----------|-------------|------------------|
@@ -126,7 +126,7 @@ Three package variants are available on Arch/CachyOS — they have similar names
 | `vscodium` | CachyOS repo | Independent OSS build, same source, different foundation | Open VSX | Community alternative to Code - OSS |
 | `visual-studio-code-bin` | AUR | Official Microsoft binary, unmodified | Microsoft | Full proprietary extensions, Settings Sync via Microsoft account |
 
-**Critical: Package name doesn't mean Microsoft.** The default `code` package in CachyOS/Arch repos is **not** Microsoft's build—it's the open-source variant. To get Microsoft's official build with full marketplace access, you need `visual-studio-code-bin` from the AUR.
+**Critical: Package name doesn't mean Microsoft.** The default `code` package in CachyOS/Arch repos is **not** Microsoft's build. It's the open-source variant. To get Microsoft's official build with full marketplace access, you need `visual-studio-code-bin` from the AUR.
 
 #### Why the difference matters
 
@@ -134,13 +134,13 @@ Three package variants are available on Arch/CachyOS — they have similar names
 
 Microsoft's licensing terms prohibit the inclusion of proprietary extensions in open-source builds. These extensions are only available in the official Microsoft Marketplace:
 
-- **GitHub Copilot** — AI-powered code completion (Microsoft-exclusive)
-- **Remote - SSH** — develop on remote machines as if local
-- **Dev Containers / Remote - Containers** — seamless containerized development
-- **C/C++ Tools** — Microsoft's optimized C/C++ language support
-- **Pylance** — Python language server with type hints and intelligent completions
+- **GitHub Copilot**: AI-powered code completion (Microsoft-exclusive)
+- **Remote - SSH**: develop on remote machines as if local
+- **Dev Containers / Remote - Containers**: seamless containerized development
+- **C/C++ Tools**: Microsoft's optimized C/C++ language support
+- **Pylance**: Python language server with type hints and intelligent completions
 
-If your workflow relies on any of these—especially remote development, containerized environments, or language-specific tooling—the Microsoft build is the pragmatic choice.
+If your workflow relies on any of these, especially remote development, containerized environments, or language-specific tooling, the Microsoft build is the pragmatic choice.
 
 **Settings Sync:**
 - **Microsoft build:** Syncs via Microsoft/GitHub account, cross-device sync works out of the box
@@ -170,7 +170,7 @@ If your workflow relies on any of these—especially remote development, contain
    paru -S visual-studio-code-bin
    ```
 
-This downloads and re-packages the official Microsoft binary locally. Paru shows the PKGBUILD for review before building—a security advantage over helpers that skip this step.
+This downloads and re-packages the official Microsoft binary locally. Paru shows the PKGBUILD for review before building, a security advantage over helpers that skip this step.
 
 **Or stay with the open-source variant:**
 

@@ -58,13 +58,13 @@ Toont je geverifieerde account en welk protocol is geconfigureerd.
 
 **Veel voorkomende `gh` commando's:**
 
-- `gh repo create` — create een nieuwe repository
-- `gh pr list` — list pull requests
-- `gh pr view <number>` — bekijk een specifieke PR
-- `gh pr checkout <number>` — check out een PR-branch lokaal
-- `gh issue list` — list open issues
-- `gh issue create` — create een nieuwe issue
-- `gh release create <tag>` — create een release
+- `gh repo create`: create een nieuwe repository
+- `gh pr list`: list pull requests
+- `gh pr view <number>`: bekijk een specifieke PR
+- `gh pr checkout <number>`: check out een PR-branch lokaal
+- `gh issue list`: list open issues
+- `gh issue create`: create een nieuwe issue
+- `gh release create <tag>`: create een release
 
 Voor volledig referentie, voer `gh --help` uit of bezoek [cli.github.com](https://cli.github.com).
 
@@ -118,7 +118,7 @@ Zelfde Flatpak-sandbox-kanttekening als bij VS Code: Git hooks draaien binnen de
 
 ### Visual Studio Code
 
-Er zijn drie package-varianten beschikbaar op Arch/CachyOS — ze hebben vergelijkbare namen maar fundamenteel verschillende doeleinden:
+Er zijn drie package-varianten beschikbaar op Arch/CachyOS, met vergelijkbare namen maar fundamenteel verschillende doeleinden:
 
 | Package | Bron | Wat het is | Marketplace | Belangrijk verschil |
 |---------|------|-----------|-------------|----------------------|
@@ -126,7 +126,7 @@ Er zijn drie package-varianten beschikbaar op Arch/CachyOS — ze hebben vergeli
 | `vscodium` | CachyOS-repo | Onafhankelijke OSS-build, zelfde source, ander fundament | Open VSX | Community-alternatief voor Code - OSS |
 | `visual-studio-code-bin` | AUR | Officiële Microsoft-binary, ongewijzigd | Microsoft | Volledige proprietary extensies, Settings Sync via Microsoft-account |
 
-**Kritiek: Packagenaam betekent niet Microsoft.** De standaard `code` package in CachyOS/Arch repos is **niet** de Microsoft-build—het is de open-source variant. Voor Microsoft's officiële build met volledige marketplace-toegang heb je `visual-studio-code-bin` uit de AUR nodig.
+**Kritiek: Packagenaam betekent niet Microsoft.** De standaard `code` package in CachyOS/Arch repos is **niet** de Microsoft-build. Het is de open-source variant. Voor Microsoft's officiële build met volledige marketplace-toegang heb je `visual-studio-code-bin` uit de AUR nodig.
 
 #### Waarom het verschil ertoe doet
 
@@ -134,13 +134,13 @@ Er zijn drie package-varianten beschikbaar op Arch/CachyOS — ze hebben vergeli
 
 Microsoft's licentievoorwaarden verbieden de opname van proprietary extensies in open-source builds. Deze extensies zijn alleen beschikbaar in de officiële Microsoft Marketplace:
 
-- **GitHub Copilot** — AI-aangedreven code completion (Microsoft-exclusief)
-- **Remote - SSH** — op afstand machines ontwikkelen alsof ze lokaal zijn
-- **Dev Containers / Remote - Containers** — naadloze containergebaseerde ontwikkeling
-- **C/C++ Tools** — Microsoft's geoptimaliseerde C/C++-ondersteuning
-- **Pylance** — Python language server met type hints en intelligente aanvullingen
+- **GitHub Copilot**: AI-aangedreven code completion (Microsoft-exclusief)
+- **Remote - SSH**: op afstand machines ontwikkelen alsof ze lokaal zijn
+- **Dev Containers / Remote - Containers**: naadloze containergebaseerde ontwikkeling
+- **C/C++ Tools**: Microsoft's geoptimaliseerde C/C++-ondersteuning
+- **Pylance**: Python language server met type hints en intelligente aanvullingen
 
-Als je workflow afhankelijk is van deze—vooral remote development, containerized omgevingen of taalspecifieke tooling—is de Microsoft-build de pragmatische keus.
+Als je workflow afhankelijk is van deze, vooral remote development, containerized omgevingen of taalspecifieke tooling, is de Microsoft-build de pragmatische keus.
 
 **Settings Sync:**
 - **Microsoft-build:** Synchroniseert via Microsoft/GitHub-account, cross-device sync werkt out of the box
@@ -170,7 +170,7 @@ Als je workflow afhankelijk is van deze—vooral remote development, containeriz
    paru -S visual-studio-code-bin
    ```
 
-Dit downloadt en herpackages het officiële Microsoft-binary lokaal. Paru toont de PKGBUILD ter review voor het bouwen—een voordeel op het gebied van beveiliging ten opzichte van helpers die deze stap overslaan.
+Dit downloadt en herpackages het officiële Microsoft-binary lokaal. Paru toont de PKGBUILD ter review voor het bouwen, een voordeel op het gebied van beveiliging ten opzichte van helpers die deze stap overslaan.
 
 **Of blijf bij de open-source variant:**
 
