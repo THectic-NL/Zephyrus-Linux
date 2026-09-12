@@ -50,7 +50,7 @@ Source: [mt7925-tune.sh](/scripts/mt7925-tune.sh). `status` shows which changes 
 | ASPM disabled + NM powersave off | 410-450 Mbit/s |
 | Everything (script `enable`) | 500-608 Mbit/s, usually 560+ |
 
-Roughly double stock, sometimes more. For reference, a phone (Samsung Galaxy S24 Ultra) on the same network measured 439-487 Mbit/s, so the tuned G16 is now at or above a modern phone's Wi-Fi radio on this network.
+Roughly double stock, sometimes more. For reference, a phone (Samsung Galaxy S24 Ultra) on the same AP measured 439-811 Mbit/s across several runs (average around 545 Mbit/s), so the tuned G16 is now in the same range as a modern phone's Wi-Fi radio here. On a stronger/closer AP the same phone hit 1.24 Gbit/s, well above what the MT7925's 160MHz ceiling can ever reach regardless of signal quality.
 
 {{< callout type="warning" >}}
 Expect run-to-run variance even in a stable, tuned state (repeated 20s runs ranged 509-598 Mbit/s back to back with nothing changed). Right after a reboot or reconnect it's worse: retries can spike hard before the link settles (seen: 3000+ retries in one run). Judge the fix on a few runs, not one, and never on the very first test after rebooting.

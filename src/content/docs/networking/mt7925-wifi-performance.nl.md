@@ -50,7 +50,7 @@ Bron: [mt7925-tune.sh](/scripts/mt7925-tune.sh). `status` laat zien welke wijzig
 | ASPM uit + NM-powersave uit | 410-450 Mbit/s |
 | Alles (script `enable`) | 500-608 Mbit/s, meestal 560+ |
 
-Ruwweg het dubbele van stock, soms meer. Ter referentie: een telefoon (Samsung Galaxy S24 Ultra) op hetzelfde netwerk mat 439-487 Mbit/s, dus de getunede G16 zit nu op of boven het niveau van de wifi-radio van een moderne telefoon op dit netwerk.
+Ruwweg het dubbele van stock, soms meer. Ter referentie: een telefoon (Samsung Galaxy S24 Ultra) op dezelfde AP mat 439-811 Mbit/s over meerdere runs (gemiddeld rond de 545 Mbit/s), dus de getunede G16 zit nu in hetzelfde bereik als de wifi-radio van een moderne telefoon hier. Op een sterkere/dichterbije AP haalde diezelfde telefoon 1,24 Gbit/s, ruim boven wat het 160MHz-plafond van de MT7925 ooit kan bereiken, ongeacht signaalkwaliteit.
 
 {{< callout type="warning" >}}
 Verwacht variatie tussen runs, ook in een stabiele, getunede staat (herhaalde runs van 20s liepen uiteen van 509-598 Mbit/s zonder dat er iets veranderde). Direct na een herstart of reconnect is het erger: retries kunnen fors pieken voordat de verbinding settelt (gezien: 3000+ retries in één run). Beoordeel de fix op een paar runs, niet op één, en nooit op de allereerste test na een herstart.
