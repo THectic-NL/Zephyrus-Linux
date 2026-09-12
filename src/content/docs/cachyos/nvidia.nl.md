@@ -57,13 +57,14 @@ Als de modules zichtbaar zijn, is de driver geladen. Zo niet, en Secure Boot sta
 Activeer de NVIDIA power services voor beter suspend/resume-gedrag en energiebeheer:
 
 ```bash
-sudo systemctl enable nvidia-hibernate.service nvidia-suspend.service nvidia-resume.service
+sudo systemctl enable nvidia-hibernate.service nvidia-suspend.service nvidia-resume.service nvidia-suspend-then-hibernate.service
 ```
 
 **Wat deze services doen:**
 - `nvidia-hibernate.service` - Slaat de GPU state correct op vóór hibernation
 - `nvidia-suspend.service` - Beheert GPU state tijdens system suspend
 - `nvidia-resume.service` - Herstelt GPU state na resume
+- `nvidia-suspend-then-hibernate.service` - Hetzelfde als `nvidia-suspend.service`, maar voor de gecombineerde suspend-then-hibernate sleep-actie
 
 Deze services voorkomen GPU state problemen na suspend/resume cycli.
 
