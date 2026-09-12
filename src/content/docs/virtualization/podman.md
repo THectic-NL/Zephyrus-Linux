@@ -13,7 +13,7 @@ Podman also integrates well with **systemd**, which makes sense since it is made
 
 For me it covers everything I need. Compose, Kubernetes and rootless networking are already built in. Docker compatibility means I can keep using the `docker` CLI and existing `docker-compose` files without any changes.
 
-> See the [Development]({{< relref "/docs/applications#podman--podman-desktop" >}}) section in Applications for the short installation summary.
+> See the [Development]({{< relref "/docs/applications/development#podman--podman-desktop" >}}) page in Applications for the short installation summary.
 
 ---
 
