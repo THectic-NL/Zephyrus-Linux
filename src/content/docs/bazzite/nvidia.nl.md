@@ -78,18 +78,19 @@ Deze instelling gaat over deze laptop en niet over de driver, dus die geldt hier
 ### Zet de NVIDIA power services aan
 
 ```bash
-sudo systemctl enable nvidia-hibernate.service nvidia-suspend.service nvidia-resume.service
+sudo systemctl enable nvidia-hibernate.service nvidia-suspend.service nvidia-resume.service nvidia-suspend-then-hibernate.service
 ```
 
 **Wat deze services doen:**
 - `nvidia-hibernate.service` - Slaat de GPU state correct op vóór hibernation
 - `nvidia-suspend.service` - Beheert GPU state tijdens system suspend
 - `nvidia-resume.service` - Herstelt GPU state na resume
+- `nvidia-suspend-then-hibernate.service` - Hetzelfde als `nvidia-suspend.service`, maar voor de gecombineerde suspend-then-hibernate sleep-actie
 
 Deze services voorkomen GPU state problemen na suspend/resume cycli. Controleer eerst of de image ze al heeft aangezet:
 
 ```bash
-systemctl is-enabled nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service
+systemctl is-enabled nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service nvidia-suspend-then-hibernate.service
 ```
 
 {{% /steps %}}
