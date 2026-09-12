@@ -48,12 +48,12 @@ Bron: [mt7925-tune.sh](/scripts/mt7925-tune.sh). `status` laat zien welke wijzig
 |---|---|
 | Stock | ~300 Mbit/s |
 | ASPM uit + NM-powersave uit | 410-450 Mbit/s |
-| Alles (script `enable`) | 598-608 Mbit/s |
+| Alles (script `enable`) | 500-608 Mbit/s, meestal 560+ |
 
-Ruwweg het dubbele van stock. Ter referentie: een telefoon (Samsung Galaxy S24 Ultra) op hetzelfde netwerk mat 439-487 Mbit/s, dus de getunede G16 zit nu dicht bij de wifi-radio van een moderne telefoon op dit netwerk.
+Ruwweg het dubbele van stock, soms meer. Ter referentie: een telefoon (Samsung Galaxy S24 Ultra) op hetzelfde netwerk mat 439-487 Mbit/s, dus de getunede G16 zit nu op of boven het niveau van de wifi-radio van een moderne telefoon op dit netwerk.
 
 {{< callout type="warning" >}}
-Direct na een herstart of reconnect kunnen retries fors pieken voordat de verbinding settelt (gezien: 3000+ retries in één run). Beoordeel de fix niet op de allereerste test na een herstart; reconnect eenmaal en test opnieuw.
+Verwacht variatie tussen runs, ook in een stabiele, getunede staat (herhaalde runs van 20s liepen uiteen van 509-598 Mbit/s zonder dat er iets veranderde). Direct na een herstart of reconnect is het erger: retries kunnen fors pieken voordat de verbinding settelt (gezien: 3000+ retries in één run). Beoordeel de fix op een paar runs, niet op één, en nooit op de allereerste test na een herstart.
 {{< /callout >}}
 
 **Op UniFi:** heb je meerdere AP's, dan is de standaard 6GHz roaming RSSI-drempel (-88 dBm) permissief genoeg dat een client op een zwak signaal blijft hangen ruim voorbij het punt waar retries beginnen op te lopen (merkbaar onder ongeveer -62 dBm in tests). Aanscherpen naar ongeveer -70 dBm (jouw SSID → Advanced → Roaming Assistance → Handoff Suggestions) hielp.

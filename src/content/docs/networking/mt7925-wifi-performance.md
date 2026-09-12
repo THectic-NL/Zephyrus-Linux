@@ -48,12 +48,12 @@ Source: [mt7925-tune.sh](/scripts/mt7925-tune.sh). `status` shows which changes 
 |---|---|
 | Stock | ~300 Mbit/s |
 | ASPM disabled + NM powersave off | 410-450 Mbit/s |
-| Everything (script `enable`) | 598-608 Mbit/s |
+| Everything (script `enable`) | 500-608 Mbit/s, usually 560+ |
 
-Roughly double stock. For reference, a phone (Samsung Galaxy S24 Ultra) on the same network measured 439-487 Mbit/s, so the tuned G16 is now close to a modern phone's Wi-Fi radio on this network.
+Roughly double stock, sometimes more. For reference, a phone (Samsung Galaxy S24 Ultra) on the same network measured 439-487 Mbit/s, so the tuned G16 is now at or above a modern phone's Wi-Fi radio on this network.
 
 {{< callout type="warning" >}}
-Right after a reboot or reconnect, retries can spike hard before the link settles (seen: 3000+ retries in one run). Don't judge the fix on the very first test after rebooting; reconnect once and retest.
+Expect run-to-run variance even in a stable, tuned state (repeated 20s runs ranged 509-598 Mbit/s back to back with nothing changed). Right after a reboot or reconnect it's worse: retries can spike hard before the link settles (seen: 3000+ retries in one run). Judge the fix on a few runs, not one, and never on the very first test after rebooting.
 {{< /callout >}}
 
 **On UniFi:** if you have multiple APs, the default 6GHz roaming RSSI threshold (-88 dBm) is permissive enough that a client can stay on a weak signal well past the point retries start climbing (noticeable below roughly -62 dBm in testing). Tightening it to around -70 dBm (your SSID → Advanced → Roaming Assistance → Handoff Suggestions) helped.
