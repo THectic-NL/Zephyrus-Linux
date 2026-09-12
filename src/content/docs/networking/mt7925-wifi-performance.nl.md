@@ -11,6 +11,8 @@ Dit is een script dat vier fixes tegelijk toepast (NetworkManager-powersave, PCI
 
 {{< callout type="info" >}}
 **Geverifieerd op deze hardware.** Getest met `iperf3` tegen een lokale server op een 2,5GbE-netwerk met UniFi. Stock: ~300 Mbit/s. Getuned: 500-608 Mbit/s, meestal 560+. Jouw cijfers variëren met AP, signaalsterkte en kernelversie, maar de fixes zelf zijn bevestigd, niet theoretisch.
+
+Testomstandigheden, want die beïnvloeden de cijfers: een UniFi U7 Pro access point, in een houten kast, ongeveer 10 meter van de laptop met een muur ertussen. 6GHz-band, 160MHz-kanaal (het maximum van deze kaart), signaal variërend van -62 tot -71 dBm over de runs, meestal -63 tot -66 dBm. Dat is een realistische alledaagse afstand, geen beste-geval-test in dezelfde kamer, dus zie de cijfers hierboven als een redelijke baseline en niet als plafond.
 {{< /callout >}}
 
 ## Installatie

@@ -11,6 +11,8 @@ This is a script that applies four fixes at once (NetworkManager power saving, P
 
 {{< callout type="info" >}}
 **Verified on this hardware.** Tested with `iperf3` against a local server on a 2.5GbE UniFi network. Stock: ~300 Mbit/s. Tuned: 500-608 Mbit/s, usually 560+. Your numbers will vary with AP, signal strength, and kernel version, but the fixes themselves are confirmed, not theoretical.
+
+Test conditions, since they affect the numbers: a UniFi U7 Pro access point, in a wooden cabinet, roughly 10 meters from the laptop with a wall in between. 6GHz band, 160MHz channel (this card's max), signal ranging -62 to -71 dBm across runs, mostly -63 to -66 dBm. That's a realistic everyday distance, not a best-case same-room test, so treat the numbers above as a reasonable baseline rather than a ceiling.
 {{< /callout >}}
 
 ## Setup
