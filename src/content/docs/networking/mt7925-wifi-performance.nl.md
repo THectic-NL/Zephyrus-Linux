@@ -11,13 +11,16 @@ De G16 GA605WV heeft een MediaTek Wi-Fi 7 MT7925-kaart. Zie je af en toe verbind
 **Geverifieerd op deze hardware.** Alles hieronder is getest en gemeten op deze G16, tegen een lokale iperf3-server op een 2,5GbE-netwerk met UniFi (U7 Pro access points). Baseline was 300 Mbit/s; met de fixes en tuning hieronder een stabiele 600+ Mbit/s. Jouw cijfers variëren met AP, signaalsterkte en kernelversie, maar het mechanisme en de fixes zijn bevestigd, niet theoretisch.
 {{< /callout >}}
 
-## Drie losse oorzaken, geen één
+## Twee losse oorzaken, geen één
 
-Dit soort klachten wordt meestal op "wifi-powersave" geschoven, maar op deze chip zitten drie onafhankelijke lagen die elk dit gedrag kunnen veroorzaken, en een fix voor de één raakt de andere niet:
+Dit soort klachten wordt meestal op "wifi-powersave" geschoven, maar op deze chip zitten twee onafhankelijke lagen die elk dit gedrag kunnen veroorzaken, en een fix voor de één raakt de andere niet:
 
-1. **De powersave van de `mt7925e`-driver zelf.** Een patch uit december 2023 zette de standaardinstelling van de driver op powersave *uit*. Op de kernel van deze G16 (7.2.4) bestaat de `power_save`-moduleparameter niet eens meer — hij is vervangen, en het instellen ervan in `modprobe.d` wordt stilzwijgend genegeerd (`mt7925e: unknown parameter 'power_save' ignored` in `dmesg`). Powersave staat al standaard uit; er valt hier niets meer vast te zetten.
-2. **NetworkManager's eigen 802.11-powersave.** Dit is een aparte laag, los van wat de driver standaard doet. NetworkManager kan de radio nog steeds in standaard powersave-modus zetten ongeacht de driverinstelling, en dit is de meest gerapporteerde oorzaak van drops en traag roamen op mesh-netwerken.
-3. **PCIe ASPM (Active State Power Management).** Een compleet ander mechanisme, over de energiestatus van de PCIe-link zelf, niet de radio. Dit is degene die er op deze hardware echt toe doet — bevestigd in `dmesg` (`mt7925e 0000:63:00.0: disabling ASPM L1`) en de belangrijkste echte fix hieronder.
+1. **NetworkManager's eigen 802.11-powersave.** De meest gerapporteerde oorzaak van drops en traag roamen op mesh-netwerken.
+2. **PCIe ASPM (Active State Power Management).** Over de energiestatus van de PCIe-link zelf, niet de radio. Dit is degene die er op deze hardware echt toe doet — bevestigd in `dmesg` (`mt7925e 0000:63:00.0: disabling ASPM L1`) en de belangrijkste echte fix hieronder.
+
+{{< callout type="info" >}}
+Oudere gidsen noemen ook het vastzetten van de `power_save`-moduleparameter van de `mt7925e`-driver zelf. Op de kernel van deze G16 (7.2.4) bestaat die parameter niet meer — `dmesg` toont `mt7925e: unknown parameter 'power_save' ignored`. Sla dit over.
+{{< /callout >}}
 
 ## De fix
 

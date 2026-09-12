@@ -11,13 +11,16 @@ The G16 GA605WV ships a MediaTek Wi-Fi 7 MT7925 card. If you occasionally see dr
 **Verified on this hardware.** Everything below has been tested and measured on this G16, against a local iperf3 server on a 2.5GbE-backed UniFi network (U7 Pro access points). Baseline was 300 Mbit/s; with the fixes and tuning below, a stable 600+ Mbit/s. Your numbers will vary with AP, signal strength, and kernel version, but the mechanism and the fixes are confirmed, not theoretical.
 {{< /callout >}}
 
-## Three separate causes, not one
+## Two separate causes, not one
 
-Symptoms like these usually get blamed on "Wi-Fi power saving," but on this chip there are three independent layers that can each cause exactly this behavior, and a fix for one doesn't touch the others:
+Symptoms like these usually get blamed on "Wi-Fi power saving," but on this chip there are two independent layers that can each cause exactly this behavior, and a fix for one doesn't touch the other:
 
-1. **The `mt7925e` driver's own power saving.** A December 2023 patch changed the driver's default to power saving *off*. On this G16's kernel (7.2.4), the `power_save` module parameter no longer even exists — it was superseded, and setting it in `modprobe.d` is silently ignored (`mt7925e: unknown parameter 'power_save' ignored` in `dmesg`). Power saving is off by default already; there's nothing to pin here anymore.
-2. **NetworkManager's own 802.11 power saving.** This is a separate layer, independent of what the driver defaults to. NetworkManager can still put the radio into standard power-save mode regardless of the driver setting, and this is the most commonly reported cause of drops and slow mesh roaming.
-3. **PCIe ASPM (Active State Power Management).** A different mechanism entirely, about the PCIe link's own power state rather than the radio. This is the one that actually matters on this hardware — confirmed in `dmesg` (`mt7925e 0000:63:00.0: disabling ASPM L1`) and the main real fix below.
+1. **NetworkManager's own 802.11 power saving.** The most commonly reported cause of drops and slow mesh roaming.
+2. **PCIe ASPM (Active State Power Management).** About the PCIe link's own power state rather than the radio. This is the one that actually matters on this hardware — confirmed in `dmesg` (`mt7925e 0000:63:00.0: disabling ASPM L1`) and the main real fix below.
+
+{{< callout type="info" >}}
+Older guides also mention pinning the `mt7925e` driver's own `power_save` module parameter. On this G16's kernel (7.2.4) that parameter no longer exists — `dmesg` shows `mt7925e: unknown parameter 'power_save' ignored`. Skip it.
+{{< /callout >}}
 
 ## The fix
 
