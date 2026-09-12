@@ -199,7 +199,9 @@ Brave, VS Code, and other Chromium-based applications (Chrome, Edge, Electron ap
 
 {{% /details %}}
 
-{{% details title="NVIDIA soft lockup / 'GPU has fallen off the bus'" closed="true" %}}
+{{% details title="NVIDIA soft lockup / 'GPU has fallen off the bus' (fixed upstream)" closed="true" %}}
+
+**Fixed upstream.** This conflict is gone as of a kernel somewhere between 6.16 and 6.17 (exact commit not pinned down). `nvidia-powerd` has been unmasked and running for months since without a single lockup, and masking it is no longer part of the standard setup. The fix below is kept for anyone still on an older kernel who runs into this.
 
 **What's happening:**
 System freezes with an NVIDIA soft lockup, even without active GPU use. Kernel logs show:
@@ -242,7 +244,7 @@ Shows the hardware watchdog failed to stop, confirming the ACPI reboot never com
 watchdog: watchdog0: watchdog did not stop!
 ```
 
-**Fix:**
+**Fix (only needed on kernels older than 6.16-6.17):**
 
 1. Disable and **mask** `nvidia-powerd` (masking is essential, `disable` alone is not enough because `supergfxd` bypasses it):
 ```bash
@@ -263,8 +265,6 @@ sudo reboot
 
 **Background:**
 On laptops with AMD iGPU + NVIDIA dGPU, the ATPX framework (via ACPI) controls which GPU is active. `nvidia-powerd` tries to make power decisions independently, which conflicts with ATPX. The `NVreg_PreserveVideoMemoryAllocations=1` parameter prevents VRAM from being lost during power transitions, and `nvidia-drm.fbdev=1` provides cleaner framebuffer handoff.
-
-**Update: fixed upstream.** This conflict is gone as of a kernel somewhere between 6.16 and 6.17 (exact commit not pinned down). `nvidia-powerd` has been unmasked and running for months since without a single lockup, and masking it is no longer part of the standard setup. Left in place for anyone still on an older kernel who runs into this.
 
 {{% /details %}}
 
