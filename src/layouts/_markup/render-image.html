@@ -1,0 +1,87 @@
+{{- /* Overrides the Hextra render hook: adds explicit width/height to every
+       image. Hextra's own markup lazy-loads images but never sets their
+       dimensions, which trips browsers' "lazy-loaded images should have
+       explicit dimensions" check and causes layout shift while an image is
+       still loading. Resource-backed images (assets/page bundles) already
+       know their size; images living under static/ never go through Hugo's
+       resource pipeline, so their size is read directly off disk. */ -}}
+{{- $alt := .PlainText | safeHTML -}}
+{{- $lazyLoading := .Page.Site.Params.enableImageLazyLoading | default true -}}
+{{- $enableImageZoom := .Page.Site.Params.imageZoom.enable | default false -}}
+{{- if not (eq .Page.Params.imageZoom nil) -}}
+  {{- $enableImageZoom = .Page.Params.imageZoom -}}
+{{- end -}}
+{{- $dest := .Destination -}}
+{{- $rawDest := $dest -}}
+{{- $url := urls.Parse $dest -}}
+
+{{- $isLocal := not $url.Scheme -}}
+{{- $isPage := and (eq .Page.Kind "page") (not .Page.BundleType) -}}
+{{- $startsWithSlash := hasPrefix $dest "/" -}}
+{{- $startsWithRelative := hasPrefix $dest "../" -}}
+
+{{- $imgResource := "" -}}
+{{- if and $dest $isLocal -}}
+  {{- if $startsWithSlash -}}
+    {{- with or (.PageInner.Resources.Get $url.Path) (resources.Get $url.Path) -}}
+      {{- $imgResource = . -}}
+      {{/* Images under assets directory */}}
+      {{- $query := cond $url.RawQuery (printf "?%s" $url.RawQuery) "" -}}
+      {{- $fragment := cond $url.Fragment (printf "#%s" $url.Fragment) "" -}}
+      {{- $dest = printf "%s%s%s" .RelPermalink $query $fragment -}}
+    {{- else -}}
+      {{/* Images under static directory */}}
+      {{- $dest = (relURL (strings.TrimPrefix "/" $dest)) -}}
+    {{- end -}}
+  {{- else -}}
+    {{/* Resolve page bundle resource for multilingual permalink */}}
+    {{- with .PageInner.Resources.Get (strings.TrimPrefix "./" $url.Path) -}}
+      {{- $imgResource = . -}}
+      {{- $query := cond $url.RawQuery (printf "?%s" $url.RawQuery) "" -}}
+      {{- $fragment := cond $url.Fragment (printf "#%s" $url.Fragment) "" -}}
+      {{- $dest = printf "%s%s%s" .RelPermalink $query $fragment -}}
+    {{- else -}}
+      {{- if and $isPage (not $startsWithRelative) -}}
+        {{ $dest = (printf "../%s" $dest) }}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $attributes := "" -}}
+{{- $hasWidth := false -}}
+{{- $hasHeight := false -}}
+{{- range $key, $value := .Attributes -}}
+  {{- if $value -}}
+    {{- if eq $key "width" -}}{{- $hasWidth = true -}}{{- end -}}
+    {{- if eq $key "height" -}}{{- $hasHeight = true -}}{{- end -}}
+    {{- $pair := printf "%s=%q" $key ($value | transform.HTMLEscape) -}}
+    {{- $attributes = printf "%s %s" $attributes $pair -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $dimensions := "" -}}
+{{- if and (not $hasWidth) (not $hasHeight) -}}
+  {{- if and $imgResource (eq $imgResource.ResourceType "image") -}}
+    {{- $dimensions = printf " width=%d height=%d" $imgResource.Width $imgResource.Height -}}
+  {{- else if and $isLocal $startsWithSlash -}}
+    {{- with try (images.Config (printf "static%s" $rawDest)) -}}
+      {{- if not .Err -}}
+        {{- $dimensions = printf " width=%d height=%d" .Value.Width .Value.Height -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- if $enableImageZoom -}}
+  {{- .Page.Store.Set "hasImageZoom" true -}}
+{{- end -}}
+
+{{- with .Title -}}
+  <figure>
+    <img src="{{ $dest | safeURL }}" title="{{ . }}" alt="{{ $alt }}" {{ $attributes | safeHTMLAttr }}{{ $dimensions | safeHTMLAttr }}{{ if $enableImageZoom }} data-zoomable{{ end }}{{ if $lazyLoading }} loading="lazy"{{ end }} />
+    <figcaption>{{ . }}</figcaption>
+  </figure>
+{{- else -}}
+  <img src="{{ $dest | safeURL }}" alt="{{ $alt }}" {{ $attributes | safeHTMLAttr }}{{ $dimensions | safeHTMLAttr }}{{ if $enableImageZoom }} data-zoomable{{ end }}{{ if $lazyLoading }} loading="lazy"{{ end }} />
+{{- end -}}
