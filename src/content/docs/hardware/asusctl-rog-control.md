@@ -52,13 +52,13 @@ When you generate your download on [bazzite.gg](https://bazzite.gg/), use the ha
 Don't layer `asusctl`/`rog-control-center` into the image yourself with `rpm-ostree install`. `asusd` is a system daemon with a kernel-facing job, which is normally a case for layering, but Bazzite ships its own maintained install path for it:
 
 ```bash
-ujust asus install
+ujust asus
 ```
 
 Installs `asusctl-linux` and `rog-control-center-linux` as Homebrew casks and enables the required services right away. No image layering, no reboot. The same install/uninstall toggle also shows up as "asusctl & ROG Control Center" in the first-boot setup wizard (yafti), if you'd rather turn it on there.
 
 {{< callout type="warning" >}}
-Already layered `asusctl`/`rog-control-center` from an older guide, including an earlier version of this page? `ujust asus install` detects the layered packages, offers to remove them for you, then installs the Homebrew version in their place.
+Already layered `asusctl`/`rog-control-center` from an older guide, including an earlier version of this page? `ujust asus` detects the layered packages, offers to remove them for you, then installs the Homebrew version in their place.
 {{< /callout >}}
 
 Older guides (including an earlier version of this page) point at the Terra repo or the unmaintained `lukenukem/asus-linux` COPR for these packages. Neither is needed for this anymore.
@@ -73,7 +73,7 @@ This gives you:
 
 ### Confirm asusd is running
 
-Don't enable `asusd.service` yourself. It ships as a `static` unit with no `[Install]` section, so `systemctl enable` has nothing to do. On this hardware family (the udev rule matches ROG, Zephyrus, TUF, Strix and a few others), `99-asusd.rules` starts it automatically once the `asus-nb-wmi` kernel driver loads, and on Bazzite `ujust asus install` already enabled what it needs. [Upstream documents this directly](https://opengamingcollective.github.io/asusctl/distributions/arch.html): "the service doesn't need to be enabled and is not supposed to be."
+Don't enable `asusd.service` yourself. It ships as a `static` unit with no `[Install]` section, so `systemctl enable` has nothing to do. On this hardware family (the udev rule matches ROG, Zephyrus, TUF, Strix and a few others), `99-asusd.rules` starts it automatically once the `asus-nb-wmi` kernel driver loads, and on Bazzite `ujust asus` already enabled what it needs. [Upstream documents this directly](https://opengamingcollective.github.io/asusctl/distributions/arch.html): "the service doesn't need to be enabled and is not supposed to be."
 
 Confirm it's actually running:
 ```bash
@@ -234,7 +234,7 @@ sudo systemctl mask --now power-profiles-daemon.service
 sudo systemctl mask --now tuned.service tuned-ppd.service
 ```
 
-`mask`, not `disable`: the same reasoning as the `nvidia-powerd` conflict in [Known Issues]({{< relref "/docs/known-issues" >}}), a plain `disable` can get silently re-activated. If you'd rather keep the external daemon and let it own profile switching instead, turn off asusd's own management by setting `platform_profile_linked_epp`, `change_platform_profile_on_battery`, and `change_platform_profile_on_ac` to `false` in `/etc/asusd/asusd.ron`.
+`mask`, not `disable`: [upstream notes](https://opengamingcollective.github.io/asusctl/distributions/bazzite.html) that KDE Plasma's PowerDevil can respawn `power-profiles-daemon` via D-Bus activation even after a plain `disable`, the same class of problem as the `nvidia-powerd` conflict in [Known Issues]({{< relref "/docs/known-issues" >}}). If you'd rather keep the external daemon and let it own profile switching instead, turn off asusd's own management by setting `platform_profile_linked_epp`, `change_platform_profile_on_battery`, and `change_platform_profile_on_ac` to `false` in `/etc/asusd/asusd.ron`.
 {{< /callout >}}
 
 {{% /details %}}
