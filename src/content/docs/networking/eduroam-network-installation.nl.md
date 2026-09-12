@@ -2,7 +2,7 @@
 title: "eduroam Netwerkinstallatie"
 weight: 1
 prev: docs/applications
-next: docs/virtualization/vm-setup
+next: docs/networking/mt7925-wifi-performance
 ---
 
 Elke officiële eduroam-installer die ik probeerde faalde op Saxion: de verbinding hangt tijdens de TLS-handshake en komt nooit door. De oorzaak is een certificaatmismatch. Saxion's gepubliceerde CAT-profiel legt nog de oude GÉANT/USERTrust-keten vast, terwijl de RADIUS-server inmiddels naar HARICA-roots ketent ([#109](https://github.com/THectic-NL/Zephyrus-Linux/issues/109)).

@@ -1,7 +1,7 @@
 ---
 title: "Virt-Manager / KVM"
 weight: 1
-prev: docs/networking/eduroam-network-installation
+prev: docs/networking/mt7925-wifi-performance
 next: docs/virtualization/quickemu
 ---
 
