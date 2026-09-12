@@ -68,6 +68,54 @@ Shows your authenticated account and which protocol is configured.
 
 For full reference, run `gh --help` or visit [cli.github.com](https://cli.github.com).
 
+### GitHub Desktop
+
+For everyday Git work (commit, branch, diff, push/pull) without the command line, GitHub Desktop is a GUI option. Two variants:
+
+- **GitHub Desktop**: the standard Linux port of the official app.
+- **[Desktop Plus](https://desktop-plus.org/)**: an actively maintained community fork with extra features (commit search, multiple accounts, Bitbucket/GitLab/Codeberg/Gitea support, a commit graph) and no Microsoft telemetry.
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+**GitHub Desktop:**
+
+```bash
+sudo pacman -S github-desktop
+```
+
+Available in the [CachyOS repository](https://packages.cachyos.org/package/cachyos/x86_64/github-desktop).
+
+**Desktop Plus:**
+
+```bash
+paru -S desktop-plus-bin
+```
+
+Available in the [AUR](https://aur.archlinux.org/packages/desktop-plus-bin).
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+**GitHub Desktop:**
+
+```bash
+flatpak install flathub io.github.shiftey.Desktop
+```
+
+**Desktop Plus:**
+
+```bash
+flatpak install flathub org.desktop_plus.desktop-plus
+```
+
+{{< callout type="info" >}}
+Same Flatpak sandbox caveat as VS Code: Git hooks run inside the sandbox and can't reach toolchains, version managers, or linters installed on the host. If your hooks depend on host tools, run either app from a distrobox container instead and export it with `distrobox-export --app <package>`.
+{{< /callout >}}
+
+{{< /tab >}}
+{{< /tabs >}}
+
 ### Visual Studio Code
 
 Three package variants are available on Arch/CachyOS — they have similar names but fundamentally different purposes:
