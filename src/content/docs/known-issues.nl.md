@@ -494,12 +494,6 @@ Als hij laadt, heropen ROG Control Center; de melding zou verdwenen moeten zijn 
 
 {{% /details %}}
 
-{{% details title="Prestatieprofiel 'Silent' heet 'Quiet' in de GUI" closed="true" %}}
-
-Het tabblad Fan Curves in ROG Control Center noemt dit profiel **Quiet**. De CLI (`asusctl profile -P Silent`) gebruikt nog steeds `Silent`, bevestigd nog steeds de juiste waarde. Puur een cosmetische GUI-herbenaming, geen omgedoopt profiel.
-
-{{% /details %}}
-
 
 ## Secure Boot
 

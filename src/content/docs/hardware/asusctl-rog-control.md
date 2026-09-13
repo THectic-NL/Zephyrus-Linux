@@ -148,15 +148,15 @@ Limiting the charge to 80% significantly extends battery lifespan. The laptop ru
 
 **Set via CLI:**
 ```bash
-asusctl battery --charge-limit 80
+asusctl battery limit 80
 ```
 
 **Set via GUI:**
-Open ROG Control Center (`rog-control-center`) → System Control → Battery Charge Limit.
+Open ROG Control Center (`rog-control-center`) → System Control → Battery Info → Charge limit.
 
 **Verify:**
 ```bash
-asusctl battery
+asusctl battery info
 ```
 
 This setting persists across reboots and is managed by `asusd`.
@@ -169,14 +169,14 @@ The Slash LED is the diagonal light bar on the lid of the G16. It supports multi
 
 **Show available animations:**
 ```bash
-asusctl slash --list
+asusctl slash list
 ```
 
 Available animations: `Static`, `Bounce`, `Slash`, `Loading`, `BitStream`, `Transmission`, `Flow`, `Flux`, `Phantom`, `Spectrum`, `Hazard`, `Interfacing`, `Ramp`, `GameOver`, `Start`, `Buzzer`
 
 **Recommended setup (AC only, off on battery and during sleep):**
 ```bash
-asusctl slash --enable -b false -s false
+asusctl slash set --enable -b false -s false
 ```
 
 **What these flags do:**
@@ -186,12 +186,12 @@ asusctl slash --enable -b false -s false
 
 **Set animation:**
 ```bash
-asusctl slash --mode Spectrum
+asusctl slash set --mode Spectrum
 ```
 
 **Set brightness (0–255):**
 ```bash
-asusctl slash -l 128
+asusctl slash set -l 128
 ```
 
 ![ROG Control Center - Slash Lighting](/images/rog-control-slash-lighting.avif)
@@ -204,25 +204,25 @@ asusctl provides three performance profiles that control CPU/GPU power limits an
 
 | Profile | Description |
 |---------|-------------|
-| `Silent` | Low power, quiet fans, throttled performance |
+| `Quiet` (a.k.a. `LowPower`) | Low power, quiet fans, throttled performance. asusctl exposes whichever of the two names the kernel's `platform_profile` handler registers for this hardware, and auto-substitutes the other one if you ask for the unavailable name. |
 | `Balanced` | Default. Moderate power and noise |
 | `Performance` | Maximum CPU/GPU power, aggressive fans |
 
 **Set a profile:**
 ```bash
-asusctl profile -P Balanced
-asusctl profile -P Silent
-asusctl profile -P Performance
+asusctl profile set Balanced
+asusctl profile set Quiet
+asusctl profile set Performance
 ```
 
 **Cycle through profiles:**
 ```bash
-asusctl profile --next
+asusctl profile next
 ```
 
 **Check current profile:**
 ```bash
-asusctl profile
+asusctl profile get
 ```
 
 {{< callout type="warning" >}}
@@ -313,10 +313,12 @@ The app marks this tab **work in progress**; notifications in particular are inc
 
 {{% details title="Keyboard RGB (Aura)" closed="true" %}}
 
-**Set keyboard backlight brightness (0–100):**
+**Set keyboard backlight brightness** (valid levels: `off`, `low`, `med`, `high`):
 ```bash
-asusctl led-brighter
-asusctl led-dimmer
+asusctl leds get     # show current level
+asusctl leds set high
+asusctl leds next     # one step brighter
+asusctl leds prev     # one step dimmer
 ```
 
 **Open Aura configuration in ROG Control Center:**
@@ -339,15 +341,16 @@ Fan curves can be configured per performance profile in ROG Control Center or vi
 rog-control-center
 ```
 
-Navigate to "Fan Curves" to set temperature/speed curves per profile (Silent, Balanced, Performance).
+Navigate to "Fan Curves" to set temperature/speed curves per profile (Quiet/LowPower, Balanced, Performance).
 
 **CLI fan curve format:**
 ```bash
 # Show current fan curve data for a profile
-asusctl fan-curve -m Balanced
+asusctl fan-curve --mod-profile Balanced
 
-# Set a custom curve (8 temperature/speed pairs: temp:speed,temp:speed,...)
-asusctl fan-curve -m Balanced -D 30:0,40:10,50:30,60:50,70:70,80:85,90:100,100:100
+# Set a custom curve (8 temperature:speed% pairs). The % suffix matters:
+# omit it and asusctl treats the values as raw 0-255 fan-PWM steps, not percentages.
+asusctl fan-curve --mod-profile Balanced --data 30c:0%,40c:10%,50c:30%,60c:50%,70c:70%,80c:85%,90c:100%,100c:100%
 ```
 
 ![ROG Control Center - Fan Curves](/images/rog-control-fan-curves.avif)
@@ -399,15 +402,16 @@ Known issues and troubleshooting for asusctl & ROG Control Center are documented
 | Command | Description |
 |---------|-------------|
 | `asusctl info` | Show detected hardware |
-| `asusctl battery --charge-limit 80` | Set battery charge limit to 80% |
-| `asusctl battery` | Show current charge limit |
-| `asusctl profile` | Show current performance profile |
-| `asusctl profile -P Balanced` | Set performance profile |
-| `asusctl profile --next` | Cycle to next profile |
-| `asusctl slash --list` | List available Slash LED animations |
-| `asusctl slash --enable -b false -s false` | Enable Slash LED, off on battery and sleep |
-| `asusctl slash --mode Spectrum` | Set Slash LED animation |
-| `asusctl slash -l 128` | Set Slash LED brightness (0–255) |
+| `asusctl battery limit 80` | Set battery charge limit to 80% |
+| `asusctl battery info` | Show current charge limit |
+| `asusctl profile get` | Show current performance profile |
+| `asusctl profile set Balanced` | Set performance profile |
+| `asusctl profile next` | Cycle to next profile |
+| `asusctl slash list` | List available Slash LED animations |
+| `asusctl slash set --enable -b false -s false` | Enable Slash LED, off on battery and sleep |
+| `asusctl slash set --mode Spectrum` | Set Slash LED animation |
+| `asusctl slash set -l 128` | Set Slash LED brightness (0–255) |
+| `asusctl leds set high` | Set keyboard backlight brightness |
 | `asusctl armoury get dgpu_disable` | Show current dGPU state (0=enabled, 1=disabled) |
 | `asusctl armoury set dgpu_disable 1` | Switch to iGPU-only (disable dGPU) |
 | `asusctl armoury set dgpu_disable 0` | Switch to Hybrid mode (enable dGPU) |

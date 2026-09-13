@@ -148,15 +148,15 @@ Het beperken van het laden tot 80% verlengt de levensduur van de batterij aanzie
 
 **Instellen via CLI:**
 ```bash
-asusctl battery --charge-limit 80
+asusctl battery limit 80
 ```
 
 **Instellen via GUI:**
-Open ROG Control Center (`rog-control-center`) → System Control → Battery Charge Limit.
+Open ROG Control Center (`rog-control-center`) → System Control → Battery Info → Charge limit.
 
 **Verifieer:**
 ```bash
-asusctl battery
+asusctl battery info
 ```
 
 Deze instelling blijft behouden na herstarten en wordt beheerd door `asusd`.
@@ -169,14 +169,14 @@ De Slash LED is de diagonale lichtbalk op het deksel van de G16. Deze ondersteun
 
 **Beschikbare animaties tonen:**
 ```bash
-asusctl slash --list
+asusctl slash list
 ```
 
 Beschikbare animaties: `Static`, `Bounce`, `Slash`, `Loading`, `BitStream`, `Transmission`, `Flow`, `Flux`, `Phantom`, `Spectrum`, `Hazard`, `Interfacing`, `Ramp`, `GameOver`, `Start`, `Buzzer`
 
 **Aanbevolen setup (alleen op netstroom, uit op batterij en tijdens slaapstand):**
 ```bash
-asusctl slash --enable -b false -s false
+asusctl slash set --enable -b false -s false
 ```
 
 **Wat deze opties doen:**
@@ -186,12 +186,12 @@ asusctl slash --enable -b false -s false
 
 **Animatie instellen:**
 ```bash
-asusctl slash --mode Spectrum
+asusctl slash set --mode Spectrum
 ```
 
 **Helderheid instellen (0–255):**
 ```bash
-asusctl slash -l 128
+asusctl slash set -l 128
 ```
 
 ![ROG Control Center - Slash Lighting](/images/rog-control-slash-lighting.avif)
@@ -204,25 +204,25 @@ asusctl biedt drie prestatieprofielen die de CPU/GPU-vermogensgrenzen en het ven
 
 | Profiel | Beschrijving |
 |---------|--------------|
-| `Silent` | Laag vermogen, stille ventilatoren, beperkte prestaties |
+| `Quiet` (a.k.a. `LowPower`) | Laag vermogen, stille ventilatoren, beperkte prestaties. asusctl toont welke van de twee namen de `platform_profile`-handler van de kernel voor deze hardware registreert, en vult automatisch de andere naam in als je om de niet-beschikbare naam vraagt. |
 | `Balanced` | Standaard. Gematigd vermogen en geluid |
 | `Performance` | Maximaal CPU/GPU-vermogen, agressieve ventilatoren |
 
 **Profiel instellen:**
 ```bash
-asusctl profile -P Balanced
-asusctl profile -P Silent
-asusctl profile -P Performance
+asusctl profile set Balanced
+asusctl profile set Quiet
+asusctl profile set Performance
 ```
 
 **Door profielen heen wisselen:**
 ```bash
-asusctl profile --next
+asusctl profile next
 ```
 
 **Huidig profiel bekijken:**
 ```bash
-asusctl profile
+asusctl profile get
 ```
 
 {{< callout type="warning" >}}
@@ -313,10 +313,12 @@ De app markeert dit tabblad zelf als **work in progress**; met name de notificat
 
 {{% details title="Toetsenbord RGB (Aura)" closed="true" %}}
 
-**Toetsenbordverlichting helderheid aanpassen:**
+**Toetsenbordverlichting helderheid aanpassen** (geldige niveaus: `off`, `low`, `med`, `high`):
 ```bash
-asusctl led-brighter
-asusctl led-dimmer
+asusctl leds get     # huidig niveau tonen
+asusctl leds set high
+asusctl leds next     # één stap helderder
+asusctl leds prev     # één stap donkerder
 ```
 
 **Aura configuratie openen in ROG Control Center:**
@@ -339,15 +341,16 @@ Fan curves kunnen per prestatieprofiel worden geconfigureerd in ROG Control Cent
 rog-control-center
 ```
 
-Ga naar "Fan Curves" om temperatuur/snelheidscurven per profiel in te stellen (Silent, Balanced, Performance).
+Ga naar "Fan Curves" om temperatuur/snelheidscurven per profiel in te stellen (Quiet/LowPower, Balanced, Performance).
 
 **CLI fan curve formaat:**
 ```bash
 # Huidige fan curve data voor een profiel tonen
-asusctl fan-curve -m Balanced
+asusctl fan-curve --mod-profile Balanced
 
-# Aangepaste curve instellen (8 temperatuur/snelheid paren: temp:speed,temp:speed,...)
-asusctl fan-curve -m Balanced -D 30:0,40:10,50:30,60:50,70:70,80:85,90:100,100:100
+# Aangepaste curve instellen (8 temperatuur:snelheid%-paren). Het %-teken is belangrijk:
+# zonder dat teken behandelt asusctl de waarden als ruwe fan-PWM-stappen (0-255), geen percentages.
+asusctl fan-curve --mod-profile Balanced --data 30c:0%,40c:10%,50c:30%,60c:50%,70c:70%,80c:85%,90c:100%,100c:100%
 ```
 
 ![ROG Control Center - Fan Curves](/images/rog-control-fan-curves.avif)
@@ -399,15 +402,16 @@ Bekende problemen en probleemoplossing voor asusctl & ROG Control Center staan o
 | Commando | Beschrijving |
 |----------|--------------|
 | `asusctl info` | Gedetecteerde hardware tonen |
-| `asusctl battery --charge-limit 80` | Batterijlaadlimiet instellen op 80% |
-| `asusctl battery` | Huidig laadlimiet tonen |
-| `asusctl profile` | Huidig prestatieprofiel tonen |
-| `asusctl profile -P Balanced` | Prestatieprofiel instellen |
-| `asusctl profile --next` | Naar volgend profiel wisselen |
-| `asusctl slash --list` | Beschikbare Slash LED animaties tonen |
-| `asusctl slash --enable -b false -s false` | Slash LED aan, uit op batterij en slaapstand |
-| `asusctl slash --mode Spectrum` | Slash LED animatie instellen |
-| `asusctl slash -l 128` | Slash LED helderheid instellen (0–255) |
+| `asusctl battery limit 80` | Batterijlaadlimiet instellen op 80% |
+| `asusctl battery info` | Huidig laadlimiet tonen |
+| `asusctl profile get` | Huidig prestatieprofiel tonen |
+| `asusctl profile set Balanced` | Prestatieprofiel instellen |
+| `asusctl profile next` | Naar volgend profiel wisselen |
+| `asusctl slash list` | Beschikbare Slash LED animaties tonen |
+| `asusctl slash set --enable -b false -s false` | Slash LED aan, uit op batterij en slaapstand |
+| `asusctl slash set --mode Spectrum` | Slash LED animatie instellen |
+| `asusctl slash set -l 128` | Slash LED helderheid instellen (0–255) |
+| `asusctl leds set high` | Toetsenbordverlichting helderheid instellen |
 | `asusctl armoury get dgpu_disable` | Huidige dGPU status tonen (0=aan, 1=uit) |
 | `asusctl armoury set dgpu_disable 1` | Overschakelen naar iGPU-only (dGPU uitschakelen) |
 | `asusctl armoury set dgpu_disable 0` | Overschakelen naar Hybrid mode (dGPU inschakelen) |
