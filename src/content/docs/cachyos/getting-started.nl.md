@@ -30,7 +30,7 @@ CachyOS gebruikt geen shim, dus Secure Boot moet **uit** staan voordat de instal
 
 ## Bureaublad
 
-Deze handleidingen zijn geschreven voor GNOME op Wayland, versies 49 en 50 op het moment van schrijven. KDE wordt niet behandeld. Zie de [GNOME]({{< relref "/docs/desktop" >}})-sectie voor wat er verandert als je Plasma draait.
+Deze handleidingen zijn geschreven voor GNOME op Wayland, versies 49 en 50 op het moment van schrijven. KDE wordt niet behandeld. Zie de [GNOME]({{< relref "/docs/desktop" >}})-sectie voor wat er verandert als je Plasma draait, waaronder de [GNOME Shell-extensies]({{< relref "/docs/desktop/gnome-extensions" >}}) en de fix voor de [touchpad-scrollsnelheid]({{< relref "/docs/desktop/touchpad-scroll-speed" >}}).
 
 ## Aanbevolen volgorde
 
@@ -56,7 +56,7 @@ Configureer optioneel GDM om het inlogscherm over te slaan na schijfontsluiting.
 
 ### Applicaties
 
-Installeer en configureer applicaties: browser, communicatietools, ontwikkelomgeving en hulpprogramma's. Inclusief niet-voor-de-hand-liggende workarounds voor Brave op GNOME Wayland en touchpad-scrollsnelheid.
+Installeer en configureer applicaties: browser, communicatietools, ontwikkelomgeving en hulpprogramma's. Inclusief een niet-voor-de-hand-liggende workaround voor Brave op GNOME Wayland.
 
 → [Applicaties]({{< relref "/docs/applications" >}})
 
