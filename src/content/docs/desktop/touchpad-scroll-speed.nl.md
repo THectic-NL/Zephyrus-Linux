@@ -56,7 +56,27 @@ wsf status      # controleer of het actief is
 
 Instellingen worden opgeslagen in `~/.config/wayland-scroll-factor/config`. Na de eerste `wsf enable` en opnieuw aanmelden, geeft `wsf set` live effect zonder een volgende logout.
 
-`wsf status` laat zien of de preload-library daadwerkelijk in `gnome-shell` is geladen. Waar die naar wijst hangt af van hoe je hem installeerde: `/usr/lib/wayland-scroll-factor/` bij de package, `~/.local/lib/wayland-scroll-factor/` als je hem zelf bouwde. Pikt hij het na een logout/login nog steeds niet op, draai dan `wsf doctor` voor een diagnose en `wsf repair` als die een verouderde preload-instelling meldt, en log daarna nog een keer uit en in.
+Direct na `wsf enable`, voordat je opnieuw bent ingelogd, laat `wsf status` nog zien dat het in de wacht staat:
+
+```
+wsf version: 1.0.0
+enabled: yes
+env file: ~/.config/environment.d/wayland-scroll-factor.conf (present)
+library: /usr/lib/wayland-scroll-factor/libwsf_preload.so (present)
+user manager LD_PRELOAD: /usr/lib/wayland-scroll-factor/libwsf_preload.so (includes WSF)
+gnome-shell pid: 3760
+gnome-shell LD_PRELOAD: not set
+gnome-shell library mapped: no
+config: ~/.config/wayland-scroll-factor/config (present)
+scroll_vertical_factor: 0.2000 (config)
+scroll_horizontal_factor: 0.2000
+pinch_zoom_factor: 1.0000
+pinch_rotate_factor: 1.0000
+runtime config reload: pending (GNOME Shell has not loaded WSF yet)
+note: logout/login required after preload enable/disable
+```
+
+Het library-pad (`/usr/lib/wayland-scroll-factor/` bij een package-install, `~/.local/lib/wayland-scroll-factor/` als je hem zelf bouwde) kent `wsf` dus al, maar `gnome-shell` zelf heeft de nieuwe `LD_PRELOAD` nog niet opgepikt, omdat die al draaide toen je hem inschakelde. Log uit en weer in, dan hoort `wsf status` `gnome-shell library mapped: yes` en `runtime config reload: active` te tonen. Is dat daarna nog steeds niet zo, draai dan `wsf doctor` voor een diagnose en `wsf repair` als die een verouderde preload-instelling meldt, en log daarna nog een keer uit en in.
 
 **Optionele GUI** (`wsf-gui`, vereist libadwaita ≥ 1.4):
 
