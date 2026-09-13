@@ -133,3 +133,63 @@ Bestanden selecteren is eenvoudig. Kies wat je wilt sturen, kies het target devi
 <img src="/images/localsend-android-2.avif" width="320" alt="LocalSend op Android - bestanden selecteren om te verzenden">
 
 <img src="/images/localsend-android-3.avif" width="320" alt="LocalSend op Android - transfer in progress">
+
+### Mission Center: GNOME-native taakbeheer
+
+[Mission Center](https://missioncenter.io/) is een GNOME-native systeemmonitor en taakbeheerder, gebouwd met Rust, GTK4 en Libadwaita. CPU, geheugen, schijven, netwerk en GPU links, een detailweergave met live grafieken rechts, plus een Apps/Services-weergave vergelijkbaar met het Processen-tabblad van Windows Taakbeheer.
+
+```bash
+flatpak install flathub io.missioncenter.MissionCenter
+```
+
+Open source onder de GPLv3, broncode op [GitLab](https://gitlab.com/mission-center-devs/mission-center). Versie 1.2.0 op het moment van schrijven.
+
+![Mission Center - CPU performance detail](/images/mission-center-cpu.avif)
+
+Op deze hardware leest het beide NVMe-schijven uit, alle vier fan-sensoren (`cpu_fan`, `gpu_fan`, `mid_fan`, plus één ongelabelde), en beide GPU's, met GPU/GPU-geheugengebruik per app uitgesplitst in de Apps-weergave:
+
+![Mission Center - Apps-weergave](/images/mission-center-apps.avif)
+
+{{< callout type="info" >}}
+GPU-monitoring is upstream als experimenteel gemarkeerd. NVIDIA wordt volledig ondersteund (inclusief VRAM en stroomverbruik per app); AMD wordt ondersteund; Intel-iGPU's ouder dan Broadwell krijgen geen VRAM-, stroom- of temperatuuruitlezing.
+{{< /callout >}}
+
+### TMOG: de Task Manager van Dave Plummer
+
+[Task Manager TMOG](https://tmog.org/) is een native Qt6-taakbeheerder voor Windows, macOS en Linux van Dave Plummer, die halverwege de jaren '90 bij Microsoft de originele Windows Taakbeheer schreef. Volgens [Tom's Hardware](https://www.tomshardware.com/software/windows/windows-veterans-vibe-coded-task-manager-now-also-runs-on-mac-and-linux-downloadable-app-is-the-result-of-a-107-page-spec-fed-to-claude-code) is deze rebuild "vibe coded" vanuit een spec van 107 pagina's, gevoerd aan Claude Code. Zie ook [Plummers eigen video erover](https://youtu.be/c3EEs-O3bGE).
+
+Het is proprietary en closed-source, uitgebracht onder een betalicentie: persoonlijk gebruik mag, herdistributie niet. De meeste functies zijn gratis; een handvol (Power & Freq, Flight Recorder, Connections, Installed Apps, Drivers, Disk Space, Benchmarks) zit achter een **PRO**-badge in de zijbalk.
+
+**Installeren (aanbevolen: de officiële AppImage van [tmog.org](https://tmog.org/)):**
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+```bash
+sudo pacman -S fuse2
+```
+
+Download de AppImage van tmog.org, en dan:
+
+```bash
+chmod +x TaskManagerOG-*.AppImage
+./TaskManagerOG-*.AppImage
+```
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+Nog niet getest op deze hardware. AppImages hebben doorgaans `libfuse2` nodig tijdens het draaien; wat de schoonste manier is om daaraan te komen op een atomic image (Homebrew, een distrobox, of anders) is hier niet bevestigd.
+
+{{< /tab >}}
+{{< /tabs >}}
+
+{{< callout type="warning" >}}
+Er bestaan ook unofficial AUR-packages (`tmog-bin`, `tmog-appimage`), maar de officiële AppImage is de veiligere keuze. Dezelfde algemene kanttekening als bij elke AUR-package: ongeauditeerde community build scripts. Daar komt bij dat `tmog-bin` op het moment van schrijven nog op 0.1.1 zat terwijl tmog.org zelf al bij 0.1.3 was — nog iets dat stilletjes uit sync kan raken.
+{{< /callout >}}
+
+![Task Manager TMOG - Summary](/images/tmog-summary.avif)
+
+Retro vormgegeven, animeert op 60 Hz in plaats van de gebruikelijke eens-per-seconde refresh, en geeft een behoorlijk diepe per-proces uitsplitsing, tot en met schijf- en netwerk-I/O per PID:
+
+![Task Manager TMOG - Processes](/images/tmog-processes.avif)
