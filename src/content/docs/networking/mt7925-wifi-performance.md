@@ -7,7 +7,7 @@ next: docs/virtualization/vm-setup
 
 The G16 GA605WV ships a MediaTek Wi-Fi 7 MT7925 card. Dropped connections, sluggish mesh roaming, or download speeds well below what the connection should give: this page covers all three.
 
-This is a script that applies four fixes at once (NetworkManager power saving, PCIe ASPM, Bluetooth, and a wireless-stack queue limit), each with a real effect measured on this hardware. It needs Python 3.14+ (standard library only) and `pkexec` for the privileged steps.
+This is a script that applies three fixes at once (NetworkManager power saving, PCIe ASPM, and a wireless-stack queue limit), each with a real effect measured on this hardware, plus an optional extra (Bluetooth off) you can opt into. It needs Python 3.14+ (standard library only) and `pkexec` for the privileged steps -- one password prompt per command, covering every privileged step in that command, not one prompt per step.
 
 {{< callout type="info" >}}
 **Verified on this hardware.** Tested with `iperf3` against a local server on a 2.5GbE UniFi network. Stock: ~300 Mbit/s. Tuned: 500-608 Mbit/s, usually 560+. Your numbers will vary with AP, signal strength, and kernel version, but the fixes themselves are confirmed, not theoretical.
@@ -23,7 +23,7 @@ Test conditions, since they affect the numbers: a UniFi U7 Pro access point, in 
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/mt7925-tune.py
-echo "c8887ca1d426df7ae55c94fd05ba9cc133566bed2feca434170f3817d6b5e69f  mt7925-tune.py" | sha256sum -c
+echo "1da15474e447e1fe98872072768dd5f148c0a632ae39f78fc5b5b8ae3fa1e534  mt7925-tune.py" | sha256sum -c
 ```
 
 ### Apply
@@ -32,20 +32,29 @@ echo "c8887ca1d426df7ae55c94fd05ba9cc133566bed2feca434170f3817d6b5e69f  mt7925-t
 python3 mt7925-tune.py enable
 ```
 
-Reboot afterward. One of the four fixes (PCIe ASPM) is a kernel module parameter, only read at module load time.
+Reboot afterward. One of the three fixes (PCIe ASPM) is a kernel module parameter, only read at module load time.
+
+Want the optional Bluetooth-off extra too (see the table below)?
+
+```bash
+python3 mt7925-tune.py enable --bluetooth-off
+```
 
 {{% /steps %}}
 
-Source: [mt7925-tune.py](/scripts/mt7925-tune.py). SHA-256 `c8887ca1d426df7ae55c94fd05ba9cc133566bed2feca434170f3817d6b5e69f`.
+Source: [mt7925-tune.py](/scripts/mt7925-tune.py). SHA-256 `1da15474e447e1fe98872072768dd5f148c0a632ae39f78fc5b5b8ae3fa1e534`.
 
-| Fix | What it does |
+| Fix (applied by `enable`) | What it does |
 |---|---|
 | Disable NetworkManager's Wi-Fi power saving | The most common cause of drops and slow mesh roaming |
 | Disable PCIe ASPM for the card | The PCIe link's own power state, not the radio. The main throughput fix |
-| Bluetooth off | The MT7925 is a combo Wi-Fi+Bluetooth chip sharing the same silicon and antenna paths. Removes a source of variance |
 | Raise the AQL Best Effort queue limit | `mac80211` caps how much data can be queued per traffic class to keep latency low under contention. The stock limit favors fairness over saturating a single stream. Trade-off: less headroom for latency-sensitive traffic (calls, gaming) sharing the radio under load |
 
-`python3 mt7925-tune.py status` shows exactly what's active right now and what still needs a reboot. `python3 mt7925-tune.py disable` reverts everything.
+| Optional extra (`--bluetooth-off`, not applied by default) | What it does |
+|---|---|
+| Bluetooth off | The MT7925 is a combo Wi-Fi+Bluetooth chip sharing the same silicon and antenna paths. Removes a source of variance, at the cost of Bluetooth. Not one of the measured fixes above, so it's your call, not the script's |
+
+`python3 mt7925-tune.py status` shows exactly what's active right now, what still needs a reboot, and the detected hardware and driver/firmware version. `python3 mt7925-tune.py disable` reverts everything, Bluetooth included.
 
 {{< callout type="info" >}}
 **Left out on purpose:** `disable_eht=1` shows up in some third-party guides, but only exists in out-of-tree patch sets, not the mainline driver this G16 runs. CPU governor and power-profile changes also helped in testing, but that's a system-wide trade-off, not a Wi-Fi-specific one, so the script doesn't touch them. Older guides also mention pinning the driver's own `power_save` module parameter; on this G16's kernel (7.2.4) that parameter no longer exists (`dmesg` shows `mt7925e: unknown parameter 'power_save' ignored`), so the script skips it too.
@@ -57,7 +66,7 @@ Source: [mt7925-tune.py](/scripts/mt7925-tune.py). SHA-256 `c8887ca1d426df7ae55c
 |---|---|
 | Stock | ~300 Mbit/s |
 | ASPM disabled + NM powersave off only | 410-450 Mbit/s |
-| Everything (script `enable`) | 500-608 Mbit/s, usually 560+ |
+| Everything, including the optional Bluetooth-off extra (`enable --bluetooth-off`) | 500-608 Mbit/s, usually 560+ |
 
 For reference, a phone (Samsung Galaxy S24 Ultra) on the same AP measured 439-811 Mbit/s across several runs, average around 545 Mbit/s, so the tuned G16 is now in the same range as a modern phone's Wi-Fi radio here. On a stronger/closer AP the same phone hit 1.24 Gbit/s, well above what the MT7925's 160MHz ceiling can ever reach regardless of signal quality (see [hardware ceiling](#the-hardware-ceiling) below).
 
@@ -108,6 +117,8 @@ Qualcomm's current Wi-Fi 7 card (QCNCM865/FastConnect 7800) isn't better either:
 
 {{% details title="Checking your driver and firmware version" closed="true" %}}
 
+`python3 mt7925-tune.py status` shows all of this automatically (kernel/driver version, the firmware version and build time from `dmesg`, and the `linux-firmware-mediatek` package version on Arch-based distros). To check by hand instead:
+
 ```bash
 uname -r                                                          # kernel = driver version, ships in-tree
 sudo dmesg | grep -i "mt7925e.*Firmware\|mt7925e.*HW/SW"          # firmware version
@@ -118,7 +129,7 @@ pacman -Qi linux-firmware-mediatek | grep Version                  # firmware pa
 
 {{% details title="Where to follow active development" closed="true" %}}
 
-The chip is still actively worked on; patches landed as recently as this week during testing for this page.
+The chip is still actively worked on; patches landed as recently as this week during testing for this page. `python3 mt7925-tune.py status` prints these same links, so you don't have to remember them.
 
 - [lore.kernel.org/linux-wireless](https://lore.kernel.org/linux-wireless/): the official patch mailing list. Search "mt7925".
 - [ratatoskr.run](https://ratatoskr.run/): a more readable web archive of the same mailing lists.
