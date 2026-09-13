@@ -1,7 +1,7 @@
 ---
 title: "Astra Monitor"
-weight: 1
-prev: docs/hardware/color-profiles
+weight: 2
+prev: docs/desktop/gnome-extensions
 next: docs/security/autologin
 ---
 
@@ -24,38 +24,7 @@ The extension has no hard dependencies. Everything below is optional, and each o
 
 ## Install the extension
 
-{{< tabs >}}
-{{< tab name="CachyOS" >}}
-
-Through Extension Manager, from the repos or from Flathub:
-
-```bash
-sudo pacman -S extension-manager
-```
-
-```bash
-flatpak install flathub com.mattjakeman.ExtensionManager
-```
-
-Open it, search for "Astra Monitor", install. Or install from [extensions.gnome.org](https://extensions.gnome.org/extension/6682/astra-monitor/) in a browser.
-
-{{< /tab >}}
-{{< tab name="Bazzite" >}}
-
-Extension Manager is a Flatpak, so nothing is layered for the extension itself:
-
-```bash
-flatpak install flathub com.mattjakeman.ExtensionManager
-```
-
-Open it, search for "Astra Monitor", install. Or install from [extensions.gnome.org](https://extensions.gnome.org/extension/6682/astra-monitor/) in a browser.
-
-{{< callout type="info" >}}
-GNOME extensions live in `~/.local/share/gnome-shell/extensions/`, which is your home directory, not the image. The extension itself survives image updates and rebases without layering. Only the optional dependencies below touch the system.
-{{< /callout >}}
-
-{{< /tab >}}
-{{< /tabs >}}
+Install it the same way as any other GNOME Shell extension: through Extension Manager, see [GNOME Extensions]({{< relref "/docs/desktop/gnome-extensions" >}}) for getting that set up on both distributions. Search for "Astra Monitor", or install directly from [extensions.gnome.org](https://extensions.gnome.org/extension/6682/astra-monitor/).
 
 ## Optional dependencies
 

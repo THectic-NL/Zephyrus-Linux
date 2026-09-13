@@ -54,7 +54,7 @@ Dat werkt prima op deze laptop. Niets hier is een waarschuwing ertegen. Na het t
 
 ## Ze wisselen elkaar af
 
-Ik heb er niet één gekozen en het daarbij gelaten. Ik heb ze allebei als dagelijks systeem op deze laptop gedraaid en ben meer dan eens heen en weer geswitcht. Terwijl ik dit schrijf zit ik op Bazzite. Geen van beide blijft lang voorop lopen.
+Ik heb er niet één gekozen en het daarbij gelaten. Ik heb ze allebei als dagelijks systeem op deze laptop gedraaid en ben meer dan eens heen en weer geswitcht. Tegenwoordig is CachyOS mijn daily driver, vooral omdat een deel van wat ik doe die extra systeemcontrole wil, maar ik dualboot Bazzite nog steeds op dezelfde machine en ga er af en toe uit nieuwsgierigheid op terug, en gebruik het dan weer een tijdje voor ik terugschakel. Geen van beide blijft lang voorop lopen.
 
 Het gaat in golven. De ene maand landt er in Bazzite een kernel-bump of een Mesa-fix en is het de soepelste van de twee. Een maand later levert CachyOS een scheduler-wijziging of een `asusctl`-update en klapt de voorsprong terug. Het gat is nooit groot en het houdt nooit aan, want de dingen die er echt toe doen worden sowieso ge-backport. Een fix die in de kernel van de ene distributie of in mainline opduikt, zit meestal binnen een release of twee ook in de andere. Geef het een paar weken en ze lopen weer gelijk.
 
