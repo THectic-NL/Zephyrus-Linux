@@ -78,7 +78,7 @@ Bazzite publiceert een aparte image per desktop en per GPU-driver, en je kiest e
 
 De `-nvidia-open`-images gebruiken NVIDIA's open kernelmodules, die elke kaart vanaf Turing ondersteunen. De RTX 4060 is Ada en valt daar dus onder; open is hier de juiste standaard.
 
-Deze handleidingen zijn rond GNOME geschreven (49 en 50 op het moment van schrijven) en behandelen alleen GNOME. De handleidingen voor [autologin]({{< relref "/docs/security/autologin" >}}) en de [YubiKey]({{< relref "/docs/security/yubikey" >}}) configureren GDM, en een aantal applicatie-aanpassingen zijn GNOME-extensies.
+Deze handleidingen zijn rond GNOME geschreven (49 en 50 op het moment van schrijven) en behandelen alleen GNOME. De handleidingen voor [autologin]({{< relref "/docs/security/autologin" >}}) en de [YubiKey]({{< relref "/docs/security/yubikey" >}}) configureren GDM, en een aantal applicatie-aanpassingen zijn [GNOME-extensies]({{< relref "/docs/desktop/gnome-extensions" >}}).
 
 {{< callout type="info" >}}
 De ISO die je downloadt bepaalt alleen waar je begint. Later van desktop of driver wisselen is een rebase, geen herinstallatie.

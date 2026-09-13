@@ -54,7 +54,7 @@ It works fine on this laptop. Nothing here is a warning against it. After testin
 
 ## They trade places
 
-I haven't picked one and stopped looking. I've daily-driven both on this laptop and switched back and forth more than once. I'm on Bazzite as I write this. Neither one stays ahead for long.
+I haven't picked one and stopped looking. I've daily-driven both on this laptop and switched back and forth more than once. These days CachyOS is my daily driver, mostly because some of what I do wants that bit of extra system control, but I still dual-boot Bazzite on the same machine and go back to it out of curiosity now and then, running it for a while before switching back. Neither one stays ahead for long.
 
 It comes in waves. One month Bazzite lands a kernel bump or a Mesa fix and it's the smoother of the two. A month later CachyOS ships a scheduler change or an `asusctl` update and the lead flips back. The gap is never large and it never lasts, because the parts that matter get backported either way. A fix that lands in one distribution's kernel, or in mainline, is usually in the other within a release or two. Give it a few weeks and they're level again.
 
