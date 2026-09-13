@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   # Semgrep: SAST scanner for the templates, the bit of CSS and the Python
-  # script the site ships.
+  # scripts the site ships.
   semgrep:
     name: Semgrep SAST scan
     runs-on: ubuntu-latest
@@ -45,9 +45,10 @@ jobs:
       - name: Run Semgrep scan
         run: semgrep scan --config auto --error src/layouts/ src/assets/ src/static/scripts/
 
-  # Python: style and security on saxion-eduroam.py. Also a step in quality.yml
-  # on every push and PR; the value of the weekly re-run is that a newer bandit
-  # can flag something in a script that has not itself changed.
+  # Python: style and security on the scripts in src/static/scripts/. Also a
+  # step in quality.yml on every push and PR; the value of the weekly re-run
+  # is that a newer bandit can flag something in a script that has not itself
+  # changed.
   python-audit:
     name: Python style and security
     runs-on: ubuntu-latest
