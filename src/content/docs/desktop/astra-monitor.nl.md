@@ -2,7 +2,7 @@
 title: "Astra Monitor"
 weight: 2
 prev: docs/desktop/gnome-extensions
-next: docs/security/autologin
+next: docs/desktop/touchpad-scroll-speed
 ---
 
 [Astra Monitor](https://github.com/AstraExt/astra-monitor) is een GNOME Shell-extensie die CPU, geheugen, schijf, netwerk en GPU in de bovenbalk zet, met een uitklapmenu voor de details.

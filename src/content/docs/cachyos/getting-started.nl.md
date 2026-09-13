@@ -56,7 +56,7 @@ Configureer optioneel GDM om het inlogscherm over te slaan na schijfontsluiting.
 
 ### Applicaties
 
-Installeer en configureer applicaties: browser, communicatietools, ontwikkelomgeving en hulpprogramma's. Inclusief niet-voor-de-hand-liggende workarounds voor Brave op GNOME Wayland en touchpad-scrollsnelheid.
+Installeer en configureer applicaties: browser, communicatietools, ontwikkelomgeving en hulpprogramma's. Inclusief een niet-voor-de-hand-liggende workaround voor Brave op GNOME Wayland.
 
 → [Applicaties]({{< relref "/docs/applications" >}})
 

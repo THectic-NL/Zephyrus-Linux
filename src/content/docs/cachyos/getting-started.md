@@ -56,7 +56,7 @@ Optionally configure GDM to skip the login screen after disk unlock. Set up the 
 
 ### Applications
 
-Install and configure applications: browser, communication tools, development environment, and utilities. Includes non-obvious workarounds for Brave on GNOME Wayland and touchpad scroll speed.
+Install and configure applications: browser, communication tools, development environment, and utilities. Includes a non-obvious workaround for Brave on GNOME Wayland.
 
 → [Applications]({{< relref "/docs/applications" >}})
 
