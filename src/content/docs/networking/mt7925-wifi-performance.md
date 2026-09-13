@@ -7,7 +7,7 @@ next: docs/virtualization/vm-setup
 
 The G16 GA605WV ships a MediaTek Wi-Fi 7 MT7925 card. Dropped connections, sluggish mesh roaming, or download speeds well below what the connection should give: this page covers all three.
 
-This is a script that applies four fixes at once (NetworkManager power saving, PCIe ASPM, Bluetooth, and a wireless-stack queue limit), each with a real effect measured on this hardware.
+This is a script that applies four fixes at once (NetworkManager power saving, PCIe ASPM, Bluetooth, and a wireless-stack queue limit), each with a real effect measured on this hardware. It needs Python 3.11+ (standard library only) and `pkexec` for the privileged steps.
 
 {{< callout type="info" >}}
 **Verified on this hardware.** Tested with `iperf3` against a local server on a 2.5GbE UniFi network. Stock: ~300 Mbit/s. Tuned: 500-608 Mbit/s, usually 560+. Your numbers will vary with AP, signal strength, and kernel version, but the fixes themselves are confirmed, not theoretical.
@@ -22,22 +22,21 @@ Test conditions, since they affect the numbers: a UniFi U7 Pro access point, in 
 ### Download and verify
 
 ```bash
-curl -LO https://zephyrus-linux.thectic.nl/scripts/mt7925-tune.sh
-echo "17464ccb7a5a892c61bc0e93e5e719d90f477b9c351156e918b7bc25c85e8cd6  mt7925-tune.sh" | sha256sum -c
-chmod +x mt7925-tune.sh
+curl -LO https://zephyrus-linux.thectic.nl/scripts/mt7925-tune.py
+echo "549cd28125ecc60a548025686ba069d6017a8c0ba5ed942a772c82b3dbd24b98  mt7925-tune.py" | sha256sum -c
 ```
 
 ### Apply
 
 ```bash
-./mt7925-tune.sh enable
+python3 mt7925-tune.py enable
 ```
 
 Reboot afterward. One of the four fixes (PCIe ASPM) is a kernel module parameter, only read at module load time.
 
 {{% /steps %}}
 
-Source: [mt7925-tune.sh](/scripts/mt7925-tune.sh). SHA-256 `17464ccb7a5a892c61bc0e93e5e719d90f477b9c351156e918b7bc25c85e8cd6`.
+Source: [mt7925-tune.py](/scripts/mt7925-tune.py). SHA-256 `549cd28125ecc60a548025686ba069d6017a8c0ba5ed942a772c82b3dbd24b98`.
 
 | Fix | What it does |
 |---|---|
@@ -46,7 +45,7 @@ Source: [mt7925-tune.sh](/scripts/mt7925-tune.sh). SHA-256 `17464ccb7a5a892c61bc
 | Bluetooth off | The MT7925 is a combo Wi-Fi+Bluetooth chip sharing the same silicon and antenna paths. Removes a source of variance |
 | Raise the AQL Best Effort queue limit | `mac80211` caps how much data can be queued per traffic class to keep latency low under contention. The stock limit favors fairness over saturating a single stream. Trade-off: less headroom for latency-sensitive traffic (calls, gaming) sharing the radio under load |
 
-`./mt7925-tune.sh status` shows exactly what's active right now and what still needs a reboot. `./mt7925-tune.sh disable` reverts everything.
+`python3 mt7925-tune.py status` shows exactly what's active right now and what still needs a reboot. `python3 mt7925-tune.py disable` reverts everything.
 
 {{< callout type="info" >}}
 **Left out on purpose:** `disable_eht=1` shows up in some third-party guides, but only exists in out-of-tree patch sets, not the mainline driver this G16 runs. CPU governor and power-profile changes also helped in testing, but that's a system-wide trade-off, not a Wi-Fi-specific one, so the script doesn't touch them. Older guides also mention pinning the driver's own `power_save` module parameter; on this G16's kernel (7.2.4) that parameter no longer exists (`dmesg` shows `mt7925e: unknown parameter 'power_save' ignored`), so the script skips it too.
