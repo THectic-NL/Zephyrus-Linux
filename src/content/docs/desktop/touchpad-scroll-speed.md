@@ -30,9 +30,8 @@ paru -S wayland-scroll-factor
 Through the project's own COPR repo, layered with `rpm-ostree`:
 
 ```bash
-fedora_version="$(rpm -E %fedora)"
 sudo curl -fsSL -o /etc/yum.repos.d/daniel-g-carrasco-wayland-scroll-factor.repo \
-  "https://copr.fedorainfracloud.org/coprs/daniel-g-carrasco/wayland-scroll-factor/repo/fedora-${fedora_version}/daniel-g-carrasco-wayland-scroll-factor-fedora-${fedora_version}.repo"
+  "https://copr.fedorainfracloud.org/coprs/daniel-g-carrasco/wayland-scroll-factor/repo/fedora-$(rpm -E %fedora)/daniel-g-carrasco-wayland-scroll-factor-fedora-$(rpm -E %fedora).repo"
 sudo rpm-ostree refresh-md
 sudo rpm-ostree install wayland-scroll-factor
 systemctl reboot
