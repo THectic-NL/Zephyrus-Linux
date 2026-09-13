@@ -70,6 +70,8 @@ Source: [mt7925-tune.py](/scripts/mt7925-tune.py). SHA-256 `cf5aa114d872c6480525
 
 For reference, a phone (Samsung Galaxy S24 Ultra) on the same AP measured 439-811 Mbit/s across several runs, average around 545 Mbit/s, so the tuned G16 is now in the same range as a modern phone's Wi-Fi radio here. On a stronger/closer AP the same phone hit 1.24 Gbit/s, well above what the MT7925's 160MHz ceiling can ever reach regardless of signal quality (see [hardware ceiling](#the-hardware-ceiling) below).
 
+Worth sitting with: that phone launched in January 2024. A purpose-built M.2 2230 Wi-Fi 7 card in a 2024/2025 gaming laptop, tuned to its actual ceiling, still loses to a two-year-old phone's Wi-Fi chip. That's not a config problem this script can tune away -- the MT7925 is, on this evidence, a mediocre card. The fixes above get it to where it should have been out of the box, not to where it should be.
+
 {{< callout type="warning" >}}
 Expect run-to-run variance even in a stable, tuned state (repeated 20s runs ranged 509-598 Mbit/s back to back with nothing changed). Right after a reboot or reconnect it's worse: retries can spike hard before the link settles (seen: 3000+ retries in one run). Judge the fix on a few runs, not one, and never on the very first test after rebooting.
 {{< /callout >}}
@@ -79,6 +81,20 @@ Expect run-to-run variance even in a stable, tuned state (repeated 20s runs rang
 ## The hardware ceiling
 
 The MT7925 is hardware-limited to 160MHz channel width and 2×2 MIMO, confirmed via `iw phy phy0 info`: `Supported Channel Width: 160 MHz`, `Rx/Tx Max NSS: 2`, no `EHT-MCS Map (BW = 320)` entry at all. A Wi-Fi 7 access point may offer 320MHz 6GHz channels; this card can only ever use half of that. No driver, firmware, or setting changes that. Expect roughly double the out-of-the-box throughput with the fixes above, not multi-gigabit Wi-Fi.
+
+## When your numbers don't match this page's
+
+The numbers above assume a reasonably strong 6GHz signal. 6GHz has less range and wall penetration than 5GHz, and the MT7925 will silently drop from 2 spatial streams to 1 well before the link actually disconnects -- which roughly halves the ceiling on top of whatever the weaker signal already costs.
+
+Real example, same laptop and access point, only the distance changed:
+
+| | Farther from the AP | Closer to the AP |
+|---|---|---|
+| Signal | -70 to -73 dBm | -63 dBm |
+| Negotiated rate (also in `status`'s "Current link") | `EHT-NSS 1`, 432-576 Mbit/s | `EHT-NSS 2`, 1152.8 Mbit/s |
+| `iperf3 -P 4` throughput | ~170-260 Mbit/s | 583-594 Mbit/s |
+
+Same script, same tuning, same everything else -- the only variable was distance. `python3 mt7925-tune.py status` prints signal and `EHT-NSS` in its "Current link" section for exactly this reason: before assuming a fix isn't working, check whether you're actually looking at a signal problem instead. If moving closer brings `EHT-NSS` back to 2 and throughput climbs, that's range, not a broken card.
 
 ## Diagnosing drops and roaming issues
 
