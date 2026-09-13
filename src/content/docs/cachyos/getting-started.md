@@ -30,7 +30,7 @@ CachyOS doesn't use shim, so Secure Boot has to be **off** before the installer 
 
 ## Desktop
 
-These guides are written for GNOME on Wayland, versions 49 and 50 at the time of writing. KDE is not covered. See the [GNOME]({{< relref "/docs/desktop" >}}) section for what changes if you run Plasma.
+These guides are written for GNOME on Wayland, versions 49 and 50 at the time of writing. KDE is not covered. See the [GNOME]({{< relref "/docs/desktop" >}}) section for what changes if you run Plasma, including [GNOME Shell extensions]({{< relref "/docs/desktop/gnome-extensions" >}}) and the [touchpad scroll speed fix]({{< relref "/docs/desktop/touchpad-scroll-speed" >}}).
 
 ## Recommended setup order
 
@@ -56,7 +56,7 @@ Optionally configure GDM to skip the login screen after disk unlock. Set up the 
 
 ### Applications
 
-Install and configure applications: browser, communication tools, development environment, and utilities. Includes non-obvious workarounds for Brave on GNOME Wayland and touchpad scroll speed.
+Install and configure applications: browser, communication tools, development environment, and utilities. Includes a non-obvious workaround for Brave on GNOME Wayland.
 
 → [Applications]({{< relref "/docs/applications" >}})
 

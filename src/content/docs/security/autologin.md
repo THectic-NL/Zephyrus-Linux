@@ -1,7 +1,7 @@
 ---
 title: "GDM Autologin"
 weight: 1
-prev: docs/desktop/astra-monitor
+prev: docs/desktop/touchpad-scroll-speed
 next: docs/security/yubikey
 ---
 

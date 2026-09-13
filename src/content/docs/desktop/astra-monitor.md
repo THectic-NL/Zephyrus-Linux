@@ -2,7 +2,7 @@
 title: "Astra Monitor"
 weight: 2
 prev: docs/desktop/gnome-extensions
-next: docs/security/autologin
+next: docs/desktop/touchpad-scroll-speed
 ---
 
 [Astra Monitor](https://github.com/AstraExt/astra-monitor) is a GNOME Shell extension that puts CPU, memory, disk, network and GPU readouts in the top panel, with a dropdown for the details.
