@@ -1137,3 +1137,12 @@ sudo sdboot-manage gen
 ```
 
 {{% /details %}}
+
+
+{{% details title="GNOME Wayland: native touchpad scroll speed setting" closed="true" %}}
+
+I think it's genuinely dumb that GNOME still doesn't have a setting for touchpad scroll speed anywhere, not in Settings, not anywhere else. KDE Plasma has had this for years. It's not a hardware limitation, it's just missing, and it's been asked for forever without anything landing upstream.
+
+[wayland-scroll-factor]({{< relref "/docs/desktop/touchpad-scroll-speed" >}}) works around it well enough, but a third-party library injected into `gnome-shell` shouldn't have to exist just to change how fast your own touchpad scrolls. See that page for the fix.
+
+{{% /details %}}
