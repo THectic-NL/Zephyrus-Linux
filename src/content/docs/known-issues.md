@@ -494,12 +494,6 @@ If it loads, reopen ROG Control Center; the warning should be gone and advanced 
 
 {{% /details %}}
 
-{{% details title="Performance profile 'Silent' shows as 'Quiet' in the GUI" closed="true" %}}
-
-The Fan Curves tab in ROG Control Center labels this profile **Quiet**. The CLI (`asusctl profile -P Silent`) still uses `Silent`, confirmed to still be the correct value. Just a cosmetic GUI relabel, not a renamed profile.
-
-{{% /details %}}
-
 
 ## Secure Boot
 
