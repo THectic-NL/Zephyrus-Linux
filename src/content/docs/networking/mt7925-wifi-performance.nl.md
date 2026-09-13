@@ -7,7 +7,7 @@ next: docs/virtualization/vm-setup
 
 De G16 GA605WV heeft een MediaTek Wi-Fi 7 MT7925-kaart. Wegvallende verbindingen, traag roamen tussen mesh-nodes, of downloadsnelheden ruim onder wat de verbinding zou moeten geven: deze pagina behandelt alle drie.
 
-Dit is een script dat vier fixes tegelijk toepast (NetworkManager-powersave, PCIe ASPM, Bluetooth en een wireless-stack-queuelimiet), elk met een echt effect gemeten op deze hardware. Het heeft Python 3.11+ nodig (alleen standaardbibliotheek) en `pkexec` voor de bevoegde stappen.
+Dit is een script dat vier fixes tegelijk toepast (NetworkManager-powersave, PCIe ASPM, Bluetooth en een wireless-stack-queuelimiet), elk met een echt effect gemeten op deze hardware. Het heeft Python 3.14+ nodig (alleen standaardbibliotheek) en `pkexec` voor de bevoegde stappen.
 
 {{< callout type="info" >}}
 **Geverifieerd op deze hardware.** Getest met `iperf3` tegen een lokale server op een 2,5GbE-netwerk met UniFi. Stock: ~300 Mbit/s. Getuned: 500-608 Mbit/s, meestal 560+. Jouw cijfers variëren met AP, signaalsterkte en kernelversie, maar de fixes zelf zijn bevestigd, niet theoretisch.
@@ -23,7 +23,7 @@ Testomstandigheden, want die beïnvloeden de cijfers: een UniFi U7 Pro access po
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/mt7925-tune.py
-echo "549cd28125ecc60a548025686ba069d6017a8c0ba5ed942a772c82b3dbd24b98  mt7925-tune.py" | sha256sum -c
+echo "c8887ca1d426df7ae55c94fd05ba9cc133566bed2feca434170f3817d6b5e69f  mt7925-tune.py" | sha256sum -c
 ```
 
 ### Toepassen
@@ -36,7 +36,7 @@ Herstart daarna. Eén van de vier fixes (PCIe ASPM) is een kernel-moduleparamete
 
 {{% /steps %}}
 
-Bron: [mt7925-tune.py](/scripts/mt7925-tune.py). SHA-256 `549cd28125ecc60a548025686ba069d6017a8c0ba5ed942a772c82b3dbd24b98`.
+Bron: [mt7925-tune.py](/scripts/mt7925-tune.py). SHA-256 `c8887ca1d426df7ae55c94fd05ba9cc133566bed2feca434170f3817d6b5e69f`.
 
 | Fix | Wat het doet |
 |---|---|

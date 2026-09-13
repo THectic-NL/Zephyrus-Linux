@@ -7,7 +7,7 @@ next: docs/virtualization/vm-setup
 
 The G16 GA605WV ships a MediaTek Wi-Fi 7 MT7925 card. Dropped connections, sluggish mesh roaming, or download speeds well below what the connection should give: this page covers all three.
 
-This is a script that applies four fixes at once (NetworkManager power saving, PCIe ASPM, Bluetooth, and a wireless-stack queue limit), each with a real effect measured on this hardware. It needs Python 3.11+ (standard library only) and `pkexec` for the privileged steps.
+This is a script that applies four fixes at once (NetworkManager power saving, PCIe ASPM, Bluetooth, and a wireless-stack queue limit), each with a real effect measured on this hardware. It needs Python 3.14+ (standard library only) and `pkexec` for the privileged steps.
 
 {{< callout type="info" >}}
 **Verified on this hardware.** Tested with `iperf3` against a local server on a 2.5GbE UniFi network. Stock: ~300 Mbit/s. Tuned: 500-608 Mbit/s, usually 560+. Your numbers will vary with AP, signal strength, and kernel version, but the fixes themselves are confirmed, not theoretical.
@@ -23,7 +23,7 @@ Test conditions, since they affect the numbers: a UniFi U7 Pro access point, in 
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/mt7925-tune.py
-echo "549cd28125ecc60a548025686ba069d6017a8c0ba5ed942a772c82b3dbd24b98  mt7925-tune.py" | sha256sum -c
+echo "c8887ca1d426df7ae55c94fd05ba9cc133566bed2feca434170f3817d6b5e69f  mt7925-tune.py" | sha256sum -c
 ```
 
 ### Apply
@@ -36,7 +36,7 @@ Reboot afterward. One of the four fixes (PCIe ASPM) is a kernel module parameter
 
 {{% /steps %}}
 
-Source: [mt7925-tune.py](/scripts/mt7925-tune.py). SHA-256 `549cd28125ecc60a548025686ba069d6017a8c0ba5ed942a772c82b3dbd24b98`.
+Source: [mt7925-tune.py](/scripts/mt7925-tune.py). SHA-256 `c8887ca1d426df7ae55c94fd05ba9cc133566bed2feca434170f3817d6b5e69f`.
 
 | Fix | What it does |
 |---|---|

@@ -33,8 +33,9 @@ import sys
 from pathlib import Path
 
 # Support policy, not a technical floor: the code itself runs on older Pythons.
-# Everything current ships 3.11 or newer.
-MIN_PYTHON = (3, 11)
+# Pinned to the current stable release so nobody runs this on an
+# already-unsupported interpreter.
+MIN_PYTHON = (3, 14)
 
 MODPROBE_CONF = Path("/etc/modprobe.d/mt7925e.conf")
 NM_CONF = Path("/etc/NetworkManager/conf.d/wifi-powersave.conf")
