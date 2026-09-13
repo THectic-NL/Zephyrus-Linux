@@ -133,3 +133,63 @@ Selecting files is straightforward. Pick what you want to send, choose the targe
 <img src="/images/localsend-android-2.avif" width="320" alt="LocalSend on Android - selecting files to send">
 
 <img src="/images/localsend-android-3.avif" width="320" alt="LocalSend on Android - transfer in progress">
+
+### Mission Center: GNOME-native task manager
+
+[Mission Center](https://missioncenter.io/) is a GNOME-native system monitor and task manager, built with Rust, GTK4 and Libadwaita. CPU, memory, disks, network and GPU on the left, a detail view with live graphs on the right, plus an Apps/Services view comparable to the Windows Task Manager's Processes tab.
+
+```bash
+flatpak install flathub io.missioncenter.MissionCenter
+```
+
+Open source under the GPLv3, source on [GitLab](https://gitlab.com/mission-center-devs/mission-center). Version 1.2.0 at the time of writing.
+
+![Mission Center - CPU performance detail](/images/mission-center-cpu.avif)
+
+On this hardware it reads both NVMe drives, all four fan sensors (`cpu_fan`, `gpu_fan`, `mid_fan`, plus one unlabeled), and both GPUs, with per-app GPU/GPU-memory usage broken out in the Apps view:
+
+![Mission Center - Apps view](/images/mission-center-apps.avif)
+
+{{< callout type="info" >}}
+GPU monitoring is marked experimental upstream. NVIDIA is fully supported (including per-app VRAM and power draw); AMD is supported; Intel iGPUs older than Broadwell get no VRAM, power or temperature readout.
+{{< /callout >}}
+
+### TMOG: Dave Plummer's Task Manager
+
+[Task Manager TMOG](https://tmog.org/) is a native Qt6 task manager for Windows, macOS and Linux by Dave Plummer, who wrote the original Windows Task Manager at Microsoft in the mid-1990s. Per [Tom's Hardware](https://www.tomshardware.com/software/windows/windows-veterans-vibe-coded-task-manager-now-also-runs-on-mac-and-linux-downloadable-app-is-the-result-of-a-107-page-spec-fed-to-claude-code), this rebuild was "vibe coded" from a 107-page spec fed to Claude Code. See also [Plummer's own video on it](https://youtu.be/c3EEs-O3bGE).
+
+It's proprietary and closed-source, released under a beta license: personal use is fine, redistribution isn't. Most features are free; a handful (Power & Freq, Flight Recorder, Connections, Installed Apps, Drivers, Disk Space, Benchmarks) sit behind a **PRO** badge in the sidebar.
+
+**Install (recommended: the official AppImage from [tmog.org](https://tmog.org/)):**
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+```bash
+sudo pacman -S fuse2
+```
+
+Download the AppImage from tmog.org, then:
+
+```bash
+chmod +x TaskManagerOG-*.AppImage
+./TaskManagerOG-*.AppImage
+```
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+Not tested on this hardware yet. AppImages generally need `libfuse2` at runtime; the cleanest way to get that on an atomic image (Homebrew, a distrobox, or otherwise) isn't confirmed here.
+
+{{< /tab >}}
+{{< /tabs >}}
+
+{{< callout type="warning" >}}
+Unofficial AUR packages (`tmog-bin`, `tmog-appimage`) exist too, but the official AppImage is the safer bet. Same general caveat as any AUR package: unaudited community build scripts. On top of that, at the time of writing `tmog-bin` was still packaging 0.1.1 while tmog.org itself had already moved on to 0.1.3. One more thing that can silently fall out of sync.
+{{< /callout >}}
+
+![Task Manager TMOG - Summary](/images/tmog-summary.avif)
+
+Retro-styled, animates at 60 Hz instead of the usual once-a-second refresh, and gives a genuinely deep per-process breakdown, down to disk and network I/O per PID:
+
+![Task Manager TMOG - Processes](/images/tmog-processes.avif)
