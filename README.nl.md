@@ -11,7 +11,7 @@ Linux op de ASUS ROG Zephyrus G16 GA605WV (2024). Mijn persoonlijke setup-log vo
 
 Dit is mijn persoonlijke setup-log voor deze laptop. Ik ben geen developer, gewoon iemand die naar Linux is overgestapt en daarna tegen van alles aanliep wat niet meteen werkte. Ik heb alles opgeschreven zodat anderen dat niet hoeven uitzoeken.
 
-De handleidingen dekken CachyOS (Arch) en Bazzite (Fedora Atomic). Ik heb ze allebei als dagelijks systeem gedraaid en wissel ertussen; op dit moment zit ik op Bazzite. De [Aan de slag](https://zephyrus-linux.thectic.nl/nl/docs/)-pagina legt de keuze uit, en een switcher bovenaan elke pagina brengt je tussen de twee sets handleidingen.
+De handleidingen dekken CachyOS (Arch) en Bazzite (Fedora Atomic). Ik dualboot ze allebei op dezelfde machine. CachyOS is mijn daily driver, vooral omdat een deel van wat ik doe net wat directere systeemcontrole wil dan een atomic image je geeft, maar af en toe ga ik uit nieuwsgierigheid terug naar Bazzite en gebruik dat dan weer een tijdje. De [Aan de slag](https://zephyrus-linux.thectic.nl/nl/docs/)-pagina legt de keuze uit, en een switcher bovenaan elke pagina brengt je tussen de twee sets handleidingen.
 
 Ik ben nog actief aan het testen en experimenteren: dingen kunnen veranderen, kapot gaan of achteraf onjuist blijken. Alles wat hier staat is gebaseerd op mijn eigen ervaring en is op eigen risico.
 

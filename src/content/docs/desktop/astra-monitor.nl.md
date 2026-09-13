@@ -1,7 +1,7 @@
 ---
 title: "Astra Monitor"
-weight: 1
-prev: docs/hardware/color-profiles
+weight: 2
+prev: docs/desktop/gnome-extensions
 next: docs/security/autologin
 ---
 
@@ -24,38 +24,7 @@ De extensie heeft geen harde dependencies. Alles hieronder is optioneel en voegt
 
 ## De extensie installeren
 
-{{< tabs >}}
-{{< tab name="CachyOS" >}}
-
-Via Extension Manager, uit de repos of van Flathub:
-
-```bash
-sudo pacman -S extension-manager
-```
-
-```bash
-flatpak install flathub com.mattjakeman.ExtensionManager
-```
-
-Open hem, zoek op "Astra Monitor" en installeer. Of installeer via [extensions.gnome.org](https://extensions.gnome.org/extension/6682/astra-monitor/) in een browser.
-
-{{< /tab >}}
-{{< tab name="Bazzite" >}}
-
-Extension Manager is een Flatpak, dus voor de extensie zelf wordt er niets gelaagd:
-
-```bash
-flatpak install flathub com.mattjakeman.ExtensionManager
-```
-
-Open hem, zoek op "Astra Monitor" en installeer. Of installeer via [extensions.gnome.org](https://extensions.gnome.org/extension/6682/astra-monitor/) in een browser.
-
-{{< callout type="info" >}}
-GNOME-extensies staan in `~/.local/share/gnome-shell/extensions/`, dus in je home-map en niet in de image. De extensie zelf overleeft image-updates en rebases zonder layering. Alleen de optionele dependencies hieronder raken het systeem aan.
-{{< /callout >}}
-
-{{< /tab >}}
-{{< /tabs >}}
+Installeer hem zoals elke andere GNOME Shell-extensie: via Extension Manager, zie [GNOME-extensies]({{< relref "/docs/desktop/gnome-extensions" >}}) voor het instellen daarvan op beide distributies. Zoek op "Astra Monitor", of installeer rechtstreeks via [extensions.gnome.org](https://extensions.gnome.org/extension/6682/astra-monitor/).
 
 ## Optionele dependencies
 
