@@ -52,7 +52,7 @@ wsf enable      # requires one logout/login to take effect
 wsf status      # check whether it is active
 ```
 
-`wsf set 0.2` covers scroll sensitivity. Pinch zoom and pinch rotate have their own factors, tunable separately with `wsf set --pinch-zoom` and `wsf set --pinch-rotate` if the default feels off.
+`wsf set 0.2` covers scroll sensitivity. Pinch zoom and pinch rotate have their own factors, tunable separately with `wsf set --pinch-zoom 1.0` and `wsf set --pinch-rotate 1.0` if the default feels off.
 
 Settings are stored in `~/.config/wayland-scroll-factor/config`. After the first `wsf enable` and re-login, `wsf set` applies live without needing another logout.
 
