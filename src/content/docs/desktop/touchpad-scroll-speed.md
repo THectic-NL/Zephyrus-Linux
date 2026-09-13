@@ -72,11 +72,33 @@ scroll_vertical_factor: 0.2000 (config)
 scroll_horizontal_factor: 0.2000
 pinch_zoom_factor: 1.0000
 pinch_rotate_factor: 1.0000
+legacy factor: yes
 runtime config reload: pending (GNOME Shell has not loaded WSF yet)
 note: logout/login required after preload enable/disable
 ```
 
-The library path (`/usr/lib/wayland-scroll-factor/` for a package install, `~/.local/lib/wayland-scroll-factor/` if you built it yourself) is already known to `wsf`, but `gnome-shell` itself hasn't picked up the new `LD_PRELOAD` yet, because it was already running when you enabled it. Log out and back in, then `wsf status` should show `gnome-shell library mapped: yes` and `runtime config reload: active`. If it still doesn't after that, run `wsf doctor` for a diagnosis and `wsf repair` if it reports a stale preload setup, then log out and back in once more.
+The library path (`/usr/lib/wayland-scroll-factor/` for a package install, `~/.local/lib/wayland-scroll-factor/` if you built it yourself) is already known to `wsf`, but `gnome-shell` itself hasn't picked up the new `LD_PRELOAD` yet, because it was already running when you enabled it. Log out and back in, and `wsf status` shows it active instead:
+
+```
+wsf version: 1.0.0
+enabled: yes
+env file: ~/.config/environment.d/wayland-scroll-factor.conf (present)
+library: /usr/lib/wayland-scroll-factor/libwsf_preload.so (present)
+user manager LD_PRELOAD: /usr/lib/wayland-scroll-factor/libwsf_preload.so (includes WSF)
+gnome-shell pid: 99717
+gnome-shell LD_PRELOAD: /usr/lib/wayland-scroll-factor/libwsf_preload.so (includes WSF)
+gnome-shell library mapped: yes
+config: ~/.config/wayland-scroll-factor/config (present)
+scroll_vertical_factor: 0.2000 (config)
+scroll_horizontal_factor: 0.2000
+pinch_zoom_factor: 1.0000
+pinch_rotate_factor: 1.0000
+legacy factor: yes
+runtime config reload: active (GNOME preload rereads factors on handled gestures)
+note: logout/login required after preload enable/disable
+```
+
+If `gnome-shell library mapped` still says `no` after logging back in, run `wsf doctor` for a diagnosis and `wsf repair` if it reports a stale preload setup, then log out and back in once more.
 
 **Optional GUI** (`wsf-gui`, requires libadwaita ≥ 1.4):
 

@@ -72,11 +72,33 @@ scroll_vertical_factor: 0.2000 (config)
 scroll_horizontal_factor: 0.2000
 pinch_zoom_factor: 1.0000
 pinch_rotate_factor: 1.0000
+legacy factor: yes
 runtime config reload: pending (GNOME Shell has not loaded WSF yet)
 note: logout/login required after preload enable/disable
 ```
 
-Het library-pad (`/usr/lib/wayland-scroll-factor/` bij een package-install, `~/.local/lib/wayland-scroll-factor/` als je hem zelf bouwde) kent `wsf` dus al, maar `gnome-shell` zelf heeft de nieuwe `LD_PRELOAD` nog niet opgepikt, omdat die al draaide toen je hem inschakelde. Log uit en weer in, dan hoort `wsf status` `gnome-shell library mapped: yes` en `runtime config reload: active` te tonen. Is dat daarna nog steeds niet zo, draai dan `wsf doctor` voor een diagnose en `wsf repair` als die een verouderde preload-instelling meldt, en log daarna nog een keer uit en in.
+Het library-pad (`/usr/lib/wayland-scroll-factor/` bij een package-install, `~/.local/lib/wayland-scroll-factor/` als je hem zelf bouwde) kent `wsf` dus al, maar `gnome-shell` zelf heeft de nieuwe `LD_PRELOAD` nog niet opgepikt, omdat die al draaide toen je hem inschakelde. Log uit en weer in, en `wsf status` toont hem in plaats daarvan actief:
+
+```
+wsf version: 1.0.0
+enabled: yes
+env file: ~/.config/environment.d/wayland-scroll-factor.conf (present)
+library: /usr/lib/wayland-scroll-factor/libwsf_preload.so (present)
+user manager LD_PRELOAD: /usr/lib/wayland-scroll-factor/libwsf_preload.so (includes WSF)
+gnome-shell pid: 99717
+gnome-shell LD_PRELOAD: /usr/lib/wayland-scroll-factor/libwsf_preload.so (includes WSF)
+gnome-shell library mapped: yes
+config: ~/.config/wayland-scroll-factor/config (present)
+scroll_vertical_factor: 0.2000 (config)
+scroll_horizontal_factor: 0.2000
+pinch_zoom_factor: 1.0000
+pinch_rotate_factor: 1.0000
+legacy factor: yes
+runtime config reload: active (GNOME preload rereads factors on handled gestures)
+note: logout/login required after preload enable/disable
+```
+
+Zegt `gnome-shell library mapped` na het opnieuw inloggen nog steeds `no`, draai dan `wsf doctor` voor een diagnose en `wsf repair` als die een verouderde preload-instelling meldt, en log daarna nog een keer uit en in.
 
 **Optionele GUI** (`wsf-gui`, vereist libadwaita ≥ 1.4):
 
