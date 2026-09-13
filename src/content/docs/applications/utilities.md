@@ -185,7 +185,7 @@ Not tested on this hardware yet. AppImages generally need `libfuse2` at runtime;
 {{< /tabs >}}
 
 {{< callout type="warning" >}}
-Unofficial AUR packages (`tmog-bin`, `tmog-appimage`) exist too, but the official AppImage is the safer bet. Same general caveat as any AUR package: unaudited community build scripts. On top of that, at the time of writing `tmog-bin` was still packaging 0.1.1 while tmog.org itself had already moved on to 0.1.3 — one more thing that can silently fall out of sync.
+Unofficial AUR packages (`tmog-bin`, `tmog-appimage`) exist too, but the official AppImage is the safer bet. Same general caveat as any AUR package: unaudited community build scripts. On top of that, at the time of writing `tmog-bin` was still packaging 0.1.1 while tmog.org itself had already moved on to 0.1.3. One more thing that can silently fall out of sync.
 {{< /callout >}}
 
 ![Task Manager TMOG - Summary](/images/tmog-summary.avif)
