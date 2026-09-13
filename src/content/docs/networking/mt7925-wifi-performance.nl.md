@@ -7,7 +7,7 @@ next: docs/virtualization/vm-setup
 
 De G16 GA605WV heeft een MediaTek Wi-Fi 7 MT7925-kaart. Wegvallende verbindingen, traag roamen tussen mesh-nodes, of downloadsnelheden ruim onder wat de verbinding zou moeten geven: deze pagina behandelt alle drie.
 
-Dit is een script dat vier fixes tegelijk toepast (NetworkManager-powersave, PCIe ASPM, Bluetooth en een wireless-stack-queuelimiet), elk met een echt effect gemeten op deze hardware. Het heeft Python 3.14+ nodig (alleen standaardbibliotheek) en `pkexec` voor de bevoegde stappen.
+Dit is een script dat drie fixes tegelijk toepast (NetworkManager-powersave, PCIe ASPM en een wireless-stack-queuelimiet), elk met een echt effect gemeten op deze hardware, plus een optionele extra (Bluetooth uit) die je zelf kunt aanzetten. Het heeft Python 3.14+ nodig (alleen standaardbibliotheek) en `pkexec` voor de bevoegde stappen -- één wachtwoordprompt per commando, die alle bevoegde stappen in dat commando dekt, niet één prompt per stap.
 
 {{< callout type="info" >}}
 **Geverifieerd op deze hardware.** Getest met `iperf3` tegen een lokale server op een 2,5GbE-netwerk met UniFi. Stock: ~300 Mbit/s. Getuned: 500-608 Mbit/s, meestal 560+. Jouw cijfers variëren met AP, signaalsterkte en kernelversie, maar de fixes zelf zijn bevestigd, niet theoretisch.
@@ -23,7 +23,7 @@ Testomstandigheden, want die beïnvloeden de cijfers: een UniFi U7 Pro access po
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/mt7925-tune.py
-echo "c8887ca1d426df7ae55c94fd05ba9cc133566bed2feca434170f3817d6b5e69f  mt7925-tune.py" | sha256sum -c
+echo "1da15474e447e1fe98872072768dd5f148c0a632ae39f78fc5b5b8ae3fa1e534  mt7925-tune.py" | sha256sum -c
 ```
 
 ### Toepassen
@@ -32,20 +32,29 @@ echo "c8887ca1d426df7ae55c94fd05ba9cc133566bed2feca434170f3817d6b5e69f  mt7925-t
 python3 mt7925-tune.py enable
 ```
 
-Herstart daarna. Eén van de vier fixes (PCIe ASPM) is een kernel-moduleparameter, alleen gelezen bij het laden van de module.
+Herstart daarna. Eén van de drie fixes (PCIe ASPM) is een kernel-moduleparameter, alleen gelezen bij het laden van de module.
+
+Wil je ook de optionele Bluetooth-uit-extra (zie tabel hieronder)?
+
+```bash
+python3 mt7925-tune.py enable --bluetooth-off
+```
 
 {{% /steps %}}
 
-Bron: [mt7925-tune.py](/scripts/mt7925-tune.py). SHA-256 `c8887ca1d426df7ae55c94fd05ba9cc133566bed2feca434170f3817d6b5e69f`.
+Bron: [mt7925-tune.py](/scripts/mt7925-tune.py). SHA-256 `1da15474e447e1fe98872072768dd5f148c0a632ae39f78fc5b5b8ae3fa1e534`.
 
-| Fix | Wat het doet |
+| Fix (toegepast door `enable`) | Wat het doet |
 |---|---|
 | NetworkManager's wifi-powersave uitzetten | De meest voorkomende oorzaak van drops en traag roamen op mesh-netwerken |
 | PCIe ASPM voor de kaart uitzetten | De energiestatus van de PCIe-link zelf, niet de radio. De belangrijkste doorvoerfix |
-| Bluetooth uit | De MT7925 is een combo Wi-Fi+Bluetooth-chip die dezelfde silicon en antennepaden deelt. Haalt een bron van variatie weg |
 | AQL Best Effort-limiet verhogen | `mac80211` begrenst hoeveel data per verkeersklasse in de wachtrij mag staan om latency laag te houden onder congestie. De standaardlimiet kiest voor eerlijkheid boven het verzadigen van één stream. Trade-off: minder marge voor latency-gevoelig verkeer (calls, gaming) dat de radio deelt onder belasting |
 
-`python3 mt7925-tune.py status` laat precies zien wat nu actief is en wat nog een herstart nodig heeft. `python3 mt7925-tune.py disable` maakt alles ongedaan.
+| Optionele extra (`--bluetooth-off`, niet standaard toegepast) | Wat het doet |
+|---|---|
+| Bluetooth uit | De MT7925 is een combo Wi-Fi+Bluetooth-chip die dezelfde silicon en antennepaden deelt. Haalt een bron van variatie weg, ten koste van Bluetooth. Geen van de gemeten fixes hierboven, dus jouw keuze, niet die van het script |
+
+`python3 mt7925-tune.py status` laat precies zien wat nu actief is, wat nog een herstart nodig heeft, en welke hardware en driver/firmwareversie gedetecteerd zijn. `python3 mt7925-tune.py disable` maakt alles ongedaan, Bluetooth inbegrepen.
 
 {{< callout type="info" >}}
 **Bewust weggelaten:** `disable_eht=1` duikt op in sommige externe gidsen, maar bestaat alleen in out-of-tree patchsets, niet in de mainline-driver die deze G16 draait. CPU-governor- en power-profile-wijzigingen hielpen ook in tests, maar dat is een systeembrede afweging, geen wifi-specifieke, dus het script raakt ze niet aan. Oudere gidsen noemen ook het vastzetten van de `power_save`-moduleparameter van de driver zelf; op de kernel van deze G16 (7.2.4) bestaat die parameter niet meer (`dmesg` toont `mt7925e: unknown parameter 'power_save' ignored`), dus het script slaat die ook over.
@@ -57,7 +66,7 @@ Bron: [mt7925-tune.py](/scripts/mt7925-tune.py). SHA-256 `c8887ca1d426df7ae55c94
 |---|---|
 | Stock | ~300 Mbit/s |
 | Alleen ASPM uit + NM-powersave uit | 410-450 Mbit/s |
-| Alles (script `enable`) | 500-608 Mbit/s, meestal 560+ |
+| Alles, inclusief de optionele Bluetooth-uit-extra (`enable --bluetooth-off`) | 500-608 Mbit/s, meestal 560+ |
 
 Ter referentie: een telefoon (Samsung Galaxy S24 Ultra) op dezelfde AP mat 439-811 Mbit/s over meerdere runs, gemiddeld rond de 545 Mbit/s, dus de getunede G16 zit nu in hetzelfde bereik als de wifi-radio van een moderne telefoon hier. Op een sterkere/dichterbije AP haalde diezelfde telefoon 1,24 Gbit/s, ruim boven wat het 160MHz-plafond van de MT7925 ooit kan bereiken, ongeacht signaalkwaliteit (zie [hardware-plafond](#het-hardware-plafond) hieronder).
 
@@ -108,6 +117,8 @@ Qualcomm's huidige Wi-Fi 7-kaart (QCNCM865/FastConnect 7800) is ook niet beter: 
 
 {{% details title="Je driver- en firmwareversie checken" closed="true" %}}
 
+`python3 mt7925-tune.py status` laat dit allemaal automatisch zien (kernel/driverversie, de firmwareversie en bouwdatum uit `dmesg`, en de `linux-firmware-mediatek`-packageversie op Arch-gebaseerde distro's). Handmatig checken kan ook:
+
 ```bash
 uname -r                                                          # kernel = driverversie, zit in-tree
 sudo dmesg | grep -i "mt7925e.*Firmware\|mt7925e.*HW/SW"          # firmwareversie
@@ -118,7 +129,7 @@ pacman -Qi linux-firmware-mediatek | grep Version                  # firmware-pa
 
 {{% details title="Waar je actieve ontwikkeling volgt" closed="true" %}}
 
-Er wordt nog steeds actief aan deze chip gewerkt; er landden patches nog deze week tijdens het testen voor deze pagina.
+Er wordt nog steeds actief aan deze chip gewerkt; er landden patches nog deze week tijdens het testen voor deze pagina. `python3 mt7925-tune.py status` toont dezelfde links, zodat je ze niet hoeft te onthouden.
 
 - [lore.kernel.org/linux-wireless](https://lore.kernel.org/linux-wireless/): de officiële patch-mailinglist. Zoek op "mt7925".
 - [ratatoskr.run](https://ratatoskr.run/): een beter leesbaar webarchief van dezelfde mailinglists.
