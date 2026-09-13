@@ -11,29 +11,37 @@ Two third-party tools fill this gap. **wayland-scroll-factor** is the recommende
 
 ## wayland-scroll-factor (recommended)
 
-[wayland-scroll-factor](https://github.com/daniel-g-carrasco/wayland-scroll-factor) by daniel-g-carrasco is a user-level tool that intercepts libinput function calls inside `gnome-shell` and applies a scroll multiplier. No root access required; everything lives in your home directory.
+[wayland-scroll-factor](https://github.com/daniel-g-carrasco/wayland-scroll-factor) by daniel-g-carrasco intercepts libinput function calls inside `gnome-shell` and applies a scroll multiplier. It has its own package for both distributions now, so building it from source by hand is no longer the easiest way to get it running.
 
 **Install:**
 
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+From the AUR:
+
 ```bash
-git clone https://github.com/daniel-g-carrasco/wayland-scroll-factor.git
-cd wayland-scroll-factor
-meson setup build --prefix="$HOME/.local"
-ninja -C build
-meson install -C build
-cd ..
-rm -rf wayland-scroll-factor
+paru -S wayland-scroll-factor
 ```
 
-{{< callout type="info" >}}
-**On Bazzite:** the result lands in `$HOME/.local`, which is fine, but the build needs a toolchain and `libinput` headers, and the library it produces is preloaded into the *host's* `gnome-shell`. Build it in a Fedora distrobox of the same release as your image, or layer the build dependencies:
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+Through the project's own COPR repo, layered with `rpm-ostree`:
 
 ```bash
-rpm-ostree install meson ninja-build gcc libinput-devel
+sudo curl -fsSL -o /etc/yum.repos.d/daniel-g-carrasco-wayland-scroll-factor.repo \
+  "https://copr.fedorainfracloud.org/coprs/daniel-g-carrasco/wayland-scroll-factor/repo/fedora-$(rpm -E %fedora)/daniel-g-carrasco-wayland-scroll-factor-fedora-$(rpm -E %fedora).repo"
+sudo rpm-ostree refresh-md
+sudo rpm-ostree install wayland-scroll-factor
 systemctl reboot
 ```
 
-A container built against a different Fedora release can produce a library `gnome-shell` refuses to load.
+{{< /tab >}}
+{{< /tabs >}}
+
+{{< callout type="info" >}}
+Building from source is still an option, for the `-git` build (`paru -S wayland-scroll-factor-git` on CachyOS) or on a distribution without a package. It needs a C compiler, `meson`, `ninja` and `pkgconf`, none of which are installed by default on either distribution here. The project's own [dependencies](https://github.com/daniel-g-carrasco/wayland-scroll-factor/blob/main/docs/dependencies.md) and [install](https://github.com/daniel-g-carrasco/wayland-scroll-factor/blob/main/docs/install.md) docs have the exact package names and build steps.
 {{< /callout >}}
 
 **Configure:**
@@ -44,17 +52,53 @@ wsf enable      # requires one logout/login to take effect
 wsf status      # check whether it is active
 ```
 
+`wsf set 0.2` covers scroll sensitivity. Pinch zoom and pinch rotate have their own factors, tunable separately with `wsf set --pinch-zoom 1.0` and `wsf set --pinch-rotate 1.0` if the default feels off.
+
 Settings are stored in `~/.config/wayland-scroll-factor/config`. After the first `wsf enable` and re-login, `wsf set` applies live without needing another logout.
 
-When everything is working, `wsf status` confirms the library is injected into gnome-shell:
+Right after `wsf enable`, before you've logged back in, `wsf status` still shows it as pending:
 
 ```
-gnome-shell LD_PRELOAD: ~/.local/lib/wayland-scroll-factor/libwsf_preload.so (includes WSF)
+wsf version: 1.0.0
+enabled: yes
+env file: ~/.config/environment.d/wayland-scroll-factor.conf (present)
+library: /usr/lib/wayland-scroll-factor/libwsf_preload.so (present)
+user manager LD_PRELOAD: /usr/lib/wayland-scroll-factor/libwsf_preload.so (includes WSF)
+gnome-shell pid: 3760
+gnome-shell LD_PRELOAD: not set
+gnome-shell library mapped: no
+config: ~/.config/wayland-scroll-factor/config (present)
+scroll_vertical_factor: 0.2000 (config)
+scroll_horizontal_factor: 0.2000
+pinch_zoom_factor: 1.0000
+pinch_rotate_factor: 1.0000
+legacy factor: yes
+runtime config reload: pending (GNOME Shell has not loaded WSF yet)
+note: logout/login required after preload enable/disable
+```
+
+The library path (`/usr/lib/wayland-scroll-factor/` for a package install, `~/.local/lib/wayland-scroll-factor/` if you built it yourself) is already known to `wsf`, but `gnome-shell` itself hasn't picked up the new `LD_PRELOAD` yet, because it was already running when you enabled it. Log out and back in, and `wsf status` shows it active instead:
+
+```
+wsf version: 1.0.0
+enabled: yes
+env file: ~/.config/environment.d/wayland-scroll-factor.conf (present)
+library: /usr/lib/wayland-scroll-factor/libwsf_preload.so (present)
+user manager LD_PRELOAD: /usr/lib/wayland-scroll-factor/libwsf_preload.so (includes WSF)
+gnome-shell pid: 99717
+gnome-shell LD_PRELOAD: /usr/lib/wayland-scroll-factor/libwsf_preload.so (includes WSF)
 gnome-shell library mapped: yes
-runtime config reload: active (factor changes should apply live)
+config: ~/.config/wayland-scroll-factor/config (present)
+scroll_vertical_factor: 0.2000 (config)
+scroll_horizontal_factor: 0.2000
+pinch_zoom_factor: 1.0000
+pinch_rotate_factor: 1.0000
+legacy factor: yes
+runtime config reload: active (GNOME preload rereads factors on handled gestures)
+note: logout/login required after preload enable/disable
 ```
 
-If the status shows the env file is present but systemd hasn't picked it up yet, run `systemctl --user daemon-reexec` and log out/in once.
+If `gnome-shell library mapped` still says `no` after logging back in, run `wsf doctor` for a diagnosis and `wsf repair` if it reports a stale preload setup, then log out and back in once more.
 
 **Optional GUI** (`wsf-gui`, requires libadwaita ≥ 1.4):
 
@@ -77,7 +121,7 @@ wsf disable
 [libinput-config](https://github.com/lz42/libinput-config) by lz42 is a system-wide workaround that requires building from source and root access. Use this if wayland-scroll-factor does not work for your setup.
 
 {{< callout type="warning" >}}
-**CachyOS only.** This installs into `/usr`, which is read-only on Bazzite. There is no clean way to do it there. Use wayland-scroll-factor above, which stays inside your home directory.
+**CachyOS only.** This installs into `/usr`, which is read-only on Bazzite. There is no clean way to do it there. Use wayland-scroll-factor above instead, which has a working install path on both distributions.
 {{< /callout >}}
 
 **Install (one-time):**
