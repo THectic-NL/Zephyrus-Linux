@@ -7,7 +7,7 @@ next: docs/networking/mt7925-wifi-performance
 
 Elke officiële eduroam-installer die ik probeerde faalde op Saxion: de verbinding hangt tijdens de TLS-handshake en komt nooit door. De oorzaak is een certificaatmismatch. Saxion's gepubliceerde CAT-profiel legt nog de oude GÉANT/USERTrust-keten vast, terwijl de RADIUS-server inmiddels naar HARICA-roots ketent ([#109](https://github.com/THectic-NL/Zephyrus-Linux/issues/109)).
 
-Dit is een Saxion-specifiek script dat de verbinding opzet met de juiste roots vastgelegd. Het gebruikt PEAP/MSCHAPv2 en `domain-suffix-match`, en heeft Python 3.11+ (alleen standaardbibliotheek) en NetworkManager 1.8+ nodig.
+Dit is een Saxion-specifiek script dat de verbinding opzet met de juiste roots vastgelegd. Het gebruikt PEAP/MSCHAPv2 en `domain-suffix-match`, en heeft Python 3.14+ (alleen standaardbibliotheek) en NetworkManager 1.8+ nodig.
 
 ## Installatie
 
@@ -17,7 +17,7 @@ Dit is een Saxion-specifiek script dat de verbinding opzet met de juiste roots v
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/saxion-eduroam.py
-echo "17cd13c629ce480ece1a7896aff7d4061347ea0082b32dfa6b23dac6b34882ad  saxion-eduroam.py" | sha256sum -c
+echo "c037f0fc7e282b8e9126e7646d87b5b50069d69e60053d22d4792c88b5bb89a8  saxion-eduroam.py" | sha256sum -c
 ```
 
 ### Uitvoeren
@@ -32,7 +32,7 @@ Het verwijdert een eventueel bestaand eduroam-profiel, vraagt je gebruikersnaam 
 
 ![eduroam installer toont installatie geslaagd](/images/eduroam-installer-success.avif)
 
-Bron: [saxion-eduroam.py](/scripts/saxion-eduroam.py). SHA-256 `17cd13c629ce480ece1a7896aff7d4061347ea0082b32dfa6b23dac6b34882ad`.
+Bron: [saxion-eduroam.py](/scripts/saxion-eduroam.py). SHA-256 `c037f0fc7e282b8e9126e7646d87b5b50069d69e60053d22d4792c88b5bb89a8`.
 
 Handige vlaggen:
 

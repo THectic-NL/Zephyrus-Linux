@@ -205,10 +205,10 @@ jobs:
 
       # ── Python: style and security ─────────────────────────────────────────
       #
-      # src/static/scripts/ ships one script, saxion-eduroam.py, that visitors
-      # download and run. flake8 and bandit also get a weekly re-run in
-      # security.yml, where new rules can flag something in code that has not
-      # changed.
+      # src/static/scripts/ ships the Python scripts (saxion-eduroam.py,
+      # mt7925-tune.py) that visitors download and run. flake8 and bandit
+      # also get a weekly re-run in security.yml, where new rules can flag
+      # something in code that has not changed.
       - name: Set up Python
         if: ${{ !cancelled() }}
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0

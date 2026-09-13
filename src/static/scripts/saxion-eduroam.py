@@ -27,8 +27,9 @@ SERVER_DOMAIN = "ise.infra.saxion.net"
 ANONYMOUS_ID = f"anonymous@{REALM}"
 
 # Support policy, not a technical floor: the code itself runs on older Pythons.
-# Everything current ships 3.11 or newer.
-MIN_PYTHON = (3, 11)
+# Pinned to the current stable release so nobody runs this on an
+# already-unsupported interpreter.
+MIN_PYTHON = (3, 14)
 
 # nmcli's default is 90s of silence, which looks like a hang. Cut it short.
 CONNECT_TIMEOUT = 45

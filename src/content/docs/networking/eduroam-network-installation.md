@@ -7,7 +7,7 @@ next: docs/networking/mt7925-wifi-performance
 
 Every official eduroam installer I tried failed on Saxion: the connection hangs during the TLS handshake and never completes. The cause is a certificate mismatch. Saxion's published CAT profile still pins the old GÉANT/USERTrust chain, while the RADIUS server now chains to HARICA roots ([#109](https://github.com/THectic-NL/Zephyrus-Linux/issues/109)).
 
-This is a Saxion-specific script that sets up the connection with the right roots pinned. It uses PEAP/MSCHAPv2 and `domain-suffix-match`, needs Python 3.11+ (standard library only) and NetworkManager 1.8+.
+This is a Saxion-specific script that sets up the connection with the right roots pinned. It uses PEAP/MSCHAPv2 and `domain-suffix-match`, needs Python 3.14+ (standard library only) and NetworkManager 1.8+.
 
 ## Setup
 
@@ -17,7 +17,7 @@ This is a Saxion-specific script that sets up the connection with the right root
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/saxion-eduroam.py
-echo "17cd13c629ce480ece1a7896aff7d4061347ea0082b32dfa6b23dac6b34882ad  saxion-eduroam.py" | sha256sum -c
+echo "c037f0fc7e282b8e9126e7646d87b5b50069d69e60053d22d4792c88b5bb89a8  saxion-eduroam.py" | sha256sum -c
 ```
 
 ### Run
@@ -32,7 +32,7 @@ It removes any existing eduroam profile, asks for your username (a zenity dialog
 
 ![eduroam installer showing installation successful](/images/eduroam-installer-success.avif)
 
-Source: [saxion-eduroam.py](/scripts/saxion-eduroam.py). SHA-256 `17cd13c629ce480ece1a7896aff7d4061347ea0082b32dfa6b23dac6b34882ad`.
+Source: [saxion-eduroam.py](/scripts/saxion-eduroam.py). SHA-256 `c037f0fc7e282b8e9126e7646d87b5b50069d69e60053d22d4792c88b5bb89a8`.
 
 Useful flags:
 
