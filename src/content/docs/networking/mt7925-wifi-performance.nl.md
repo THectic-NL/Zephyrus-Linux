@@ -23,7 +23,7 @@ Testomstandigheden, want die beïnvloeden de cijfers: een UniFi U7 Pro access po
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/mt7925-tune.py
-echo "1da15474e447e1fe98872072768dd5f148c0a632ae39f78fc5b5b8ae3fa1e534  mt7925-tune.py" | sha256sum -c
+echo "cf5aa114d872c6480525b55f637fab346337f9cbbdce9657e0688fd48cac1247  mt7925-tune.py" | sha256sum -c
 ```
 
 ### Toepassen
@@ -42,7 +42,7 @@ python3 mt7925-tune.py enable --bluetooth-off
 
 {{% /steps %}}
 
-Bron: [mt7925-tune.py](/scripts/mt7925-tune.py). SHA-256 `1da15474e447e1fe98872072768dd5f148c0a632ae39f78fc5b5b8ae3fa1e534`.
+Bron: [mt7925-tune.py](/scripts/mt7925-tune.py). SHA-256 `cf5aa114d872c6480525b55f637fab346337f9cbbdce9657e0688fd48cac1247`.
 
 | Fix (toegepast door `enable`) | Wat het doet |
 |---|---|

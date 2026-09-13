@@ -372,7 +372,9 @@ fi
         dmesg_part, _, aql_part = res.stdout.partition(marker + "\n")
         aql_lines = aql_part.splitlines()
         exists = bool(aql_lines) and aql_lines[0].strip() == "EXISTS"
-        value = aql_lines[1].strip() if exists and len(aql_lines) > 1 else ""
+        # aql_txq_limit is a header line plus one row per access category
+        # (VO/VI/BE/BK), not a single value -- keep the whole table.
+        value = "\n".join(aql_lines[1:]).strip() if exists and len(aql_lines) > 1 else ""
         return {"dmesg": dmesg_part, "aql_exists": exists, "aql_value": value}
 
     @staticmethod
