@@ -313,12 +313,12 @@ The app marks this tab **work in progress**; notifications in particular are inc
 
 {{% details title="Keyboard RGB (Aura)" closed="true" %}}
 
-**Set keyboard backlight brightness:**
+**Set keyboard backlight brightness** (valid levels: `off`, `low`, `med`, `high`):
 ```bash
-asusctl leds get                    # show current level
-asusctl leds set <off|low|med|high>
-asusctl leds next                   # one step brighter
-asusctl leds prev                   # one step dimmer
+asusctl leds get     # show current level
+asusctl leds set high
+asusctl leds next     # one step brighter
+asusctl leds prev     # one step dimmer
 ```
 
 **Open Aura configuration in ROG Control Center:**

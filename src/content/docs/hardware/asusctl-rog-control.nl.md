@@ -313,12 +313,12 @@ De app markeert dit tabblad zelf als **work in progress**; met name de notificat
 
 {{% details title="Toetsenbord RGB (Aura)" closed="true" %}}
 
-**Toetsenbordverlichting helderheid aanpassen:**
+**Toetsenbordverlichting helderheid aanpassen** (geldige niveaus: `off`, `low`, `med`, `high`):
 ```bash
-asusctl leds get                    # huidig niveau tonen
-asusctl leds set <off|low|med|high>
-asusctl leds next                   # één stap helderder
-asusctl leds prev                   # één stap donkerder
+asusctl leds get     # huidig niveau tonen
+asusctl leds set high
+asusctl leds next     # één stap helderder
+asusctl leds prev     # één stap donkerder
 ```
 
 **Aura configuratie openen in ROG Control Center:**

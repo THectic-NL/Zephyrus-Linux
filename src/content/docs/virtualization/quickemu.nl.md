@@ -138,7 +138,7 @@ gpu_accel="on"
 
 - **Hybride graphics.** Laat de VM op de iGPU renderen. Hem met `prime-run` naar de discrete kaart duwen levert voor een bureaublad-VM niets op en kost accu.
 - **Schermschaling.** VM-vensters komen op in de resolutie uit de config, en op een 2560x1600-paneel is dat klein. Zet de resolutie binnen de gast in plaats van te vechten met het venster op de host.
-- **Accu.** Een draaiende VM houdt cores bezig en maakt het Silent-[`asusctl`-profiel]({{< relref "/docs/hardware/asusctl-rog-control" >}}) zinloos. Prima op netstroom, merkbaar op accu.
+- **Accu.** Een draaiende VM houdt cores bezig en maakt het Quiet/LowPower-[`asusctl`-profiel]({{< relref "/docs/hardware/asusctl-rog-control" >}}) zinloos. Prima op netstroom, merkbaar op accu.
 
 ## Referenties
 

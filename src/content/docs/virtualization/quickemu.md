@@ -138,7 +138,7 @@ gpu_accel="on"
 
 - **Hybrid graphics.** Let the VM render on the iGPU. Forcing it onto the discrete card with `prime-run` gains nothing for a desktop VM and costs battery.
 - **Display scaling.** VM windows come up at the config's resolution, which on a 2560x1600 panel means small. Set the resolution inside the guest rather than fighting the host window.
-- **Battery.** A running VM keeps cores busy and defeats the point of the Silent [`asusctl` profile]({{< relref "/docs/hardware/asusctl-rog-control" >}}). Fine on AC, noticeable on battery.
+- **Battery.** A running VM keeps cores busy and defeats the point of the Quiet/LowPower [`asusctl` profile]({{< relref "/docs/hardware/asusctl-rog-control" >}}). Fine on AC, noticeable on battery.
 
 ## References
 
