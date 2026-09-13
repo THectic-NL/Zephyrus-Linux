@@ -70,6 +70,8 @@ Bron: [mt7925-tune.py](/scripts/mt7925-tune.py). SHA-256 `cf5aa114d872c6480525b5
 
 Ter referentie: een telefoon (Samsung Galaxy S24 Ultra) op dezelfde AP mat 439-811 Mbit/s over meerdere runs, gemiddeld rond de 545 Mbit/s, dus de getunede G16 zit nu in hetzelfde bereik als de wifi-radio van een moderne telefoon hier. Op een sterkere/dichterbije AP haalde diezelfde telefoon 1,24 Gbit/s, ruim boven wat het 160MHz-plafond van de MT7925 ooit kan bereiken, ongeacht signaalkwaliteit (zie [hardware-plafond](#het-hardware-plafond) hieronder).
 
+Om even bij stil te staan: die telefoon kwam uit in januari 2024. Een speciaal gebouwde M.2 2230 Wi-Fi 7-kaart in een 2024/2025-gaminglaptop, getuned tot zijn eigen plafond, verliest nog steeds van de wifi-chip van een telefoon van twee jaar oud. Dat is geen configuratieprobleem dat dit script kan wegtunen -- de MT7925 is, op basis van dit bewijs, gewoon een middelmatige kaart. De fixes hierboven brengen 'm waar hij uit de doos had moeten zitten, niet waar hij eigenlijk zou moeten zitten.
+
 {{< callout type="warning" >}}
 Verwacht variatie tussen runs, ook in een stabiele, getunede staat (herhaalde runs van 20s liepen uiteen van 509-598 Mbit/s zonder dat er iets veranderde). Direct na een herstart of reconnect is het erger: retries kunnen fors pieken voordat de verbinding settelt (gezien: 3000+ retries in één run). Beoordeel de fix op een paar runs, niet op één, en nooit op de allereerste test na een herstart.
 {{< /callout >}}
@@ -79,6 +81,20 @@ Verwacht variatie tussen runs, ook in een stabiele, getunede staat (herhaalde ru
 ## Het hardware-plafond
 
 De MT7925 is hardware-gelimiteerd tot 160MHz-kanaalbreedte en 2×2 MIMO, bevestigd via `iw phy phy0 info`: `Supported Channel Width: 160 MHz`, `Rx/Tx Max NSS: 2`, helemaal geen `EHT-MCS Map (BW = 320)`-vermelding. Een Wi-Fi 7 access point kan 320MHz 6GHz-kanalen aanbieden; deze kaart kan daar altijd maar de helft van gebruiken. Geen driver, firmware of instelling verandert dat. Verwacht met de fixes hierboven ruwweg een verdubbeling van de doorvoer uit de doos, geen multi-gigabit wifi.
+
+## Als jouw cijfers niet overeenkomen met die van deze pagina
+
+De cijfers hierboven gaan uit van een redelijk sterk 6GHz-signaal. 6GHz heeft minder bereik en muurpenetratie dan 5GHz, en de MT7925 valt stilletjes terug van 2 spatial streams naar 1 ruim voordat de verbinding daadwerkelijk wegvalt -- wat het plafond ruwweg halveert, bovenop wat het zwakkere signaal al kost.
+
+Echt voorbeeld, dezelfde laptop en access point, alleen de afstand veranderde:
+
+| | Verder van de AP | Dichter bij de AP |
+|---|---|---|
+| Signaal | -70 tot -73 dBm | -63 dBm |
+| Onderhandelde rate (ook in `status`'s "Current link") | `EHT-NSS 1`, 432-576 Mbit/s | `EHT-NSS 2`, 1152,8 Mbit/s |
+| `iperf3 -P 4`-doorvoer | ~170-260 Mbit/s | 583-594 Mbit/s |
+
+Zelfde script, zelfde tuning, verder alles gelijk -- de enige variabele was afstand. `python3 mt7925-tune.py status` toont signaal en `EHT-NSS` in het "Current link"-onderdeel precies om deze reden: check eerst of je niet gewoon naar een signaalprobleem kijkt voordat je aanneemt dat een fix niet werkt. Springt `EHT-NSS` terug naar 2 en stijgt de doorvoer als je dichterbij gaat staan? Dan is het bereik, geen kapotte kaart.
 
 ## Drops en roaming-problemen diagnosticeren
 
