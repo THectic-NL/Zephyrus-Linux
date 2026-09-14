@@ -12,9 +12,13 @@ The Zephyrus G16 has a lot of hardware features that don't work out of the box o
 {{< /callout >}}
 
 **Package Information (at the time of writing):**
-- `asusctl` 6.4.0: CLI frontend for fan curves, profiles, battery limit, RGB, Slash LED, GPU switching. Also ships `asusd`, the background daemon that actually talks to the hardware, and its systemd service. There's no separate `asusd` package to install: `pacman -Q asusd` / `rpm -q asusd` will come back empty even though the daemon is very much there.
-- `rog-control-center` 6.4.0: graphical frontend, communicates with asusd
+- `asusctl` 6.5.0: CLI frontend for fan curves, profiles, battery limit, RGB, Slash LED, GPU switching. Also ships `asusd`, the background daemon that actually talks to the hardware, and its systemd service. There's no separate `asusd` package to install: `pacman -Q asusd` / `rpm -q asusd` will come back empty even though the daemon is very much there.
+- `rog-control-center` 6.5.0: graphical frontend, communicates with asusd
 - Source: [asusctl releases](https://github.com/OpenGamingCollective/asusctl/releases) · in the CachyOS/Arch repos, and in [Terra](https://terra.fyralabs.com/) for Fedora
+
+{{< callout type="info" >}}
+**6.5.0** ([release notes](https://github.com/OpenGamingCollective/asusctl/releases/tag/6.5.0), tagged September 13, 2026) is mostly a stability and validation pass: fixed MUX write failures in certain scenarios, better fan-curve and firmware-attribute write validation, GPU wake-up by telemetry fixed, fan curves now update after a profile change, and new Aura lighting support for several other Strix models. The "MUX write failures" fix lines up with the batch-write bug tracked in [Known Issues]({{< relref "/docs/known-issues" >}}) (`asusctl#318`): its two upstream commits landed in late August, before this tag, so 6.5.0 is the first tagged release that should carry it. Confirm with `asusctl info` once your distro packages the update.
+{{< /callout >}}
 
 {{< callout type="info" >}}
 Verify what's actually installed with `asusctl info` (prints the asusctl version alongside detected hardware) or `pacman -Q asusctl rog-control-center` / `rpm -q asusctl rog-control-center`.
@@ -439,6 +443,12 @@ The `asus-armoury` driver has been [merged into Linux 6.19](https://www.phoronix
 Kernel 7.0 shipped in April 2026 and CachyOS picked it up fast. For this ASUS ROG G16 it delivered what was promised: better AMDGPU coverage for newer RDNA 3.5-class IP blocks (GFX11.5.4) and further NVIDIA work. Gaming performance on the Radeon 890M improved noticeably, roughly in line with the ~20% uplift that was anticipated. Combined with the improvements from 6.19, this hardware finally runs the way it should on Linux. The current CachyOS kernel is 7.2.4-1-cachyos.
 
 **Sources:** [Linus confirms Linux 7.0](https://www.phoronix.com/news/Linux-7.0-Is-Next) · [HID laptop quirks for ASUS ROG models](https://www.phoronix.com/news/Linux-7.0-HID) · [Linux 7.0 DRM/AMDGPU updates](https://www.phoronix.com/news/Linux-7.0-Graphics-Drivers)
+
+### Linux 7.3: scheduler rework and storage/memory wins (not out yet)
+
+Not released yet, but close. `7.3-rc1` landed August 30, 2026 and `rc3` on September 13; on the usual 9-10 week cycle that puts the final release around October 18, 2026 (October 25 if an extra rc8 turns out to be needed). Worth planning for: a scheduler rework that's measured up to 25% better average FPS on older/low-power hardware, with improved cluster-aware scheduling across core types. That's directly relevant here, not just an Intel P/E-core story: the Ryzen AI 9 HX 370 in this laptop is itself a mixed Zen5/Zen5c-core design. Alongside the scheduler work: Direct I/O now runs through an iomap bounce buffer instead of falling back to buffered I/O (roughly half of theoretical throughput up to close to 95%), Btrfs skips slow paths on Direct I/O and `fsync()`, a KSM reverse-mapping lock fix drops a worst-case stall from ~700ms to under 2ms, and `zsmalloc` sees less lock contention when several processes free compressed memory at once.
+
+**Sources:** [Phoronix: Linux 7.3 features overview](https://www.phoronix.com/review/linux-73-features) · [Phoronix: Linux 7.3 "flattens the pick" (scheduler)](https://www.phoronix.com/news/Linux-7.3-Flattens-The-Pick) · [9to5Linux: Linux 7.3-rc1 announced](https://9to5linux.com/linus-torvalds-announces-first-linux-kernel-7-3-release-candidate)
 
 
 ## Additional Resources

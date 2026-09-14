@@ -12,9 +12,13 @@ De Zephyrus G16 heeft veel hardware-functies die op Linux niet zomaar werken: fa
 {{< /callout >}}
 
 **Pakketinformatie (op het moment van schrijven):**
-- `asusctl` 6.4.0: CLI frontend voor fan curves, profielen, batterijlimiet, RGB, Slash LED, GPU-switching. Levert ook `asusd` mee, het achtergrondproces dat daadwerkelijk met de hardware praat, plus de bijbehorende systemd-service. Er is geen los `asusd`-pakket om te installeren: `pacman -Q asusd` / `rpm -q asusd` komt leeg terug terwijl de daemon er wel degelijk is.
-- `rog-control-center` 6.4.0: grafische frontend, communiceert met asusd
+- `asusctl` 6.5.0: CLI frontend voor fan curves, profielen, batterijlimiet, RGB, Slash LED, GPU-switching. Levert ook `asusd` mee, het achtergrondproces dat daadwerkelijk met de hardware praat, plus de bijbehorende systemd-service. Er is geen los `asusd`-pakket om te installeren: `pacman -Q asusd` / `rpm -q asusd` komt leeg terug terwijl de daemon er wel degelijk is.
+- `rog-control-center` 6.5.0: grafische frontend, communiceert met asusd
 - Bron: [asusctl releases](https://github.com/OpenGamingCollective/asusctl/releases) · in de CachyOS/Arch-repos, en in [Terra](https://terra.fyralabs.com/) voor Fedora
+
+{{< callout type="info" >}}
+**6.5.0** ([release notes](https://github.com/OpenGamingCollective/asusctl/releases/tag/6.5.0), getagd op 13 september 2026) is vooral een stabiliteits- en validatieronde: MUX-schrijffouten in bepaalde scenario's gefixt, betere validatie bij het wegschrijven van fan curves en firmware-attributen, GPU-wake-up via telemetrie gefixt, fan curves worden nu na een profielwissel bijgewerkt, en nieuwe Aura-verlichtingsondersteuning voor een aantal andere Strix-modellen. De "MUX-schrijffouten"-fix komt overeen met de batch-write-bug uit [Known Issues]({{< relref "/docs/known-issues" >}}) (`asusctl#318`): de twee upstream-commits daarvoor landden eind augustus, vóór deze tag, dus 6.5.0 is de eerste getagde release die 'm zou moeten bevatten. Check met `asusctl info` zodra jouw distro de update pakketteert.
+{{< /callout >}}
 
 {{< callout type="info" >}}
 Controleer wat er daadwerkelijk geïnstalleerd is met `asusctl info` (toont de asusctl-versie samen met gedetecteerde hardware) of `pacman -Q asusctl rog-control-center` / `rpm -q asusctl rog-control-center`.
@@ -439,6 +443,12 @@ De `asus-armoury` driver is [gemerged in Linux 6.19](https://www.phoronix.com/ne
 Kernel 7.0 is in april 2026 uitgebracht en CachyOS pakte het snel op. Voor deze ASUS ROG G16 bracht het wat beloofd was: betere AMDGPU-ondersteuning voor nieuwere RDNA 3.5-klasse IP blocks (GFX11.5.4) en verder NVIDIA-werk. De gaming-performance op de Radeon 890M is merkbaar verbeterd, ruwweg in lijn met de ~20% uplift die werd verwacht. Samen met de verbeteringen uit 6.19 draait deze hardware eindelijk zoals het hoort op Linux. De huidige CachyOS-kernel is 7.2.4-1-cachyos.
 
 **Bronnen:** [Linus bevestigt Linux 7.0](https://www.phoronix.com/news/Linux-7.0-Is-Next) · [HID laptop quirks voor ASUS ROG modellen](https://www.phoronix.com/news/Linux-7.0-HID) · [Linux 7.0 DRM/AMDGPU updates](https://www.phoronix.com/news/Linux-7.0-Graphics-Drivers)
+
+### Linux 7.3: scheduler-herziening en storage/memory-winst (nog niet uit)
+
+Nog niet uitgebracht, maar dichtbij. `7.3-rc1` landde op 30 augustus 2026, `rc3` op 13 september; bij de gebruikelijke cyclus van 9-10 weken komt de finale release rond 18 oktober 2026 uit (25 oktober als er alsnog een rc8 nodig blijkt). Interessant om op te letten: een scheduler-herziening die tot 25% betere gemiddelde FPS meet op oudere/low-power hardware, met verbeterde cluster-aware scheduling over verschillende coretypes heen. Dat is hier direct relevant, niet alleen een Intel P/E-core-verhaal: de Ryzen AI 9 HX 370 in deze laptop is zelf een gemengd Zen5/Zen5c-core-ontwerp. Naast het scheduler-werk: Direct I/O loopt nu via een iomap-bouncebuffer in plaats van terug te vallen op buffered I/O (van ruwweg de helft van de theoretische doorvoer naar bijna 95%), Btrfs slaat trage paden over bij Direct I/O en `fsync()`, een fix in KSM's reverse-mapping-lock brengt een worst-case stall terug van ~700ms naar onder de 2ms, en `zsmalloc` heeft minder lock-contentie als meerdere processen tegelijk gecomprimeerd geheugen vrijgeven.
+
+**Bronnen:** [Phoronix: Linux 7.3-overzicht](https://www.phoronix.com/review/linux-73-features) · [Phoronix: Linux 7.3 "flattens the pick" (scheduler)](https://www.phoronix.com/news/Linux-7.3-Flattens-The-Pick) · [9to5Linux: Linux 7.3-rc1 aangekondigd](https://9to5linux.com/linus-torvalds-announces-first-linux-kernel-7-3-release-candidate)
 
 
 ## Aanvullende Bronnen

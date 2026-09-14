@@ -15,6 +15,10 @@ Dit is een script dat drie fixes tegelijk toepast (NetworkManager-powersave, PCI
 Testomstandigheden, want die beïnvloeden de cijfers: een UniFi U7 Pro access point, in een houten kast, ongeveer 10 meter van de laptop met een muur ertussen. 6GHz-band, 160MHz-kanaal (het maximum van deze kaart), signaal variërend van -62 tot -71 dBm over de runs, meestal -63 tot -66 dBm. Dat is een realistische alledaagse afstand, geen beste-geval-test in dezelfde kamer, dus zie de cijfers hierboven als een redelijke baseline en niet als plafond.
 {{< /callout >}}
 
+{{< callout type="warning" >}}
+**Is dit nog steeds de moeite waard?** Voorlopig wel -- elke fix hieronder heeft een gemeten, reproduceerbaar effect en kost niets behalve een herstart. Maar zie het niet aan voor "de kaart gefixt": dit zijn workarounds voor driver-defaults die nooit getuned hadden hoeven worden, geen herschrijving van wat de silicon kan. Afgezet tegen de wifi-chip van een telefoon van twee jaar oud (zie [Resultaten](#resultaten) hieronder) is de eerlijke conclusie dat de MT7925 zelf gewoon een middelmatige Wi-Fi 7-kaart is, en geen enkele tuning verandert dat. Het goede nieuws: dit is geen doodlopende weg. MediaTek's Wi-Fi 7-stack wordt nog steeds actief upstream ontwikkeld, met patches die nog deze testweek van deze pagina landden -- zie [Waar je actieve ontwikkeling volgt](#waar-je-actieve-ontwikkeling-volgt) hieronder. Liever wachten tot de driver volwassener is dan zelf tunen? Ook een prima keuze.
+{{< /callout >}}
+
 ## Installatie
 
 {{% steps %}}
@@ -151,6 +155,8 @@ Er wordt nog steeds actief aan deze chip gewerkt; er landden patches nog deze we
 - [ratatoskr.run](https://ratatoskr.run/): een beter leesbaar webarchief van dezelfde mailinglists.
 - [github.com/openwrt/mt76](https://github.com/openwrt/mt76): spiegel van de driverbroncode, makkelijker te doorbladeren dan de kernel.org-tree.
 
+Recent bewijs dat dit beweegt, niet stilstaat: een [patch die scans tijdens suspend overslaat](https://ratatoskr.run/linux-mediatek/2026/04/3520789) landde in april 2026 om command-timeouts bij resume te stoppen, en een [mt7925-firmware-update](https://ratatoskr.run/linux-wireless/2026/08/17426467/t) ging uit in augustus 2026. Geen van beide is op zichzelf spectaculair, maar het tempo is het punt: deze driver wordt de meeste maanden aangeraakt, niet één keer per jaar.
+
 {{% /details %}}
 
 ## Meer lezen
@@ -160,3 +166,5 @@ Er wordt nog steeds actief aan deze chip gewerkt; er landden patches nog deze we
 - [wifi: mt76: mt7925: disable ASPM for MT7927 to fix throughput collapse](https://lkml.iu.edu/hypermail/linux/kernel/2603.0/12526.html): upstream-werk aan hetzelfde ASPM-probleem voor de nieuwere MT7927.
 - [MT7927 WiFi on Linux: Making It Work](https://jetm.github.io/blog/posts/mt7927-wifi-making-it-work/): de community reverse-engineering-inspanning achter MT7927-support.
 - [Known Issues, Linux MT7921/MT7925 WiFi Driver Fixes](https://zbowling.github.io/mt7925/issues/known-issues/): een lopende lijst van chip-niveau issues en hun status.
+- [From "Replace It with Intel" to Upstream: Bringing MediaTek Bluetooth/WiFi 7 to Linux](https://www.linaro.org/blog/from-replace-it-with-intel-to-upstream-bringing-mediatek-bluetooth-wifi-7-to-linux/): Linaro's verhaal over hoe MediaTek's Wi-Fi 7-support van "niet te ondersteunen, vervang de kaart" naar actief geüpstreamd ging -- nuttige context voor waarom de situatie van deze chip er over een jaar beter uitziet dan vandaag.
+- [MT7925 WiFi Driver Fixes, nu als DKMS-package](https://community.frame.work/t/mt7925-wifi-driver-fixes-now-available-as-dkms-package/79777): de community-fixset uit de lijst "Waar je actieve ontwikkeling volgt" hierboven, nu installeerbaar zonder handmatig patchen -- een teken dat de fixes stabiel genoeg worden om te packagen.
