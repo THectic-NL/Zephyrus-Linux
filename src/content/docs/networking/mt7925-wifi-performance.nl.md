@@ -155,7 +155,7 @@ Er wordt nog steeds actief aan deze chip gewerkt; er landden patches nog deze we
 - [ratatoskr.run](https://ratatoskr.run/): een beter leesbaar webarchief van dezelfde mailinglists.
 - [github.com/openwrt/mt76](https://github.com/openwrt/mt76): spiegel van de driverbroncode, makkelijker te doorbladeren dan de kernel.org-tree.
 
-Recent bewijs dat dit beweegt, niet stilstaat: een [patch die scans tijdens suspend overslaat](https://ratatoskr.run/linux-mediatek/2026/04/3520789) landde in april 2026 om command-timeouts bij resume te stoppen, en een [mt7925-firmware-update](https://ratatoskr.run/linux-wireless/2026/08/17426467/t) ging uit in augustus 2026. Geen van beide is op zichzelf spectaculair, maar het tempo is het punt: deze driver wordt de meeste maanden aangeraakt, niet één keer per jaar.
+Recent bewijs dat dit beweegt, niet stilstaat: een [patch die scans tijdens suspend overslaat](https://ratatoskr.run/linux-mediatek/2026/04/3520789) landde in april 2026 om command-timeouts bij resume te stoppen, en een [mt7925-firmware-update](https://ratatoskr.run/linux-wireless/2026/08/17426467/t) ging uit in augustus 2026. Geen van beide is op zichzelf spectaculair, maar het tempo is het punt: driver en firmware voor deze chip worden de meeste maanden aangeraakt, niet één keer per jaar.
 
 {{% /details %}}
 
@@ -167,4 +167,4 @@ Recent bewijs dat dit beweegt, niet stilstaat: een [patch die scans tijdens susp
 - [MT7927 WiFi on Linux: Making It Work](https://jetm.github.io/blog/posts/mt7927-wifi-making-it-work/): de community reverse-engineering-inspanning achter MT7927-support.
 - [Known Issues, Linux MT7921/MT7925 WiFi Driver Fixes](https://zbowling.github.io/mt7925/issues/known-issues/): een lopende lijst van chip-niveau issues en hun status.
 - [From "Replace It with Intel" to Upstream: Bringing MediaTek Bluetooth/WiFi 7 to Linux](https://www.linaro.org/blog/from-replace-it-with-intel-to-upstream-bringing-mediatek-bluetooth-wifi-7-to-linux/): Linaro's verhaal over hoe MediaTek's Wi-Fi 7-support van "niet te ondersteunen, vervang de kaart" naar actief geüpstreamd ging -- nuttige context voor waarom de situatie van deze chip er over een jaar beter uitziet dan vandaag.
-- [MT7925 WiFi Driver Fixes, nu als DKMS-package](https://community.frame.work/t/mt7925-wifi-driver-fixes-now-available-as-dkms-package/79777): de community-fixset uit de lijst "Waar je actieve ontwikkeling volgt" hierboven, nu installeerbaar zonder handmatig patchen -- een teken dat de fixes stabiel genoeg worden om te packagen.
+- [MT7925 WiFi Driver Fixes, nu als DKMS-package](https://community.frame.work/t/mt7925-wifi-driver-fixes-now-available-as-dkms-package/79777): een community-fixset voor deze chip, nu installeerbaar als DKMS-module in plaats van handmatig patchen -- een teken dat fixes voor deze chip stabiel genoeg worden om te packagen voor eindgebruikers.
