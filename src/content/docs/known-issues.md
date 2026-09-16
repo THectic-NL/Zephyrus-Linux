@@ -169,9 +169,9 @@ firmware
 **4. The kernel binds only one kind of backlight interface per boot.** With `acpi_backlight=native`, `nvidia_wmi_ec_backlight` still loads but refuses to register a device, unless its `force` parameter is set. From the [driver source](https://github.com/torvalds/linux/blob/master/drivers/platform/x86/nvidia-wmi-ec-backlight.c):
 
 ```c
-	/* drivers/acpi/video_detect.c also checks that SOURCE == EC */
-	if (!force && acpi_video_get_backlight_type() != acpi_backlight_nvidia_wmi_ec)
-		return -ENODEV;
+    /* drivers/acpi/video_detect.c also checks that SOURCE == EC */
+    if (!force && acpi_video_get_backlight_type() != acpi_backlight_nvidia_wmi_ec)
+        return -ENODEV;
 ```
 
 In Hybrid mode with the fix below in place, that parameter is set and all three devices exist side by side:
