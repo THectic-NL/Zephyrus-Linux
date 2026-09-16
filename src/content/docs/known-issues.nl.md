@@ -52,6 +52,41 @@ Zie de sectie **Dingen die ik graag werkend had gezien** onderaan deze pagina vo
 
 {{% /details %}}
 
+{{% details title="Helderheid fixen in Integrated mode breekt het in Hybrid/Ultimate mode" closed="true" %}}
+
+**Wat er gebeurt:**
+De Integrated-mode-helderheidsfix uit het opgeloste probleem hierboven (`acpi_backlight=native amdgpu.backlight=0`) lost de helderheid alleen op in Integrated mode. Blijven diezelfde twee kernelparameters in `GRUB_CMDLINE_LINUX_DEFAULT` staan bij het opstarten in Hybrid of Ultimate, dan breekt de helderheid daar juist, terwijl die daarvoor prima werkte via `nvidia_wmi_ec_backlight`.
+
+Bevestigd op CachyOS: dezelfde twee parameters actief, GPU-mode via ROG Control naar Hybrid gewisseld (reboot vereist, `nvidia-smi -L` bevestigt dat de RTX 4060 terug is). `/sys/class/backlight/` toont `amdgpu_bl2` en `nvidia_0` (geen `nvidia_wmi_ec_backlight`, want `acpi_backlight=native` onderdrukt die ongeacht GPU-mode). Schrijven naar **beide** devices slaagt (waarde leest terug) maar heeft geen zichtbaar effect op het scherm, en de GNOME-slider doet niets.
+
+Werktheorie: in Hybrid mode is het eDP-paneel via de hardware-MUX mogelijk niet daadwerkelijk naar de AMD-iGPU gerouteerd zoals in Integrated mode. `amdgpu.backlight=0` forceert PWM-signalering op `amdgpu_bl2`, maar als `amdgpu_bl2` niet de GPU is die de connector in deze mode daadwerkelijk aanstuurt, doet dat er niet toe. Het gebrek aan effect bij `nvidia_0` kan mogelijk verklaard worden door `nvidia.NVreg_EnableBacklightHandler=0`, een parameter die al sinds vroeg testen op het probleem hierboven in de cmdline staat (toen zonder effect op `nvidia_wmi_ec_backlight`) maar nooit getest is tegen `nvidia_0`, een device dat pas bestaat zodra `acpi_backlight=native` staat. Als die vlag de backend van de nvidia-driver voor zijn eigen native backlight-device uitschakelt, zouden writes naar `nvidia_0` op sysfs-niveau slagen terwijl ze stilletjes verdwijnen voor ze de hardware bereiken. Nog niet getest.
+
+**Workaround:**
+Er bestaat geen enkele `GRUB_CMDLINE_LINUX_DEFAULT` die voor elke mode werkt. Gebruik welke van deze twee past bij de GPU-mode waar je naartoe wisselt, want een modewissel vereist op deze hardware toch al een reboot:
+
+**Integrated mode** (voegt `acpi_backlight=native amdgpu.backlight=0` toe):
+```bash
+GRUB_CMDLINE_LINUX_DEFAULT='nowatchdog nvme_load=YES splash loglevel=3 nvidia.NVreg_EnableBacklightHandler=0 nvidia.NVreg_RegistryDwords=EnableBrightnessControl=0 acpi_backlight=native amdgpu.backlight=0'
+```
+
+**Hybrid of Ultimate mode** (laat de backlight-interface op de werkende standaard staan):
+```bash
+GRUB_CMDLINE_LINUX_DEFAULT='nowatchdog nvme_load=YES splash loglevel=3 nvidia.NVreg_EnableBacklightHandler=0 nvidia.NVreg_RegistryDwords=EnableBrightnessControl=0'
+```
+
+Beide bevatten de basis CachyOS-bootflags van deze installatie (`nowatchdog nvme_load=YES splash loglevel=3`) plus de twee NVIDIA-parameters die in het probleem hierboven zijn uitgesloten, in beide gehouden omdat ze nooit een negatief effect hebben laten zien. Heeft jouw eigen `GRUB_CMDLINE_LINUX_DEFAULT` andere basisflags, of zit je op Bazzite (`grub2-mkconfig`, ander configpad), houd dan je eigen flags aan en voeg alleen `acpi_backlight=native amdgpu.backlight=0` toe of haal die weg aan het eind wanneer je van mode wisselt.
+
+Na het bewerken van `/etc/default/grub`:
+```bash
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+sudo reboot
+```
+
+**Status:**
+Open. De workaround met twee configs werkt, maar moet handmatig herhaald worden bij elke modewissel. Volgende stap: `nvidia.NVreg_EnableBacklightHandler=0` weghalen met de andere twee Integrated-mode-parameters erin, en dan `nvidia_0` testen in Hybrid.
+
+{{% /details %}}
+
 ## Opgeloste Problemen
 
 De volgende problemen zijn opgelost. Sommige zijn verholpen door kernel- of driver-updates, andere via een configuratiewijziging, en eerlijk gezegd heb ik een aantal dingen misschien gewoon zelf fout gedaan. Ik heb ze hier toch bewaard, want misschien bespaar ik iemand anders dezelfde zoektocht.
@@ -98,31 +133,7 @@ sudo reboot
 **Bevestigd werkend:**
 - CachyOS (kernel 7.2.5-1-cachyos), `acpi_backlight=native amdgpu.backlight=0` in `GRUB_CMDLINE_LINUX_DEFAULT`, herstart in Integrated GPU-mode. `ls /sys/class/backlight/` toont alleen `amdgpu_bl2`. De helderheid reageert correct via zowel de Fn-toetsen als de GNOME quick-settings slider.
 
-**⚠️ Niet upstream, en alleen voor Integrated: zet dit niet zomaar globaal in `GRUB_CMDLINE_LINUX_DEFAULT`:** dit is een lokale kernel-bootparameter-workaround, geen fix in `asusctl`, `amdgpu`, of ASUS-firmware. Er is niets upstream veranderd, en het lost de helderheid alleen op in Integrated mode. Als blanket default toegepast, regresseert het Hybrid mode, dat daarvoor prima werkte via `nvidia_wmi_ec_backlight`:
-
-- CachyOS, dezelfde twee parameters actief, GPU-mode via ROG Control naar Hybrid gewisseld (reboot vereist, `nvidia-smi -L` bevestigt dat de RTX 4060 terug is). `/sys/class/backlight/` toont nu `amdgpu_bl2` en `nvidia_0` (geen `nvidia_wmi_ec_backlight`, want `acpi_backlight=native` onderdrukt die ongeacht GPU-mode). Schrijven naar **beide** `amdgpu_bl2` en `nvidia_0` slaagt (waarde leest terug) maar heeft geen zichtbaar effect op het scherm, en de GNOME-slider doet niets. Dezelfde twee parameters die Integrated fixen, **breken** dus Hybrid, dat daarvoor werkende helderheid had.
-
-Werktheorie waarom: in Hybrid mode is het eDP-paneel via de hardware-MUX mogelijk niet daadwerkelijk naar de AMD-iGPU gerouteerd zoals in Integrated mode. `amdgpu.backlight=0` forceert PWM-signalering op `amdgpu_bl2`, maar als `amdgpu_bl2` niet de GPU is die de connector in deze mode daadwerkelijk aanstuurt, doet dat er niet toe. Het gebrek aan effect bij `nvidia_0` kan mogelijk verklaard worden door `nvidia.NVreg_EnableBacklightHandler=0`, een parameter die al sinds vroeg testen hierboven in de cmdline staat (toen zonder effect op `nvidia_wmi_ec_backlight`) maar nooit getest is tegen `nvidia_0`, een device dat pas bestaat zodra `acpi_backlight=native` staat. Als die vlag de backend van de nvidia-driver voor zijn eigen native backlight-device uitschakelt, zouden writes naar `nvidia_0` op sysfs-niveau slagen terwijl ze stilletjes verdwijnen voor ze de hardware bereiken. Nog niet getest, volgende stap.
-
-Door deze regressie bestaat er geen enkele `GRUB_CMDLINE_LINUX_DEFAULT` die voor elke mode werkt. Gebruik welke van deze twee past bij de GPU-mode waar je naartoe wisselt, want een modewissel vereist op deze hardware toch al een reboot:
-
-**Integrated mode** (voegt `acpi_backlight=native amdgpu.backlight=0` toe):
-```bash
-GRUB_CMDLINE_LINUX_DEFAULT='nowatchdog nvme_load=YES splash loglevel=3 nvidia.NVreg_EnableBacklightHandler=0 nvidia.NVreg_RegistryDwords=EnableBrightnessControl=0 acpi_backlight=native amdgpu.backlight=0'
-```
-
-**Hybrid of Ultimate mode** (laat de backlight-interface op de werkende standaard staan):
-```bash
-GRUB_CMDLINE_LINUX_DEFAULT='nowatchdog nvme_load=YES splash loglevel=3 nvidia.NVreg_EnableBacklightHandler=0 nvidia.NVreg_RegistryDwords=EnableBrightnessControl=0'
-```
-
-Beide bevatten de basis CachyOS-bootflags van deze installatie (`nowatchdog nvme_load=YES splash loglevel=3`) plus de twee NVIDIA-parameters die eerder in dit stuk zijn uitgesloten, in beide gehouden omdat ze nooit een negatief effect hebben laten zien. Heeft jouw eigen `GRUB_CMDLINE_LINUX_DEFAULT` andere basisflags, of zit je op Bazzite (`grub2-mkconfig`, ander configpad), houd dan je eigen flags aan en voeg alleen `acpi_backlight=native amdgpu.backlight=0` toe of haal die weg aan het eind wanneer je van mode wisselt.
-
-Na het bewerken van `/etc/default/grub`:
-```bash
-sudo grub-mkconfig -o /boot/grub/grub.cfg
-sudo reboot
-```
+**⚠️ Niet upstream, en alleen voor Integrated:** dit is een lokale kernel-bootparameter-workaround, geen fix in `asusctl`, `amdgpu`, of ASUS-firmware. Er is niets upstream veranderd, en het lost de helderheid alleen op in Integrated mode. Als blanket default in `GRUB_CMDLINE_LINUX_DEFAULT` toegepast, breekt het juist de helderheid in Hybrid/Ultimate mode, die daarvoor prima werkte via `nvidia_wmi_ec_backlight`. Zie het aparte actieve probleem hieronder voor die regressie en de huidige workaround.
 
 **Gerelateerd, maar apart:** de GPU-*modewissel zelf* betrouwbaar laten toepassen is een andere bug (#318 hierboven) met een eigen workaround (rechtstreeks schrijven naar het sysfs-attribuut dat moet veranderen, buiten asusd's batch-write om: zie de firmware-attributentabel in de sectie "GPU mode switching" op de [asusctl-pagina]({{< relref "/docs/hardware/asusctl-rog-control" >}})), alleen nodig op installaties die nog niet op de gefixte `asusctl` `6.5.0` zitten.
 
