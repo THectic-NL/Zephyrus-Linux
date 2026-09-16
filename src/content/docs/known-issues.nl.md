@@ -52,10 +52,80 @@ Zie de sectie **Dingen die ik graag werkend had gezien** onderaan deze pagina vo
 
 {{% /details %}}
 
-{{% details title="Helderheid fixen in Integrated mode breekt het in Hybrid/Ultimate mode" closed="true" %}}
+## Opgeloste Problemen
 
-**Wat er gebeurt:**
-De kernelparameters die de helderheid in Integrated mode fixen (`acpi_backlight=native amdgpu.backlight=0`, zie het opgeloste probleem hieronder) breken die in Hybrid mode, waar hij standaard gewoon werkte. Met die parameters toont `/sys/class/backlight/` een `amdgpu_bl*`-device en `nvidia_0`, maar geen `nvidia_wmi_ec_backlight`. Writes naar beide devices worden geaccepteerd en de GNOME-slider beweegt, maar het scherm verandert niet.
+De volgende problemen zijn opgelost. Sommige zijn verholpen door kernel- of driver-updates, andere via een configuratiewijziging, en eerlijk gezegd heb ik een aantal dingen misschien gewoon zelf fout gedaan. Ik heb ze hier toch bewaard, want misschien bespaar ik iemand anders dezelfde zoektocht.
+
+## GPU & Beeldscherm
+
+{{% details title="Schermhelderheid werkte niet zolang alleen de iGPU actief was" closed="true" %}}
+
+**Wat er gebeurde:**
+Schermhelderheid reageerde nergens op zolang alleen de AMD Radeon 890M iGPU actief was. Niet op de Fn-toetsen, niet op de OS-slider.
+
+**Oorzaak:**
+Zonder `acpi_backlight=`-parameter kiest de kernel per boot één backlight-interface (`drivers/acpi/video_detect.c`). Eerst vraagt hij de firmware, via NVIDIA's WMI-backlight-interface (GUID `603E9613-EF25-4338-A3D0-C46177516DB7`), of de helderheid door de embedded controller geregeld wordt. Is het antwoord "EC", dan gebruikt hij `nvidia_wmi_ec_backlight`, en registreren de GPU-drivers geen eigen backlight-devices.
+
+Op een standaardinstallatie in Integrated mode is `nvidia_wmi_ec_backlight` het enige device onder `/sys/class/backlight/`. Die driver registreert alleen als deze check "EC" antwoordt, en de kernel heeft geen quirk voor dit model, dus de firmware moet ook in Integrated mode "EC" antwoorden (afgeleid uit welke driver registreert, nog niet bevestigd door de ACPI-tabellen uit te lezen). Daar klopt dat antwoord niet: de dGPU is helemaal van de PCI-bus verdwenen, de EC negeert de brightness-writes, en de iGPU die het paneel echt aanstuurt krijgt nooit een backlight-device.
+
+```mermaid
+flowchart TD
+    A["Kernel: wie regelt de helderheid?"] --> B["ASUS-firmware antwoordt: EC"]
+    B --> C["Kernel koppelt alleen nvidia_wmi_ec_backlight"]
+    C --> D["GNOME-slider en Fn-toetsen schrijven daarnaar"]
+    D --> E["EC negeert de writes: de dGPU staat uit"]
+    E --> G["Helderheid verandert niet"]
+```
+
+De kernelcode zelf is dus niet de boosdoener. Die vraagt het de firmware en vertrouwt het antwoord, zoals bedoeld. De bug zit in de ASUS-firmware.
+
+**Fix:**
+Voeg één parameter toe aan `GRUB_CMDLINE_LINUX_DEFAULT` in `/etc/default/grub`, regenereer GRUB en herstart:
+
+```bash
+sudo nano /etc/default/grub
+# achteraan GRUB_CMDLINE_LINUX_DEFAULT toevoegen: acpi_backlight=native
+# andere hardware of kernels: verandert de helderheid nog steeds niet, voeg dan ook amdgpu.backlight=0 toe
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+sudo reboot
+```
+
+`acpi_backlight=native` slaat de firmware-check over en laat de GPU-drivers hun eigen backlight-devices registreren. Meer heeft Integrated mode niet nodig.
+
+**⚠️ In je eentje breekt dit Hybrid mode.** `acpi_backlight=native` schakelt ook `nvidia_wmi_ec_backlight` uit, en die heeft Hybrid mode nodig. Voeg daarom ook de modprobe-regel toe uit het volgende probleem, "Helderheid fixen in Integrated mode brak het in Hybrid mode". Het script `zephyrus-backlight.py` daar voert beide onderdelen in één keer uit.
+
+Dit is een lokale workaround, geen upstream-fix. Zolang ASUS geen firmware-update uitbrengt, is de gebruikelijke plek om dit voor iedereen op te lossen een modelspecifieke quirk in diezelfde detectiecode van de kernel, bijvoorbeeld een die het "EC"-antwoord van de firmware niet vertrouwt zolang de NVIDIA-dGPU niet op de PCI-bus zit.
+
+**Bevestigd werkend:**
+- CachyOS (kernel 7.2.5-1-cachyos), alleen `acpi_backlight=native`, opgestart in Integrated mode. `/sys/class/backlight/` toont één `amdgpu_bl*`-device, en de helderheid reageert op de Fn-toetsen en de GNOME quick-settings slider.
+
+Het nummer achter `amdgpu_bl` volgt het DRM-kaartnummer en ligt niet vast: tijdens het testen was het `1` in Integrated mode en `2` in Hybrid mode, maar na een reboot kan het anders zijn. Niets in deze fix hangt ervan af.
+
+**Bevestigd kapot (vóór de fix):**
+- Bazzite (Fedora 44, kernel 7.2.4), na het wisselen naar Integrated GPU-mode via ROG Control Center
+- CachyOS (kernel 7.2.3-1-cachyos), op een verse installatie zonder `asusctl`. Het systeem staat standaard op iGPU-only, en de helderheid was daar al kapot
+- CachyOS, na een volledige handmatige NVIDIA-teardown vóór de modewissel (zie hieronder): de modewissel werd toegepast (`nvidia-smi` faalde zoals verwacht), maar de helderheid reageerde nog steeds niet
+
+**Wat al wél werkte, zelfs vóór de fix:** terugschakelen naar Hybrid (`dgpu_disable` 1→0) herstelde de helderheid live, zonder herstart. Dat past bij de oorzaak: zodra de dGPU weer stroom heeft, werkt het pad via de EC.
+
+**Onderweg uitgesloten:**
+- Kernelparameters `nvidia.NVreg_EnableBacklightHandler=0` en `nvidia.NVreg_RegistryDwords=EnableBrightnessControl=0`. Geen effect.
+- asusd's eigen NVIDIA-teardown nabootsen (stop `nvidia-powerd`/`nvidia-persistenced`, dan `modprobe -r nvidia_drm nvidia_modeset nvidia_uvm nvidia`, gecontroleerd schoon via `lsmod`) vanaf een TTY, vóór het wegschrijven van `dgpu_disable`. Geen effect.
+- Rechtstreeks schrijven naar `/sys/class/backlight/nvidia_wmi_ec_backlight/brightness`. De waarde leest terug, het scherm verandert niet.
+- `acpi_backlight=native` alleen in Hybrid mode: er verschijnen een `amdgpu_bl*`-device en `nvidia_0`, geen van beide verandert het scherm, en de werkende Hybrid-helderheid is weg. In Integrated mode lost hij het wel op; het volgende probleem legt het verschil uit.
+
+**Cross-platform kanttekening:** hetzelfde patroon duikt op onder Windows, in [G-Helper issue #660](https://github.com/seerge/g-helper/issues/660). Het is geen eenmalig geval: meldingen lopen van 2023 tot 2025, op een Zephyrus G14 (GA402NI), een TUF F15 (FX507VV), en meerdere Zephyrus G16's, waaronder een 2025 G16 met AMD Ryzen + RTX 5070, dezelfde AMD+NVIDIA-combinatie als deze laptop. De trigger komt ook overeen: de helderheid breekt zodra de dGPU wordt uitgeschakeld (G-Helper's "Eco"-mode) of als het systeem opstart terwijl hij al uit staat, niet andersom. Niemand op die thread vond ooit een fix die de dGPU uit houdt **én** de helderheid werkend houdt op Windows. Elke workaround daar houdt de dGPU juist aan.
+
+**Bronnen:** `acpi_backlight=native` kwam uit een [r/gnome-post](https://www.reddit.com/r/gnome/comments/1vkly3q/archgnome_brightness_control_not_working_fixed/) over een andere AMD-iGPU + NVIDIA-dGPU laptop. In zijn eentje breekt die Hybrid mode, dus de modprobe-regel is op deze hardware uitgewerkt en geverifieerd in alle drie de GPU-modes.
+
+**Gerelateerd, maar een aparte bug:** een GPU-modewissel die helemaal niet wordt toegepast is [asusctl#318](https://github.com/OpenGamingCollective/asusctl/issues/318). GPU-modewijzigingen worden bij het afsluiten in een batch weggeschreven, en een onschuldige no-op write in die batch laat de ASUS WMI-firmware een I/O-fout teruggeven die de hele batch afbreekt, inclusief de eigenlijke modewissel. Upstream gefixt in commit `940dba87` ("Fixes #318", gemerged 2026-08-21) en de ordening-fix `e0abda4b` (gemerged 2026-08-22), voor het eerst getagd in `asusctl` [6.5.0](https://github.com/OpenGamingCollective/asusctl/releases/tag/6.5.0) (2026-09-13), waarvan de changelog "Fix issue where MUX writes fail in certain cases" noemt. Op oudere builds schrijf je het firmware-attribuut rechtstreeks: zie de firmware-attributentabel in de sectie "GPU mode switching" op de [asusctl-pagina]({{< relref "/docs/hardware/asusctl-rog-control" >}}). Door deze bug kun je in een andere mode belanden dan je koos, maar hij is niet wat de helderheid breekt: die was ook kapot op een verse installatie zonder `asusctl`.
+
+{{% /details %}}
+
+{{% details title="Helderheid fixen in Integrated mode brak het in Hybrid mode" closed="true" %}}
+
+**Wat er gebeurde:**
+De kernelparameter die de helderheid in Integrated mode fixt (`acpi_backlight=native`, zie het probleem hierboven) brak die in Hybrid mode, waar hij standaard gewoon werkte. Met die parameter toonde `/sys/class/backlight/` een `amdgpu_bl*`-device en `nvidia_0`, maar geen `nvidia_wmi_ec_backlight`. Writes naar beide devices werden geaccepteerd en de GNOME-slider bewoog, maar het scherm veranderde niet. Ultimate mode had daarbovenop een eigen aanpak nodig.
 
 De GPU-mode wissel je in ROG Control Center onder **GPU Configuration**, en die gaat pas in na een reboot:
 
@@ -104,7 +174,7 @@ firmware
 		return -ENODEV;
 ```
 
-Met de fix hieronder staat die parameter aan en bestaan alle drie de devices naast elkaar:
+In Hybrid mode met de fix hieronder staat die parameter aan en bestaan alle drie de devices naast elkaar:
 
 ```console
 $ modinfo -p nvidia_wmi_ec_backlight
@@ -117,14 +187,24 @@ nvidia_0
 nvidia_wmi_ec_backlight
 ```
 
-Integrated mode heeft dus de backlight van amdgpu nodig, Hybrid die van de EC, en geen enkele `acpi_backlight=`-waarde geeft je allebei.
+**5. In Ultimate mode stuurt de NVIDIA-GPU het paneel aan, en negeert de EC de helderheid.** De MUX geeft het paneel aan de NVIDIA-GPU, die dan ook het opstartscherm is. `nvidia_wmi_ec_backlight` accepteert een write, maar de firmware leest de oude waarde terug en het scherm blijft gelijk. `nvidia_0`, de eigen backlight van de NVIDIA-driver, dimt het scherm wel. Gemeten in beide modes:
+
+| | Hybrid | Ultimate |
+|---|---|---|
+| Paneel hangt aan | amdgpu | nvidia |
+| NVIDIA `boot_vga` | `0` | `1` |
+| `gpu_mux_mode` (asus-armoury) | `1` | `0` |
+| `nvidia_wmi_ec_backlight` | dimt het scherm (40 gezet, leest 40 terug) | geen effect (60 gezet, leest 200 terug) |
+| `nvidia_0` | geen effect | dimt het scherm (30 gezet, leest 30 terug) |
+
+Integrated mode heeft dus de backlight van amdgpu nodig, Hybrid die van de EC, en Ultimate die van de NVIDIA-driver. Geen enkele `acpi_backlight=`-waarde dekt ze alle drie.
 
 **Fix:**
 Het script hieronder voert beide onderdelen voor je uit, en kan ook de status tonen en het resultaat testen. De handmatige stappen staan eronder.
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-backlight.py
-echo "a3ccb69ff141d326a934ed6f0dd672a96bc2a25c162f008fe8556e77e1c8fb30  zephyrus-backlight.py" | sha256sum -c
+echo "b5a9d1cde35aae69224d52e74b7d836da89d562ca725490e4e35417b8ee8c4fe  zephyrus-backlight.py" | sha256sum -c
 python3 zephyrus-backlight.py
 ```
 
@@ -134,15 +214,15 @@ Zonder actie opent het een menu (zenity, kdialog of yad, wat bij je desktop past
 |---|---|
 | `status` | In het menu: een korte samenvatting in gewone taal, met de technische details één klik verder. In de terminal: wat er geconfigureerd is, wat er draait, welk backlight-device in gebruik is, en een diagnose voor de huidige GPU-mode. Vraagt geen wachtwoord |
 | `test` | Dimt het scherm 3 seconden via dat device en vraagt of je het zag |
-| `enable` | Zet de kernelparameters in `/etc/default/grub` (met backup), installeert de modprobe-regel en regenereert GRUB, alles achter één wachtwoordprompt. Herstart daarna |
+| `enable` | Zet `acpi_backlight=native` in `/etc/default/grub` (met backup), installeert de modprobe-regel en regenereert GRUB, alles achter één wachtwoordprompt. Herstart daarna |
 | `disable` | Haalt beide onderdelen weer weg. Herstart daarna |
 
 Met `--silent` krijg je alleen terminal-output, zonder dialogen of vragen. Het script ondersteunt alleen GRUB en weigert `enable` op iets anders dan een GA605WV. Faalt `grub-mkconfig`, dan zet het `/etc/default/grub` terug en verandert het verder niets.
 
-Bron: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py). SHA-256 `a3ccb69ff141d326a934ed6f0dd672a96bc2a25c162f008fe8556e77e1c8fb30`.
+Bron: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py). SHA-256 `b5a9d1cde35aae69224d52e74b7d836da89d562ca725490e4e35417b8ee8c4fe`.
 
 **Handmatig:**
-Houd de Integrated-kernelparameters uit het opgeloste probleem hieronder aan, en laad daarnaast `nvidia_wmi_ec_backlight` met `force=1`, maar alleen als de NVIDIA-dGPU op de PCI-bus zit. Maak het bestand aan:
+Houd de Integrated-kernelparameter uit het probleem hierboven aan, en laad daarnaast `nvidia_wmi_ec_backlight` met `force=1`, maar alleen in Hybrid mode: als er een NVIDIA-GPU op de PCI-bus zit die niet het opstartscherm is. Maak het bestand aan:
 
 ```bash
 sudo nano /etc/modprobe.d/nvidia-wmi-ec-backlight.conf
@@ -151,9 +231,10 @@ sudo nano /etc/modprobe.d/nvidia-wmi-ec-backlight.conf
 Met deze inhoud:
 
 ```
-# acpi_backlight=native stops this driver from binding, but in Hybrid/Ultimate the backlight goes through the EC.
-# Force it only while the NVIDIA dGPU is on the PCI bus. In Integrated mode the dGPU is absent and amdgpu handles brightness.
-install nvidia_wmi_ec_backlight if /usr/bin/grep -qsx 0x10de /sys/bus/pci/devices/*/vendor; then /usr/bin/modprobe --ignore-install nvidia_wmi_ec_backlight force=1; fi
+# acpi_backlight=native stops this driver from binding, but in Hybrid mode the backlight goes through the EC.
+# Force it only for an NVIDIA GPU that isn't the boot display, which means Hybrid. In Integrated mode amdgpu
+# handles brightness, and in Ultimate mode (NVIDIA is the boot display) the NVIDIA driver's nvidia_0 does.
+install nvidia_wmi_ec_backlight for d in /sys/bus/pci/devices/*; do [ -e "$d/boot_vga" ] || continue; read -r vendor < "$d/vendor"; read -r boot_vga < "$d/boot_vga"; if [ "$vendor" = 0x10de ] && [ "$boot_vga" = 0 ]; then exec /usr/bin/modprobe --ignore-install nvidia_wmi_ec_backlight force=1; fi; done
 ```
 
 Herstart daarna.
@@ -162,18 +243,19 @@ Wat er bij het opstarten gebeurt als beide onderdelen erin staan:
 
 ```mermaid
 flowchart TD
-    boot["Opstarten met acpi_backlight=native amdgpu.backlight=0"] --> pci{"NVIDIA-dGPU op de PCI-bus?"}
-    pci -- "Nee: Integrated" --> skip["modprobe-regel slaat nvidia_wmi_ec_backlight over"]
-    skip --> amd["GNOME gebruikt amdgpu_bl*"]
-    amd --> pwm["amdgpu stuurt de backlight via PWM"]
-    pci -- "Ja: Hybrid of Ultimate" --> force["modprobe-regel laadt nvidia_wmi_ec_backlight force=1"]
-    force --> fw["GNOME kiest dit firmware-device"]
-    fw --> ec["De EC stuurt de backlight"]
+    boot["Opstarten met acpi_backlight=native"] --> pci{"NVIDIA-GPU op de PCI-bus?"}
+    pci -- "Nee: Integrated" --> amd["GNOME gebruikt amdgpu_bl*"]
+    amd --> amdset["amdgpu stuurt de backlight aan"]
+    pci -- "Ja" --> vga{"Is NVIDIA het opstartscherm?"}
+    vga -- "Nee: Hybrid" --> force["modprobe-regel laadt nvidia_wmi_ec_backlight force=1"]
+    force --> ec["GNOME kiest dit firmware-device, de EC stuurt de backlight aan"]
+    vga -- "Ja: Ultimate" --> skip["modprobe-regel slaat nvidia_wmi_ec_backlight over"]
+    skip --> nv["GNOME gebruikt nvidia_0, de NVIDIA-driver stuurt de backlight aan"]
 ```
 
-Waarom de conditie werkt: in Integrated mode is de dGPU helemaal van de PCI-bus verdwenen (geen enkel `0x10de`-device, bevestigd in de kernellog), dus de module wordt niet geladen en het amdgpu-device is de enige backlight. In Hybrid mode is de dGPU er wel (`65:00.0`, plus zijn audiofunctie `65:00.1`), wordt de driver geforceerd te registreren, en gebruikt GNOME hem omdat GNOME `firmware`-backlights verkiest boven de `raw` devices van amdgpu en nvidia.
+Waarom de conditie werkt: de kernel bepaalt `boot_vga` al bij het opstarten, op basis van het scherm waarmee de firmware opstartte, vóór de GPU-drivers laden. In Integrated mode zit de NVIDIA-GPU helemaal niet op de bus, dus doet de regel niets en is het amdgpu-device de enige backlight. In Hybrid mode is de NVIDIA-GPU er wel, maar is die niet het opstartscherm (`boot_vga=0`), dus wordt de driver geforceerd te registreren, en gebruikt GNOME hem omdat GNOME `firmware`-backlights verkiest boven `raw`. In Ultimate mode is de NVIDIA-GPU het opstartscherm (`boot_vga=1`), dus slaat de regel de driver over en gebruikt GNOME `nvidia_0`.
 
-Een simpele `options nvidia_wmi_ec_backlight force=1` werkt niet: dan registreert het device zich ook in Integrated mode, verkiest GNOME het boven het amdgpu-device, en is de helderheid weer kapot.
+Een simpele `options nvidia_wmi_ec_backlight force=1` werkt niet: dan registreert het device zich ook in Integrated en Ultimate mode, verkiest GNOME het daar, en is de helderheid weer kapot.
 
 Op deze installatie zit de module niet in de initramfs, dus opnieuw bouwen is niet nodig. Controleer dat bij jezelf met `lsinitcpio /boot/initramfs-linux-cachyos.img | grep wmi-ec`. Verschijnt hij wel, bouw de initramfs dan opnieuw zodat de regel wordt meegenomen.
 
@@ -181,89 +263,20 @@ Op deze installatie zit de module niet in de initramfs, dus opnieuw bouwen is ni
 
 | Test | Resultaat |
 |---|---|
-| Integrated, alleen kernelparameters | Werkt (Fn-toetsen en GNOME-slider) |
-| Hybrid, alleen kernelparameters | Kapot, zoals hierboven beschreven |
+| Integrated, alleen de kernelparameter | Werkt (Fn-toetsen en GNOME-slider) |
+| Hybrid, alleen de kernelparameter | Kapot, zoals hierboven beschreven |
 | Hybrid, driver handmatig herladen met `force=1` | Werkt: het scherm dimt, en na uit- en weer inloggen werken de GNOME-slider en Fn-toetsen |
-| De modprobe-regel die de driver bij het opstarten laadt (Hybrid) | Werkt: na een verse boot staat `force=Y` automatisch aan, en de Fn-toetsen en GNOME-slider werken meteen, zonder uit te loggen |
-| De modprobe-regel bij het opstarten (Integrated) | Werkt: de dGPU staat niet op de PCI-bus, dus de regel slaat `nvidia_wmi_ec_backlight` helemaal over. `amdgpu_bl*` is de enige backlight, en de Fn-toetsen en GNOME-slider werken |
-| Ultimate mode | Nog niet getest |
-| Integrated zonder `amdgpu.backlight=0` | Nog niet getest, dus nog onbekend of dit paneel die nodig heeft |
+| Integrated, verse boot met de regel | Werkt: er zit geen NVIDIA-GPU op de bus, dus de regel doet niets. `amdgpu_bl*` is de enige backlight, en de Fn-toetsen en GNOME-slider werken |
+| Hybrid, verse boot met de regel | Werkt: `boot_vga=0`, de regel forceert de driver, en de Fn-toetsen en GNOME-slider werken meteen, zonder uit te loggen |
+| Ultimate, verse boot met de regel | Werkt: `boot_vga=1`, de regel slaat de driver over, GNOME gebruikt `nvidia_0`, en de Fn-toetsen en GNOME-slider werken meteen |
 
-Getest op CachyOS, kernel 7.2.5-1-cachyos. Niet getest op Bazzite, waar kernelparameters met `rpm-ostree kargs` worden ingesteld in plaats van via `/etc/default/grub`.
+Getest op CachyOS, kernel 7.2.5-1-cachyos, in alle drie de GPU-modes. Niet getest op Bazzite, waar kernelparameters met `rpm-ostree kargs` worden ingesteld in plaats van via `/etc/default/grub`.
 
-**Uitgesloten voor Hybrid mode:**
-- `nvidia_0`: de eDP-connector van NVIDIA is in Hybrid mode disconnected, dus dit device stuurt het paneel niet aan.
+**Uitgesloten:**
+- Hybrid mode, `nvidia_0`: de eDP-connector van NVIDIA is disconnected, dus dit device stuurt het paneel niet aan.
+- Ultimate mode, `nvidia_wmi_ec_backlight`: de EC negeert daar brightness-writes.
 - `nvidia.NVreg_EnableBacklightHandler=0` weghalen: geen verschil, en de geladen driver noemt die parameter niet eens in `/proc/driver/nvidia/params`. Het weghalen brak de Integrated-fix ook niet.
-
-{{% /details %}}
-
-## Opgeloste Problemen
-
-De volgende problemen zijn opgelost. Sommige zijn verholpen door kernel- of driver-updates, andere via een configuratiewijziging, en eerlijk gezegd heb ik een aantal dingen misschien gewoon zelf fout gedaan. Ik heb ze hier toch bewaard, want misschien bespaar ik iemand anders dezelfde zoektocht.
-
-## GPU & Beeldscherm
-
-{{% details title="Schermhelderheid werkte niet zolang alleen de iGPU actief was" closed="true" %}}
-
-**Wat er gebeurde:**
-Schermhelderheid reageerde nergens op zolang alleen de AMD Radeon 890M iGPU actief was. Niet op de Fn-toetsen, niet op de OS-slider.
-
-**Oorzaak:**
-Zonder `acpi_backlight=`-parameter kiest de kernel per boot één backlight-interface (`drivers/acpi/video_detect.c`). Eerst vraagt hij de firmware, via NVIDIA's WMI-backlight-interface (GUID `603E9613-EF25-4338-A3D0-C46177516DB7`), of de helderheid door de embedded controller geregeld wordt. Is het antwoord "EC", dan gebruikt hij `nvidia_wmi_ec_backlight`, en registreren de GPU-drivers geen eigen backlight-devices.
-
-Op een standaardinstallatie in Integrated mode is `nvidia_wmi_ec_backlight` het enige device onder `/sys/class/backlight/`. Die driver registreert alleen als deze check "EC" antwoordt, en de kernel heeft geen quirk voor dit model, dus de firmware moet ook in Integrated mode "EC" antwoorden (afgeleid uit welke driver registreert, nog niet bevestigd door de ACPI-tabellen uit te lezen). Daar klopt dat antwoord niet: de dGPU is helemaal van de PCI-bus verdwenen, de EC negeert de brightness-writes, en de iGPU die het paneel echt aanstuurt krijgt nooit een backlight-device.
-
-```mermaid
-flowchart TD
-    A["Kernel: wie regelt de helderheid?"] --> B["ASUS-firmware antwoordt: EC"]
-    B --> C["Kernel koppelt alleen nvidia_wmi_ec_backlight"]
-    C --> D["GNOME-slider en Fn-toetsen schrijven daarnaar"]
-    D --> E["EC negeert de writes: de dGPU staat uit"]
-    E --> G["Helderheid verandert niet"]
-```
-
-De kernelcode zelf is dus niet de boosdoener. Die vraagt het de firmware en vertrouwt het antwoord, zoals bedoeld. De bug zit in de ASUS-firmware.
-
-**Fix:**
-Voeg twee parameters toe aan `GRUB_CMDLINE_LINUX_DEFAULT` in `/etc/default/grub`, regenereer GRUB en herstart:
-
-```bash
-sudo nano /etc/default/grub
-# achteraan GRUB_CMDLINE_LINUX_DEFAULT toevoegen: acpi_backlight=native amdgpu.backlight=0
-sudo grub-mkconfig -o /boot/grub/grub.cfg
-sudo reboot
-```
-
-- `acpi_backlight=native` slaat de firmware-check over en laat de GPU-drivers hun eigen backlight-devices registreren.
-- `amdgpu.backlight=0` laat amdgpu het paneel via PWM aansturen (`0` = PWM, `1` = AUX, `-1` = automatisch). Een [CachyOS-forumpost](https://discuss.cachyos.org/t/asus-tuf-gaming-a15-fa506nc-brightness-not-working-on-linux-fixed-by-forcing-pwm-backlight/30862) over een ASUS TUF A15 FA506NC met hetzelfde symptoom liet zien dat amdgpu uit zichzelf AUX koos, wat dat paneel negeerde. Of dit paneel die parameter ook nodig heeft is nog niet getest: de combinatie werkt, maar `acpi_backlight=native` alleen is alleen in Hybrid mode geprobeerd.
-
-**⚠️ In je eentje breekt dit Hybrid en Ultimate mode.** `acpi_backlight=native` schakelt ook `nvidia_wmi_ec_backlight` uit, en die hebben die modes nodig. Voeg daarom ook de modprobe-regel toe uit het actieve probleem "Helderheid fixen in Integrated mode breekt het in Hybrid/Ultimate mode" hierboven. Het script `zephyrus-backlight.py` daar voert beide onderdelen in één keer uit.
-
-Dit is een lokale workaround, geen upstream-fix. Zolang ASUS geen firmware-update uitbrengt, is de gebruikelijke plek om dit voor iedereen op te lossen een modelspecifieke quirk in diezelfde detectiecode van de kernel, bijvoorbeeld een die het "EC"-antwoord van de firmware niet vertrouwt zolang de NVIDIA-dGPU niet op de PCI-bus zit.
-
-**Bevestigd werkend:**
-- CachyOS (kernel 7.2.5-1-cachyos), beide parameters ingesteld, opgestart in Integrated mode. `/sys/class/backlight/` toont één `amdgpu_bl*`-device. De helderheid reageert op de Fn-toetsen en de GNOME quick-settings slider.
-
-Het nummer achter `amdgpu_bl` volgt het DRM-kaartnummer en ligt niet vast: tijdens het testen was het `1` in Integrated mode en `2` in Hybrid mode, maar na een reboot kan het anders zijn. Niets in deze fix hangt ervan af.
-
-**Bevestigd kapot (vóór de fix):**
-- Bazzite (Fedora 44, kernel 7.2.4), na het wisselen naar Integrated GPU-mode via ROG Control Center
-- CachyOS (kernel 7.2.3-1-cachyos), op een verse installatie zonder `asusctl`. Het systeem staat standaard op iGPU-only, en de helderheid was daar al kapot
-- CachyOS, na een volledige handmatige NVIDIA-teardown vóór de modewissel (zie hieronder): de modewissel werd toegepast (`nvidia-smi` faalde zoals verwacht), maar de helderheid reageerde nog steeds niet
-
-**Wat al wél werkte, zelfs vóór de fix:** terugschakelen naar Hybrid (`dgpu_disable` 1→0) herstelde de helderheid live, zonder herstart. Dat past bij de oorzaak: zodra de dGPU weer stroom heeft, werkt het pad via de EC.
-
-**Onderweg uitgesloten:**
-- Kernelparameters `nvidia.NVreg_EnableBacklightHandler=0` en `nvidia.NVreg_RegistryDwords=EnableBrightnessControl=0`. Geen effect.
-- asusd's eigen NVIDIA-teardown nabootsen (stop `nvidia-powerd`/`nvidia-persistenced`, dan `modprobe -r nvidia_drm nvidia_modeset nvidia_uvm nvidia`, gecontroleerd schoon via `lsmod`) vanaf een TTY, vóór het wegschrijven van `dgpu_disable`. Geen effect.
-- Rechtstreeks schrijven naar `/sys/class/backlight/nvidia_wmi_ec_backlight/brightness`. De waarde leest terug, het scherm verandert niet.
-- `acpi_backlight=native` alleen, uitsluitend getest in Hybrid mode: er verschijnen een `amdgpu_bl*`-device en `nvidia_0`, geen van beide verandert het scherm, en de werkende Hybrid-helderheid is weg. Het actieve probleem hierboven legt uit waarom.
-
-**Cross-platform kanttekening:** hetzelfde patroon duikt op onder Windows, in [G-Helper issue #660](https://github.com/seerge/g-helper/issues/660). Het is geen eenmalig geval: meldingen lopen van 2023 tot 2025, op een Zephyrus G14 (GA402NI), een TUF F15 (FX507VV), en meerdere Zephyrus G16's, waaronder een 2025 G16 met AMD Ryzen + RTX 5070, dezelfde AMD+NVIDIA-combinatie als deze laptop. De trigger komt ook overeen: de helderheid breekt zodra de dGPU wordt uitgeschakeld (G-Helper's "Eco"-mode) of als het systeem opstart terwijl hij al uit staat, niet andersom. Niemand op die thread vond ooit een fix die de dGPU uit houdt **én** de helderheid werkend houdt op Windows. Elke workaround daar houdt de dGPU juist aan.
-
-**Bronnen:** `acpi_backlight=native` kwam uit een [r/gnome-post](https://www.reddit.com/r/gnome/comments/1vkly3q/archgnome_brightness_control_not_working_fixed/) over een andere AMD-iGPU + NVIDIA-dGPU laptop, `amdgpu.backlight=0` uit de CachyOS-forumpost hierboven. Geen van beide gaat over de GA605WV. De combinatie is op deze hardware samengesteld en geverifieerd.
-
-**Gerelateerd, maar een aparte bug:** een GPU-modewissel die helemaal niet wordt toegepast is [asusctl#318](https://github.com/OpenGamingCollective/asusctl/issues/318). GPU-modewijzigingen worden bij het afsluiten in een batch weggeschreven, en een onschuldige no-op write in die batch laat de ASUS WMI-firmware een I/O-fout teruggeven die de hele batch afbreekt, inclusief de eigenlijke modewissel. Upstream gefixt in commit `940dba87` ("Fixes #318", gemerged 2026-08-21) en de ordening-fix `e0abda4b` (gemerged 2026-08-22), voor het eerst getagd in `asusctl` [6.5.0](https://github.com/OpenGamingCollective/asusctl/releases/tag/6.5.0) (2026-09-13), waarvan de changelog "Fix issue where MUX writes fail in certain cases" noemt. Op oudere builds schrijf je het firmware-attribuut rechtstreeks: zie de firmware-attributentabel in de sectie "GPU mode switching" op de [asusctl-pagina]({{< relref "/docs/hardware/asusctl-rog-control" >}}). Door deze bug kun je in een andere mode belanden dan je koos, maar hij is niet wat de helderheid breekt: die was ook kapot op een verse installatie zonder `asusctl`.
+- `nvidia.NVreg_RegistryDwords=EnableBrightnessControl=0`, dat van eerder testen nog op de cmdline van deze laptop staat, houdt `nvidia_0` in Ultimate mode niet tegen.
 
 {{% /details %}}
 

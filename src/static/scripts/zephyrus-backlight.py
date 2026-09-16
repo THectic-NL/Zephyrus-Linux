@@ -10,22 +10,23 @@ the kernel that brightness is handled by the embedded controller (EC), so
 only nvidia_wmi_ec_backlight registers, and the EC ignores it while the
 dGPU is off. The fix has two parts:
 
-  1. Kernel parameters acpi_backlight=native amdgpu.backlight=0, so amdgpu
-     gets a backlight device of its own and drives the panel over PWM.
+  1. Kernel parameter acpi_backlight=native, so amdgpu gets a backlight
+     device of its own.
   2. A modprobe rule that still loads nvidia_wmi_ec_backlight, with
-     force=1, whenever the NVIDIA dGPU is on the PCI bus. In Hybrid and
-     Ultimate mode brightness goes through the EC, and part 1 on its own
-     would stop that driver from registering.
+     force=1, in Hybrid mode: the NVIDIA GPU is on the PCI bus but isn't
+     the boot display. Brightness goes through the EC there, and part 1 on
+     its own would stop that driver from registering. In Ultimate mode the
+     NVIDIA GPU is the boot display and its own nvidia_0 controls brightness,
+     so the rule stays out of the way.
 
 Both parts are read at boot, so enable and disable need a reboot. 'status'
 shows what's configured, what's running, and which backlight device is in
 use. 'test' dims the screen for a few seconds through that device, so you
 can see whether brightness actually reaches the panel.
 
-Built on CachyOS with GRUB (kernel 7.2.5). Integrated and Hybrid mode are
-verified; Ultimate mode is not tested yet. Other bootloaders and image-based
-systems like Bazzite are detected and refused, with a pointer to the manual
-steps instead.
+Built on CachyOS with GRUB (kernel 7.2.5) and verified in all three GPU
+modes. Other bootloaders and image-based systems like Bazzite are detected
+and refused, with a pointer to the manual steps instead.
 
 Every privileged step for one action runs as a single script under one
 pkexec call, so there's one polkit password prompt per action. Dialogs use
@@ -51,7 +52,6 @@ import tempfile
 from pathlib import Path
 from typing import NoReturn, TypedDict
 
-# Support policy, not a technical floor: the code itself runs on older Pythons.
 # Pinned to the current stable release so nobody runs this on an
 # already-unsupported interpreter.
 MIN_PYTHON = (3, 14)
@@ -64,18 +64,22 @@ GRUB_CFG = Path("/boot/grub/grub.cfg")
 GRUB_BACKUP = Path("/etc/default/grub.zephyrus-backlight.bak")
 MODPROBE_CONF = Path("/etc/modprobe.d/nvidia-wmi-ec-backlight.conf")
 
-KERNEL_PARAMS = ("acpi_backlight=native", "amdgpu.backlight=0")
+KERNEL_PARAMS = ("acpi_backlight=native",)
 
 # Identical to the rule in the write-up, so a hand-installed copy counts as
 # installed.
 MODPROBE_RULE = (
     "# acpi_backlight=native stops this driver from binding, "
-    "but in Hybrid/Ultimate the backlight goes through the EC.\n"
-    "# Force it only while the NVIDIA dGPU is on the PCI bus. "
-    "In Integrated mode the dGPU is absent and amdgpu handles brightness.\n"
-    "install nvidia_wmi_ec_backlight "
-    "if /usr/bin/grep -qsx 0x10de /sys/bus/pci/devices/*/vendor; "
-    "then /usr/bin/modprobe --ignore-install nvidia_wmi_ec_backlight force=1; fi\n"
+    "but in Hybrid mode the backlight goes through the EC.\n"
+    "# Force it only for an NVIDIA GPU that isn't the boot display, which means Hybrid. "
+    "In Integrated mode amdgpu\n"
+    "# handles brightness, and in Ultimate mode (NVIDIA is the boot display) "
+    "the NVIDIA driver's nvidia_0 does.\n"
+    "install nvidia_wmi_ec_backlight for d in /sys/bus/pci/devices/*; do "
+    '[ -e "$d/boot_vga" ] || continue; '
+    'read -r vendor < "$d/vendor"; read -r boot_vga < "$d/boot_vga"; '
+    'if [ "$vendor" = 0x10de ] && [ "$boot_vga" = 0 ]; '
+    "then exec /usr/bin/modprobe --ignore-install nvidia_wmi_ec_backlight force=1; fi; done\n"
 )
 
 NVIDIA_VENDOR = "0x10de"
@@ -94,14 +98,14 @@ TITLE = "Zephyrus Backlight Fix"
 ACTIONS = [
     ("status", "Show what's configured, what's running, and which backlight is in use"),
     ("test", f"Dim the screen for {TEST_SECONDS} seconds to check brightness reaches the panel"),
-    ("enable", "Apply the fix (kernel parameters and modprobe rule), then reboot"),
+    ("enable", "Apply the fix (kernel parameter and modprobe rule), then reboot"),
     ("disable", "Remove the fix and go back to the default, then reboot"),
 ]
 
 MODE_LABELS = {
     "Integrated": "Integrated (NVIDIA GPU off)",
     "Hybrid": "Hybrid",
-    "Ultimate": "Ultimate (the fix isn't tested in this mode yet)",
+    "Ultimate": "Ultimate (NVIDIA GPU drives the screen)",
     "unknown": "couldn't be detected",
 }
 
@@ -145,6 +149,23 @@ OUTCOMES = {
         "{mode} mode with the default handling: brightness works here, but not in Integrated mode.",
         "Brightness works in this mode",
         "Without the fix it doesn't work in Integrated mode. Choose enable to fix that."),
+    "fix_nvidia_ok": (
+        "ok",
+        "Ultimate mode: the NVIDIA driver's nvidia_0 drives the backlight. Brightness should work.",
+        "Brightness should work",
+        "The NVIDIA graphics driver controls the screen brightness."),
+    "fix_ultimate_ec_in_use": (
+        "error",
+        "Ultimate mode, but nvidia_wmi_ec_backlight is loaded and preferred over nvidia_0, while the EC "
+        "ignores brightness in this mode. The modprobe rule should skip it here.",
+        "Brightness doesn't work in this mode",
+        "The wrong device controls the brightness. Choose enable, then restart."),
+    "fix_ultimate_wrong_device": (
+        "error",
+        "Ultimate mode, but {device} looks like the device in use instead of nvidia_0. "
+        "Brightness probably doesn't work.",
+        "Brightness probably doesn't work",
+        "The wrong device seems to control the brightness. Restart, then check again."),
     "unknown_mode": (
         "warning",
         "Couldn't tell which GPU mode this is, so no conclusion on brightness.",
@@ -475,7 +496,7 @@ class BacklightFix:
     @staticmethod
     def rewrite_grub(text: str, enable: bool) -> tuple[str, list[str]]:
         """
-        The GRUB defaults file with the fix's kernel parameters added or removed,
+        The GRUB defaults file with the fix's kernel parameter added or removed,
         plus any conflicting values that enabling replaced.
 
         Only a single, quoted GRUB_CMDLINE_LINUX_DEFAULT line is edited. Anything
@@ -536,7 +557,7 @@ class BacklightFix:
             return (
                 f"GRUB wasn't found ({GRUB_DEFAULT}, {GRUB_CFG} and grub-mkconfig are all "
                 "needed). This script only supports GRUB. With systemd-boot or Limine, add "
-                "the kernel parameters by hand; the modprobe rule is the same everywhere. "
+                "acpi_backlight=native by hand; the modprobe rule is the same everywhere. "
                 f"Manual steps:\n{DOC_URL}"
             )
         return None
@@ -657,8 +678,8 @@ fi""")
         try:
             new_grub, replaced = self.rewrite_grub(original, enable=True)
         except ValueError as error:
-            self.fail(f"Can't edit the GRUB defaults safely: {error}. Add the kernel "
-                      f"parameters by hand instead:\n{DOC_URL}")
+            self.fail(f"Can't edit the GRUB defaults safely: {error}. Add "
+                      f"acpi_backlight=native by hand instead:\n{DOC_URL}")
 
         grub_changes = new_grub != original
         rule_before = self.rule_state()
@@ -680,7 +701,7 @@ fi""")
                            None if rule_before == "installed" else "write"):
             return
 
-        print(f"[1/3] Kernel parameters in {GRUB_DEFAULT}: {' '.join(KERNEL_PARAMS)}")
+        print(f"[1/3] Kernel parameter in {GRUB_DEFAULT}: {' '.join(KERNEL_PARAMS)}")
         if grub_changes:
             print("      -> added" + (f", replacing {' '.join(replaced)}" if replaced else ""))
             print(f"      -> previous file kept at {GRUB_BACKUP}")
@@ -714,8 +735,8 @@ fi""")
         try:
             new_grub, _ = self.rewrite_grub(original, enable=False)
         except ValueError as error:
-            self.fail(f"Can't edit the GRUB defaults safely: {error}. Remove the kernel "
-                      f"parameters by hand instead:\n{DOC_URL}")
+            self.fail(f"Can't edit the GRUB defaults safely: {error}. Remove "
+                      f"acpi_backlight=native by hand instead:\n{DOC_URL}")
 
         grub_changes = new_grub != original
         rule_before = self.rule_state()
@@ -731,12 +752,12 @@ fi""")
                            None if rule_before == "absent" else "remove"):
             return
 
-        print(f"[1/3] Kernel parameters in {GRUB_DEFAULT}")
-        print("      -> removed" if grub_changes else "      -> weren't there")
+        print(f"[1/3] Kernel parameter in {GRUB_DEFAULT}: {' '.join(KERNEL_PARAMS)}")
+        print("      -> removed" if grub_changes else "      -> wasn't there")
         if grub_changes:
             print(f"      -> previous file kept at {GRUB_BACKUP}")
         print(f"[2/3] modprobe rule ({MODPROBE_CONF})")
-        print("      -> weren't there" if rule_before == "absent" else "      -> removed")
+        print("      -> wasn't there" if rule_before == "absent" else "      -> removed")
         print(f"[3/3] GRUB configuration ({GRUB_CFG})")
         print("      -> regenerated" if grub_changes else "      -> unchanged, not regenerated")
 
@@ -805,6 +826,11 @@ fi""")
         if mode == "Integrated":
             return ("fix_integrated_ok" if in_use.startswith("amdgpu_bl")
                     else "fix_integrated_wrong_device"), notes
+        if mode == "Ultimate":
+            if in_use == "nvidia_0":
+                return "fix_nvidia_ok", notes
+            return ("fix_ultimate_ec_in_use" if in_use == "nvidia_wmi_ec_backlight"
+                    else "fix_ultimate_wrong_device"), notes
         if in_use == "nvidia_wmi_ec_backlight":
             return "fix_ec_ok", notes
         return ("fix_rule_missing" if s["rule"] != "installed" else "fix_rule_not_loaded"), notes
@@ -818,7 +844,8 @@ fi""")
         }
         lines = [NOTES[note][0].format(**fields) for note in notes]
         lines.append(OUTCOMES[outcome][1].format(**fields))
-        if outcome in ("default_integrated_broken", "fix_rule_missing") and "reboot_to_apply" not in notes:
+        if (outcome in ("default_integrated_broken", "fix_rule_missing", "fix_ultimate_ec_in_use")
+                and "reboot_to_apply" not in notes):
             lines.append("Run 'enable' and reboot.")
         lines.append("Run 'test' to see whether brightness actually reaches the panel.")
         return lines
@@ -869,8 +896,6 @@ fi""")
         out.append(f"Model: {self.model()} ({'supported' if s['supported'] else 'not a ' + SUPPORTED_BOARD})")
         out.append(f"OS: {os_name}, kernel {platform.release()}")
         out.append(f"GPU mode: {mode}")
-        if mode == "Ultimate":
-            out.append("  (the fix hasn't been tested in Ultimate mode yet)")
 
         out.append("")
         out.append("-- Display wiring --")
@@ -887,7 +912,7 @@ fi""")
 
         out.append("")
         out.append("-- Running now --")
-        out.append(f"Kernel parameters: {params_line(s['running'])}")
+        out.append(f"Kernel parameter: {params_line(s['running'])}")
         if s["wmi_ec_loaded"]:
             out.append(f"nvidia_wmi_ec_backlight module: loaded, force={s['force']}")
         else:
