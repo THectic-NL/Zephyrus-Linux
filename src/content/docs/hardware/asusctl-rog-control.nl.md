@@ -238,7 +238,7 @@ sudo systemctl mask --now power-profiles-daemon.service
 sudo systemctl mask --now tuned.service tuned-ppd.service
 ```
 
-`mask`, niet `disable`: [upstream noemt](https://opengamingcollective.github.io/asusctl/distributions/bazzite.html) dat KDE Plasma's PowerDevil `power-profiles-daemon` weer kan opstarten via D-Bus-activatie, zelfs na een gewone `disable` — dezelfde soort probleem als het `nvidia-powerd`-conflict in [Bekende problemen]({{< relref "/docs/known-issues" >}}). Wil je liever de externe daemon aanhouden en die het profiel laten beheren, zet dan asusd's eigen beheer uit door `platform_profile_linked_epp`, `change_platform_profile_on_battery` en `change_platform_profile_on_ac` op `false` te zetten in `/etc/asusd/asusd.ron`.
+`mask`, niet `disable`: [upstream noemt](https://opengamingcollective.github.io/asusctl/distributions/bazzite.html) dat KDE Plasma's PowerDevil `power-profiles-daemon` weer kan opstarten via D-Bus-activatie, zelfs na een gewone `disable`, hetzelfde soort probleem als het `nvidia-powerd`-conflict in [Bekende problemen]({{< relref "/docs/known-issues" >}}). Wil je liever de externe daemon aanhouden en die het profiel laten beheren, zet dan asusd's eigen beheer uit door `platform_profile_linked_epp`, `change_platform_profile_on_battery` en `change_platform_profile_on_ac` op `false` te zetten in `/etc/asusd/asusd.ron`.
 {{< /callout >}}
 
 {{% /details %}}

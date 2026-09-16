@@ -52,46 +52,63 @@ Zie de sectie **Dingen die ik graag werkend had gezien** onderaan deze pagina vo
 
 {{% /details %}}
 
-{{% details title="Schermhelderheid werkt niet zolang alleen de iGPU actief is" closed="true" %}}
-
-**Wat er gebeurt:**
-Schermhelderheid reageert nergens op zolang alleen de AMD Radeon 890M iGPU actief is. Niet op de Fn-toetsen, niet op de OS-slider.
-
-**Oorzaak (bevestigd upstream):** dit is [asusctl#318](https://github.com/OpenGamingCollective/asusctl/issues/318). GPU-modewijzigingen worden in een batch weggeschreven bij het afsluiten van het systeem. Een onschuldige no-op write in diezelfde batch (een waarde herschrijven die al zo staat) laat de ASUS WMI-firmware een I/O-fout teruggeven, en door hoe die fout wordt afgehandeld breekt dat de **hele** batch af, inclusief de write die de mode daadwerkelijk had moeten wisselen. Een modewissel kan dus stilletjes helemaal niet toegepast worden, en de helderheid kan als bijeffect van die half-toegepaste staat kapot achterblijven. Een sterk gerelateerde fix landde de dag erna, die de gekoppelde writes herordent zodat `gpu_mux_mode` en `dgpu_disable` in de juiste volgorde ten opzichte van elkaar worden toegepast.
-
-Gefixt upstream: commit `940dba87` ("Fixes #318", gemerged 2026-08-21) en de ordening-fix, commit `e0abda4b` (gemerged 2026-08-22). Beide landden na de `6.4.0`-tag (2026-08-15), die zonder beide fixes uitkwam. `asusctl` [6.5.0](https://github.com/OpenGamingCollective/asusctl/releases/tag/6.5.0) (getagd op 2026-09-13) is de eerste tag sindsdien, en de changelog noemt "Fix issue where MUX writes fail in certain cases", wat overeenkomt met deze bug. Of een installatie 'm heeft hangt af van of het distro-pakket al is bijgewerkt naar `6.5.0`. In tegenstelling tot de ambiguïteit rond `6.4.0` hierboven is `6.5.0` een schone tag, dus `asusctl info` dat `6.5.0` rapporteert is een betrouwbaar signaal dat de fix erin zit. Blijven de mode-switch-symptomen hieronder optreden op een bevestigde `6.5.0`-installatie, dan is dat het melden upstream waard.
-
-**Uitgesloten door direct testen op deze hardware, in volgorde:**
-- Kernelparameters `nvidia.NVreg_EnableBacklightHandler=0` en `nvidia.NVreg_RegistryDwords=EnableBrightnessControl=0`. Geen effect.
-- Een volledige, correcte replicatie van asusd's eigen NVIDIA-teardown (stop `nvidia-powerd`/`nvidia-persistenced`, dan `modprobe -r nvidia_drm nvidia_modeset nvidia_uvm nvidia`, gecontroleerd schoon via `lsmod`), uitgevoerd vanaf een TTY met de sessie van de display manager losgelaten, *voordat* `dgpu_disable` wordt weggeschreven. Geen effect. Die teardown-fix zit al in de geïnstalleerde `6.4.0`-build (commits `8733b58f`/`b1f9a6fd`, gemerged juli 2026, ruim vóór de `6.4.0`-tag), dus dit was geen kwestie van een ontbrekende fix.
-- Rechtstreeks schrijven naar de enige backlight-interface die deze hardware heeft, `/sys/class/backlight/nvidia_wmi_ec_backlight/brightness`. De write slaagt (leest de nieuwe waarde terug, geen fout) maar heeft geen zichtbaar effect op het scherm.
-
-Dat laatste punt is de kern. Deze laptop heeft helemaal geen eigen `amdgpu`-backlight-device. `nvidia_wmi_ec_backlight` is het **enige** item onder `/sys/class/backlight/`. Het praat met de embedded controller via NVIDIA's WMI-backlight-GUID (`603E9613-EF25-4338-A3D0-C46177516DB7`), ongeacht welke GPU het scherm daadwerkelijk aanstuurt. Met de dGPU volledig zonder stroom lijkt die EC-methode writes gewoon te negeren op firmware-niveau, nog voor enige driver- of userspace-code er iets aan kan doen. Dit oogt als een ASUS firmware/EC-ontwerpkeuze op de GA605WV, niet als een Linux-driverbug. Er lijkt geen software-laag meer over te zijn om te repareren.
-
-**Cross-platform kanttekening:** hetzelfde patroon duikt op onder Windows, in [G-Helper issue #660](https://github.com/seerge/g-helper/issues/660), die ik voor dit stuk helemaal doorgelezen heb, niet alleen de openingspost. Het is geen eenmalig geval: meldingen lopen van 2023 tot 2025, op een Zephyrus G14 (GA402NI), een TUF F15 (FX507VV), en meerdere Zephyrus G16's, waaronder een 2025 G16 met AMD Ryzen + RTX 5070, dezelfde AMD+NVIDIA-combinatie als deze laptop. De trigger komt ook overeen: de helderheid breekt zodra de dGPU wordt uitgeschakeld (G-Helper's "Eco"-mode) of als het systeem opstart terwijl hij al uit staat, niet andersom. De maintainer van G-Helper vermoedde in eerste instantie zelfs dat dit AMD+NVIDIA-specifiek zou kunnen zijn, en kwam uiteindelijk uit op een NVIDIA driver/Optimus-initialisatieprobleem gekoppeld aan de voedingsstatus van de dGPU als werktheorie, niet iets ASUS-specifieks.
-
-Elke fix op die thread houdt de dGPU aan in plaats van de helderheid daadwerkelijk te herstellen terwijl hij uit staat. De officiële is "Enable GPU on shutdown", die de dGPU aan houdt tijdens het afsluiten zodat de driver bij het opstarten netjes initialiseert. De andere is het herstarten van de "NVIDIA Display Container LS"-service, wat meerdere mensen een tijdelijke fix noemen die je steeds opnieuw moet doen, waaronder de auteur van deze site zelf, die dit in maart 2025 op diezelfde thread meemaakte, nog voor de overstap naar Linux. De maintainer merkt zelfs op dat het daarna niet eens helpt om weer van Standard naar Eco te gaan. In twee jaar tijd heeft niemand op die thread een fix gevonden die de dGPU uit houdt én de helderheid werkend houdt, wat overeenkomt met wat direct testen op deze hardware onder Linux opleverde. De softwarelagen verschillen (NVIDIA's Windows-driver versus het `nvidia_wmi_ec_backlight`-sysfs-pad van deze laptop), dus het is niet hetzelfde codepad, maar het lijkt wel hetzelfde onderliggende verhaal: zodra de NVIDIA-GPU zonder stroom komt te zitten, stopt wat normaal de helderheid erdoorheen aanstuurt, op beide besturingssystemen.
-
-**Bevestigd:**
-- Bazzite (Fedora 44, kernel 7.2.4), na het wisselen naar Integrated GPU-mode via ROG Control Center
-- CachyOS (kernel 7.2.3-1-cachyos), op een verse installatie zonder `asusctl` geïnstalleerd. Het systeem staat standaard op iGPU-only, en de helderheid is daar al kapot
-- CachyOS, `asusctl armoury set dgpu_disable 1` (CLI) schakelt ook niet uit Hybrid, en overleeft een herstart ongewijzigd. Consistent met de batch-write-fout uit #318 die de mode-write blokkeert, ongeacht of die via GUI of CLI wordt aangevraagd
-- CachyOS, na de volledige handmatige teardown-dan-switch hierboven: de modewissel zelf past correct toe (`nvidia-smi` faalt zoals verwacht in Integrated), maar de helderheid reageert nog steeds niet
-
-**Wat wél werkt:** terugschakelen naar Hybrid (`dgpu_disable` 1→0) herstelt zowel `nvidia-smi` als de helderheid, en dat gebeurt live, zonder herstart. In tegenstelling tot elke andere geteste modewissel. De dGPU weer inschakelen lijkt voor deze firmware een veilige, hot-pluggable actie; 'm uitschakelen terwijl de modules in gebruik zijn niet, wat waarschijnlijk verklaart waarom de EC-logica alleen in die richting correct werkt.
-
-**Workaround:**
-Om de **modewissel zelf** betrouwbaar toe te passen: schrijf rechtstreeks naar het sysfs-attribuut dat moet veranderen, buiten asusd's kapotte batch-write om. Zie de firmware-attributentabel in de sectie "GPU mode switching" op de [asusctl-pagina]({{< relref "/docs/hardware/asusctl-rog-control" >}}) voor de exacte waarden en het pad. Dit herstelt de helderheid **niet**, blijkens bovenstaande tests. De eigen upstream-suggestie voor de modewissel-bug, terugvallen op `supergfxctl`, botst direct met de eigen waarschuwing [hierboven]({{< relref "/docs/hardware/asusctl-rog-control" >}}) op deze pagina dat supergfxctl onbeheerd is en een beveiligingsrisico vormt. Weeg die afweging zelf.
-
-Voor de helderheid zelf is geen software-workaround bekend. Weegt Integrated mode's stroombesparing zwaarder dan werkende schermhelderheid, dan is dat momenteel de afweging. De enige overgebleven hefboom is een ASUS BIOS/UEFI-update die de EC-afhandeling hiervan verandert (de moeite waard om af en toe op te checken), of dit verder upstream melden. De bevindingen hierboven vormen een redelijk compleet startpunt daarvoor.
-
-{{% /details %}}
-
 ## Opgeloste Problemen
 
 De volgende problemen zijn opgelost. Sommige zijn verholpen door kernel- of driver-updates, andere via een configuratiewijziging, en eerlijk gezegd heb ik een aantal dingen misschien gewoon zelf fout gedaan. Ik heb ze hier toch bewaard, want misschien bespaar ik iemand anders dezelfde zoektocht.
 
 ## GPU & Beeldscherm
+
+{{% details title="Schermhelderheid werkte niet zolang alleen de iGPU actief was" closed="true" %}}
+
+**Wat er gebeurde:**
+Schermhelderheid reageerde nergens op zolang alleen de AMD Radeon 890M iGPU actief was. Niet op de Fn-toetsen, niet op de OS-slider.
+
+**Oorzaak (bevestigd upstream, voor de gerelateerde modewissel-bug):** dit is [asusctl#318](https://github.com/OpenGamingCollective/asusctl/issues/318). GPU-modewijzigingen worden in een batch weggeschreven bij het afsluiten van het systeem. Een onschuldige no-op write in diezelfde batch (een waarde herschrijven die al zo staat) laat de ASUS WMI-firmware een I/O-fout teruggeven, en door hoe die fout wordt afgehandeld breekt dat de **hele** batch af, inclusief de write die de mode daadwerkelijk had moeten wisselen. Een modewissel kan dus stilletjes helemaal niet toegepast worden, en de helderheid kan als bijeffect van die half-toegepaste staat kapot achterblijven. Een sterk gerelateerde fix landde de dag erna, die de gekoppelde writes herordent zodat `gpu_mux_mode` en `dgpu_disable` in de juiste volgorde ten opzichte van elkaar worden toegepast.
+
+Gefixt upstream: commit `940dba87` ("Fixes #318", gemerged 2026-08-21) en de ordening-fix, commit `e0abda4b` (gemerged 2026-08-22). Beide landden na de `6.4.0`-tag (2026-08-15), die zonder beide fixes uitkwam. `asusctl` [6.5.0](https://github.com/OpenGamingCollective/asusctl/releases/tag/6.5.0) (getagd op 2026-09-13) is de eerste tag sindsdien, en de changelog noemt "Fix issue where MUX writes fail in certain cases", wat overeenkomt met deze bug. Of een installatie 'm heeft hangt af van of het distro-pakket al is bijgewerkt naar `6.5.0`.
+
+**Uitgesloten door direct testen op deze hardware, in volgorde:**
+- Kernelparameters `nvidia.NVreg_EnableBacklightHandler=0` en `nvidia.NVreg_RegistryDwords=EnableBrightnessControl=0`. Geen effect.
+- Een volledige, correcte replicatie van asusd's eigen NVIDIA-teardown (stop `nvidia-powerd`/`nvidia-persistenced`, dan `modprobe -r nvidia_drm nvidia_modeset nvidia_uvm nvidia`, gecontroleerd schoon via `lsmod`), uitgevoerd vanaf een TTY met de sessie van de display manager losgelaten, *voordat* `dgpu_disable` wordt weggeschreven. Geen effect.
+- Rechtstreeks schrijven naar de enige backlight-interface die deze hardware standaard heeft, `/sys/class/backlight/nvidia_wmi_ec_backlight/brightness`. De write slaagt (leest de nieuwe waarde terug, geen fout) maar heeft geen zichtbaar effect op het scherm. Deze laptop heeft standaard geen eigen `amdgpu`-backlight-device: `nvidia_wmi_ec_backlight` is het **enige** item onder `/sys/class/backlight/` zonder verdere kernelparameters. Het praat met de embedded controller via NVIDIA's WMI-backlight-GUID (`603E9613-EF25-4338-A3D0-C46177516DB7`), ongeacht welke GPU het scherm daadwerkelijk aanstuurt. Met de dGPU volledig zonder stroom stopt die EC-methode met reageren op writes op firmware-niveau, nog voor enige driver- of userspace-code er iets aan kan doen.
+- `acpi_backlight=native` alleen. Dit laat de kernel generieke native backlight-devices per GPU registreren in plaats van te leunen op de vendor-WMI-EC-interface: `amdgpu_bl2` (AMD iGPU) en `nvidia_0` (NVIDIA dGPU) verschijnen, en `nvidia_wmi_ec_backlight` verdwijnt helemaal. Schrijven naar `amdgpu_bl2` slaagt en `actual_brightness` verandert, maar het scherm reageerde nog steeds niet, zowel in Integrated als Hybrid mode. Erger nog: omdat `nvidia_wmi_ec_backlight` (dat wél werkt in Hybrid) verdwijnt zodra deze parameter staat, breekt deze parameter alleen de werkende Hybrid-helderheid zonder Integrated te repareren.
+
+**Cross-platform kanttekening:** hetzelfde patroon duikt op onder Windows, in [G-Helper issue #660](https://github.com/seerge/g-helper/issues/660). Het is geen eenmalig geval: meldingen lopen van 2023 tot 2025, op een Zephyrus G14 (GA402NI), een TUF F15 (FX507VV), en meerdere Zephyrus G16's, waaronder een 2025 G16 met AMD Ryzen + RTX 5070, dezelfde AMD+NVIDIA-combinatie als deze laptop. De trigger komt ook overeen: de helderheid breekt zodra de dGPU wordt uitgeschakeld (G-Helper's "Eco"-mode) of als het systeem opstart terwijl hij al uit staat, niet andersom. Niemand op die thread vond ooit een fix die de dGPU uit houdt **én** de helderheid werkend houdt op Windows. Elke workaround daar houdt de dGPU juist aan.
+
+**Bevestigd kapot (vóór onderstaande fix):**
+- Bazzite (Fedora 44, kernel 7.2.4), na het wisselen naar Integrated GPU-mode via ROG Control Center
+- CachyOS (kernel 7.2.3-1-cachyos), op een verse installatie zonder `asusctl` geïnstalleerd. Het systeem staat standaard op iGPU-only, en de helderheid was daar al kapot
+- CachyOS, na de volledige handmatige teardown-dan-switch hierboven: de modewissel zelf paste correct toe (`nvidia-smi` faalde zoals verwacht in Integrated), maar de helderheid reageerde nog steeds niet
+
+**Wat al wél werkte, zelfs vóór de fix:** terugschakelen naar Hybrid (`dgpu_disable` 1→0) herstelde zowel `nvidia-smi` als de helderheid, live, zonder herstart. De dGPU weer inschakelen is voor deze firmware een veilige, hot-pluggable actie; 'm uitschakelen terwijl de modules in gebruik zijn niet, wat waarschijnlijk verklaart waarom de EC-logica alleen in die richting correct werkte.
+
+**Fix gevonden (2026-09-16):** de ontbrekende stap bleek een *tweede* kernelparameter te zijn, geen vervanging van `acpi_backlight=native`. Voeg zowel `acpi_backlight=native` als `amdgpu.backlight=0` toe aan `GRUB_CMDLINE_LINUX_DEFAULT` in `/etc/default/grub`, regenereer GRUB en herstart:
+
+```bash
+sudo nano /etc/default/grub
+# GRUB_CMDLINE_LINUX_DEFAULT='... acpi_backlight=native amdgpu.backlight=0'
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+sudo reboot
+```
+
+`amdgpu.backlight` is een aparte `amdgpu`-moduleparameter (`0` = PWM, `1` = AUX/DPCD, `-1` = auto-detectie) die bepaalt welke fysieke signaleringsmethode de driver gebruikt om daadwerkelijk met het paneel te praten, los van welk sysfs-device geregistreerd wordt. Op dit paneel resulteert auto-detectie in AUX/DPCD-control, en dat pad werkt niet. De write bereikt de driver en `actual_brightness` verandert, maar het bereikt het paneel nooit. Dit werd onafhankelijk bevestigd in een [CachyOS-forumpost](https://discuss.cachyos.org/t/asus-tuf-gaming-a15-fa506nc-brightness-not-working-on-linux-fixed-by-forcing-pwm-backlight/30862) over een ASUS TUF A15 FA506NC, een andere AMD-iGPU + NVIDIA-dGPU hybride laptop met exact hetzelfde symptoom, die `amdgpu_dm_brightness` traceerde en `aux=true` vond bij elke brightness-aanvraag terwijl het scherm gelijk bleef. `amdgpu.backlight=0` forceren schakelt de driver naar PWM-signalering, en dat is waar zowel dat paneel als dit paneel daadwerkelijk op reageren.
+
+`acpi_backlight=native` alleen kwam naar boven via een [r/gnome-post](https://www.reddit.com/r/gnome/comments/1vkly3q/archgnome_brightness_control_not_working_fixed/) over nog weer een andere AMD-iGPU + NVIDIA-dGPU laptop. Geen van beide bronnen gaat specifiek over de GA605WV, en geen van beide parameters loste het hier alleen op. De combinatie is samengesteld en rechtstreeks op deze hardware geverifieerd.
+
+**Bevestigd werkend:**
+- CachyOS (kernel 7.2.5-1-cachyos), `acpi_backlight=native amdgpu.backlight=0` in `GRUB_CMDLINE_LINUX_DEFAULT`, herstart in Integrated GPU-mode. `ls /sys/class/backlight/` toont alleen `amdgpu_bl2`. De helderheid reageert correct via zowel de Fn-toetsen als de GNOME quick-settings slider.
+
+**⚠️ Niet upstream, en alleen voor Integrated: zet dit niet zomaar globaal in `GRUB_CMDLINE_LINUX_DEFAULT`:** dit is een lokale kernel-bootparameter-workaround, geen fix in `asusctl`, `amdgpu`, of ASUS-firmware. Er is niets upstream veranderd, en het lost de helderheid alleen op in Integrated mode. Als blanket default toegepast, regresseert het Hybrid mode, dat daarvoor prima werkte via `nvidia_wmi_ec_backlight`:
+
+- CachyOS, dezelfde twee parameters actief, GPU-mode via ROG Control naar Hybrid gewisseld (reboot vereist, `nvidia-smi -L` bevestigt dat de RTX 4060 terug is). `/sys/class/backlight/` toont nu `amdgpu_bl2` en `nvidia_0` (geen `nvidia_wmi_ec_backlight`, want `acpi_backlight=native` onderdrukt die ongeacht GPU-mode). Schrijven naar **beide** `amdgpu_bl2` en `nvidia_0` slaagt (waarde leest terug) maar heeft geen zichtbaar effect op het scherm, en de GNOME-slider doet niets. Dezelfde twee parameters die Integrated fixen, **breken** dus Hybrid, dat daarvoor werkende helderheid had.
+
+Werktheorie waarom: in Hybrid mode is het eDP-paneel via de hardware-MUX mogelijk niet daadwerkelijk naar de AMD-iGPU gerouteerd zoals in Integrated mode. `amdgpu.backlight=0` forceert PWM-signalering op `amdgpu_bl2`, maar als `amdgpu_bl2` niet de GPU is die de connector in deze mode daadwerkelijk aanstuurt, doet dat er niet toe. Het gebrek aan effect bij `nvidia_0` kan mogelijk verklaard worden door `nvidia.NVreg_EnableBacklightHandler=0`, een parameter die al sinds vroeg testen hierboven in de cmdline staat (toen zonder effect op `nvidia_wmi_ec_backlight`) maar nooit getest is tegen `nvidia_0`, een device dat pas bestaat zodra `acpi_backlight=native` staat. Als die vlag de backend van de nvidia-driver voor zijn eigen native backlight-device uitschakelt, zouden writes naar `nvidia_0` op sysfs-niveau slagen terwijl ze stilletjes verdwijnen voor ze de hardware bereiken. Nog niet getest, volgende stap.
+
+Door deze regressie is de praktische manier om de Integrated-fix te leveren zonder Hybrid/Ultimate te breken een **apart GRUB-bootmenu-item** met de extra parameters, alleen gekozen bij het opstarten in Integrated mode, in plaats van `GRUB_CMDLINE_LINUX_DEFAULT` te bewerken. Omdat een GPU-modewissel op deze hardware toch al een reboot vereist, is de juiste boot-entry kiezen bij diezelfde reboot geen extra moeite. Nog niet opgezet. Bijgehouden als vervolgwerk.
+
+**Gerelateerd, maar apart:** de GPU-*modewissel zelf* betrouwbaar laten toepassen is een andere bug (#318 hierboven) met een eigen workaround (rechtstreeks schrijven naar het sysfs-attribuut dat moet veranderen, buiten asusd's batch-write om: zie de firmware-attributentabel in de sectie "GPU mode switching" op de [asusctl-pagina]({{< relref "/docs/hardware/asusctl-rog-control" >}})), alleen nodig op installaties die nog niet op de gefixte `asusctl` `6.5.0` zitten.
+
+{{% /details %}}
 
 {{% details title="Systeem bevriest bij gebruik van externe monitoren (AMD GPU PSR bug)" closed="true" %}}
 
