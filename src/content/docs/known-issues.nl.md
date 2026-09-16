@@ -73,13 +73,18 @@ Het script doet allebei, en kan de status tonen en het resultaat testen:
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-backlight.py
-echo "b5a9d1cde35aae69224d52e74b7d836da89d562ca725490e4e35417b8ee8c4fe  zephyrus-backlight.py" | sha256sum -c
+echo "c2418861924060cf97bf14f82418207ef1083d025dda34a084904725579f0c09  zephyrus-backlight.py" | sha256sum -c
 python3 zephyrus-backlight.py
 ```
 
-Zonder actie opent het een menu. Vanuit de terminal: `status`, `test`, `enable` of `disable`, plus `--silent` zonder dialogen. Het ondersteunt alleen GRUB en zet de fix alleen aan op een GA605WV. Bron: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py), SHA-256 `b5a9d1cde35aae69224d52e74b7d836da89d562ca725490e4e35417b8ee8c4fe`.
+Zonder actie opent het een menu. Vanuit de terminal: `status`, `test`, `enable` of `disable`, plus `--silent` zonder dialogen. Het zet de kernelparameter via GRUB of via `rpm-ostree kargs`, afhankelijk van wat het systeem gebruikt, en zet de fix alleen aan op een GA605WV. Bron: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py), SHA-256 `c2418861924060cf97bf14f82418207ef1083d025dda34a084904725579f0c09`.
 
-Handmatig, op CachyOS met GRUB:
+Met de hand:
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+Met GRUB:
 
 ```bash
 sudo nano /etc/default/grub
@@ -90,6 +95,23 @@ sudo nano /etc/modprobe.d/nvidia-wmi-ec-backlight.conf
 sudo grub-mkconfig -o /boot/grub/grub.cfg
 sudo reboot
 ```
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+```bash
+rpm-ostree kargs --append-if-missing=acpi_backlight=native
+sudo nano /etc/modprobe.d/nvidia-wmi-ec-backlight.conf
+# plak de regel hieronder
+systemctl reboot
+```
+
+`/etc` is op een atomic systeem van jou, dus de modprobe-regel overleeft image-updates, en `rpm-ostree kargs` staagt een nieuwe deployment mét de parameter in plaats van een bootloaderconfiguratie te bewerken. Met `rpm-ostree kargs --delete-if-present=acpi_backlight=native` draai je het terug. Bewerk hier niet `/etc/default/grub`: op een image-based systeem is dat niet wat de machine opstart.
+
+{{< /tab >}}
+{{< /tabs >}}
+
+De regel, op beide hetzelfde:
 
 ```
 # acpi_backlight=native stops this driver from binding, but in Hybrid mode the backlight goes through the EC.
@@ -128,7 +150,9 @@ De kernel kiest per boot één backlight-interface, en vraagt eerst aan de firmw
 `acpi_backlight=native` slaat die vraag over en fixt Integrated mode, maar houdt ook `nvidia_wmi_ec_backlight` tegen, en die heeft Hybrid mode nodig. De modprobe-regel haalt hem terug met `force=1`, alleen waar het nodig is.
 
 **Getest:**
-Na een verse boot in Integrated, Hybrid en Ultimate mode werken de Fn-toetsen en de GNOME-slider meteen. CachyOS, kernel 7.2.5-1-cachyos. Nog niet getest op KDE of Bazzite (waar de kernelparameter met `rpm-ostree kargs` wordt ingesteld).
+Na een verse boot in Integrated, Hybrid en Ultimate mode werken de Fn-toetsen en de GNOME-slider meteen. CachyOS, kernel 7.2.5-1-cachyos.
+
+Op Bazzite (GNOME, kernel 7.2.4-ogc3.1.fc44, NVIDIA 615.71.09) zet en verwijdert het script beide onderdelen via `rpm-ostree kargs`. Na een verse boot in Integrated, Hybrid en Ultimate mode werken ook daar de Fn-toetsen en de GNOME-slider. Niet getest op KDE.
 
 **Achtergrond:**
 

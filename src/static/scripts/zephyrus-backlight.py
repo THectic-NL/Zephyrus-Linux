@@ -24,9 +24,16 @@ shows what's configured, what's running, and which backlight device is in
 use. 'test' dims the screen for a few seconds through that device, so you
 can see whether brightness actually reaches the panel.
 
-Built on CachyOS with GRUB (kernel 7.2.5) and verified in all three GPU
-modes. Other bootloaders and image-based systems like Bazzite are detected
-and refused, with a pointer to the manual steps instead.
+Two ways of storing that kernel parameter are handled: /etc/default/grub
+plus grub-mkconfig on a conventional distribution, and 'rpm-ostree kargs'
+on an image-based one like Bazzite, where /etc/default/grub either isn't
+there or isn't what boots the machine. The right one is detected. Other
+bootloaders, systemd-boot and Limine among them, are refused with a pointer
+to the manual steps instead.
+
+Built on CachyOS with GRUB (kernel 7.2.5), then extended to Bazzite with
+rpm-ostree (kernel 7.2.4). Verified in all three GPU modes on both, with
+GNOME. KDE is untested.
 
 Every privileged step for one action runs as a single script under one
 pkexec call, so there's one polkit password prompt per action. Dialogs use
@@ -63,6 +70,9 @@ GRUB_DEFAULT = Path("/etc/default/grub")
 GRUB_CFG = Path("/boot/grub/grub.cfg")
 GRUB_BACKUP = Path("/etc/default/grub.zephyrus-backlight.bak")
 MODPROBE_CONF = Path("/etc/modprobe.d/nvidia-wmi-ec-backlight.conf")
+
+# Present on a booted ostree deployment, so on Bazzite and its siblings.
+OSTREE_MARKER = Path("/run/ostree-booted")
 
 KERNEL_PARAMS = ("acpi_backlight=native",)
 
@@ -215,11 +225,12 @@ class Device(TypedDict):
 class State(TypedDict):
     supported: bool
     problem: str | None
+    backend: str | None
     mode: str
     panel: tuple[str, str] | None
-    grub: list[str] | None
-    grub_has_fix: bool
-    grub_has_any: bool
+    configured: list[str] | None
+    configured_has_fix: bool
+    configured_has_any: bool
     rule: str
     running: list[str]
     running_has_fix: bool
@@ -237,6 +248,8 @@ class BacklightFix:
         # --silent means no dialogs and no questions. Decided once so every
         # helper below agrees.
         self.gui_tool = None if silent else self._detect_gui()
+        # 'ostree', 'grub' or None. Decided once for the same reason.
+        self.backend = self.kargs_backend()
 
     # --- dialogs -----------------------------------------------------------
 
@@ -545,35 +558,66 @@ class BacklightFix:
             return "absent"
         return "installed" if self._read(MODPROBE_CONF) == MODPROBE_RULE.strip() else "different"
 
-    def platform_problem(self) -> str | None:
-        """Why enable/disable can't safely run here, or None if they can."""
-        if Path("/run/ostree-booted").exists():
-            return (
-                "This is an image-based system (ostree, for example Bazzite). Kernel "
-                "parameters are set with 'rpm-ostree kargs' there, which this script "
-                f"doesn't do. Follow the manual steps instead:\n{DOC_URL}"
-            )
-        if not (GRUB_DEFAULT.exists() and GRUB_CFG.exists() and shutil.which("grub-mkconfig")):
-            return (
-                f"GRUB wasn't found ({GRUB_DEFAULT}, {GRUB_CFG} and grub-mkconfig are all "
-                "needed). This script only supports GRUB. With systemd-boot or Limine, add "
-                "acpi_backlight=native by hand; the modprobe rule is the same everywhere. "
-                f"Manual steps:\n{DOC_URL}"
-            )
+    @staticmethod
+    def kargs_backend() -> str | None:
+        """
+        How this system stores kernel parameters: 'ostree', 'grub', or None.
+
+        ostree is checked first on purpose. An image-based system can still
+        carry a /etc/default/grub that looks editable but isn't what boots the
+        machine, and editing it there would silently do nothing.
+        """
+        if OSTREE_MARKER.exists():
+            return "ostree" if shutil.which("rpm-ostree") else None
+        if GRUB_DEFAULT.exists() and GRUB_CFG.exists() and shutil.which("grub-mkconfig"):
+            return "grub"
         return None
 
+    def platform_problem(self) -> str | None:
+        """Why enable/disable can't safely run here, or None if they can."""
+        if self.backend:
+            return None
+        if OSTREE_MARKER.exists():
+            return (
+                "This is an image-based system (ostree, for example Bazzite), but "
+                "rpm-ostree isn't on PATH, so the kernel parameter can't be set. "
+                f"Follow the manual steps instead:\n{DOC_URL}"
+            )
+        return (
+            f"No supported way to set kernel parameters was found. This script handles "
+            f"GRUB ({GRUB_DEFAULT}, {GRUB_CFG} and grub-mkconfig) and rpm-ostree. With "
+            "systemd-boot or Limine, add acpi_backlight=native by hand; the modprobe "
+            f"rule is the same everywhere. Manual steps:\n{DOC_URL}"
+        )
+
+    def configured_params(self) -> list[str] | None:
+        """
+        The kernel parameters the next boot will use, or None if they can't be read.
+
+        On ostree that's 'rpm-ostree kargs', which reports the staged deployment
+        when there is one, so it answers the same question the GRUB defaults file
+        does: what is configured, as opposed to what this boot is running.
+        """
+        if self.backend == "ostree":
+            res = subprocess.run(["rpm-ostree", "kargs"], capture_output=True, text=True)
+            return res.stdout.split() if res.returncode == 0 else None
+        return self.grub_params()
+
     def state(self) -> State:
-        grub = self.grub_params()
+        configured = self.configured_params()
         running = self._read(Path("/proc/cmdline")).split()
         devices = self.backlights()
         return {
             "supported": self.is_supported_model(),
             "problem": self.platform_problem(),
+            "backend": self.backend,
             "mode": self.gpu_mode(),
             "panel": self.panel_gpu(),
-            "grub": grub,
-            "grub_has_fix": grub is not None and all(p in grub for p in KERNEL_PARAMS),
-            "grub_has_any": grub is not None and any(p in grub for p in KERNEL_PARAMS),
+            "configured": configured,
+            "configured_has_fix": configured is not None
+            and all(p in configured for p in KERNEL_PARAMS),
+            "configured_has_any": configured is not None
+            and any(p in configured for p in KERNEL_PARAMS),
             "rule": self.rule_state(),
             "running": running,
             "running_has_fix": all(p in running for p in KERNEL_PARAMS),
@@ -598,25 +642,38 @@ class BacklightFix:
         return subprocess.run(["pkexec", "bash", "-c", script],
                               capture_output=True, text=True)
 
-    def _apply(self, original: str, new_grub: str | None, rule: str | None) -> bool:
+    def _apply(self, karg: str | None, rule: str | None,
+               grub: tuple[str, str] | None = None) -> bool:
         """
-        Write the GRUB defaults and/or change the modprobe rule, in one prompt.
+        Change the kernel parameter and/or the modprobe rule, in one prompt.
 
-        Order is deliberate: the GRUB file is written and grub-mkconfig run
-        first, and the old file is restored if that fails. Only after that is
-        the modprobe rule touched, so a failed run leaves nothing half done.
+        karg is 'enable', 'disable' or None, and grub carries (original, new)
+        contents of the GRUB defaults file on that backend.
+
+        Order is deliberate: the kernel parameter goes first, and on GRUB the
+        old file is restored if grub-mkconfig fails. Only after that is the
+        modprobe rule touched, so a failed run leaves nothing half done.
         """
         q = shlex.quote
         with tempfile.TemporaryDirectory(prefix="zephyrus-backlight-") as tmp:
-            expected = Path(tmp, "grub.expected")
-            proposed = Path(tmp, "grub.new")
             rule_file = Path(tmp, "rule.conf")
-            expected.write_text(original, encoding="utf-8")
-            proposed.write_text(new_grub or "", encoding="utf-8")
             rule_file.write_text(MODPROBE_RULE, encoding="utf-8")
 
             script = ["set -euo pipefail"]
-            if new_grub is not None:
+            if karg and self.backend == "ostree":
+                # rpm-ostree writes a new deployment, so there's nothing to back
+                # up: the running one stays on disk to boot back into.
+                flag = "--append-if-missing" if karg == "enable" else "--delete-if-present"
+                for param in KERNEL_PARAMS:
+                    script.append(
+                        f"rpm-ostree kargs {flag}={q(param)} "
+                        '|| { echo RPM_OSTREE_FAILED >&2; exit 5; }')
+            elif karg and grub is not None:
+                original, new_grub = grub
+                expected = Path(tmp, "grub.expected")
+                proposed = Path(tmp, "grub.new")
+                expected.write_text(original, encoding="utf-8")
+                proposed.write_text(new_grub, encoding="utf-8")
                 script.append(f"""
 cmp -s {q(str(expected))} {q(str(GRUB_DEFAULT))} || {{ echo CHANGED_ON_DISK >&2; exit 3; }}
 cp -p {q(str(GRUB_DEFAULT))} {q(str(GRUB_BACKUP))}
@@ -647,6 +704,12 @@ fi""")
             self.show_message(
                 f"grub-mkconfig failed, so {GRUB_DEFAULT} was put back and nothing else "
                 "was changed. Its output is in the terminal.", is_error=True)
+        elif res.returncode == 5:
+            print(res.stderr.strip() or res.stdout.strip(), file=sys.stderr)
+            self.show_message(
+                "'rpm-ostree kargs' failed, so nothing was changed. Its output is in the "
+                "terminal. A staged deployment from another tool can block it; "
+                "'rpm-ostree cleanup -p' clears that.", is_error=True)
         else:
             print(res.stderr.strip() or res.stdout.strip(), file=sys.stderr)
             self.show_message(
@@ -658,10 +721,68 @@ fi""")
         if self.ask_yes_no("Reboot now to apply the change?"):
             subprocess.run(["systemctl", "reboot"])
 
-    def _require_grub_platform(self):
+    def _require_supported_platform(self):
         problem = self.platform_problem()
         if problem:
             self.fail(problem)
+
+    def _karg_location(self) -> str:
+        return "the ostree deployment" if self.backend == "ostree" else str(GRUB_DEFAULT)
+
+    def _karg_plan(self, enable: bool) -> tuple[bool, list[str], tuple[str, str] | None]:
+        """
+        What the kernel parameter step has to do: (needs changing, values it
+        replaces, GRUB file contents as (original, new)).
+
+        The GRUB tuple is None on ostree, where rpm-ostree edits the parameters
+        itself and there's no file for this script to rewrite.
+        """
+        if self.backend == "ostree":
+            configured = self.configured_params()
+            if configured is None:
+                self.fail("Couldn't read the configured kernel parameters from 'rpm-ostree "
+                          f"kargs', so nothing was changed. Manual steps:\n{DOC_URL}")
+            present = [p for p in KERNEL_PARAMS if p in configured]
+            changes = len(present) != len(KERNEL_PARAMS) if enable else bool(present)
+            return changes, [], None
+
+        original = GRUB_DEFAULT.read_text(encoding="utf-8")
+        try:
+            new_grub, replaced = self.rewrite_grub(original, enable=enable)
+        except ValueError as error:
+            self.fail(f"Can't edit the GRUB defaults safely: {error}. "
+                      f"{'Add' if enable else 'Remove'} acpi_backlight=native by hand "
+                      f"instead:\n{DOC_URL}")
+        return new_grub != original, replaced, (original, new_grub)
+
+    def _print_steps(self, karg_changes: bool, replaced: list[str], rule_before: str,
+                     enabling: bool):
+        """The three-step report both enable and disable print after a successful run."""
+        print(f"[1/3] Kernel parameter in {self._karg_location()}: {' '.join(KERNEL_PARAMS)}")
+        if enabling and karg_changes:
+            print("      -> added" + (f", replacing {' '.join(replaced)}" if replaced else ""))
+        elif enabling:
+            print("      -> already present")
+        else:
+            print("      -> removed" if karg_changes else "      -> wasn't there")
+        if karg_changes and self.backend == "grub":
+            print(f"      -> previous file kept at {GRUB_BACKUP}")
+
+        print(f"[2/3] modprobe rule for nvidia_wmi_ec_backlight ({MODPROBE_CONF})")
+        if enabling:
+            print({"installed": "      -> already in place",
+                   "different": "      -> replaced a different rule with this one",
+                   "absent": "      -> written"}[rule_before])
+        else:
+            print("      -> wasn't there" if rule_before == "absent" else "      -> removed")
+
+        if self.backend == "ostree":
+            print("[3/3] ostree deployment")
+            print("      -> staged for the next boot" if karg_changes
+                  else "      -> unchanged, nothing staged")
+        else:
+            print(f"[3/3] GRUB configuration ({GRUB_CFG})")
+            print("      -> regenerated" if karg_changes else "      -> unchanged, not regenerated")
 
     # --- enable --------------------------------------------------------------
 
@@ -671,22 +792,15 @@ fi""")
                 f"This laptop reports '{self.model()}', not a {SUPPORTED_BOARD}. The fix is "
                 "specific to how that model's firmware handles brightness, so it isn't "
                 f"applied anywhere else. Background:\n{DOC_URL}")
-        self._require_grub_platform()
+        self._require_supported_platform()
         self.require_pkexec()
 
-        original = GRUB_DEFAULT.read_text(encoding="utf-8")
-        try:
-            new_grub, replaced = self.rewrite_grub(original, enable=True)
-        except ValueError as error:
-            self.fail(f"Can't edit the GRUB defaults safely: {error}. Add "
-                      f"acpi_backlight=native by hand instead:\n{DOC_URL}")
-
-        grub_changes = new_grub != original
+        karg_changes, replaced, grub = self._karg_plan(enable=True)
         rule_before = self.rule_state()
         running = all(p in self._read(Path("/proc/cmdline")).split() for p in KERNEL_PARAMS)
 
         print("=== Enabling the backlight fix ===")
-        if not grub_changes and rule_before == "installed":
+        if not karg_changes and rule_before == "installed":
             print("Both parts are already configured.")
             if running:
                 self.show_message("The backlight fix is already enabled and active.")
@@ -697,24 +811,11 @@ fi""")
             return
 
         print("One polkit prompt covers every privileged step below.\n")
-        if not self._apply(original, new_grub if grub_changes else None,
-                           None if rule_before == "installed" else "write"):
+        if not self._apply("enable" if karg_changes else None,
+                           None if rule_before == "installed" else "write", grub):
             return
 
-        print(f"[1/3] Kernel parameter in {GRUB_DEFAULT}: {' '.join(KERNEL_PARAMS)}")
-        if grub_changes:
-            print("      -> added" + (f", replacing {' '.join(replaced)}" if replaced else ""))
-            print(f"      -> previous file kept at {GRUB_BACKUP}")
-        else:
-            print("      -> already present")
-
-        print(f"[2/3] modprobe rule for nvidia_wmi_ec_backlight ({MODPROBE_CONF})")
-        print({"installed": "      -> already in place",
-               "different": "      -> replaced a different rule with this one",
-               "absent": "      -> written"}[rule_before])
-
-        print(f"[3/3] GRUB configuration ({GRUB_CFG})")
-        print("      -> regenerated" if grub_changes else "      -> unchanged, not regenerated")
+        self._print_steps(karg_changes, replaced, rule_before, enabling=True)
 
         print("\nDone. REBOOT REQUIRED: both parts are read at boot.")
         print(f"After the reboot, run 'python3 {Path(sys.argv[0]).name} test' to check it.")
@@ -728,38 +829,24 @@ fi""")
     # --- disable -------------------------------------------------------------
 
     def disable(self):
-        self._require_grub_platform()
+        self._require_supported_platform()
         self.require_pkexec()
 
-        original = GRUB_DEFAULT.read_text(encoding="utf-8")
-        try:
-            new_grub, _ = self.rewrite_grub(original, enable=False)
-        except ValueError as error:
-            self.fail(f"Can't edit the GRUB defaults safely: {error}. Remove "
-                      f"acpi_backlight=native by hand instead:\n{DOC_URL}")
-
-        grub_changes = new_grub != original
+        karg_changes, replaced, grub = self._karg_plan(enable=False)
         rule_before = self.rule_state()
 
         print("=== Disabling the backlight fix ===")
-        if not grub_changes and rule_before == "absent":
+        if not karg_changes and rule_before == "absent":
             print("Neither part is configured.")
             self.show_message("The backlight fix isn't enabled, so there's nothing to remove.")
             return
 
         print("One polkit prompt covers every privileged step below.\n")
-        if not self._apply(original, new_grub if grub_changes else None,
-                           None if rule_before == "absent" else "remove"):
+        if not self._apply("disable" if karg_changes else None,
+                           None if rule_before == "absent" else "remove", grub):
             return
 
-        print(f"[1/3] Kernel parameter in {GRUB_DEFAULT}: {' '.join(KERNEL_PARAMS)}")
-        print("      -> removed" if grub_changes else "      -> wasn't there")
-        if grub_changes:
-            print(f"      -> previous file kept at {GRUB_BACKUP}")
-        print(f"[2/3] modprobe rule ({MODPROBE_CONF})")
-        print("      -> wasn't there" if rule_before == "absent" else "      -> removed")
-        print(f"[3/3] GRUB configuration ({GRUB_CFG})")
-        print("      -> regenerated" if grub_changes else "      -> unchanged, not regenerated")
+        self._print_steps(karg_changes, replaced, rule_before, enabling=False)
 
         print("\nDone. REBOOT REQUIRED to go back to the default backlight handling.")
         print("Reminder: without the fix, brightness doesn't work in Integrated mode.")
@@ -785,11 +872,11 @@ fi""")
 
     @staticmethod
     def fix_label(s: State) -> str:
-        configured = s["grub_has_fix"] and s["rule"] == "installed"
+        configured = s["configured_has_fix"] and s["rule"] == "installed"
         running = s["running_has_fix"]
         if configured:
             return "on" if running else "on after a restart"
-        if s["grub_has_any"] or s["rule"] != "absent":
+        if s["configured_has_any"] or s["rule"] != "absent":
             return "partly set up"
         return "off after a restart" if running else "off"
 
@@ -807,8 +894,8 @@ fi""")
             notes.append("unsupported")
         if s["problem"]:
             notes.append("platform")
-        configured = s["grub_has_fix"] and s["rule"] == "installed"
-        partly = not configured and (s["grub_has_any"] or s["rule"] != "absent")
+        configured = s["configured_has_fix"] and s["rule"] == "installed"
+        partly = not configured and (s["configured_has_any"] or s["rule"] != "absent")
         running = s["running_has_fix"]
         if partly:
             notes.append("partly")
@@ -880,7 +967,8 @@ fi""")
 
         def params_line(params: list[str] | None) -> str:
             if params is None:
-                return "can't read a single quoted GRUB_CMDLINE_LINUX_DEFAULT line"
+                return ("couldn't be read" if s["backend"] == "ostree"
+                        else "can't read a single quoted GRUB_CMDLINE_LINUX_DEFAULT line")
             return ", ".join(f"{p}: {yes_no(p in params)}" for p in KERNEL_PARAMS)
 
         try:
@@ -905,10 +993,15 @@ fi""")
 
         out.append("")
         out.append("-- Configured (takes effect at boot) --")
-        out.append(f"{GRUB_DEFAULT}: {params_line(s['grub'])}")
+        source = {"ostree": "rpm-ostree kargs", "grub": str(GRUB_DEFAULT)}.get(
+            s["backend"] or "", "kernel parameters")
+        out.append(f"{source}: {params_line(s['configured'])}")
         out.append(f"{MODPROBE_CONF}: {s['rule']}")
-        out.append("Bootloader: not supported by this script (see the diagnosis)" if s["problem"]
-                   else "Bootloader: GRUB")
+        out.append({
+            "ostree": "Kernel parameters: ostree deployment, set with rpm-ostree kargs",
+            "grub": "Kernel parameters: GRUB",
+        }.get(s["backend"] or "",
+              "Kernel parameters: no supported method found (see the diagnosis)"))
 
         out.append("")
         out.append("-- Running now --")
