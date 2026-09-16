@@ -104,7 +104,25 @@ sudo reboot
 
 Working theory for why: in Hybrid mode the eDP panel may not actually be routed to the AMD iGPU by the hardware MUX the way Integrated mode routes it. `amdgpu.backlight=0` forces PWM signalling on `amdgpu_bl2`, but if `amdgpu_bl2` isn't the GPU actually driving the connector in this mode, that's moot. `nvidia_0`'s lack of effect might instead be explained by `nvidia.NVreg_EnableBacklightHandler=0`, a parameter that's been in the cmdline since early testing above (when it had no effect on `nvidia_wmi_ec_backlight`) but was never tested against `nvidia_0`, a device that only exists once `acpi_backlight=native` is set. If that flag disables the nvidia driver's backend for its own native backlight device, `nvidia_0` writes would succeed at the sysfs level while being silently dropped before reaching hardware. Not yet tested, next thing to try.
 
-Because of this regression, the practical way to ship the Integrated fix without breaking Hybrid/Ultimate is a **dedicated GRUB boot entry** carrying the extra parameters, selected only when booting into Integrated mode, rather than editing `GRUB_CMDLINE_LINUX_DEFAULT`. Since a GPU mode change already requires a reboot on this hardware, picking the matching boot entry at the same reboot isn't extra overhead. Not yet set up. Tracked as follow-up work.
+Because of this regression, there's no single `GRUB_CMDLINE_LINUX_DEFAULT` that works for every mode. Use whichever of these two matches the GPU mode you're switching to, since a mode change already needs a reboot on this hardware anyway:
+
+**Integrated mode** (adds `acpi_backlight=native amdgpu.backlight=0`):
+```bash
+GRUB_CMDLINE_LINUX_DEFAULT='nowatchdog nvme_load=YES splash loglevel=3 nvidia.NVreg_EnableBacklightHandler=0 nvidia.NVreg_RegistryDwords=EnableBrightnessControl=0 acpi_backlight=native amdgpu.backlight=0'
+```
+
+**Hybrid or Ultimate mode** (leaves the backlight interface at its working default):
+```bash
+GRUB_CMDLINE_LINUX_DEFAULT='nowatchdog nvme_load=YES splash loglevel=3 nvidia.NVreg_EnableBacklightHandler=0 nvidia.NVreg_RegistryDwords=EnableBrightnessControl=0'
+```
+
+Both include the base CachyOS boot flags from this install (`nowatchdog nvme_load=YES splash loglevel=3`) plus the two NVIDIA parameters ruled out earlier in this write-up, kept in both since they've never shown a negative effect. If your own `GRUB_CMDLINE_LINUX_DEFAULT` has different base flags, or you're on Bazzite (`grub2-mkconfig`, different config path), keep your existing flags and just add or drop `acpi_backlight=native amdgpu.backlight=0` at the end when you switch modes.
+
+After editing `/etc/default/grub`:
+```bash
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+sudo reboot
+```
 
 **Related, still separate:** getting the GPU *mode switch itself* to apply reliably is a different bug (#318 above) with its own workaround (write directly to the sysfs attribute that needs to change, bypassing asusd's batched write: see the firmware-attribute table in the "GPU mode switching" section of the [asusctl page]({{< relref "/docs/hardware/asusctl-rog-control" >}})), needed only on installs not yet on the fixed `asusctl` `6.5.0`.
 
