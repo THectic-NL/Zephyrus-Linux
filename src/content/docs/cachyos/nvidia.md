@@ -16,7 +16,7 @@ The G16 has an NVIDIA RTX 4060 alongside the AMD iGPU. The RTX 4060 is Ada, so i
 
 CachyOS detects the card during installation and sets up `nvidia-open` with no manual steps. By the time the installer finishes, the driver is active and configured.
 
-That covers the driver. What's left is confirming it loaded, enrolling a Secure Boot key if you run Secure Boot, and two power settings that are specific to this laptop and are *not* set for you.
+That covers the driver. What's left is confirming it loaded, enrolling a Secure Boot key if you run Secure Boot, and one power setting that is specific to this laptop and is *not* set for you.
 
 ## Post-Installation Verification
 

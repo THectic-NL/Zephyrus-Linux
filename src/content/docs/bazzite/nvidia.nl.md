@@ -6,7 +6,7 @@ next: docs/bazzite/secure-boot
 distro: bazzite
 ---
 
-De G16 heeft een NVIDIA RTX 4060 naast de AMD iGPU. Op Bazzite is de driver niets dat je installeert. Hij is onderdeel van de image waarmee je opstart, dus het werk hier bestaat uit de juiste image kiezen, één Secure Boot-sleutel inschrijven en twee energie-instellingen die deze laptop nodig heeft.
+De G16 heeft een NVIDIA RTX 4060 naast de AMD iGPU. Op Bazzite is de driver niets dat je installeert. Hij is onderdeel van de image waarmee je opstart, dus het werk hier bestaat uit de juiste image kiezen, één Secure Boot-sleutel inschrijven en controleren dat suspend al geregeld is.
 
 {{< callout type="warning" >}}
 Als je hier kwam voor RPM Fusion, `akmod-nvidia`, `akmods --force` en een MOK-inschrijfscherm: dat is hier allemaal niet van toepassing. Dat is de procedure voor gewoon Fedora. Op een atomic image is het op zijn best overbodig en op zijn slechtst breekt het je volgende update.
@@ -71,27 +71,39 @@ De eerste regel zegt `NVIDIA UNIX Open Kernel Module` op een `-nvidia-open`-imag
 
 ## Energiebeheer
 
-Deze instelling gaat over deze laptop en niet over de driver, dus die geldt hier precies zoals op CachyOS. `systemctl` schrijft naar `/etc`, en dat is op een atomic systeem van jou, dus dat overleeft image-updates.
+De CachyOS-pagina heeft hier een handmatige stap: Arch's `nvidia-utils`-pakket levert suspend- en resume-afhandeling als losse systemd-units, en die pagina zet ze met de hand aan. De driver op Bazzite wordt door negativo17 verpakt en is anders ingericht. Met de open kernelmodules laat `NVreg_UseKernelSuspendNotifiers=1` de driver zelf het videogeheugen bewaren en herstellen, dus die units worden helemaal niet meegeleverd. Hij staat al aan. Er is hier niets om aan te zetten.
+
+{{< callout type="warning" >}}
+Zet je hier `nvidia-suspend.service` aan, een stap die je in andere handleidingen tegenkomt, waaronder de CachyOS-pagina in deze repo, dan mislukt dat met `Unit nvidia-suspend.service could not be found`. De unit staat helemaal niet op deze image. Hij is niet alleen uitgeschakeld.
+{{< /callout >}}
 
 {{% steps %}}
 
-### Zet de NVIDIA power services aan
+### Controleer of de suspend-override actief is
 
 ```bash
-sudo systemctl enable nvidia-hibernate.service nvidia-suspend.service nvidia-resume.service nvidia-suspend-then-hibernate.service
+systemctl show systemd-suspend.service -p Environment
 ```
 
-**Wat deze services doen:**
-- `nvidia-hibernate.service` - Slaat de GPU state correct op vóór hibernation
-- `nvidia-suspend.service` - Beheert GPU state tijdens system suspend
-- `nvidia-resume.service` - Herstelt GPU state na resume
-- `nvidia-suspend-then-hibernate.service` - Hetzelfde als `nvidia-suspend.service`, maar voor de gecombineerde suspend-then-hibernate sleep-actie
+Je zou `Environment=SYSTEMD_SLEEP_FREEZE_USER_SESSIONS=false` moeten zien. Dat komt uit `nvidia-suspend-nofreeze.conf`, een drop-in die het `nvidia-driver`-pakket op `systemd-suspend.service` zet (en op de hibernate- en suspend-then-hibernate-units), om een VT-switch deadlock tijdens suspend te voorkomen.
 
-Deze services voorkomen GPU state problemen na suspend/resume cycli. Controleer eerst of de image ze al heeft aangezet:
+### Controleer de suspend-instellingen van de driver
 
 ```bash
-systemctl is-enabled nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service nvidia-suspend-then-hibernate.service
+grep -E "UseKernelSuspendNotifiers|PreserveVideoMemoryAllocations|EnableS0ixPowerManagement" /proc/driver/nvidia/params
 ```
+
+Verwacht:
+
+```
+PreserveVideoMemoryAllocations: 1
+UseKernelSuspendNotifiers: 1
+EnableS0ixPowerManagement: 1
+```
+
+Dit leest wat de geladen driver echt gebruikt, en dat is betrouwbaarder dan een config-bestand: nieuwere images zetten `NVreg_UseKernelSuspendNotifiers` niet meer in `/usr/lib/modprobe.d/nvidia.conf`, terwijl hij toch aan staat. Het bestand bestaat alleen zolang de NVIDIA-module geladen is, dus controleer in Hybrid of Ultimate mode. In Integrated mode staat de dGPU van de bus.
+
+`NVreg_UseKernelSuspendNotifiers=1` is wat de losse suspend- en resume-units vervangt. Met de open kernelmodules bewaart de driver het videogeheugen via de eigen suspend- en resume-notifiers van de kernel, in plaats van via een systemd-unit die `nvidia-sleep.sh` aanroept.
 
 {{% /steps %}}
 

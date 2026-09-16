@@ -6,7 +6,7 @@ next: docs/bazzite/secure-boot
 distro: bazzite
 ---
 
-The G16 has an NVIDIA RTX 4060 alongside the AMD iGPU. On Bazzite the driver is not something you install. It is part of the image you booted, so the work here is picking the right image, enrolling one Secure Boot key, and two power settings this laptop needs.
+The G16 has an NVIDIA RTX 4060 alongside the AMD iGPU. On Bazzite the driver is not something you install. It is part of the image you booted, so the work here is picking the right image, enrolling one Secure Boot key, and checking that suspend is already taken care of.
 
 {{< callout type="warning" >}}
 If you came here looking for RPM Fusion, `akmod-nvidia`, `akmods --force` and a MOK enrollment screen: none of that applies. That is the procedure for conventional Fedora. On an atomic image it is at best redundant and at worst breaks your next update.
@@ -71,27 +71,39 @@ The first line reads `NVIDIA UNIX Open Kernel Module` on an `-nvidia-open` image
 
 ## Power Management
 
-This setting is about this laptop, not about the driver, so it applies here exactly as it does on CachyOS. `systemctl` writes to `/etc`, which is yours on an atomic system, so it survives image updates.
+The CachyOS page has a manual step here: Arch's `nvidia-utils` package ships suspend and resume handling as separate systemd units, and that page enables them by hand. Bazzite's driver is packaged by negativo17 and set up differently. With the open kernel modules, `NVreg_UseKernelSuspendNotifiers=1` lets the driver save and restore video memory on its own, so those units aren't shipped at all. It's already on. There is nothing here for you to turn on.
+
+{{< callout type="warning" >}}
+If you enable `nvidia-suspend.service` here, a step you may see in other guides including the CachyOS page in this repo, it fails with `Unit nvidia-suspend.service could not be found`. The unit isn't on this image at all. It wasn't just disabled.
+{{< /callout >}}
 
 {{% steps %}}
 
-### Enable the NVIDIA power services
+### Confirm the suspend override is in place
 
 ```bash
-sudo systemctl enable nvidia-hibernate.service nvidia-suspend.service nvidia-resume.service nvidia-suspend-then-hibernate.service
+systemctl show systemd-suspend.service -p Environment
 ```
 
-**What these services do:**
-- `nvidia-hibernate.service` - Properly saves GPU state before hibernation
-- `nvidia-suspend.service` - Manages GPU state during system suspend
-- `nvidia-resume.service` - Restores GPU state after resume
-- `nvidia-suspend-then-hibernate.service` - Same as `nvidia-suspend.service`, but for the combined suspend-then-hibernate sleep action
+You should see `Environment=SYSTEMD_SLEEP_FREEZE_USER_SESSIONS=false`. That comes from `nvidia-suspend-nofreeze.conf`, a drop-in the `nvidia-driver` package installs on `systemd-suspend.service` (and the hibernate and suspend-then-hibernate units) to avoid a VT-switch deadlock during suspend.
 
-These services prevent GPU state issues after suspend/resume cycles. Check first whether the image already enabled them:
+### Confirm the driver's suspend settings
 
 ```bash
-systemctl is-enabled nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service nvidia-suspend-then-hibernate.service
+grep -E "UseKernelSuspendNotifiers|PreserveVideoMemoryAllocations|EnableS0ixPowerManagement" /proc/driver/nvidia/params
 ```
+
+Expect:
+
+```
+PreserveVideoMemoryAllocations: 1
+UseKernelSuspendNotifiers: 1
+EnableS0ixPowerManagement: 1
+```
+
+This reads what the loaded driver actually uses, which is more reliable than a config file: newer images no longer list `NVreg_UseKernelSuspendNotifiers` in `/usr/lib/modprobe.d/nvidia.conf`, yet it's still on. The file only exists while the NVIDIA module is loaded, so check in Hybrid or Ultimate mode. In Integrated mode the dGPU is off the bus.
+
+`NVreg_UseKernelSuspendNotifiers=1` is what replaces the separate suspend and resume units. With the open kernel modules, the driver preserves video memory through the kernel's own suspend and resume notifiers, instead of a systemd unit calling `nvidia-sleep.sh`.
 
 {{% /steps %}}
 
