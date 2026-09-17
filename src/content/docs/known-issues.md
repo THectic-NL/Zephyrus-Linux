@@ -73,11 +73,11 @@ The script does both, and can show the status and test the result:
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-backlight.py
-echo "c2418861924060cf97bf14f82418207ef1083d025dda34a084904725579f0c09  zephyrus-backlight.py" | sha256sum -c
+echo "f571e8e54de485f16747fc528d95765ae2e3564039d648219cf21d0177b0458d  zephyrus-backlight.py" | sha256sum -c
 python3 zephyrus-backlight.py
 ```
 
-Without an action it opens a menu. From the terminal: `status`, `test`, `enable` or `disable`, plus `--silent` for no dialogs. It sets the kernel parameter through GRUB or through `rpm-ostree kargs`, whichever the system uses, and only enables the fix on a GA605WV. Source: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py), SHA-256 `c2418861924060cf97bf14f82418207ef1083d025dda34a084904725579f0c09`.
+Without an action it opens a menu. From the terminal: `status`, `test`, `enable` or `disable`, plus `--silent` for no dialogs. It sets the kernel parameter through GRUB or through `rpm-ostree kargs`, whichever the system uses, and only enables the fix on a GA605WV. `disable` reverts what `enable` changed rather than just deleting it: an `acpi_backlight=` value it replaced, and a modprobe rule of your own that it moved aside, both come back. Source: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py), SHA-256 `f571e8e54de485f16747fc528d95765ae2e3564039d648219cf21d0177b0458d`.
 
 By hand:
 
@@ -106,6 +106,8 @@ sudo nano /etc/modprobe.d/nvidia-wmi-ec-backlight.conf
 systemctl reboot
 ```
 
+`rpm-ostree kargs` takes a while, normally 30 to 60 seconds and longer on a slow disk, and prints nothing at all until it finishes. That silence is what it looks like when it is working, so leave it alone rather than interrupting it.
+
 `/etc` is yours on an atomic system, so the modprobe rule survives image updates, and `rpm-ostree kargs` stages a new deployment with the parameter instead of editing a bootloader config. `rpm-ostree kargs --delete-if-present=acpi_backlight=native` undoes it. Don't edit `/etc/default/grub` here: on an image-based system it isn't what boots the machine.
 
 {{< /tab >}}
@@ -117,7 +119,7 @@ The rule, the same on both:
 # acpi_backlight=native stops this driver from binding, but in Hybrid mode the backlight goes through the EC.
 # Force it only for an NVIDIA GPU that isn't the boot display, which means Hybrid. In Integrated mode amdgpu
 # handles brightness, and in Ultimate mode (NVIDIA is the boot display) the NVIDIA driver's nvidia_0 does.
-install nvidia_wmi_ec_backlight for d in /sys/bus/pci/devices/*; do [ -e "$d/boot_vga" ] || continue; read -r vendor < "$d/vendor"; read -r boot_vga < "$d/boot_vga"; if [ "$vendor" = 0x10de ] && [ "$boot_vga" = 0 ]; then exec /usr/bin/modprobe --ignore-install nvidia_wmi_ec_backlight force=1; fi; done
+install nvidia_wmi_ec_backlight for d in /sys/bus/pci/devices/*; do [ -e "$d/boot_vga" ] || continue; read -r vendor < "$d/vendor"; read -r boot_vga < "$d/boot_vga"; if [ "$vendor" = 0x10de ] && [ "$boot_vga" = 0 ]; then exec /sbin/modprobe --ignore-install nvidia_wmi_ec_backlight force=1; fi; done
 ```
 
 **How it works:**
