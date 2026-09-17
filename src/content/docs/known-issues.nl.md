@@ -73,11 +73,11 @@ Het script doet allebei, en kan de status tonen en het resultaat testen:
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-backlight.py
-echo "1a9edeefa9ff9af5f6c7212640d982df010094867aacb6e5d56a815906a1d202  zephyrus-backlight.py" | sha256sum -c
+echo "f571e8e54de485f16747fc528d95765ae2e3564039d648219cf21d0177b0458d  zephyrus-backlight.py" | sha256sum -c
 python3 zephyrus-backlight.py
 ```
 
-Zonder actie opent het een menu. Vanuit de terminal: `status`, `test`, `enable` of `disable`, plus `--silent` zonder dialogen. Het zet de kernelparameter via GRUB of via `rpm-ostree kargs`, afhankelijk van wat het systeem gebruikt, en zet de fix alleen aan op een GA605WV. `disable` draait terug wat `enable` veranderde in plaats van het alleen te verwijderen: een `acpi_backlight=`-waarde die het verving en een eigen modprobe-regel die het opzij zette komen allebei terug. Bron: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py), SHA-256 `1a9edeefa9ff9af5f6c7212640d982df010094867aacb6e5d56a815906a1d202`.
+Zonder actie opent het een menu. Vanuit de terminal: `status`, `test`, `enable` of `disable`, plus `--silent` zonder dialogen. Het zet de kernelparameter via GRUB of via `rpm-ostree kargs`, afhankelijk van wat het systeem gebruikt, en zet de fix alleen aan op een GA605WV. `disable` draait terug wat `enable` veranderde in plaats van het alleen te verwijderen: een `acpi_backlight=`-waarde die het verving en een eigen modprobe-regel die het opzij zette komen allebei terug. Bron: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py), SHA-256 `f571e8e54de485f16747fc528d95765ae2e3564039d648219cf21d0177b0458d`.
 
 Met de hand:
 

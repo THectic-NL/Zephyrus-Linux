@@ -520,7 +520,9 @@ class BacklightFix:
         On disable, restore holds the acpi_backlight= value enabling took out, read
         back from the backup file. Without it, enabling on a machine that already
         had acpi_backlight=vendor and then disabling would leave the machine with
-        neither, which is not where it started.
+        neither, which is not where it started. It is only ever applied when the
+        fix is actually present in params: a stale backup from an enable that was
+        later undone by hand must not reintroduce a value nothing here removed.
 
         Only a single, quoted GRUB_CMDLINE_LINUX_DEFAULT line is edited. Anything
         else raises ValueError instead of guessing at a file that boots the
@@ -549,14 +551,21 @@ class BacklightFix:
                 params = [p for p in params if not p.startswith(key)]
                 params.append(wanted)
         else:
+            had_fix = any(p in params for p in KERNEL_PARAMS)
             params = [p for p in params if p not in KERNEL_PARAMS]
-            for old in restore or []:
-                key = old.split("=", 1)[0] + "="
-                # Only when nothing else claims that key now, so a value the user
-                # set by hand after enabling wins over the one from the backup.
-                if not any(p.startswith(key) for p in params):
-                    params.append(old)
-                    replaced.append(old)
+            if had_fix:
+                # Keys already present now, fixed before the loop starts, so a
+                # value the user set by hand after enabling wins over the one
+                # from the backup, and a backup with more than one original
+                # value for the same key restores all of them instead of only
+                # the first (a later one would otherwise find the first one's
+                # own restore already claiming that key).
+                claimed = {p.split("=", 1)[0] + "=" for p in params}
+                for old in restore or []:
+                    key = old.split("=", 1)[0] + "="
+                    if key not in claimed:
+                        params.append(old)
+                        replaced.append(old)
 
         lines[index] = f"GRUB_CMDLINE_LINUX_DEFAULT={quote}{' '.join(params)}{quote}{ending}"
         return "".join(lines), replaced
@@ -688,10 +697,22 @@ class BacklightFix:
 
         Order is deliberate: the kernel parameter goes first, and on GRUB the old
         file is put back if grub-mkconfig fails or the run is interrupted. Only
-        after that is the modprobe rule touched, so a failed run leaves nothing
-        half done. An existing rule that isn't this one is copied aside first and
-        restored on disable, because the filename is generic enough that somebody
-        may already be using it for something else.
+        after that is the modprobe rule touched. That ordering can't make the two
+        atomic together across independent privileged mechanisms, so a modprobe
+        failure after the kernel parameter already changed leaves the kernel
+        parameter applied; the whole flow re-derives what still needs doing from
+        current state, so re-running the same command picks up from there rather
+        than duplicating or undoing it. An existing rule that isn't this one is
+        copied aside first and restored on disable, and only ever touched again
+        when the live file is still exactly the one this script installed,
+        because the filename is generic enough that somebody may already be
+        using it for something else.
+
+        GRUB_BACKUP is the persistent record replaced_by_enable() reads on a
+        later disable, so only enable refreshes it and only a successful disable
+        clears it; the rollback copy put_back() uses to undo *this* run lives
+        under $work instead, so a failed or interrupted disable can never
+        overwrite that record with the fix's own value.
 
         Every file the root script reads, it writes itself. Handing root a path
         under /tmp that this unprivileged process can still write would leave a
@@ -713,12 +734,17 @@ class BacklightFix:
                     '|| { echo RPM_OSTREE_FAILED >&2; exit 5; }')
         elif karg and grub is not None:
             original, new_grub = grub
+            # Only enable snapshots the persistent backup, and only a successful
+            # disable clears it; see the docstring above.
+            snapshot = f"cp -p {q(str(GRUB_DEFAULT))} {q(str(GRUB_BACKUP))}" if karg == "enable" else ":"
+            cleanup_backup = f"rm -f {q(str(GRUB_BACKUP))}" if karg == "disable" else ":"
             script.append(f"""
 printf '%s' {q(original)} > "$work/expected"
 printf '%s' {q(new_grub)} > "$work/proposed"
 cmp -s "$work/expected" {q(str(GRUB_DEFAULT))} || {{ echo CHANGED_ON_DISK >&2; exit 3; }}
-cp -p {q(str(GRUB_DEFAULT))} {q(str(GRUB_BACKUP))}
-put_back() {{ cp -p {q(str(GRUB_BACKUP))} {q(str(GRUB_DEFAULT))} 2>/dev/null || true; }}
+cp -p {q(str(GRUB_DEFAULT))} "$work/rollback"
+put_back() {{ cp -p "$work/rollback" {q(str(GRUB_DEFAULT))} || {{ echo PUT_BACK_FAILED >&2; exit 6; }}; }}
+{snapshot}
 # Ctrl+C lands here too: grub-mkconfig is slow enough that people reach for it.
 trap 'put_back; exit 130' INT TERM
 install -m 644 "$work/proposed" {q(str(GRUB_DEFAULT))}
@@ -727,7 +753,8 @@ if ! out=$(grub-mkconfig -o {q(str(GRUB_CFG))} 2>&1); then
     printf '%s\\n' "$out" >&2
     exit 4
 fi
-trap - INT TERM""")
+trap - INT TERM
+{cleanup_backup}""")
 
         if rule == "write":
             script.append(f"""
@@ -737,19 +764,20 @@ if [ -e {q(str(MODPROBE_CONF))} ] && ! cmp -s "$work/rule.conf" {q(str(MODPROBE_
 fi
 install -D -m 644 "$work/rule.conf" {q(str(MODPROBE_CONF))}""")
         elif rule == "remove":
-            # Never drop a rule this script didn't write without leaving a copy,
-            # whether it was moved aside by an earlier enable or was simply there.
+            # Only ever touch MODPROBE_CONF here when it still holds exactly the
+            # rule this script installed. If it was replaced by something else
+            # since, or was never ours (no backup, and the live file isn't
+            # ours either), leave it alone rather than deleting someone else's
+            # config.
             script.append(f"""
 printf '%s' {q(MODPROBE_RULE)} > "$work/rule.conf"
-if [ -e {q(str(MODPROBE_BACKUP))} ]; then
-    install -D -m 644 {q(str(MODPROBE_BACKUP))} {q(str(MODPROBE_CONF))}
-    rm -f {q(str(MODPROBE_BACKUP))}
-else
-    if [ -e {q(str(MODPROBE_CONF))} ] \\
-       && ! cmp -s "$work/rule.conf" {q(str(MODPROBE_CONF))}; then
-        install -D -m 644 {q(str(MODPROBE_CONF))} {q(str(MODPROBE_BACKUP))}
+if [ -e {q(str(MODPROBE_CONF))} ] && cmp -s "$work/rule.conf" {q(str(MODPROBE_CONF))}; then
+    if [ -e {q(str(MODPROBE_BACKUP))} ]; then
+        install -D -m 644 {q(str(MODPROBE_BACKUP))} {q(str(MODPROBE_CONF))}
+        rm -f {q(str(MODPROBE_BACKUP))}
+    else
+        rm -f {q(str(MODPROBE_CONF))}
     fi
-    rm -f {q(str(MODPROBE_CONF))}
 fi""")
 
         res = self.run_privileged("\n".join(script))
@@ -777,11 +805,20 @@ fi""")
                 "'rpm-ostree kargs' failed, so nothing was changed. Its output is in the "
                 "terminal. A staged deployment from another tool can block it; "
                 "'rpm-ostree cleanup -p' clears that.", is_error=True)
+        elif res.returncode == 6:
+            print(res.stderr.strip() or res.stdout.strip(), file=sys.stderr)
+            self.show_message(
+                f"grub-mkconfig failed or was interrupted, and restoring the previous "
+                f"{GRUB_DEFAULT} then failed too. It may now hold the attempted change "
+                f"rather than what it had before; check it by hand. The last known-good "
+                f"copy this script kept is at {GRUB_BACKUP}, if it exists.", is_error=True)
         else:
             print(res.stderr.strip() or res.stdout.strip(), file=sys.stderr)
             self.show_message(
                 f"A privileged step failed (exit code {res.returncode}). Details are in "
-                "the terminal.", is_error=True)
+                "the terminal. If the kernel parameter step ran first, it may already be "
+                "applied; running this command again is safe and picks up from there.",
+                is_error=True)
         return False
 
     def _announce_slow_step(self, karg: str | None):
@@ -866,7 +903,7 @@ fi""")
                   + (f", putting back {' '.join(replaced)} from the backup" if replaced else ""))
         else:
             print("      -> wasn't there")
-        if karg_changes and self.backend == "grub":
+        if karg_changes and enabling and self.backend == "grub":
             print(f"      -> previous file kept at {GRUB_BACKUP}")
 
         print(f"[2/3] modprobe rule for nvidia_wmi_ec_backlight ({MODPROBE_CONF})")
@@ -876,10 +913,10 @@ fi""")
                    "absent": "      -> written"}[rule_before])
         elif rule_before == "absent":
             print("      -> wasn't there")
+        elif rule_before == "different":
+            print("      -> left alone, it isn't this script's rule")
         elif had_backup:
             print(f"      -> removed, putting back the rule kept at {MODPROBE_BACKUP}")
-        elif rule_before == "different":
-            print(f"      -> removed a rule this script didn't write, kept at {MODPROBE_BACKUP}")
         else:
             print("      -> removed")
 

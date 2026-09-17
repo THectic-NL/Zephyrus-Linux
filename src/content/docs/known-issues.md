@@ -73,11 +73,11 @@ The script does both, and can show the status and test the result:
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-backlight.py
-echo "1a9edeefa9ff9af5f6c7212640d982df010094867aacb6e5d56a815906a1d202  zephyrus-backlight.py" | sha256sum -c
+echo "f571e8e54de485f16747fc528d95765ae2e3564039d648219cf21d0177b0458d  zephyrus-backlight.py" | sha256sum -c
 python3 zephyrus-backlight.py
 ```
 
-Without an action it opens a menu. From the terminal: `status`, `test`, `enable` or `disable`, plus `--silent` for no dialogs. It sets the kernel parameter through GRUB or through `rpm-ostree kargs`, whichever the system uses, and only enables the fix on a GA605WV. `disable` reverts what `enable` changed rather than just deleting it: an `acpi_backlight=` value it replaced, and a modprobe rule of your own that it moved aside, both come back. Source: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py), SHA-256 `1a9edeefa9ff9af5f6c7212640d982df010094867aacb6e5d56a815906a1d202`.
+Without an action it opens a menu. From the terminal: `status`, `test`, `enable` or `disable`, plus `--silent` for no dialogs. It sets the kernel parameter through GRUB or through `rpm-ostree kargs`, whichever the system uses, and only enables the fix on a GA605WV. `disable` reverts what `enable` changed rather than just deleting it: an `acpi_backlight=` value it replaced, and a modprobe rule of your own that it moved aside, both come back. Source: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py), SHA-256 `f571e8e54de485f16747fc528d95765ae2e3564039d648219cf21d0177b0458d`.
 
 By hand:
 
