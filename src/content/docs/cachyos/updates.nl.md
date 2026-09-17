@@ -16,6 +16,12 @@ Het is een rolling distributie, dus dat is de update. Er is geen release om naar
 
 Breekt een update iets, dan draai je hem met de hand terug. Herinstalleer het vorige package uit de cache in `/var/cache/pacman/pkg/`, of haal het uit het [Arch Linux Archive](https://archive.archlinux.org/). Handig om te weten voordat je het nodig hebt.
 
+## Grafisch bijwerken
+
+Wil je liever geen terminal gebruiken? [Shelly](https://github.com/Seafoam-Labs/Shelly-ALPM) — de standaard grafische package manager van CachyOS — heeft een tabblad **Update** dat hetzelfde doet: eerst een conflictcheck, dan elk package bijwerken met een eigen voortgangsbalk, met daaronder hetzelfde pacman-transactielog als je wilt meekijken.
+
+![Shelly werkt packages bij, met het pacman-transactielog eronder open](/images/shelly-updating.avif)
+
 ## De kernel
 
 CachyOS levert de **CachyOS Kernel Manager** als voorgeïnstalleerde GUI. Die beheert geïnstalleerde kernels en configureert de `sched-ext`-scheduler, het framework van de kernel om er een userspace-CPU-scheduler in te wisselen.
