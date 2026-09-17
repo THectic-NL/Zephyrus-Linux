@@ -70,6 +70,10 @@ GRUB_DEFAULT = Path("/etc/default/grub")
 GRUB_CFG = Path("/boot/grub/grub.cfg")
 GRUB_BACKUP = Path("/etc/default/grub.zephyrus-backlight.bak")
 MODPROBE_CONF = Path("/etc/modprobe.d/nvidia-wmi-ec-backlight.conf")
+# Backups live here, not next to the original: older kmod still reads files in
+# /etc/modprobe.d that do not end in .conf, so a copy dropped there could end up
+# active alongside the rule it backs up. /var is writable on ostree too.
+MODPROBE_BACKUP = Path("/var/lib/zephyrus-backlight/nvidia-wmi-ec-backlight.conf.bak")
 
 # Present on a booted ostree deployment, so on Bazzite and its siblings.
 OSTREE_MARKER = Path("/run/ostree-booted")
@@ -89,7 +93,7 @@ MODPROBE_RULE = (
     '[ -e "$d/boot_vga" ] || continue; '
     'read -r vendor < "$d/vendor"; read -r boot_vga < "$d/boot_vga"; '
     'if [ "$vendor" = 0x10de ] && [ "$boot_vga" = 0 ]; '
-    "then exec /usr/bin/modprobe --ignore-install nvidia_wmi_ec_backlight force=1; fi; done\n"
+    "then exec /sbin/modprobe --ignore-install nvidia_wmi_ec_backlight force=1; fi; done\n"
 )
 
 NVIDIA_VENDOR = "0x10de"
@@ -507,10 +511,18 @@ class BacklightFix:
         return min(devices, key=rank)
 
     @staticmethod
-    def rewrite_grub(text: str, enable: bool) -> tuple[str, list[str]]:
+    def rewrite_grub(text: str, enable: bool,
+                     restore: list[str] | None = None) -> tuple[str, list[str]]:
         """
         The GRUB defaults file with the fix's kernel parameter added or removed,
         plus any conflicting values that enabling replaced.
+
+        On disable, restore holds the acpi_backlight= value enabling took out, read
+        back from the backup file. Without it, enabling on a machine that already
+        had acpi_backlight=vendor and then disabling would leave the machine with
+        neither, which is not where it started. It is only ever applied when the
+        fix is actually present in params: a stale backup from an enable that was
+        later undone by hand must not reintroduce a value nothing here removed.
 
         Only a single, quoted GRUB_CMDLINE_LINUX_DEFAULT line is edited. Anything
         else raises ValueError instead of guessing at a file that boots the
@@ -539,7 +551,21 @@ class BacklightFix:
                 params = [p for p in params if not p.startswith(key)]
                 params.append(wanted)
         else:
+            had_fix = any(p in params for p in KERNEL_PARAMS)
             params = [p for p in params if p not in KERNEL_PARAMS]
+            if had_fix:
+                # Keys already present now, fixed before the loop starts, so a
+                # value the user set by hand after enabling wins over the one
+                # from the backup, and a backup with more than one original
+                # value for the same key restores all of them instead of only
+                # the first (a later one would otherwise find the first one's
+                # own restore already claiming that key).
+                claimed = {p.split("=", 1)[0] + "=" for p in params}
+                for old in restore or []:
+                    key = old.split("=", 1)[0] + "="
+                    if key not in claimed:
+                        params.append(old)
+                        replaced.append(old)
 
         lines[index] = f"GRUB_CMDLINE_LINUX_DEFAULT={quote}{' '.join(params)}{quote}{ending}"
         return "".join(lines), replaced
@@ -552,6 +578,25 @@ class BacklightFix:
             return None
         matches = [m for line in text.splitlines() if (m := _GRUB_LINE_RE.match(line))]
         return matches[0].group(2).split() if len(matches) == 1 else None
+
+    def replaced_by_enable(self) -> list[str]:
+        """
+        The acpi_backlight= values that were in GRUB_DEFAULT before the last
+        enable, taken from the backup it wrote.
+
+        Empty when there is no backup, when it can't be parsed, or when it already
+        held the fix's own value, which is the case after a second enable.
+        """
+        try:
+            text = GRUB_BACKUP.read_text(encoding="utf-8")
+        except OSError:
+            return []
+        matches = [m for line in text.splitlines() if (m := _GRUB_LINE_RE.match(line))]
+        if len(matches) != 1:
+            return []
+        keys = tuple(p.split("=", 1)[0] + "=" for p in KERNEL_PARAMS)
+        return [p for p in matches[0].group(2).split()
+                if p.startswith(keys) and p not in KERNEL_PARAMS]
 
     def rule_state(self) -> str:
         if not MODPROBE_CONF.exists():
@@ -650,46 +695,96 @@ class BacklightFix:
         karg is 'enable', 'disable' or None, and grub carries (original, new)
         contents of the GRUB defaults file on that backend.
 
-        Order is deliberate: the kernel parameter goes first, and on GRUB the
-        old file is restored if grub-mkconfig fails. Only after that is the
-        modprobe rule touched, so a failed run leaves nothing half done.
+        Order is deliberate: the kernel parameter goes first, and on GRUB the old
+        file is put back if grub-mkconfig fails or the run is interrupted. Only
+        after that is the modprobe rule touched. That ordering can't make the two
+        atomic together across independent privileged mechanisms, so a modprobe
+        failure after the kernel parameter already changed leaves the kernel
+        parameter applied; the whole flow re-derives what still needs doing from
+        current state, so re-running the same command picks up from there rather
+        than duplicating or undoing it. An existing rule that isn't this one is
+        copied aside first and restored on disable, and only ever touched again
+        when the live file is still exactly the one this script installed,
+        because the filename is generic enough that somebody may already be
+        using it for something else.
+
+        GRUB_BACKUP is the persistent record replaced_by_enable() reads on a
+        later disable, so only enable refreshes it and only a successful disable
+        clears it; the rollback copy put_back() uses to undo *this* run lives
+        under $work instead, so a failed or interrupted disable can never
+        overwrite that record with the fix's own value.
+
+        Every file the root script reads, it writes itself. Handing root a path
+        under /tmp that this unprivileged process can still write would leave a
+        window to swap the contents between the polkit prompt and the copy, and
+        the modprobe rule is a file of commands root runs on every module load.
         """
         q = shlex.quote
-        with tempfile.TemporaryDirectory(prefix="zephyrus-backlight-") as tmp:
-            rule_file = Path(tmp, "rule.conf")
-            rule_file.write_text(MODPROBE_RULE, encoding="utf-8")
+        script = ["set -euo pipefail",
+                  "work=$(mktemp -d)",
+                  'trap \'rm -rf "$work"\' EXIT']
 
-            script = ["set -euo pipefail"]
-            if karg and self.backend == "ostree":
-                # rpm-ostree writes a new deployment, so there's nothing to back
-                # up: the running one stays on disk to boot back into.
-                flag = "--append-if-missing" if karg == "enable" else "--delete-if-present"
-                for param in KERNEL_PARAMS:
-                    script.append(
-                        f"rpm-ostree kargs {flag}={q(param)} "
-                        '|| { echo RPM_OSTREE_FAILED >&2; exit 5; }')
-            elif karg and grub is not None:
-                original, new_grub = grub
-                expected = Path(tmp, "grub.expected")
-                proposed = Path(tmp, "grub.new")
-                expected.write_text(original, encoding="utf-8")
-                proposed.write_text(new_grub, encoding="utf-8")
-                script.append(f"""
-cmp -s {q(str(expected))} {q(str(GRUB_DEFAULT))} || {{ echo CHANGED_ON_DISK >&2; exit 3; }}
-cp -p {q(str(GRUB_DEFAULT))} {q(str(GRUB_BACKUP))}
-install -m 644 {q(str(proposed))} {q(str(GRUB_DEFAULT))}
+        if karg and self.backend == "ostree":
+            # rpm-ostree writes a new deployment, so there's nothing to back
+            # up: the running one stays on disk to boot back into.
+            flag = "--append-if-missing" if karg == "enable" else "--delete-if-present"
+            for param in KERNEL_PARAMS:
+                script.append(
+                    f"rpm-ostree kargs {flag}={q(param)} "
+                    '|| { echo RPM_OSTREE_FAILED >&2; exit 5; }')
+        elif karg and grub is not None:
+            original, new_grub = grub
+            # Only enable snapshots the persistent backup, and only a successful
+            # disable clears it; see the docstring above.
+            snapshot = f"cp -p {q(str(GRUB_DEFAULT))} {q(str(GRUB_BACKUP))}" if karg == "enable" else ":"
+            cleanup_backup = f"rm -f {q(str(GRUB_BACKUP))}" if karg == "disable" else ":"
+            script.append(f"""
+printf '%s' {q(original)} > "$work/expected"
+printf '%s' {q(new_grub)} > "$work/proposed"
+cmp -s "$work/expected" {q(str(GRUB_DEFAULT))} || {{ echo CHANGED_ON_DISK >&2; exit 3; }}
+cp -p {q(str(GRUB_DEFAULT))} "$work/rollback"
+put_back() {{ cp -p "$work/rollback" {q(str(GRUB_DEFAULT))} || {{ echo PUT_BACK_FAILED >&2; exit 6; }}; }}
+{snapshot}
+# Ctrl+C lands here too: grub-mkconfig is slow enough that people reach for it.
+trap 'put_back; exit 130' INT TERM
+install -m 644 "$work/proposed" {q(str(GRUB_DEFAULT))}
 if ! out=$(grub-mkconfig -o {q(str(GRUB_CFG))} 2>&1); then
-    cp -p {q(str(GRUB_BACKUP))} {q(str(GRUB_DEFAULT))}
+    put_back
     printf '%s\\n' "$out" >&2
     exit 4
+fi
+trap - INT TERM
+{cleanup_backup}""")
+
+        if rule == "write":
+            script.append(f"""
+printf '%s' {q(MODPROBE_RULE)} > "$work/rule.conf"
+if [ -e {q(str(MODPROBE_CONF))} ] && ! cmp -s "$work/rule.conf" {q(str(MODPROBE_CONF))}; then
+    install -D -m 644 {q(str(MODPROBE_CONF))} {q(str(MODPROBE_BACKUP))}
+fi
+install -D -m 644 "$work/rule.conf" {q(str(MODPROBE_CONF))}""")
+        elif rule == "remove":
+            # Only ever touch MODPROBE_CONF here when it still holds exactly the
+            # rule this script installed. If it was replaced by something else
+            # since, or was never ours (no backup, and the live file isn't
+            # ours either), leave it alone rather than deleting someone else's
+            # config.
+            script.append(f"""
+printf '%s' {q(MODPROBE_RULE)} > "$work/rule.conf"
+if [ -e {q(str(MODPROBE_CONF))} ] && cmp -s "$work/rule.conf" {q(str(MODPROBE_CONF))}; then
+    if [ -e {q(str(MODPROBE_BACKUP))} ]; then
+        install -D -m 644 {q(str(MODPROBE_BACKUP))} {q(str(MODPROBE_CONF))}
+        rm -f {q(str(MODPROBE_BACKUP))}
+    else
+        rm -f {q(str(MODPROBE_CONF))}
+    fi
 fi""")
-            if rule == "write":
-                script.append(f"install -D -m 644 {q(str(rule_file))} {q(str(MODPROBE_CONF))}")
-            elif rule == "remove":
-                script.append(f"rm -f {q(str(MODPROBE_CONF))}")
 
-            res = self.run_privileged("\n".join(script))
+        res = self.run_privileged("\n".join(script))
 
+        if res.returncode == 130:
+            self.show_message("Interrupted. Nothing was changed.", is_error=True)
+            return False
         if res.returncode == 0:
             return True
         if res.returncode in PKEXEC_CANCELLED:
@@ -710,12 +805,48 @@ fi""")
                 "'rpm-ostree kargs' failed, so nothing was changed. Its output is in the "
                 "terminal. A staged deployment from another tool can block it; "
                 "'rpm-ostree cleanup -p' clears that.", is_error=True)
+        elif res.returncode == 6:
+            print(res.stderr.strip() or res.stdout.strip(), file=sys.stderr)
+            self.show_message(
+                f"grub-mkconfig failed or was interrupted, and restoring the previous "
+                f"{GRUB_DEFAULT} then failed too. It may now hold the attempted change "
+                f"rather than what it had before; check it by hand. The last known-good "
+                f"copy this script kept is at {GRUB_BACKUP}, if it exists.", is_error=True)
         else:
             print(res.stderr.strip() or res.stdout.strip(), file=sys.stderr)
             self.show_message(
                 f"A privileged step failed (exit code {res.returncode}). Details are in "
-                "the terminal.", is_error=True)
+                "the terminal. If the kernel parameter step ran first, it may already be "
+                "applied; running this command again is safe and picks up from there.",
+                is_error=True)
         return False
+
+    def _announce_slow_step(self, karg: str | None):
+        """
+        Say how long the privileged step takes before it starts.
+
+        Its output is captured, so the terminal shows nothing at all while it
+        runs. On an image-based system that silence lasts long enough to read as
+        a hang, and reaching for Ctrl+C is the expected reaction rather than an
+        unlikely one.
+        """
+        print("One polkit prompt covers every privileged step below.")
+        if not karg:
+            print()
+            return
+        if self.backend == "ostree":
+            print("\nTHIS TAKES A WHILE. 'rpm-ostree kargs' writes a whole new deployment:\n"
+                  "30 to 60 seconds is normal, and on a slow disk it can be several minutes.\n"
+                  "Nothing is printed until it finishes, so a terminal that just sits there\n"
+                  "is what this looks like when it is working. Let it run.\n"
+                  "Ctrl+C isn't fatal if you do lose patience: rpm-ostree writes the\n"
+                  "deployment in one transaction through its daemon, which rolls itself back.\n")
+        else:
+            print("\nTHIS TAKES A WHILE. grub-mkconfig scans the disks for kernels and other\n"
+                  "operating systems. That is a few seconds, sometimes longer, and it prints\n"
+                  "nothing until it is done.\n"
+                  "Ctrl+C isn't fatal if you do lose patience: this script puts the old\n"
+                  f"{GRUB_DEFAULT} back before it quits.\n")
 
     def _offer_reboot(self):
         if self.ask_yes_no("Reboot now to apply the change?"):
@@ -735,7 +866,9 @@ fi""")
         replaces, GRUB file contents as (original, new)).
 
         The GRUB tuple is None on ostree, where rpm-ostree edits the parameters
-        itself and there's no file for this script to rewrite.
+        itself and there's no file for this script to rewrite. Nothing is replaced
+        there either: --append-if-missing leaves any acpi_backlight= value already
+        in the deployment alone, and the kernel takes the last one on the line.
         """
         if self.backend == "ostree":
             configured = self.configured_params()
@@ -748,7 +881,9 @@ fi""")
 
         original = GRUB_DEFAULT.read_text(encoding="utf-8")
         try:
-            new_grub, replaced = self.rewrite_grub(original, enable=enable)
+            new_grub, replaced = self.rewrite_grub(
+                original, enable=enable,
+                restore=None if enable else self.replaced_by_enable())
         except ValueError as error:
             self.fail(f"Can't edit the GRUB defaults safely: {error}. "
                       f"{'Add' if enable else 'Remove'} acpi_backlight=native by hand "
@@ -756,25 +891,34 @@ fi""")
         return new_grub != original, replaced, (original, new_grub)
 
     def _print_steps(self, karg_changes: bool, replaced: list[str], rule_before: str,
-                     enabling: bool):
+                     enabling: bool, had_backup: bool = False):
         """The three-step report both enable and disable print after a successful run."""
         print(f"[1/3] Kernel parameter in {self._karg_location()}: {' '.join(KERNEL_PARAMS)}")
         if enabling and karg_changes:
             print("      -> added" + (f", replacing {' '.join(replaced)}" if replaced else ""))
         elif enabling:
             print("      -> already present")
+        elif karg_changes:
+            print("      -> removed"
+                  + (f", putting back {' '.join(replaced)} from the backup" if replaced else ""))
         else:
-            print("      -> removed" if karg_changes else "      -> wasn't there")
-        if karg_changes and self.backend == "grub":
+            print("      -> wasn't there")
+        if karg_changes and enabling and self.backend == "grub":
             print(f"      -> previous file kept at {GRUB_BACKUP}")
 
         print(f"[2/3] modprobe rule for nvidia_wmi_ec_backlight ({MODPROBE_CONF})")
         if enabling:
             print({"installed": "      -> already in place",
-                   "different": "      -> replaced a different rule with this one",
+                   "different": f"      -> replaced a different rule, kept at {MODPROBE_BACKUP}",
                    "absent": "      -> written"}[rule_before])
+        elif rule_before == "absent":
+            print("      -> wasn't there")
+        elif rule_before == "different":
+            print("      -> left alone, it isn't this script's rule")
+        elif had_backup:
+            print(f"      -> removed, putting back the rule kept at {MODPROBE_BACKUP}")
         else:
-            print("      -> wasn't there" if rule_before == "absent" else "      -> removed")
+            print("      -> removed")
 
         if self.backend == "ostree":
             print("[3/3] ostree deployment")
@@ -810,7 +954,7 @@ fi""")
                 self._offer_reboot()
             return
 
-        print("One polkit prompt covers every privileged step below.\n")
+        self._announce_slow_step("enable" if karg_changes else None)
         if not self._apply("enable" if karg_changes else None,
                            None if rule_before == "installed" else "write", grub):
             return
@@ -829,6 +973,17 @@ fi""")
     # --- disable -------------------------------------------------------------
 
     def disable(self):
+        if not self.is_supported_model():
+            warning = (
+                f"This laptop reports '{self.model()}', not a {SUPPORTED_BOARD}, so this "
+                f"script never applied the fix here. Disabling still takes "
+                f"{' '.join(KERNEL_PARAMS)} out of the kernel parameters, and on another "
+                "machine that parameter is likely to be there for a reason of its own.")
+            if self.silent:
+                self.fail(f"{warning} Run it without --silent to confirm.")
+            if not self.ask_yes_no(f"{warning}\n\nRemove it anyway?"):
+                print("Nothing was changed.")
+                return
         self._require_supported_platform()
         self.require_pkexec()
 
@@ -841,12 +996,14 @@ fi""")
             self.show_message("The backlight fix isn't enabled, so there's nothing to remove.")
             return
 
-        print("One polkit prompt covers every privileged step below.\n")
+        had_backup = MODPROBE_BACKUP.exists()
+        self._announce_slow_step("disable" if karg_changes else None)
         if not self._apply("disable" if karg_changes else None,
                            None if rule_before == "absent" else "remove", grub):
             return
 
-        self._print_steps(karg_changes, replaced, rule_before, enabling=False)
+        self._print_steps(karg_changes, replaced, rule_before, enabling=False,
+                          had_backup=had_backup)
 
         print("\nDone. REBOOT REQUIRED to go back to the default backlight handling.")
         print("Reminder: without the fix, brightness doesn't work in Integrated mode.")
@@ -1133,10 +1290,15 @@ def main():
         parser.error("--silent needs an action")
 
     fix = BacklightFix(silent=args.silent)
-    if args.action:
-        getattr(fix, args.action)()
-    else:
-        fix.menu()
+    try:
+        if args.action:
+            getattr(fix, args.action)()
+        else:
+            fix.menu()
+    except KeyboardInterrupt:
+        # The privileged script has its own trap and has already put things back.
+        print("\nInterrupted.", file=sys.stderr)
+        sys.exit(130)
 
 
 if __name__ == "__main__":
