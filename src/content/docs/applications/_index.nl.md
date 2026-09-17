@@ -24,6 +24,10 @@ Drie plekken, in deze volgorde:
 
 3. **[Flathub](https://flathub.org/)**: Flatpak-packages die hun eigen dependencies meebrengen. Installeren met `flatpak install flathub <app-id>`, starten met `flatpak run <app-id>`.
 
+CachyOS levert ook **[Shelly](https://github.com/Seafoam-Labs/Shelly-ALPM)** mee als standaard grafische package manager, sinds de ISO van april 2026 de opvolger van het oudere Octopi. Het praat rechtstreeks met `libalpm` in plaats van `pacman` te omwikkelen, en zet alle drie bovenstaande bronnen in één GTK4-app: officiële packages, AUR-builds en Flathub, plus AppImages, achter de tabbladen **Recommended**, **Package**, **AUR**, **Flatpak**, **AppImage** en **Update**. Op een oudere installatie zonder Shelly haal je het binnen met `sudo pacman -S shelly`.
+
+![Shelly bladert door Flathub-apps in het Flatpak-tabblad](/images/shelly-flatpak.avif)
+
 **Native (pacman/paru) vs Flatpak: wat kies je?**
 
 | | Native (pacman/paru) | Flatpak |

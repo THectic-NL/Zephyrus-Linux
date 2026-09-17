@@ -16,6 +16,12 @@ It's a rolling distribution, so that is the update. There is no release to move 
 
 If an update breaks something, you roll it back by hand. Reinstall the previous package from the cache in `/var/cache/pacman/pkg/`, or pull it from the [Arch Linux Archive](https://archive.archlinux.org/). Worth knowing before you need it.
 
+## Doing it graphically
+
+If a terminal isn't where you want to be, [Shelly](https://github.com/Seafoam-Labs/Shelly-ALPM) — CachyOS's default graphical package manager — has an **Update** tab that does the same job: it checks for conflicts first, then upgrades each package with its own progress bar, with the same pacman transaction log available underneath if you want to watch it.
+
+![Shelly upgrading packages, with the pacman transaction log open below](/images/shelly-updating.avif)
+
 ## The kernel
 
 CachyOS ships the **CachyOS Kernel Manager** as a pre-installed GUI. It manages installed kernels and configures the `sched-ext` scheduler, the kernel's framework for swapping in a userspace CPU scheduler.

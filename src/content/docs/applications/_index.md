@@ -24,6 +24,10 @@ Three places, in this order:
 
 3. **[Flathub](https://flathub.org/)**: Flatpak packages that bundle all their own dependencies. Install with `flatpak install flathub <app-id>`, run with `flatpak run <app-id>`.
 
+CachyOS also ships **[Shelly](https://github.com/Seafoam-Labs/Shelly-ALPM)** as its default graphical package manager, replacing the older Octopi since the April 2026 ISO. It talks to `libalpm` directly rather than wrapping `pacman`, and puts all three sources above in one GTK4 app — official packages, AUR builds and Flathub, plus AppImages — behind **Recommended**, **Package**, **AUR**, **Flatpak**, **AppImage** and **Update** tabs. On an older install that predates it, `sudo pacman -S shelly` retrofits it.
+
+![Shelly browsing Flathub apps in its Flatpak tab](/images/shelly-flatpak.avif)
+
 **Native (pacman/paru) vs Flatpak: which to choose?**
 
 | | Native (pacman/paru) | Flatpak |
