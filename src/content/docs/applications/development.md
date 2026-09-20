@@ -352,23 +352,23 @@ For the full setup (including registry configuration and connecting Docker Hub a
 
 ### AWS CLI
 
-Installed to reach AWS from the terminal, and because CloudFormation and Terraform both lean on it. Neither of those needs the `aws` command to run, but both read the same `~/.aws/` profiles that the CLI writes, so configuring the CLI is what makes the other two authenticate.
+Installed to reach AWS from the terminal. CloudFormation and Terraform don't need the `aws` command, but they read the same `~/.aws/` profiles it writes.
 
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
 
-AWS CLI v2 is in the `extra` repository as [aws-cli-v2](https://archlinux.org/packages/extra/any/aws-cli-v2/), so pacman handles it along with everything else:
+AWS CLI v2 is in the `extra` repository as [aws-cli-v2](https://archlinux.org/packages/extra/any/aws-cli-v2/):
 
 ```bash
 sudo pacman -S aws-cli-v2
 ```
 
-It provides the same `aws` command as the old v1 `aws-cli` package and conflicts with it, so pacman offers to replace v1 if that is still installed.
+It conflicts with the old v1 `aws-cli` package and provides the same `aws` command, so pacman offers to replace v1.
 
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
-A single command-line tool with no system integration, which is the case for Homebrew rather than layering:
+A CLI tool with no system integration, so Homebrew rather than layering:
 
 ```bash
 brew install awscli
@@ -379,22 +379,33 @@ brew install awscli
 
 #### AWS's own installer
 
-AWS also publishes its own build as a zip, which is the route the [nixCraft guide](https://www.cyberciti.biz/faq/how-to-install-aws-cli-on-linux/) takes. It is worth knowing about: it is the exact build AWS documentation and support assume you are running, and it is distribution-independent.
+AWS publishes its own build as a zip, distribution-independent. This is the route the [nixCraft guide](https://www.cyberciti.biz/faq/how-to-install-aws-cli-on-linux/) takes.
+
+Download the zip and its signature:
 
 ```bash
 curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
+curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip.sig" -o awscliv2.sig
+```
+
+`gpg --verify` needs AWS's public key first, or it stops at `Can't check signature: No public key`. AWS publishes the key block in the [install documentation](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html). Save it as `aws-cli.asc` and import it:
+
+```bash
+gpg --import aws-cli.asc
+gpg --fingerprint aws-cli@amazon.com
+```
+
+The fingerprint must be `FB5D B77F D5C1 18B8 0511 ADA8 A631 0ACC 4672 475C`, on a 4096-bit RSA key for `AWS CLI Team <aws-cli@amazon.com>`. Take the key from AWS, not from a keyserver: the copy on `keyserver.ubuntu.com` expired in July 2026 while AWS kept signing releases with it.
+
+Verify first, install after:
+
+```bash
+gpg --verify awscliv2.sig awscliv2.zip
 unzip -q awscliv2.zip
 sudo ./aws/install
 ```
 
-Verify the download before running an installer as root. AWS signs the zip with GPG and publishes the public key and its fingerprint in the [install documentation](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html):
-
-```bash
-curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip.sig" -o awscliv2.sig
-gpg --verify awscliv2.sig awscliv2.zip
-```
-
-This works on Bazzite as well as on CachyOS. The installer writes to `/usr/local`, which on an atomic image is a symlink to `/var/usrlocal` and therefore writable: no layered package, no reboot, and it survives image updates. The trade-off is that nothing updates it for you. Upgrading means downloading the zip again and running `sudo ./aws/install --update`, which is exactly the maintenance the packaged versions above take off your hands.
+Works on Bazzite too: the installer writes to `/usr/local`, a symlink to `/var/usrlocal` on an atomic image and therefore writable. No layering, no reboot, and it survives image updates. Nothing updates it for you, so upgrading means downloading the zip again and running `sudo ./aws/install --update`.
 
 #### Configuration
 
@@ -404,18 +415,18 @@ If the account uses IAM Identity Center, set up a profile against it instead of 
 aws configure sso
 ```
 
-That opens a browser once and then keeps a short-lived token, refreshed with `aws sso login` when it expires. Plain access keys still work:
+That opens a browser once and keeps a short-lived token, refreshed with `aws sso login`. Plain access keys still work:
 
 ```bash
 aws configure
 ```
 
-The difference matters for what ends up on the laptop. `aws configure sso` writes the profile to `~/.aws/config` and caches the token under `~/.aws/sso/cache/`. `aws configure` writes the access key ID and the secret access key to `~/.aws/credentials` in plain text, and those keys do not expire on their own. Prefer the SSO route wherever the account allows it.
+`aws configure sso` writes the profile to `~/.aws/config` and caches the token under `~/.aws/sso/cache/`. `aws configure` writes the access key ID and secret access key to `~/.aws/credentials` in plain text, and those don't expire. Use SSO where the account allows it.
 
-Check what the CLI thinks you are:
+Check the resolved identity:
 
 ```bash
 aws sts get-caller-identity
 ```
 
-It returns the account ID, the ARN of the user or role, and the user ID. Once that works, `aws cloudformation` and the Terraform AWS provider work too, because both resolve credentials through the same profile chain. Point them at a non-default profile with `AWS_PROFILE=name` in the environment, or `--profile name` on an `aws` command.
+It returns the account ID, the ARN of the user or role, and the user ID. Once that works, `aws cloudformation` and the Terraform AWS provider work too: both resolve credentials through the same profile chain. Point them at another profile with `AWS_PROFILE=name` or `--profile name`.

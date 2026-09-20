@@ -47,17 +47,17 @@ flatpak install flathub me.proton.Mail
 
 ![Proton Mail app in Flathub](/images/protonmail-flathub.avif)
 
-#### Proton's eigen .rpm, en waarom Bazzite de Flatpak houdt
+#### Proton's eigen .rpm
 
-Proton publiceert zelf een `.deb` en een `.rpm` van de desktop app, te vinden via [hun Linux setup-artikel](https://proton.me/support/set-up-proton-mail-linux). Een native package is dus niet langer iets dat alleen de CachyOS repository en de AUR leveren, en op een gewone Fedora-installatie is dat bestand de betere keuze, omdat dnf de app dan beheert:
+Proton publiceert zelf een `.deb` en een `.rpm`, te vinden via [hun Linux setup-artikel](https://proton.me/support/set-up-proton-mail-linux). Op gewone Fedora installeer je dat met dnf:
 
 ```bash
 sudo dnf install ./ProtonMail-desktop-*.rpm
 ```
 
-Bazzite is geen gewone Fedora-installatie, en daar houdt de aantrekkingskracht op. Op het moment van schrijven levert Proton het bestand, geen repository, dus een atomic host heeft niets om updates uit te halen. Installeren betekent `rpm-ostree install` op een lokale RPM: een gelayerd package en een reboot om het binnen te krijgen, en daarna opnieuw downloaden, opnieuw layeren en opnieuw rebooten bij elke Proton-release. De [WinBoat]({{< relref "/docs/virtualization/winboat" >}}) pagina loopt met zijn `.rpm` tegen precies hetzelfde aan.
+Dat levert dependency-afhandeling en een schone `dnf remove` op, maar geen updates. Er zit geen Proton-repository achter het bestand, dus er verschijnt niets in `dnf upgrade` en elke release betekent de RPM opnieuw downloaden.
 
-Het officiële package is dus de moeite waard op CachyOS, waar het er al een is, en niet de moeite waard om op Bazzite achteraan te jagen. De Flatpak update op de achtergrond en kost geen enkele reboot, en voor een mailclient die zo vaak uitkomt weegt dat zwaarder dan de sandbox overhead die je bespaart. Als Proton ooit een echte RPM repository publiceert verandert die rekensom en is dit het opnieuw bekijken waard.
+Bazzite heeft geen `dnf` op de host, dus hetzelfde bestand betekent daar `rpm-ostree install` op een lokale RPM: een gelayerd package en een reboot, en dat bij elke release opnieuw. De [WinBoat]({{< relref "/docs/virtualization/winboat" >}}) pagina loopt tegen hetzelfde aan. De Flatpak update op de achtergrond en kost geen reboots, dus op Bazzite blijft die de betere optie.
 
 ### Standard Notes
 
