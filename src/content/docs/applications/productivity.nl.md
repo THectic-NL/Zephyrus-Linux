@@ -31,7 +31,7 @@ flatpak install flathub org.signal.Signal
 
 ### Proton Mail
 
-Proton Mail desktop app is een wrapper rond de web app in plaats van een native client. Op CachyOS levert de [repository](https://packages.cachyos.org/package/cachyos/any/proton-mail-bin) `proton-mail-bin`, die sneller integreert dan de Flatpak: beter tray icon behavior, system notifications, en geen Flatpak sandbox overhead. Op Bazzite is de Flatpak de optie.
+Proton Mail desktop app is een wrapper rond de web app in plaats van een native client. Op CachyOS levert de [repository](https://packages.cachyos.org/package/cachyos/any/proton-mail-bin) `proton-mail-bin`, die sneller integreert dan de Flatpak: beter tray icon behavior, system notifications, en geen Flatpak sandbox overhead.
 
 **CachyOS / Arch (aanbevolen):**
 
@@ -46,6 +46,18 @@ flatpak install flathub me.proton.Mail
 ```
 
 ![Proton Mail app in Flathub](/images/protonmail-flathub.avif)
+
+#### Proton's eigen .rpm, en waarom Bazzite de Flatpak houdt
+
+Proton publiceert zelf een `.deb` en een `.rpm` van de desktop app, te vinden via [hun Linux setup-artikel](https://proton.me/support/set-up-proton-mail-linux). Een native package is dus niet langer iets dat alleen de CachyOS repository en de AUR leveren, en op een gewone Fedora-installatie is dat bestand de betere keuze, omdat dnf de app dan beheert:
+
+```bash
+sudo dnf install ./ProtonMail-desktop-*.rpm
+```
+
+Bazzite is geen gewone Fedora-installatie, en daar houdt de aantrekkingskracht op. Op het moment van schrijven levert Proton het bestand, geen repository, dus een atomic host heeft niets om updates uit te halen. Installeren betekent `rpm-ostree install` op een lokale RPM: een gelayerd package en een reboot om het binnen te krijgen, en daarna opnieuw downloaden, opnieuw layeren en opnieuw rebooten bij elke Proton-release. De [WinBoat]({{< relref "/docs/virtualization/winboat" >}}) pagina loopt met zijn `.rpm` tegen precies hetzelfde aan.
+
+Het officiële package is dus de moeite waard op CachyOS, waar het er al een is, en niet de moeite waard om op Bazzite achteraan te jagen. De Flatpak update op de achtergrond en kost geen enkele reboot, en voor een mailclient die zo vaak uitkomt weegt dat zwaarder dan de sandbox overhead die je bespaart. Als Proton ooit een echte RPM repository publiceert verandert die rekensom en is dit het opnieuw bekijken waard.
 
 ### Standard Notes
 
