@@ -349,3 +349,84 @@ flatpak install flathub io.podman_desktop.PodmanDesktop
 {{< /tabs >}}
 
 For the full setup (including registry configuration and connecting Docker Hub and GitHub), see [Podman & Podman Desktop]({{< relref "/docs/virtualization/podman" >}}) in the Virtualization section.
+
+### AWS CLI
+
+Installed to reach AWS from the terminal. CloudFormation and Terraform don't need the `aws` command, but they read the same `~/.aws/` profiles it writes.
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+AWS CLI v2 is in the `extra` repository as [aws-cli-v2](https://archlinux.org/packages/extra/any/aws-cli-v2/):
+
+```bash
+sudo pacman -S aws-cli-v2
+```
+
+It conflicts with the old v1 `aws-cli` package and provides the same `aws` command, so pacman offers to replace v1.
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+A CLI tool with no system integration, so Homebrew rather than layering:
+
+```bash
+brew install awscli
+```
+
+{{< /tab >}}
+{{< /tabs >}}
+
+#### AWS's own installer
+
+AWS publishes its own build as a zip, distribution-independent. This is the route the [nixCraft guide](https://www.cyberciti.biz/faq/how-to-install-aws-cli-on-linux/) takes.
+
+Download the zip and its signature:
+
+```bash
+curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
+curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip.sig" -o awscliv2.sig
+```
+
+`gpg --verify` needs AWS's public key first, or it stops at `Can't check signature: No public key`. AWS publishes the key block in the [install documentation](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html). Save it as `aws-cli.asc` and import it:
+
+```bash
+gpg --import aws-cli.asc
+gpg --fingerprint aws-cli@amazon.com
+```
+
+The fingerprint must be `FB5D B77F D5C1 18B8 0511 ADA8 A631 0ACC 4672 475C`, on a 4096-bit RSA key for `AWS CLI Team <aws-cli@amazon.com>`. Take the key from AWS, not from a keyserver: the copy on `keyserver.ubuntu.com` expired in July 2026 while AWS kept signing releases with it.
+
+Verify first, install after:
+
+```bash
+gpg --verify awscliv2.sig awscliv2.zip
+unzip -q awscliv2.zip
+sudo ./aws/install
+```
+
+Works on Bazzite too: the installer writes to `/usr/local`, a symlink to `/var/usrlocal` on an atomic image and therefore writable. No layering, no reboot, and it survives image updates. Nothing updates it for you, so upgrading means downloading the zip again and running `sudo ./aws/install --update`.
+
+#### Configuration
+
+If the account uses IAM Identity Center, set up a profile against it instead of putting long-lived keys on disk:
+
+```bash
+aws configure sso
+```
+
+That opens a browser once and keeps a short-lived token, refreshed with `aws sso login`. Plain access keys still work:
+
+```bash
+aws configure
+```
+
+`aws configure sso` writes the profile to `~/.aws/config` and caches the token under `~/.aws/sso/cache/`. `aws configure` writes the access key ID and secret access key to `~/.aws/credentials` in plain text, and those don't expire. Use SSO where the account allows it.
+
+Check the resolved identity:
+
+```bash
+aws sts get-caller-identity
+```
+
+It returns the account ID, the ARN of the user or role, and the user ID. Once that works, `aws cloudformation` and the Terraform AWS provider work too: both resolve credentials through the same profile chain. Point them at another profile with `AWS_PROFILE=name` or `--profile name`.
