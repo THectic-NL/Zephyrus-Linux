@@ -349,3 +349,84 @@ flatpak install flathub io.podman_desktop.PodmanDesktop
 {{< /tabs >}}
 
 Voor de volledige setup (inclusief registry-configuratie en verbinding met Docker Hub en GitHub), zie [Podman & Podman Desktop]({{< relref "/docs/virtualization/podman" >}}) in de Virtualization sectie.
+
+### AWS CLI
+
+Geïnstalleerd om vanaf de terminal bij AWS te kunnen. CloudFormation en Terraform hebben het `aws` commando niet nodig, maar lezen wel dezelfde `~/.aws/` profielen die het wegschrijft.
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+AWS CLI v2 zit in de `extra` repository als [aws-cli-v2](https://archlinux.org/packages/extra/any/aws-cli-v2/):
+
+```bash
+sudo pacman -S aws-cli-v2
+```
+
+Het conflicteert met het oude v1 `aws-cli` package en levert hetzelfde `aws` commando, dus pacman biedt aan v1 te vervangen.
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+Een CLI-tool zonder systeemintegratie, dus Homebrew in plaats van layeren:
+
+```bash
+brew install awscli
+```
+
+{{< /tab >}}
+{{< /tabs >}}
+
+#### AWS' eigen installer
+
+AWS publiceert zijn eigen build als zip, distributie-onafhankelijk. Dit is de route die de [nixCraft guide](https://www.cyberciti.biz/faq/how-to-install-aws-cli-on-linux/) neemt.
+
+Download de zip en de signature:
+
+```bash
+curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
+curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip.sig" -o awscliv2.sig
+```
+
+`gpg --verify` heeft eerst de public key van AWS nodig, anders stopt het met `Can't check signature: No public key`. AWS publiceert het keyblok in de [installatiedocumentatie](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html). Bewaar het als `aws-cli.asc` en importeer het:
+
+```bash
+gpg --import aws-cli.asc
+gpg --fingerprint aws-cli@amazon.com
+```
+
+De fingerprint moet `FB5D B77F D5C1 18B8 0511 ADA8 A631 0ACC 4672 475C` zijn, op een 4096-bit RSA-key van `AWS CLI Team <aws-cli@amazon.com>`. Haal de key bij AWS, niet van een keyserver: de kopie op `keyserver.ubuntu.com` verliep in juli 2026 terwijl AWS er releases mee bleef ondertekenen.
+
+Eerst verifiëren, daarna pas installeren:
+
+```bash
+gpg --verify awscliv2.sig awscliv2.zip
+unzip -q awscliv2.zip
+sudo ./aws/install
+```
+
+Werkt ook op Bazzite: de installer schrijft naar `/usr/local`, op een atomic image een symlink naar `/var/usrlocal` en dus schrijfbaar. Geen layering, geen reboot, en het overleeft image-updates. Niets werkt het voor je bij, dus upgraden betekent de zip opnieuw downloaden en `sudo ./aws/install --update` draaien.
+
+#### Configuratie
+
+Gebruikt het account IAM Identity Center, zet dan een profiel daartegen op in plaats van langlevende keys op schijf:
+
+```bash
+aws configure sso
+```
+
+Dat opent één keer een browser en houdt een kortlevend token bij, dat je met `aws sso login` ververst. Gewone access keys werken ook:
+
+```bash
+aws configure
+```
+
+`aws configure sso` schrijft het profiel naar `~/.aws/config` en cachet het token onder `~/.aws/sso/cache/`. `aws configure` schrijft de access key ID en secret access key in platte tekst naar `~/.aws/credentials`, en die verlopen niet. Gebruik SSO waar het account dat toelaat.
+
+Controleer de opgeloste identiteit:
+
+```bash
+aws sts get-caller-identity
+```
+
+Dat geeft het account-ID, de ARN van de user of role, en het user-ID terug. Werkt dat, dan werken `aws cloudformation` en de Terraform AWS provider ook: allebei lossen ze credentials op via dezelfde profielketen. Wijs ze naar een ander profiel met `AWS_PROFILE=naam` of `--profile naam`.

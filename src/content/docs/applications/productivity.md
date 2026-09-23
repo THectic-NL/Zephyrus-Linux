@@ -31,7 +31,7 @@ flatpak install flathub org.signal.Signal
 
 ### Proton Mail
 
-Proton Mail desktop app is a wrapper around the web app rather than a native client. On CachyOS the [repository](https://packages.cachyos.org/package/cachyos/any/proton-mail-bin) ships `proton-mail-bin`, which integrates more natively into the desktop than the Flatpak: better tray icon behavior, system notifications, and no Flatpak sandbox overhead. On Bazzite the Flatpak is the option.
+Proton Mail desktop app is a wrapper around the web app rather than a native client. On CachyOS the [repository](https://packages.cachyos.org/package/cachyos/any/proton-mail-bin) ships `proton-mail-bin`, which integrates more natively into the desktop than the Flatpak: better tray icon behavior, system notifications, and no Flatpak sandbox overhead.
 
 **CachyOS / Arch (recommended):**
 
@@ -46,6 +46,18 @@ flatpak install flathub me.proton.Mail
 ```
 
 ![Proton Mail app in Flathub](/images/protonmail-flathub.avif)
+
+#### Proton's own .rpm
+
+Proton publishes a `.deb` and an `.rpm` itself, linked from [its Linux setup article](https://proton.me/support/set-up-proton-mail-linux). On ordinary Fedora, install it with dnf:
+
+```bash
+sudo dnf install ./ProtonMail-desktop-*.rpm
+```
+
+That gives you dependency handling and a clean `dnf remove`, but not updates. No Proton repository sits behind the file, so nothing shows up in `dnf upgrade` and every release means downloading the RPM again.
+
+Bazzite has no `dnf` on the host, so the same file means `rpm-ostree install` on a local RPM: a layered package and a reboot, repeated per release. The [WinBoat]({{< relref "/docs/virtualization/winboat" >}}) page runs into the same thing. The Flatpak updates in the background and costs no reboots, so it stays the better option on Bazzite.
 
 ### Standard Notes
 
