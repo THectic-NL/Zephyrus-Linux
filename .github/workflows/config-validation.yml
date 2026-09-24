@@ -76,7 +76,7 @@ jobs:
       - name: Validate Dependabot config
         env:
           # renovate: datasource=pypi depName=check-jsonschema
-          CHECK_JSONSCHEMA_VERSION: "0.38.1"
+          CHECK_JSONSCHEMA_VERSION: "0.38.2"
         run: |
           config=""
           for candidate in .github/dependabot.yml .github/dependabot.yaml; do
