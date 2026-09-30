@@ -627,7 +627,11 @@ class BacklightFix:
         paths = {}
         for path in LIMINE_CONFIG_CANDIDATES:
             if path.is_file():
-                paths[path.resolve()] = path
+                try:
+                    metadata = path.stat()
+                except OSError:
+                    continue
+                paths.setdefault((metadata.st_dev, metadata.st_ino), path)
         return list(paths.values())
 
     @staticmethod
@@ -638,15 +642,14 @@ class BacklightFix:
     @staticmethod
     def efi_loader_info() -> str | None:
         """Read the active bootloader name from the systemd Boot Loader Interface."""
-        for path in EFI_VARIABLES.glob("LoaderInfo-*"):
-            try:
-                data = path.read_bytes()
-                if len(data) < 6:
-                    continue
-                return data[4:].decode("utf-16-le").rstrip("\0")
-            except (OSError, UnicodeDecodeError):
-                continue
-        return None
+        path = EFI_VARIABLES / "LoaderInfo-4a67b082-0a4c-41cf-b6c7-440b29bb8c4f"
+        try:
+            data = path.read_bytes()
+            if len(data) < 6:
+                return None
+            return data[4:].decode("utf-16-le").rstrip("\0")
+        except (OSError, UnicodeDecodeError):
+            return None
 
     @staticmethod
     def limine_params(text: str) -> list[str]:
@@ -656,7 +659,7 @@ class BacklightFix:
         if not starts:
             raise ValueError("no Limine menu entries were found")
 
-        params: list[str] = []
+        common_params: list[str] | None = None
         linux_entries = 0
         for number, start in enumerate(starts):
             end = starts[number + 1] if number + 1 < len(starts) else len(lines)
@@ -680,12 +683,16 @@ class BacklightFix:
             if len(cmdlines) > 1:
                 raise ValueError("a Linux entry has more than one command-line option")
             linux_entries += 1
-            if cmdlines:
-                params.extend(cmdlines[0].split())
+            entry_params = cmdlines[0].split() if cmdlines else []
+            if common_params is None:
+                common_params = entry_params
+            else:
+                entry_param_set = set(entry_params)
+                common_params = [param for param in common_params if param in entry_param_set]
 
         if not linux_entries:
             raise ValueError("no Linux Limine entries were found")
-        return params
+        return common_params or []
 
     @staticmethod
     def rewrite_limine(text: str, enable: bool) -> tuple[str, list[str]]:
@@ -729,17 +736,19 @@ class BacklightFix:
             index = cmdline_indexes[0]
             match = _LIMINE_CMDLINE_RE.match(block[index])
             assert match is not None
-            params = match.group(2).split()
+            raw_cmdline = match.group(2)
+            parameter = re.compile(r"(?<!\S)acpi_backlight=native(?!\S)")
             if enable:
-                if "acpi_backlight=native" not in params:
-                    params.append("acpi_backlight=native")
+                if not parameter.search(raw_cmdline):
+                    separator = "" if not raw_cmdline or raw_cmdline[-1].isspace() else " "
+                    raw_cmdline += f"{separator}acpi_backlight=native"
             else:
-                params = [p for p in params if p != "acpi_backlight=native"]
+                raw_cmdline = parameter.sub("", raw_cmdline)
             ending = match.group(3) or ""
-            if not enable and not params:
+            if not enable and not raw_cmdline.strip():
                 del block[index]
             else:
-                block[index] = f"{match.group(1)}{' '.join(params)}{ending}"
+                block[index] = f"{match.group(1)}{raw_cmdline}{ending}"
             out.extend(block)
 
         if not linux_entries:
