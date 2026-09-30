@@ -73,11 +73,11 @@ The script does both, and can show the status and test the result:
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-backlight.py
-echo "f571e8e54de485f16747fc528d95765ae2e3564039d648219cf21d0177b0458d  zephyrus-backlight.py" | sha256sum -c
+echo "3ea751d7a4b1ac930de974bfe26f16ee3952fb96fa6ef31aa44756a0ae09cba5  zephyrus-backlight.py" | sha256sum -c
 python3 zephyrus-backlight.py
 ```
 
-Without an action it opens a menu. From the terminal: `status`, `test`, `enable` or `disable`, plus `--silent` for no dialogs. It sets the kernel parameter through GRUB or through `rpm-ostree kargs`, whichever the system uses, and only enables the fix on a GA605WV. `disable` reverts what `enable` changed rather than just deleting it: an `acpi_backlight=` value it replaced, and a modprobe rule of your own that it moved aside, both come back. Source: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py), SHA-256 `f571e8e54de485f16747fc528d95765ae2e3564039d648219cf21d0177b0458d`.
+Without an action it opens a menu. From the terminal: `status`, `test`, `enable` or `disable`, plus `--silent` for no dialogs. It sets the kernel parameter through GRUB, `rpm-ostree kargs`, or a Limine config, whichever the system uses, and only enables the fix on a GA605WV. Limine support is early and untested; it may be unstable or not work. `disable` removes the fix's kernel parameter (restoring a replaced GRUB value) and restores a modprobe rule of your own that it moved aside. Source: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py), SHA-256 `3ea751d7a4b1ac930de974bfe26f16ee3952fb96fa6ef31aa44756a0ae09cba5`.
 
 By hand:
 
@@ -155,6 +155,8 @@ The kernel picks one backlight interface per boot, and first asks the firmware w
 After a fresh boot in Integrated, Hybrid and Ultimate mode, the Fn keys and the GNOME slider work right away. CachyOS, kernel 7.2.5-1-cachyos.
 
 On Bazzite (GNOME, kernel 7.2.4-ogc3.1.fc44, NVIDIA 615.71.09), the script applies and removes both parts through `rpm-ostree kargs`. After a fresh boot in Integrated, Hybrid and Ultimate mode, the Fn keys and the GNOME slider work there too. Not tested on KDE.
+
+Limine support is early and has not been tested on a Limine system. It may be unstable or not work.
 
 **Background:**
 

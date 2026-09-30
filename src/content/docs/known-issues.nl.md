@@ -73,11 +73,11 @@ Het script doet allebei, en kan de status tonen en het resultaat testen:
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-backlight.py
-echo "f571e8e54de485f16747fc528d95765ae2e3564039d648219cf21d0177b0458d  zephyrus-backlight.py" | sha256sum -c
+echo "3ea751d7a4b1ac930de974bfe26f16ee3952fb96fa6ef31aa44756a0ae09cba5  zephyrus-backlight.py" | sha256sum -c
 python3 zephyrus-backlight.py
 ```
 
-Zonder actie opent het een menu. Vanuit de terminal: `status`, `test`, `enable` of `disable`, plus `--silent` zonder dialogen. Het zet de kernelparameter via GRUB of via `rpm-ostree kargs`, afhankelijk van wat het systeem gebruikt, en zet de fix alleen aan op een GA605WV. `disable` draait terug wat `enable` veranderde in plaats van het alleen te verwijderen: een `acpi_backlight=`-waarde die het verving en een eigen modprobe-regel die het opzij zette komen allebei terug. Bron: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py), SHA-256 `f571e8e54de485f16747fc528d95765ae2e3564039d648219cf21d0177b0458d`.
+Zonder actie opent het een menu. Vanuit de terminal: `status`, `test`, `enable` of `disable`, plus `--silent` zonder dialogen. Het zet de kernelparameter via GRUB, `rpm-ostree kargs` of een Limine-configuratie, afhankelijk van wat het systeem gebruikt, en zet de fix alleen aan op een GA605WV. Limine-ondersteuning is pril en ongetest; die kan instabiel zijn of niet werken. `disable` verwijdert de kernelparameter (en herstelt een vervangen GRUB-waarde) en herstelt een eigen modprobe-regel die het opzij heeft gezet. Bron: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py), SHA-256 `3ea751d7a4b1ac930de974bfe26f16ee3952fb96fa6ef31aa44756a0ae09cba5`.
 
 Met de hand:
 
@@ -155,6 +155,8 @@ De kernel kiest per boot één backlight-interface, en vraagt eerst aan de firmw
 Na een verse boot in Integrated, Hybrid en Ultimate mode werken de Fn-toetsen en de GNOME-slider meteen. CachyOS, kernel 7.2.5-1-cachyos.
 
 Op Bazzite (GNOME, kernel 7.2.4-ogc3.1.fc44, NVIDIA 615.71.09) zet en verwijdert het script beide onderdelen via `rpm-ostree kargs`. Na een verse boot in Integrated, Hybrid en Ultimate mode werken ook daar de Fn-toetsen en de GNOME-slider. Niet getest op KDE.
+
+Limine-ondersteuning is pril en is niet getest op een Limine-systeem. Die kan instabiel zijn of niet werken.
 
 **Achtergrond:**
 

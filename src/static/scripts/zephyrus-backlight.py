@@ -78,7 +78,6 @@ MODPROBE_BACKUP = Path("/var/lib/zephyrus-backlight/nvidia-wmi-ec-backlight.conf
 # Present on a booted ostree deployment, so on Bazzite and its siblings.
 OSTREE_MARKER = Path("/run/ostree-booted")
 EFI_VARIABLES = Path("/sys/firmware/efi/efivars")
-LIMINE_VENDOR_GUID = "4a67b082-0a4c-41cf-b6c7-440b29bb8c4f"
 LIMINE_CONFIG_CANDIDATES = tuple(Path(path) for path in (
     "/boot/EFI/BOOT/limine.conf",
     "/boot/EFI/limine/limine.conf",
@@ -625,7 +624,11 @@ class BacklightFix:
 
     @staticmethod
     def limine_config_paths() -> list[Path]:
-        return [path for path in LIMINE_CONFIG_CANDIDATES if path.is_file()]
+        paths = {}
+        for path in LIMINE_CONFIG_CANDIDATES:
+            if path.is_file():
+                paths[path.resolve()] = path
+        return list(paths.values())
 
     @staticmethod
     def find_limine_config() -> Path | None:
@@ -634,8 +637,8 @@ class BacklightFix:
 
     @staticmethod
     def efi_loader_info() -> str | None:
-        """The systemd Boot Loader Interface identifies Limine through LoaderInfo."""
-        for path in EFI_VARIABLES.glob(f"LoaderInfo-{LIMINE_VENDOR_GUID}"):
+        """Read the active bootloader name from the systemd Boot Loader Interface."""
+        for path in EFI_VARIABLES.glob("LoaderInfo-*"):
             try:
                 data = path.read_bytes()
                 if len(data) < 6:
@@ -733,7 +736,10 @@ class BacklightFix:
             else:
                 params = [p for p in params if p != "acpi_backlight=native"]
             ending = match.group(3) or ""
-            block[index] = f"{match.group(1)}{' '.join(params)}{ending}"
+            if not enable and not params:
+                del block[index]
+            else:
+                block[index] = f"{match.group(1)}{' '.join(params)}{ending}"
             out.extend(block)
 
         if not linux_entries:
@@ -758,7 +764,7 @@ class BacklightFix:
         loader_info = self.efi_loader_info()
         if loader_info and loader_info.startswith("Limine "):
             return "limine" if self.limine_config else None
-        if not loader_info and len(self.limine_config_paths()) == 1:
+        if loader_info is None and len(self.limine_config_paths()) == 1:
             grub_available = (
                 GRUB_DEFAULT.exists() and GRUB_CFG.exists()
                 and shutil.which("grub-mkconfig")
@@ -792,7 +798,7 @@ class BacklightFix:
                 "Limine is running, but its configuration file wasn't found in a supported "
                 f"location. Follow the manual steps:\n{DOC_URL}"
             )
-        if not loader_info and len(limine_paths) > 1:
+        if loader_info is None and len(limine_paths) > 1:
             return (
                 "More than one Limine configuration file was found, and the active one "
                 f"couldn't be identified. Follow the manual steps:\n{DOC_URL}"
@@ -820,7 +826,7 @@ class BacklightFix:
                 return None
             try:
                 return self.limine_params(self.limine_config.read_text(encoding="utf-8"))
-            except (OSError, ValueError):
+            except (OSError, UnicodeError, ValueError):
                 return None
         return self.grub_params()
 
@@ -941,7 +947,7 @@ cp -p {q(str(config_path))} "$work/rollback"
 put_back() {{ cp -p "$work/rollback" {q(str(config_path))} || {{ echo PUT_BACK_FAILED >&2; exit 6; }}; }}
 trap 'put_back; exit 130' INT TERM
 if ! install -m 644 "$work/proposed" {q(str(config_path))}; then
-    put_back
+    put_back || exit 6
     exit 7
 fi
 trap - INT TERM""")
@@ -1066,12 +1072,12 @@ fi""")
     def _karg_plan(self, enable: bool) -> tuple[bool, list[str], tuple[Path, str, str] | None]:
         """
         What the kernel parameter step has to do: (needs changing, values it
-        replaces, GRUB file contents as (original, new)).
+        replaces, and the config file path and contents).
 
-        The GRUB tuple is None on ostree, where rpm-ostree edits the parameters
-        itself and there's no file for this script to rewrite. Nothing is replaced
-        there either: --append-if-missing leaves any acpi_backlight= value already
-        in the deployment alone, and the kernel takes the last one on the line.
+        The config tuple is None on ostree, where rpm-ostree edits the parameters
+        itself and there's no file for this script to rewrite. Limine keeps any
+        existing acpi_backlight= value and appends native; disable removes only
+        native, leaving the previous value intact.
         """
         if self.backend == "ostree":
             configured = self.configured_params()
@@ -1088,7 +1094,7 @@ fi""")
                       f"Follow the manual steps:\n{DOC_URL}")
         try:
             original = config_path.read_text(encoding="utf-8")
-        except OSError as error:
+        except (OSError, UnicodeError) as error:
             self.fail(f"Couldn't read {config_path}: {error}. Nothing was changed.")
         try:
             if self.backend == "limine":
