@@ -73,11 +73,11 @@ The script does both, and can show the status and test the result:
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-backlight.py
-echo "f571e8e54de485f16747fc528d95765ae2e3564039d648219cf21d0177b0458d  zephyrus-backlight.py" | sha256sum -c
+echo "08061fe4682683c287e318be7f8109ba621d718347c7a275f5d3de38623a667e  zephyrus-backlight.py" | sha256sum -c
 python3 zephyrus-backlight.py
 ```
 
-Without an action it opens a menu. From the terminal: `status`, `test`, `enable` or `disable`, plus `--silent` for no dialogs. It sets the kernel parameter through GRUB or through `rpm-ostree kargs`, whichever the system uses, and only enables the fix on a GA605WV. `disable` reverts what `enable` changed rather than just deleting it: an `acpi_backlight=` value it replaced, and a modprobe rule of your own that it moved aside, both come back. Source: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py), SHA-256 `f571e8e54de485f16747fc528d95765ae2e3564039d648219cf21d0177b0458d`.
+Without an action it opens a menu. From the terminal: `status`, `test`, `enable` or `disable`, plus `--silent` for no dialogs. It sets the kernel parameter through GRUB, `rpm-ostree kargs`, or a Limine config, whichever the system uses, and only enables the fix on a GA605WV. Limine support is early and untested; it may be unstable or not work. `disable` removes the fix's kernel parameter (restoring a replaced GRUB value) and restores a modprobe rule of your own that it moved aside. Source: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py), SHA-256 `08061fe4682683c287e318be7f8109ba621d718347c7a275f5d3de38623a667e`.
 
 By hand:
 
@@ -109,6 +109,21 @@ systemctl reboot
 `rpm-ostree kargs` takes a while, normally 30 to 60 seconds and longer on a slow disk, and prints nothing at all until it finishes. That silence is what it looks like when it is working, so leave it alone rather than interrupting it.
 
 `/etc` is yours on an atomic system, so the modprobe rule survives image updates, and `rpm-ostree kargs` stages a new deployment with the parameter instead of editing a bootloader config. `rpm-ostree kargs --delete-if-present=acpi_backlight=native` undoes it. Don't edit `/etc/default/grub` here: on an image-based system it isn't what boots the machine.
+
+{{< /tab >}}
+{{< tab name="Limine" >}}
+
+Edit the Limine configuration file actually used by your bootloader (commonly `/boot/limine.conf` or `/boot/EFI/BOOT/limine.conf`; the path depends on your setup):
+
+```bash
+sudo nano /boot/limine.conf
+```
+
+In every Linux entry (the entry with `protocol: linux`), append `acpi_backlight=native` to its existing `cmdline:` or `kernel_cmdline:` value. If it has neither, add `cmdline: acpi_backlight=native`. Keep the other kernel parameters. To undo this, remove only `acpi_backlight=native` from those entries. Save the file and reboot:
+
+```bash
+sudo reboot
+```
 
 {{< /tab >}}
 {{< /tabs >}}
@@ -155,6 +170,8 @@ The kernel picks one backlight interface per boot, and first asks the firmware w
 After a fresh boot in Integrated, Hybrid and Ultimate mode, the Fn keys and the GNOME slider work right away. CachyOS, kernel 7.2.5-1-cachyos.
 
 On Bazzite (GNOME, kernel 7.2.4-ogc3.1.fc44, NVIDIA 615.71.09), the script applies and removes both parts through `rpm-ostree kargs`. After a fresh boot in Integrated, Hybrid and Ultimate mode, the Fn keys and the GNOME slider work there too. Not tested on KDE.
+
+Limine support is early and has not been tested on a Limine system. It may be unstable or not work.
 
 **Background:**
 
