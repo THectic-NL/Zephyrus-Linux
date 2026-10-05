@@ -4,11 +4,25 @@ weight: 1
 toc: false
 ---
 
-# My Setup Notes
+# My Linux setup
 
-Everything I've documented while running Linux on the ROG Zephyrus G16 (GA605WV), for the two distributions I'd recommend on it: **CachyOS** and **Bazzite**.
+This is how I like Linux, written down so I can rebuild it quickly and so you can build the same one. It is built around the one laptop I own, the ROG Zephyrus G16 (GA605WV), and covers the two distributions I'd recommend on it: **CachyOS** and **Bazzite**.
 
-I'm not a developer, just someone who switched to Linux and hit a lot of things that didn't work out of the box. I wrote it all down so others don't have to figure out the same things. If something here helps you, good. If you run into something I haven't covered, get in touch.
+It is opinionated. These are my favorite settings and the software I actually use, not a survey of every option, and most of it is turned into a script. If something here helps you, good. If you run into something I haven't covered, get in touch.
+
+## Set up a machine like mine
+
+{{< cards >}}
+  {{< card link="/docs/setup-script" title="Setup script" subtitle="A menu that shows what is done and what is open on your machine, and sets up my recommended defaults, with a guide link for every step." >}}
+{{< /cards >}}
+
+## What is specific to this laptop
+
+You don't need this exact model. Only the pages about the laptop's own hardware are specific to the G16. Everything else works on any machine.
+
+| Specific to the Zephyrus G16 | Works on any machine |
+|---|---|
+| [asusctl & ROG Control Center]({{< relref "/docs/hardware/asusctl-rog-control" >}}), [display color profiles]({{< relref "/docs/hardware/color-profiles" >}}), [MT7925 Wi-Fi tuning]({{< relref "/docs/networking/mt7925-wifi-performance" >}}), the brightness fix in [Known Issues]({{< relref "/docs/known-issues" >}}) | [GNOME desktop]({{< relref "/docs/desktop" >}}), [security]({{< relref "/docs/security" >}}), [applications]({{< relref "/docs/applications" >}}), [virtualization]({{< relref "/docs/virtualization" >}}), [gaming]({{< relref "/docs/gaming" >}}), [eduroam]({{< relref "/docs/networking/eduroam-network-installation" >}}) |
 
 ## Pick a distribution first
 
@@ -54,7 +68,7 @@ It works fine on this laptop. Nothing here is a warning against it. After testin
 
 ## They trade places
 
-I haven't picked one and stopped looking. I've daily-driven both on this laptop and switched back and forth more than once. These days CachyOS is my daily driver, mostly because some of what I do wants that bit of extra system control, but I still dual-boot Bazzite on the same machine and go back to it out of curiosity now and then, running it for a while before switching back. Neither one stays ahead for long.
+I haven't picked one and stopped looking. I've daily-driven both on this laptop and switched back and forth more than once. These days CachyOS is my daily driver, mostly because some of what I do wants that bit of extra system control, but I used to dual-boot Bazzite on the same machine and went back to it out of curiosity now and then, running it for a while before switching back. Neither one stays ahead for long.
 
 It comes in waves. One month Bazzite lands a kernel bump or a Mesa fix and it's the smoother of the two. A month later CachyOS ships a scheduler change or an `asusctl` update and the lead flips back. The gap is never large and it never lasts, because the parts that matter get backported either way. A fix that lands in one distribution's kernel, or in mainline, is usually in the other within a release or two. Give it a few weeks and they're level again.
 

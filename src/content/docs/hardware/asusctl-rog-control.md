@@ -8,7 +8,7 @@ next: docs/hardware/color-profiles
 The Zephyrus G16 has a lot of hardware features that don't work out of the box on Linux: fan curves, performance profiles, the Slash LED on the lid, GPU switching, battery charge limiting. This page documents how I got all of it working using asusctl and the ASUS Linux project tools. Everything below the installation step is identical on both distributions, since it's the same daemon reading the same hardware. Only getting it installed differs.
 
 {{< callout type="warning" >}}
-**supergfxctl is abandoned.** If you come across guides that mention `supergfxctl` or `supergfxd` for GPU switching on ASUS laptops: don't use them. The project is unmaintained and poses security risks. Everything it used to handle is now part of `asusctl` and ROG Control Center, which are actively maintained by the asus-linux team.
+**supergfxctl is abandoned.** If you come across guides that mention `supergfxctl` or `supergfxd` for GPU switching on ASUS laptops: don't use them. The [Arch Wiki](https://wiki.archlinux.org/title/Supergfxctl) calls it deprecated and unmaintained, and asusctl's [changelog](https://github.com/OpenGamingCollective/asusctl/blob/main/CHANGELOG.md) lists "Remove supergfxctl completely" in 6.3.9. GPU mode switching is now part of `asusctl` (`asusctl armoury`) and ROG Control Center, which are actively maintained by the Open Gaming Collective.
 {{< /callout >}}
 
 **Package Information (at the time of writing):**
@@ -239,6 +239,12 @@ sudo systemctl mask --now tuned.service tuned-ppd.service
 ```
 
 `mask`, not `disable`: [upstream notes](https://opengamingcollective.github.io/asusctl/distributions/bazzite.html) that KDE Plasma's PowerDevil can respawn `power-profiles-daemon` via D-Bus activation even after a plain `disable`, the same class of problem as the `nvidia-powerd` conflict in [Known Issues]({{< relref "/docs/known-issues" >}}). If you'd rather keep the external daemon and let it own profile switching instead, turn off asusd's own management by setting `platform_profile_linked_epp`, `change_platform_profile_on_battery`, and `change_platform_profile_on_ac` to `false` in `/etc/asusd/asusd.ron`.
+{{< /callout >}}
+
+{{< callout type="info" >}}
+**Why guides disagree about power-profiles-daemon.** The [asus-linux.org Arch guide](https://asus-linux.org/guides/arch-guide/) says "Asusctl is designed to work primarily with power-profiles-daemon" and tells you to enable it. The Open Gaming Collective, which maintains asusctl now, says the opposite: its [Arch](https://opengamingcollective.github.io/asusctl/distributions/arch.html) and [Bazzite](https://opengamingcollective.github.io/asusctl/distributions/bazzite.html) guides and its [manual](https://github.com/OpenGamingCollective/asusctl/blob/main/MANUAL.md) all warn that running both can cause race conditions, and offer the two ways out above. Two things point the same way. [Issue #205](https://github.com/OpenGamingCollective/asusctl/issues/205) reports PPD silently resetting asusd's EPP value to the amd_pstate default (asusd 6.3.10, a Strix G16), and since [PR #217](https://github.com/OpenGamingCollective/asusctl/pull/217) (merged August 3, 2026) asusctl and ROG Control Center print a warning when PPD runs next to asusd. The Arch package of asusctl 6.5.0 doesn't depend on PPD either: `pacman -Qi asusctl` lists only `glibc`, `libgcc`, `libusb` and `systemd-libs`. The [changelog](https://github.com/OpenGamingCollective/asusctl/blob/main/CHANGELOG.md) says profiles depended on PPD in 4.0.0, and that asusd uses the kernel's `platform_profile` interface only from 6.1.
+
+One catch in that warning: it promises that asusd then handles the "KDE/GNOME sliders natively". The part of the pull request that would have done that, a replacement for PPD's D-Bus interface, was split off and dropped before the merge. So with PPD masked, GNOME's Power Mode switch has nothing behind it. On this laptop `net.hadess.PowerProfiles` is still listed as activatable on the system bus, but its unit is masked. Switch profiles with `asusctl profile next` or ROG Control Center instead. The mask-instead-of-disable advice was asked for in [issue #264](https://github.com/OpenGamingCollective/asusctl/issues/264).
 {{< /callout >}}
 
 {{% /details %}}

@@ -24,7 +24,7 @@ Edit the GDM config:
 sudo nano /etc/gdm/custom.conf
 ```
 
-Add `AutomaticLoginEnable` and `AutomaticLogin` under `[daemon]`:
+Add `AutomaticLoginEnable` and `AutomaticLogin` under `[daemon]`, as the [GNOME System Administrator's Guide](https://help.gnome.org/admin/system-admin-guide/stable/login-automatic.html.en) describes:
 
 ```ini
 [daemon]
@@ -75,7 +75,7 @@ AutomaticLogin=sten
 ## Notes
 
 - Autologin only applies to the **initial boot session**. GDM does not trigger when resuming from suspend.
-- The GNOME **screen lock** (Super+L, lid close, idle timeout) is handled by `gnome-screensaver` / `gnome-shell`, not GDM. It always requires your user password regardless of autologin settings.
+- The GNOME **screen lock** (Super+L, lid close, idle timeout) is handled by GNOME Shell, not GDM. It always requires your user password regardless of autologin settings.
 - If you have a second user account on the system, only the configured user gets autologin. Other accounts always get a GDM prompt.
 
 
@@ -99,3 +99,7 @@ Remove or comment out the two lines:
 Reboot to apply.
 
 {{% /details %}}
+
+## Sources
+
+- [GNOME System Administrator's Guide: Enabling automatic login](https://help.gnome.org/admin/system-admin-guide/stable/login-automatic.html.en): the `/etc/gdm/custom.conf` syntax used above

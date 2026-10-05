@@ -18,7 +18,7 @@ De YubiKey voor `sudo` en de GNOME-schermvergrendeling werkt betrouwbaar via `pa
 
 ## Yubico Authenticator (OATH/TOTP)
 
-Yubico Authenticator slaat TOTP-geheimen op de YubiKey zelf op in plaats van op het apparaat. Hiervoor is een smartcard-daemon nodig om met de key te communiceren.
+Yubico Authenticator slaat TOTP-geheimen op de YubiKey zelf op in plaats van op het apparaat. Hiervoor is een smartcard-daemon nodig om met de key te communiceren: de [README van Yubico Authenticator](https://github.com/Yubico/yubioath-flutter) zegt "On Linux platforms you will need pcscd installed and running to be able to communicate with a YubiKey over the SmartCard interface."
 
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
@@ -82,6 +82,8 @@ Raak de YubiKey aan als hij knippert. Voor een reservesleutel: sluit de tweede Y
 pamu2fcfg -n >> ~/.config/Yubico/u2f_keys
 ```
 
+`-n` print alleen de registratiegegevens, zonder de gebruikersnaam ervoor. De [pamu2fcfg-manual](https://developers.yubico.com/pam-u2f/Manuals/pamu2fcfg.1.html) noemt dat "useful for appending". `~/.config/Yubico/u2f_keys` is waar `pam_u2f` standaard kijkt, volgens de [pam-u2f README](https://github.com/Yubico/pam-u2f).
+
 Beide sleutels staan dan in hetzelfde bestand. Omdat zowel `sudo` als de GNOME-schermvergrendeling uit `~/.config/Yubico/u2f_keys` lezen, werkt de reservesleutel direct voor beiden zonder extra configuratie.
 
 {{< /tab >}}
@@ -107,7 +109,7 @@ pamu2fcfg -n | sudo tee -a /etc/u2f_mappings
 ```
 
 {{< callout type="warning" >}}
-`~/.config/Yubico/u2f_keys` is waar `pam_u2f` standaard kijkt, en het is wat de CachyOS-tab gebruikt. Op Fedora-gebaseerde systemen beperkt SELinux wat PAM uit een home-map mag lezen, waardoor een sleutelbestand daar meestal stilzwijgend genegeerd wordt. De touch-prompt komt nooit en je valt terug op het wachtwoord. Met `/etc/u2f_mappings` speelt dat niet.
+`~/.config/Yubico/u2f_keys` is waar `pam_u2f` standaard kijkt, en het is wat de CachyOS-tab gebruikt. Op Fedora-gebaseerde systemen beperkt SELinux wat PAM uit een home-map mag lezen, waardoor een sleutelbestand daar meestal stilzwijgend genegeerd wordt. De touch-prompt komt nooit en je valt terug op het wachtwoord. Met `/etc/u2f_mappings` speelt dat niet. De [pam-u2f README](https://github.com/Yubico/pam-u2f) beschrijft hetzelfde probleem: op SELinux-systemen zoals Fedora kan de toegang tot het credentialbestand geweigerd worden. Het noemt `/etc/u2f_mappings` als centraal mappingbestand (zet `authfile=/etc/u2f_mappings` op de PAM-regel als je het met de hand doet) en een relabel met `chcon -t auth_home_t` als andere uitweg.
 {{< /callout >}}
 
 {{< /tab >}}
@@ -185,7 +187,7 @@ Vergrendel het scherm met `Super+L` en raak de YubiKey aan om te ontgrendelen.
 | YubiKey niet aanwezig | Valt terug op wachtwoord |
 | Boot / autologin | Ongewijzigd (LUKS-wachtwoord, dan direct naar bureaublad) |
 
-`sufficient` betekent: als de YubiKey slaagt, sla de rest van de verificatiestappen over. Als hij niet aanwezig is of de aanraaktijd verstrijkt, gaat PAM door naar de volgende methode (wachtwoord). `cue` toont "Please touch the FIDO authenticator." als visuele hint.
+`sufficient` betekent: als de YubiKey slaagt, sla de rest van de verificatiestappen over. Als hij niet aanwezig is of de aanraaktijd verstrijkt, gaat PAM door naar de volgende methode (wachtwoord). De [pam.d-manual](https://man7.org/linux/man-pages/man5/pam.d.5.html) zegt het zo: een `sufficient`-module die slaagt, zonder dat een eerdere `required`-module faalde, laat PAM meteen succes teruggeven, en "a failure of a sufficient module is ignored and processing of the PAM module stack continues unaffected". `cue` toont "Please touch the FIDO authenticator." als visuele hint; de [pam-u2f README](https://github.com/Yubico/pam-u2f) beschrijft het als de gebruiker vragen de authenticator aan te raken.
 
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
@@ -206,7 +208,7 @@ Controleer wat je hebt gekregen:
 authselect current
 ```
 
-Wil je de YubiKey *naast* het wachtwoord vereisen in plaats van in plaats daarvan, gebruik dan `with-pam-u2f-2fa` in plaats van `with-pam-u2f`. Terugdraaien:
+Wil je de YubiKey *naast* het wachtwoord vereisen in plaats van in plaats daarvan, gebruik dan `with-pam-u2f-2fa` in plaats van `with-pam-u2f`. Het [authselect sssd-profiel](https://github.com/authselect/authselect/blob/master/profiles/sssd/README) omschrijft ze als "Enable authentication via u2f dongle through pam_u2f" en "Enable 2nd factor authentication via u2f dongle through pam_u2f". Terugdraaien:
 
 ```bash
 sudo authselect disable-feature with-pam-u2f
@@ -236,3 +238,11 @@ LUKS blijft wachtwoord-only. De YubiKey speelt alleen een rol nadat het bureaubl
 {{< callout type="info" >}}
 Probleemoplossing voor YubiKey en LUKS staat op de pagina [Bekende Problemen]({{< relref "/docs/known-issues" >}}).
 {{< /callout >}}
+
+## Bronnen
+
+- [pam-u2f README](https://github.com/Yubico/pam-u2f): standaard sleutelbestand, `/etc/u2f_mappings`, `cue` en de SELinux-opmerking
+- [pamu2fcfg-manual](https://developers.yubico.com/pam-u2f/Manuals/pamu2fcfg.1.html): de optie `-n`
+- [README van Yubico Authenticator](https://github.com/Yubico/yubioath-flutter): `pcscd` op Linux
+- [authselect sssd-profiel](https://github.com/authselect/authselect/blob/master/profiles/sssd/README): de `with-pam-u2f`-features
+- [pam.d(5)](https://man7.org/linux/man-pages/man5/pam.d.5.html): de `sufficient`-controlvlag

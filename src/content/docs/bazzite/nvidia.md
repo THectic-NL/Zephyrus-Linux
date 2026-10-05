@@ -71,10 +71,10 @@ The first line reads `NVIDIA UNIX Open Kernel Module` on an `-nvidia-open` image
 
 ## Power Management
 
-The CachyOS page has a manual step here: Arch's `nvidia-utils` package ships suspend and resume handling as separate systemd units, and that page enables them by hand. Bazzite's driver is packaged by negativo17 and set up differently. With the open kernel modules, `NVreg_UseKernelSuspendNotifiers=1` lets the driver save and restore video memory on its own, so those units aren't shipped at all. It's already on. There is nothing here for you to turn on.
+Other guides have you enable separate suspend and resume systemd units. Arch's `nvidia-utils` package ships them too, but doesn't enable them: with the open kernel modules, `NVreg_UseKernelSuspendNotifiers=1` lets the driver save and restore video memory on its own. [NVIDIA's README](https://download.nvidia.com/XFree86/Linux-x86_64/615.71.09/README/powermanagement.html) says so: "When the open kernel modules are in use, this is handled automatically if `NVreg_UseKernelSuspendNotifiers=1` is enabled." Bazzite's driver is packaged by negativo17 and goes one step further: those units aren't shipped at all, and the parameter is already on. There is nothing here for you to turn on. The [CachyOS page]({{< relref "/docs/cachyos/nvidia" >}}) has the details.
 
 {{< callout type="warning" >}}
-If you enable `nvidia-suspend.service` here, a step you may see in other guides including the CachyOS page in this repo, it fails with `Unit nvidia-suspend.service could not be found`. The unit isn't on this image at all. It wasn't just disabled.
+If you enable `nvidia-suspend.service` here, a step you may see in guides written for the proprietary driver, such as the asus-linux.org and Open Gaming Collective Arch guides, it fails with `Unit nvidia-suspend.service could not be found`. The unit isn't on this image at all. It wasn't just disabled.
 {{< /callout >}}
 
 {{% steps %}}

@@ -2,16 +2,34 @@
 
 English | [Nederlands](README.nl.md)
 
-Linux on the ASUS ROG Zephyrus G16 GA605WV (2024). My personal setup log for the two distributions I run on it, CachyOS and Bazzite: what worked, what didn't, and how I fixed it.
+My Linux setup for the ASUS ROG Zephyrus G16 GA605WV (2024), written down and scripted. It is how I like Linux, and how I get a fresh install to exactly that state: a menu that shows what is already done on your machine, explains every step and links to the guide page for it. You don't need this exact laptop. Only the pages and script items that talk to its hardware are specific to the G16, everything else works on any machine.
 
-**Browse the full documentation site: [zephyrus-linux.thectic.nl](https://zephyrus-linux.thectic.nl/)**
+**Browse the guides: [zephyrus-linux.thectic.nl](https://zephyrus-linux.thectic.nl/)**
+
+
+## Set up a machine like mine
+
+```bash
+curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-setup.py
+python3 zephyrus-setup.py                       # the menu
+python3 zephyrus-setup.py apply --recommended --dry-run   # or just look at the plan
+```
+
+The setup script shows what is done and what is still open, explains what applying each item would do and links to the guide for it. Nothing changes until you have seen the plan and confirmed it. Check the SHA-256 on [the script's page](https://zephyrus-linux.thectic.nl/docs/setup-script/) before you run it. Applying is built for CachyOS and other Arch-based systems with GNOME.
+
+
+## What is in here
+
+- **Guides** for CachyOS and Bazzite: the settings and software I actually use, and why. Pages about the laptop's own hardware (the ASUS tools, brightness, the Wi-Fi card, the color profiles) are G16-specific. The GNOME desktop, security, applications, virtualization and gaming pages work on any machine.
+- **A setup script** that turns most of that into a menu, with a "learn more" link per item.
+- **Dedicated scripts** for the harder fixes (brightness in every GPU mode, Wi-Fi tuning, eduroam), which the setup script can open for you after checking them against the SHA-256 published in the guides.
 
 
 ## About this project
 
-This is my personal setup log for this laptop. I'm not a developer, just someone who switched to Linux and ran into a lot of things that didn't work out of the box. I wrote it all down so others don't have to go through the same trial and error.
+This is my own setup, not a neutral survey. It is opinionated: my favorite settings and the software I actually use, on the one laptop I own. I wrote it down so I can rebuild the machine quickly, and so others who like the same things get there faster. I'm not a developer, just someone who switched to Linux and ran into a lot of things that didn't work out of the box, and much of this is what I figured out along the way.
 
-The guides cover CachyOS (Arch) and Bazzite (Fedora Atomic). I dual-boot both on the same machine. CachyOS is my daily driver, mostly because some of what I do wants a bit more direct control over the system than an atomic image gives you, but I still go back to Bazzite out of curiosity every now and then and run it for a while. The site's [Getting Started](https://zephyrus-linux.thectic.nl/docs/) page explains the choice, and a switcher at the top of every page moves between the two sets of guides.
+CachyOS (Arch) is my daily driver, mostly because some of what I do wants a bit more direct control over the system than an atomic image gives you. I used to dual-boot it with Bazzite (Fedora Atomic) on the same machine and still keep those guides. The site's [Getting Started](https://zephyrus-linux.thectic.nl/docs/) page explains the choice, and a switcher at the top of every page moves between the two sets of guides.
 
 I'm still actively testing and experimenting: things may change, break, or turn out to be wrong. Everything here is based on my own experience and should be taken as-is, at your own risk.
 
@@ -86,6 +104,7 @@ for f in *.png; do avifenc -q 80 -s 6 "$f" "${f%.png}.avif" && rm "$f"; done
 This project wouldn't exist without the work of these people and communities:
 
 - **[ASUS Linux community](https://asus-linux.org/)**: The project behind `asusctl` and `rog-control-center`, now maintained under the [Open Gaming Collective](https://github.com/OpenGamingCollective/asusctl). Luke Jones has been a major driving force, and numerous contributors have submitted kernel patches, many of which are now merged into mainline Linux, making modern ASUS ROG laptops genuinely usable on Linux.
+- **[G-Helper](https://github.com/seerge/g-helper)**: The Windows tool whose way of handling ASUS color profiles (a per-model zip from ASUS's CDN, offered as Native, sRGB, DCI-P3 and Display P3) is the model for the color modes in the setup script.
 - **[CachyOS](https://cachyos.org/)**: An Arch-based distribution with extensive hardware-specific tuning: an improved scheduler (BORE/EEVDF), better power management, dynamic refresh rate support, and built-in drivers for both the AMD iGPU and NVIDIA dGPU, including integrated GPU switching. One of the two distributions these guides cover.
 - **[Bazzite / Universal Blue](https://universal-blue.org/)**: The people who make the atomic Fedora images this laptop runs well on, and who have contributed many of the patches that make it perform better. The other distribution these guides cover.
 - **[Foxboron/sbctl](https://github.com/Foxboron/sbctl)**: Secure Boot key management tool used to enroll custom keys and sign the kernel and EFI binaries. Essential for keeping Secure Boot enabled with a custom kernel.

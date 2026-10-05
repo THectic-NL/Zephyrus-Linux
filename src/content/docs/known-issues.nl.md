@@ -73,11 +73,11 @@ Het script doet allebei, en kan de status tonen en het resultaat testen:
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-backlight.py
-echo "f571e8e54de485f16747fc528d95765ae2e3564039d648219cf21d0177b0458d  zephyrus-backlight.py" | sha256sum -c
+echo "47999987b8dba31fed6f8931a3ef50d23ed0e8dad32dbb890a40c2f5f92c087f  zephyrus-backlight.py" | sha256sum -c
 python3 zephyrus-backlight.py
 ```
 
-Zonder actie opent het een menu. Vanuit de terminal: `status`, `test`, `enable` of `disable`, plus `--silent` zonder dialogen. Het zet de kernelparameter via GRUB of via `rpm-ostree kargs`, afhankelijk van wat het systeem gebruikt, en zet de fix alleen aan op een GA605WV. `disable` draait terug wat `enable` veranderde in plaats van het alleen te verwijderen: een `acpi_backlight=`-waarde die het verving en een eigen modprobe-regel die het opzij zette komen allebei terug. Bron: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py), SHA-256 `f571e8e54de485f16747fc528d95765ae2e3564039d648219cf21d0177b0458d`.
+Zonder actie opent het een menu. Vanuit de terminal: `status`, `test`, `enable` of `disable`, plus `--silent` zonder dialogen. Het zet de kernelparameter via GRUB, via Limine (op de CachyOS-manier, met `/etc/default/limine` en `limine-update`) of via `rpm-ostree kargs`, afhankelijk van wat het systeem gebruikt, en zet de fix alleen aan op een GA605WV. `disable` draait terug wat `enable` veranderde in plaats van het alleen te verwijderen: een `acpi_backlight=`-waarde die het op GRUB verving en een eigen modprobe-regel die het opzij zette komen allebei terug. Op Limine zet het een commentaarregel en één `KERNEL_CMDLINE[default]+=`-regel achteraan `/etc/default/limine`, en `disable` haalt precies die twee regels weer weg. Zet dat bestand al een andere `acpi_backlight=`, dan stopt het en zegt dat in plaats van te gokken, want die waarde zou de fix overschrijven. De Limine-methode is gedraaid op een echte CachyOS-installatie, en `enable` en `disable` hebben allebei het bootmenu goed opnieuw gegenereerd, maar er is nog niet mee herstart. Bron: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py), SHA-256 `47999987b8dba31fed6f8931a3ef50d23ed0e8dad32dbb890a40c2f5f92c087f`.
 
 Met de hand:
 
@@ -96,6 +96,19 @@ sudo grub-mkconfig -o /boot/grub/grub.cfg
 sudo reboot
 ```
 
+Met Limine:
+
+```bash
+sudo nano /etc/default/limine
+# voeg achteraan een nieuwe regel toe: KERNEL_CMDLINE[default]+="acpi_backlight=native"
+sudo nano /etc/modprobe.d/nvidia-wmi-ec-backlight.conf
+# plak de regel hieronder
+sudo limine-update
+sudo reboot
+```
+
+Bewerk `/etc/default/limine`, niet `/boot/limine.conf`. Die laatste wordt gegenereerd door `limine-entry-tool` en `limine-snapper-sync`, dus de volgende kernelupdate of snapshot overschrijft een wijziging daar, en `/boot` is alleen leesbaar voor root. `limine-update` bouwt de bootimages voor elke kernel opnieuw en duurt een minuut of langer.
+
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
@@ -113,7 +126,7 @@ systemctl reboot
 {{< /tab >}}
 {{< /tabs >}}
 
-De regel, op beide hetzelfde:
+De regel, overal hetzelfde:
 
 ```
 # acpi_backlight=native stops this driver from binding, but in Hybrid mode the backlight goes through the EC.
@@ -156,6 +169,8 @@ Na een verse boot in Integrated, Hybrid en Ultimate mode werken de Fn-toetsen en
 
 Op Bazzite (GNOME, kernel 7.2.4-ogc3.1.fc44, NVIDIA 615.71.09) zet en verwijdert het script beide onderdelen via `rpm-ostree kargs`. Na een verse boot in Integrated, Hybrid en Ultimate mode werken ook daar de Fn-toetsen en de GNOME-slider. Niet getest op KDE.
 
+Op CachyOS met Limine 12.9.0 (kernel 7.2.9-1-cachyos, GNOME 50.5) bewerkt het script `/etc/default/limine` en draait het `limine-update`; beide bootitems kregen daarna `acpi_backlight=native`. Na een herstart in Integrated mode werkt de helderheid. Aanzetten, uitzetten en weer aanzetten zijn op de echte machine gedraaid, en uitzetten gaf het bestand byte voor byte terug. Hybrid en Ultimate mode zijn nog niet getest op Limine.
+
 **Achtergrond:**
 
 - Vóór de fix was de helderheid ook kapot op een verse CachyOS-installatie zonder `asusctl`, en op Bazzite. Kernelparameters voor de NVIDIA-driver en het ontladen van zijn modules maakten geen verschil.
@@ -165,10 +180,14 @@ Op Bazzite (GNOME, kernel 7.2.4-ogc3.1.fc44, NVIDIA 615.71.09) zet en verwijdert
 
 {{% /details %}}
 
-{{% details title="Systeem bevriest bij gebruik van externe monitoren (AMD GPU PSR bug)" closed="true" %}}
+{{% details title="Systeem bevriest bij gebruik van externe monitoren (AMD GPU PSR bug, oudere kernels)" closed="true" %}}
+
+{{< callout type="info" >}}
+**Op een moderne kernel zou dit geen probleem meer moeten zijn.** PSR was vooral buggy op kernels 6.15 tot en met 6.18, in de eerste periode nadat de laptop uitkwam. Pas deze fix alleen toe als je de fouten hieronder op jouw kernel nog steeds ziet: met PSR aan verbruikt de laptop iets minder, en uitzetten kost je dat voor niets.
+{{< /callout >}}
 
 **Probleem:**
-Systeem bevriest of crasht bij gebruik van externe monitoren via Thunderbolt/USB-C, met name bij het (ont)koppelen van displays. Logs tonen AMD GPU-fouten:
+Op kernels 6.15 tot en met 6.18 bevroor of crashte het systeem bij gebruik van externe monitoren via Thunderbolt/USB-C, met name bij het (ont)koppelen van displays. Logs tonen AMD GPU-fouten:
 ```
 amdgpu 0000:66:00.0: amdgpu: MES failed to respond to msg=RESET
 amdgpu 0000:66:00.0: amdgpu: Ring gfx_0.0.0 reset failed
@@ -176,10 +195,10 @@ amdgpu 0000:66:00.0: amdgpu: GPU reset begin!
 ```
 
 **Oorzaak:**
-Deze laptop heeft twee GPU's (AMD Radeon 890M geïntegreerd + NVIDIA RTX 4060 discreet). De PSR-functie (Panel Self Refresh) van de AMD GPU heeft een bug die crashes veroorzaakt met externe Thunderbolt-monitoren.
+Deze laptop heeft twee GPU's (AMD Radeon 890M geïntegreerd + NVIDIA RTX 4060 discreet). Op die kernels had de PSR-functie (Panel Self Refresh) van de AMD GPU een bug die crashes veroorzaakte met externe Thunderbolt-monitoren.
 
 **Oplossing:**
-Schakel AMD PSR uit door een kernelparameter toe te voegen. Bewerk `/etc/default/grub` en voeg `amdgpu.dcdebugmask=0x600` toe aan `GRUB_CMDLINE_LINUX_DEFAULT`, daarna opnieuw genereren:
+Alleen als je de fouten nog steeds ziet: schakel AMD PSR uit door een kernelparameter toe te voegen. Bewerk `/etc/default/grub` en voeg `amdgpu.dcdebugmask=0x600` toe aan `GRUB_CMDLINE_LINUX_DEFAULT`, daarna opnieuw genereren:
 
 ```bash
 sudo nano /etc/default/grub
@@ -194,10 +213,10 @@ sudo reboot
 **Wat dit doet:**
 - `amdgpu.dcdebugmask=0x600` schakelt PSR (Panel Self Refresh) uit op de AMD GPU
 - PSR is een energiebesparingsfunctie waarbij het scherm zichzelf vernieuwt zonder GPU-betrokkenheid
-- De PSR-implementatie heeft bugs met externe Thunderbolt/USB-C-monitoren
+- De PSR-implementatie had bugs met externe Thunderbolt/USB-C-monitoren op kernels 6.15 tot en met 6.18
 
 **Afwegingen:**
-- Pro: Stabiel systeem met externe monitoren
+- Pro: Stabiel systeem met externe monitoren, als jouw kernel de bug nog heeft
 - Con: Iets hoger stroomverbruik (PSR uitgeschakeld)
 
 **Verificatie:**
