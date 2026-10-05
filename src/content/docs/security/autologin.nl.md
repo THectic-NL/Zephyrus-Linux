@@ -25,7 +25,7 @@ Bewerk de GDM-configuratie:
 sudo nano /etc/gdm/custom.conf
 ```
 
-Voeg `AutomaticLoginEnable` en `AutomaticLogin` toe onder `[daemon]`:
+Voeg `AutomaticLoginEnable` en `AutomaticLogin` toe onder `[daemon]`, zoals de [GNOME System Administrator's Guide](https://help.gnome.org/admin/system-admin-guide/stable/login-automatic.html.en) beschrijft:
 
 ```ini
 [daemon]
@@ -76,7 +76,7 @@ AutomaticLogin=sten
 ## Opmerkingen
 
 - Autologin geldt alleen voor de **initiële bootsessie**. GDM wordt niet geactiveerd bij hervatten na slaapstand.
-- De GNOME **schermvergrendeling** (Super+L, deksel sluiten, time-out bij inactiviteit) wordt beheerd door `gnome-screensaver` / `gnome-shell`, niet door GDM. Deze vraagt altijd om je gebruikerswachtwoord, ongeacht de autologin-instellingen.
+- De GNOME **schermvergrendeling** (Super+L, deksel sluiten, time-out bij inactiviteit) wordt beheerd door GNOME Shell, niet door GDM. Deze vraagt altijd om je gebruikerswachtwoord, ongeacht de autologin-instellingen.
 - Als er een tweede gebruikersaccount op het systeem staat, krijgt alleen de geconfigureerde gebruiker autologin. Andere accounts krijgen altijd een GDM-prompt.
 
 
@@ -100,3 +100,7 @@ Verwijder of becommentarieer de twee regels:
 Herstart om toe te passen.
 
 {{% /details %}}
+
+## Bronnen
+
+- [GNOME System Administrator's Guide: Enabling automatic login](https://help.gnome.org/admin/system-admin-guide/stable/login-automatic.html.en): de `/etc/gdm/custom.conf`-syntaxis die hierboven gebruikt wordt

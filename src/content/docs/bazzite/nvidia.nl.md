@@ -71,10 +71,10 @@ De eerste regel zegt `NVIDIA UNIX Open Kernel Module` op een `-nvidia-open`-imag
 
 ## Energiebeheer
 
-De CachyOS-pagina heeft hier een handmatige stap: Arch's `nvidia-utils`-pakket levert suspend- en resume-afhandeling als losse systemd-units, en die pagina zet ze met de hand aan. De driver op Bazzite wordt door negativo17 verpakt en is anders ingericht. Met de open kernelmodules laat `NVreg_UseKernelSuspendNotifiers=1` de driver zelf het videogeheugen bewaren en herstellen, dus die units worden helemaal niet meegeleverd. Hij staat al aan. Er is hier niets om aan te zetten.
+Andere handleidingen laten je losse suspend- en resume-systemd-units aanzetten. Arch's `nvidia-utils`-pakket levert ze ook mee, maar zet ze niet aan: met de open kernelmodules laat `NVreg_UseKernelSuspendNotifiers=1` de driver zelf het videogeheugen bewaren en herstellen. [NVIDIA's README](https://download.nvidia.com/XFree86/Linux-x86_64/615.71.09/README/powermanagement.html) zegt dat: "When the open kernel modules are in use, this is handled automatically if `NVreg_UseKernelSuspendNotifiers=1` is enabled." De driver op Bazzite wordt door negativo17 verpakt en gaat nog een stap verder: die units worden helemaal niet meegeleverd en de parameter staat al aan. Er is hier niets om aan te zetten. De [CachyOS-pagina]({{< relref "/docs/cachyos/nvidia" >}}) heeft de details.
 
 {{< callout type="warning" >}}
-Zet je hier `nvidia-suspend.service` aan, een stap die je in andere handleidingen tegenkomt, waaronder de CachyOS-pagina in deze repo, dan mislukt dat met `Unit nvidia-suspend.service could not be found`. De unit staat helemaal niet op deze image. Hij is niet alleen uitgeschakeld.
+Zet je hier `nvidia-suspend.service` aan, een stap die je tegenkomt in handleidingen voor de closed driver, zoals de Arch-gidsen van asus-linux.org en het Open Gaming Collective, dan mislukt dat met `Unit nvidia-suspend.service could not be found`. De unit staat helemaal niet op deze image. Hij is niet alleen uitgeschakeld.
 {{< /callout >}}
 
 {{% steps %}}

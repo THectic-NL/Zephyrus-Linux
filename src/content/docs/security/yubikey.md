@@ -18,7 +18,7 @@ Using the YubiKey for `sudo` and the GNOME lock screen works reliably via `pam-u
 
 ## Yubico Authenticator (OATH/TOTP)
 
-Yubico Authenticator stores TOTP secrets on the YubiKey itself rather than on the device. It requires a smartcard daemon to communicate with the key.
+Yubico Authenticator stores TOTP secrets on the YubiKey itself rather than on the device. It requires a smartcard daemon to communicate with the key: the [Yubico Authenticator README](https://github.com/Yubico/yubioath-flutter) says "On Linux platforms you will need pcscd installed and running to be able to communicate with a YubiKey over the SmartCard interface."
 
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
@@ -82,6 +82,8 @@ Touch the YubiKey when it blinks. For a backup key, plug in the second YubiKey a
 pamu2fcfg -n >> ~/.config/Yubico/u2f_keys
 ```
 
+`-n` prints only the registration data, without the username in front. The [pamu2fcfg manual](https://developers.yubico.com/pam-u2f/Manuals/pamu2fcfg.1.html) calls that "useful for appending". `~/.config/Yubico/u2f_keys` is where `pam_u2f` looks by default, per the [pam-u2f README](https://github.com/Yubico/pam-u2f).
+
 Both keys share one file. Since both `sudo` and the GNOME lock screen read from `~/.config/Yubico/u2f_keys`, the backup key works for both immediately without extra configuration.
 
 {{< /tab >}}
@@ -107,7 +109,7 @@ pamu2fcfg -n | sudo tee -a /etc/u2f_mappings
 ```
 
 {{< callout type="warning" >}}
-`~/.config/Yubico/u2f_keys` is where `pam_u2f` looks by default, and it's what the CachyOS tab uses. On Fedora-based systems SELinux confines what PAM may read out of a home directory, so a key file there tends to be silently ignored. The touch prompt never appears and you fall through to the password. `/etc/u2f_mappings` avoids the problem entirely.
+`~/.config/Yubico/u2f_keys` is where `pam_u2f` looks by default, and it's what the CachyOS tab uses. On Fedora-based systems SELinux confines what PAM may read out of a home directory, so a key file there tends to be silently ignored. The touch prompt never appears and you fall through to the password. `/etc/u2f_mappings` avoids the problem entirely. The [pam-u2f README](https://github.com/Yubico/pam-u2f) describes the same problem: on SELinux systems like Fedora, access to the credential file may be denied. It documents `/etc/u2f_mappings` as the central mapping file (add `authfile=/etc/u2f_mappings` to the PAM line if you use it by hand) and a relabel with `chcon -t auth_home_t` as another way out.
 {{< /callout >}}
 
 {{< /tab >}}
@@ -185,7 +187,7 @@ Lock the screen with `Super+L` and touch the YubiKey to unlock.
 | YubiKey absent | Falls back to password |
 | Boot / autologin | Unaffected (LUKS password, then straight to desktop) |
 
-`sufficient` means: if the YubiKey succeeds, skip remaining auth steps. If absent or touch times out, PAM continues to the next method (password). `cue` prints "Please touch the FIDO authenticator." as a visual hint.
+`sufficient` means: if the YubiKey succeeds, skip remaining auth steps. If absent or touch times out, PAM continues to the next method (password). The [pam.d manual](https://man7.org/linux/man-pages/man5/pam.d.5.html) puts it this way: a `sufficient` module that succeeds, with no earlier `required` module having failed, makes PAM return success at once, and "a failure of a sufficient module is ignored and processing of the PAM module stack continues unaffected". `cue` prints "Please touch the FIDO authenticator." as a visual hint; the [pam-u2f README](https://github.com/Yubico/pam-u2f) describes it as prompting the user to touch the authenticator.
 
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
@@ -206,7 +208,7 @@ Check what you ended up with:
 authselect current
 ```
 
-To require the YubiKey *in addition to* the password rather than instead of it, use `with-pam-u2f-2fa` instead of `with-pam-u2f`. To undo:
+To require the YubiKey *in addition to* the password rather than instead of it, use `with-pam-u2f-2fa` instead of `with-pam-u2f`. The [authselect sssd profile](https://github.com/authselect/authselect/blob/master/profiles/sssd/README) describes them as "Enable authentication via u2f dongle through pam_u2f" and "Enable 2nd factor authentication via u2f dongle through pam_u2f". To undo:
 
 ```bash
 sudo authselect disable-feature with-pam-u2f
@@ -237,3 +239,11 @@ LUKS stays password-only. The YubiKey only comes into play after the desktop is 
 {{< callout type="info" >}}
 Troubleshooting for YubiKey and LUKS is documented on the [Known Issues]({{< relref "/docs/known-issues" >}}) page.
 {{< /callout >}}
+
+## Sources
+
+- [pam-u2f README](https://github.com/Yubico/pam-u2f): default key file, `/etc/u2f_mappings`, `cue` and the SELinux note
+- [pamu2fcfg manual](https://developers.yubico.com/pam-u2f/Manuals/pamu2fcfg.1.html): the `-n` option
+- [Yubico Authenticator README](https://github.com/Yubico/yubioath-flutter): `pcscd` on Linux
+- [authselect sssd profile](https://github.com/authselect/authselect/blob/master/profiles/sssd/README): the `with-pam-u2f` features
+- [pam.d(5)](https://man7.org/linux/man-pages/man5/pam.d.5.html): the `sufficient` control flag

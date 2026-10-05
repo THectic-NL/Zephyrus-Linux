@@ -67,24 +67,11 @@ Het voelt ergens tussen een minimale teksteditor en OneNote: schoon sidebar, sne
 
 Wat het onderscheidt is precies wat er *niet* is. Geen onnodig UI-rommel, geen subscription upsell banners overal, geen trage startup. Het is gewoon snel.
 
-{{< tabs >}}
-{{< tab name="CachyOS" >}}
-
-```bash
-paru -S standardnotes-bin
-```
-
-Beschikbaar op de [AUR](https://aur.archlinux.org/packages/standardnotes-bin) (`standardnotes-bin`). Er bestaat nog geen native CachyOS/Arch package.
-
-{{< /tab >}}
-{{< tab name="Bazzite" >}}
-
 ```bash
 flatpak install flathub org.standardnotes.standardnotes
 ```
 
-{{< /tab >}}
-{{< /tabs >}}
+De Flatpak is op beide distributies hetzelfde. Er is ook een `standardnotes-bin`-pakket in de AUR, maar een community-buildscript draaien voor zo'n simpele app is een risico waarvan ik het nut niet zie.
 
 ![Standard Notes op het desktop](/images/standard-notes-desktop.avif)
 

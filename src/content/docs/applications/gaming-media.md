@@ -38,24 +38,13 @@ There's no official Tidal client for Linux. Two community alternatives exist.
 
 #### High Tide (recommended)
 
-[High Tide](https://aur.archlinux.org/packages/high-tide) is a native GTK4 frontend for Tidal, not an Electron wrapper, but an actual application built with proper Linux toolkit. It looks clean, integrates well with GNOME, and supports Hi-Fi quality.
-
-{{< tabs >}}
-{{< tab name="CachyOS" >}}
-
-```bash
-paru -S high-tide
-```
-
-{{< /tab >}}
-{{< tab name="Bazzite" >}}
+[High Tide](https://flathub.org/apps/io.github.nokse22.high-tide) is a native GTK4 frontend for Tidal, not an Electron wrapper, but an actual application built with proper Linux toolkit. It looks clean, integrates well with GNOME, and supports Hi-Fi quality.
 
 ```bash
 flatpak install flathub io.github.nokse22.high-tide
 ```
 
-{{< /tab >}}
-{{< /tabs >}}
+It comes from Flathub on both distributions. The AUR has a `high-tide` package as well, but the Flatpak does the same job without a community build script.
 
 ![High Tide running on GNOME](/images/high-tide.avif)
 

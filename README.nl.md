@@ -2,16 +2,34 @@
 
 Nederlands | [English](README.md)
 
-Linux op de ASUS ROG Zephyrus G16 GA605WV (2024). Mijn persoonlijke setup-log voor de twee distributies die ik erop draai, CachyOS en Bazzite: wat werkte, wat niet, en hoe ik het heb opgelost.
+Mijn Linux-setup voor de ASUS ROG Zephyrus G16 GA605WV (2024), opgeschreven en gescript. Zo vind ik Linux fijn, en zo krijg ik een verse installatie precies in die staat: een menu dat laat zien wat er op jouw machine al klaar is, elke stap uitlegt en linkt naar de pagina in de handleiding. Je hebt niet precies deze laptop nodig. Alleen de pagina's en script-onderdelen die met de hardware praten zijn specifiek voor de G16, al het andere werkt op elke machine.
 
-**Bekijk de volledige documentatiesite: [zephyrus-linux.thectic.nl](https://zephyrus-linux.thectic.nl/nl/)**
+**Bekijk de handleidingen: [zephyrus-linux.thectic.nl](https://zephyrus-linux.thectic.nl/nl/)**
+
+
+## Richt een machine in zoals de mijne
+
+```bash
+curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-setup.py
+python3 zephyrus-setup.py                       # het menu
+python3 zephyrus-setup.py apply --recommended --dry-run   # of bekijk alleen het plan
+```
+
+Het setup-script laat zien wat er klaar is en wat nog openstaat, legt uit wat het toepassen van elk onderdeel zou doen en linkt naar de handleiding. Er verandert niets totdat je het plan hebt gezien en bevestigd. Controleer de SHA-256 op [de pagina van het script](https://zephyrus-linux.thectic.nl/nl/docs/setup-script/) voordat je het draait. Toepassen is gebouwd voor CachyOS en andere Arch-systemen met GNOME.
+
+
+## Wat er in zit
+
+- **Handleidingen** voor CachyOS en Bazzite: de instellingen en software die ik echt gebruik, en waarom. Pagina's over de hardware van de laptop zelf (de ASUS-tools, helderheid, de Wi-Fi-kaart, de kleurprofielen) zijn specifiek voor de G16. De pagina's over het GNOME-bureaublad, beveiliging, applicaties, virtualisatie en gaming werken op elke machine.
+- **Een setup-script** dat het grootste deel daarvan omzet in een menu, met per onderdeel een "learn more"-link.
+- **Eigen scripts** voor de lastigere fixes (helderheid in elke GPU-modus, Wi-Fi-tuning, eduroam), die het setup-script voor je kan openen nadat het ze heeft gecontroleerd met de SHA-256 uit de handleidingen.
 
 
 ## Over dit project
 
-Dit is mijn persoonlijke setup-log voor deze laptop. Ik ben geen developer, gewoon iemand die naar Linux is overgestapt en daarna tegen van alles aanliep wat niet meteen werkte. Ik heb alles opgeschreven zodat anderen dat niet hoeven uitzoeken.
+Dit is mijn eigen setup, geen neutraal overzicht. Het is eigenzinnig: mijn favoriete instellingen en de software die ik echt gebruik, op de ene laptop die ik heb. Ik heb het opgeschreven zodat ik de machine snel opnieuw kan opbouwen, en zodat anderen die hetzelfde fijn vinden er sneller komen. Ik ben geen developer, gewoon iemand die naar Linux is overgestapt en daarna tegen van alles aanliep wat niet meteen werkte, en veel hiervan heb ik gaandeweg uitgezocht.
 
-De handleidingen dekken CachyOS (Arch) en Bazzite (Fedora Atomic). Ik dualboot ze allebei op dezelfde machine. CachyOS is mijn daily driver, vooral omdat een deel van wat ik doe net wat directere systeemcontrole wil dan een atomic image je geeft, maar af en toe ga ik uit nieuwsgierigheid terug naar Bazzite en gebruik dat dan weer een tijdje. De [Aan de slag](https://zephyrus-linux.thectic.nl/nl/docs/)-pagina legt de keuze uit, en een switcher bovenaan elke pagina brengt je tussen de twee sets handleidingen.
+CachyOS (Arch) is mijn daily driver, vooral omdat een deel van wat ik doe net wat directere systeemcontrole wil dan een atomic image je geeft. Ik dualbootte het vroeger met Bazzite (Fedora Atomic) op dezelfde machine en houd die handleidingen aan. De [Aan de slag](https://zephyrus-linux.thectic.nl/nl/docs/)-pagina legt de keuze uit, en een switcher bovenaan elke pagina brengt je tussen de twee sets handleidingen.
 
 Ik ben nog actief aan het testen en experimenteren: dingen kunnen veranderen, kapot gaan of achteraf onjuist blijken. Alles wat hier staat is gebaseerd op mijn eigen ervaring en is op eigen risico.
 
@@ -86,6 +104,7 @@ for f in *.png; do avifenc -q 80 -s 6 "$f" "${f%.png}.avif" && rm "$f"; done
 Dit project zou niet bestaan zonder het werk van deze mensen en communities:
 
 - **[ASUS Linux community](https://asus-linux.org/)**: Het project achter `asusctl` en `rog-control-center`, tegenwoordig onderhouden onder het [Open Gaming Collective](https://github.com/OpenGamingCollective/asusctl). Luke Jones is hier een grote drijvende kracht achter geweest, en ook andere bijdragers hebben kernel patches ingediend, waarvan velen inmiddels in mainline Linux zijn gemerged, waardoor moderne ASUS ROG laptops echt bruikbaar zijn op Linux.
+- **[G-Helper](https://github.com/seerge/g-helper)**: De Windows-tool waarvan de manier om ASUS-kleurprofielen te behandelen (een zip per model van de ASUS CDN, aangeboden als Native, sRGB, DCI-P3 en Display P3) het voorbeeld is voor de kleurstanden in het setup-script.
 - **[CachyOS](https://cachyos.org/)**: Een op Arch gebaseerde distributie met uitgebreide hardware-specifieke tuning: een verbeterde scheduler (BORE/EEVDF), beter energiebeheer, ondersteuning voor dynamische verversingsfrequentie, en ingebouwde drivers voor zowel de AMD iGPU als de NVIDIA dGPU, inclusief geïntegreerde GPU-switching. Een van de twee distributies die deze handleidingen dekken.
 - **[Bazzite / Universal Blue](https://universal-blue.org/)**: De mensen die de atomic Fedora-images maken waarop deze laptop goed draait, en die veel van de patches hebben bijgedragen die hem beter laten presteren. De andere distributie die deze handleidingen dekken.
 - **[Foxboron/sbctl](https://github.com/Foxboron/sbctl)**: Beheertool voor Secure Boot-sleutels, gebruikt voor het inschrijven van eigen sleutels en het ondertekenen van de kernel en EFI-binaries. Onmisbaar voor het actief houden van Secure Boot met een aangepaste kernel.

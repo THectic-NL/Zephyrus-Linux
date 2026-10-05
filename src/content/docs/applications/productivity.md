@@ -67,24 +67,11 @@ The feel is somewhere between a minimal text editor and OneNote: clean sidebar, 
 
 What makes it stand out is exactly what's *not* there. No unnecessary UI chrome, no subscription upsell banners everywhere, no slow startup. It's just fast.
 
-{{< tabs >}}
-{{< tab name="CachyOS" >}}
-
-```bash
-paru -S standardnotes-bin
-```
-
-Available on the [AUR](https://aur.archlinux.org/packages/standardnotes-bin) (`standardnotes-bin`). No native CachyOS/Arch package exists yet.
-
-{{< /tab >}}
-{{< tab name="Bazzite" >}}
-
 ```bash
 flatpak install flathub org.standardnotes.standardnotes
 ```
 
-{{< /tab >}}
-{{< /tabs >}}
+The Flatpak is the same on both distributions. There is also a `standardnotes-bin` package in the AUR, but running a community build script for an app this simple is a risk I don't see the point of.
 
 ![Standard Notes running on the desktop](/images/standard-notes-desktop.avif)
 

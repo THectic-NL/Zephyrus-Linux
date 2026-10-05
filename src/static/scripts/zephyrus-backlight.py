@@ -24,16 +24,20 @@ shows what's configured, what's running, and which backlight device is in
 use. 'test' dims the screen for a few seconds through that device, so you
 can see whether brightness actually reaches the panel.
 
-Two ways of storing that kernel parameter are handled: /etc/default/grub
-plus grub-mkconfig on a conventional distribution, and 'rpm-ostree kargs'
-on an image-based one like Bazzite, where /etc/default/grub either isn't
-there or isn't what boots the machine. The right one is detected. Other
-bootloaders, systemd-boot and Limine among them, are refused with a pointer
-to the manual steps instead.
+Three ways of storing that kernel parameter are handled: /etc/default/grub
+plus grub-mkconfig on a conventional distribution, 'rpm-ostree kargs' on an
+image-based one like Bazzite, where /etc/default/grub either isn't there or
+isn't what boots the machine, and /etc/default/limine plus limine-update on
+CachyOS with Limine. On Limine the file it edits is the one CachyOS keeps
+the kernel command line in, not limine.conf on the ESP: that one is generated
+and gets overwritten on the next kernel update. The right method is detected.
+Other bootloaders, systemd-boot among them, are refused with a pointer to the
+manual steps instead.
 
 Built on CachyOS with GRUB (kernel 7.2.5), then extended to Bazzite with
 rpm-ostree (kernel 7.2.4). Verified in all three GPU modes on both, with
-GNOME. KDE is untested.
+GNOME. The Limine method is new and has not been through a reboot yet. KDE is
+untested.
 
 Every privileged step for one action runs as a single script under one
 pkexec call, so there's one polkit password prompt per action. Dialogs use
@@ -69,6 +73,12 @@ DMI_DIR = Path("/sys/class/dmi/id")
 GRUB_DEFAULT = Path("/etc/default/grub")
 GRUB_CFG = Path("/boot/grub/grub.cfg")
 GRUB_BACKUP = Path("/etc/default/grub.zephyrus-backlight.bak")
+# CachyOS keeps the kernel command line for Limine here and limine-update turns it
+# into limine.conf on the ESP, which is root-only and regenerated, so never edited.
+LIMINE_DEFAULT = Path("/etc/default/limine")
+# The EFI variable a boot loader uses to say which one it is: 4 attribute bytes,
+# then UTF-16 text such as 'Limine 12.9.0'.
+LOADER_INFO = Path("/sys/firmware/efi/efivars/LoaderInfo-4a67b082-0a4c-41cf-b6c7-440b29bb8c4f")
 MODPROBE_CONF = Path("/etc/modprobe.d/nvidia-wmi-ec-backlight.conf")
 # Backups live here, not next to the original: older kmod still reads files in
 # /etc/modprobe.d that do not end in .conf, so a copy dropped there could end up
@@ -79,6 +89,11 @@ MODPROBE_BACKUP = Path("/var/lib/zephyrus-backlight/nvidia-wmi-ec-backlight.conf
 OSTREE_MARKER = Path("/run/ostree-booted")
 
 KERNEL_PARAMS = ("acpi_backlight=native",)
+
+# What enabling appends to the Limine defaults, and what disabling removes again:
+# exactly these two lines, so nothing else in the file is ever touched.
+LIMINE_MARKER = "# Added by zephyrus-backlight.py: the Zephyrus G16 brightness fix"
+LIMINE_LINE = f'KERNEL_CMDLINE[default]+="{" ".join(KERNEL_PARAMS)}"'
 
 # Identical to the rule in the write-up, so a hand-installed copy counts as
 # installed.
@@ -216,6 +231,7 @@ ICONS = {
 PKEXEC_CANCELLED = (126, 127)
 
 _GRUB_LINE_RE = re.compile(r"""^GRUB_CMDLINE_LINUX_DEFAULT=(["'])(.*)\1\s*$""")
+_LIMINE_LINE_RE = re.compile(r"""^\s*KERNEL_CMDLINE\[default\]\s*(\+?=)\s*(.*?)\s*$""")
 
 
 class Device(TypedDict):
@@ -252,7 +268,7 @@ class BacklightFix:
         # --silent means no dialogs and no questions. Decided once so every
         # helper below agrees.
         self.gui_tool = None if silent else self._detect_gui()
-        # 'ostree', 'grub' or None. Decided once for the same reason.
+        # 'ostree', 'grub', 'limine' or None. Decided once for the same reason.
         self.backend = self.kargs_backend()
 
     # --- dialogs -----------------------------------------------------------
@@ -570,6 +586,83 @@ class BacklightFix:
         lines[index] = f"GRUB_CMDLINE_LINUX_DEFAULT={quote}{' '.join(params)}{quote}{ending}"
         return "".join(lines), replaced
 
+    @staticmethod
+    def limine_params(text: str) -> list[str] | None:
+        """
+        The parameters limine-entry-tool builds from the KERNEL_CMDLINE[default]
+        lines of the Limine defaults, or None when the file has no such line.
+
+        '+=' appends and '=' starts over, the same as the tool does. With no line
+        at all the tool reads /proc/cmdline instead, which this can't know.
+        """
+        params: list[str] | None = None
+        for line in text.splitlines():
+            if not (match := _LIMINE_LINE_RE.match(line)):
+                continue
+            value = match.group(2)
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+                value = value[1:-1]
+            params = value.split() if match.group(1) == "=" else (params or []) + value.split()
+        return params
+
+    @staticmethod
+    def rewrite_limine(text: str, enable: bool) -> tuple[str, list[str]]:
+        """
+        The Limine defaults with the fix's kernel parameter added or removed. The
+        second value is always empty: nothing is replaced, it only has the same
+        shape as rewrite_grub.
+
+        Enabling appends a comment and one KERNEL_CMDLINE[default]+= line.
+        Disabling deletes exactly those lines (and the blank line before them),
+        so enable followed by disable gives the original file back, and a
+        parameter you added yourself is never touched.
+
+        Two cases raise ValueError instead of guessing. A file with no
+        KERNEL_CMDLINE[default] assignment: without one limine-entry-tool reads
+        /proc/cmdline, and a '+=' line would make it stop doing that and leave
+        the boot entries without root=. And a file that already sets another
+        acpi_backlight= value: the tool puts the parameters of a later line
+        before those of an earlier one, and the kernel takes the last
+        acpi_backlight= it sees, so the old value would override the fix.
+        """
+        lines = text.splitlines(keepends=True)
+        if enable:
+            params = BacklightFix.limine_params(text)
+            if params is None:
+                raise ValueError(
+                    f"{LIMINE_DEFAULT} has no KERNEL_CMDLINE[default] line, so adding one "
+                    "would replace the command line limine-entry-tool reads from /proc/cmdline")
+            if all(p in params for p in KERNEL_PARAMS):
+                return text, []
+            keys = tuple(p.split("=", 1)[0] + "=" for p in KERNEL_PARAMS)
+            if conflicts := [p for p in params if p.startswith(keys) and p not in KERNEL_PARAMS]:
+                raise ValueError(
+                    f"{LIMINE_DEFAULT} already sets {' '.join(conflicts)}, which would override "
+                    "the fix because limine-entry-tool puts the parameters of earlier lines last")
+            if lines and not lines[-1].endswith("\n"):
+                lines[-1] += "\n"
+            return "".join(lines + ["\n", LIMINE_MARKER + "\n", LIMINE_LINE + "\n"]), []
+
+        kept: list[str] = []
+        for line in lines:
+            if line.strip() != LIMINE_LINE:
+                kept.append(line)
+                continue
+            if kept and kept[-1].strip() == LIMINE_MARKER:
+                kept.pop()
+                if kept and not kept[-1].strip():
+                    kept.pop()
+        return "".join(kept), []
+
+    @staticmethod
+    def loader_info() -> str | None:
+        """The running boot loader's name and version from EFI, or None if it doesn't say."""
+        try:
+            raw = LOADER_INFO.read_bytes()[4:]
+        except OSError:
+            return None
+        return raw.decode("utf-16-le", errors="replace").rstrip("\0").strip() or None
+
     def grub_params(self) -> list[str] | None:
         """Parameters in GRUB_CMDLINE_LINUX_DEFAULT, or None if that can't be read safely."""
         try:
@@ -606,16 +699,26 @@ class BacklightFix:
     @staticmethod
     def kargs_backend() -> str | None:
         """
-        How this system stores kernel parameters: 'ostree', 'grub', or None.
+        How this system stores kernel parameters: 'ostree', 'grub', 'limine', or None.
 
         ostree is checked first on purpose. An image-based system can still
         carry a /etc/default/grub that looks editable but isn't what boots the
         machine, and editing it there would silently do nothing.
+
+        Limine counts when the machine says it booted with Limine and has the
+        CachyOS files for it. A machine that doesn't say which loader it used,
+        like GRUB or a BIOS Limine, only gets Limine when GRUB isn't usable.
         """
         if OSTREE_MARKER.exists():
             return "ostree" if shutil.which("rpm-ostree") else None
+        loader = BacklightFix.loader_info()
+        limine_ready = LIMINE_DEFAULT.exists() and shutil.which("limine-update") is not None
+        if limine_ready and loader and loader.startswith("Limine"):
+            return "limine"
         if GRUB_DEFAULT.exists() and GRUB_CFG.exists() and shutil.which("grub-mkconfig"):
             return "grub"
+        if limine_ready and loader is None:
+            return "limine"
         return None
 
     def platform_problem(self) -> str | None:
@@ -628,10 +731,18 @@ class BacklightFix:
                 "rpm-ostree isn't on PATH, so the kernel parameter can't be set. "
                 f"Follow the manual steps instead:\n{DOC_URL}"
             )
+        if (self.loader_info() or "").startswith("Limine"):
+            return (
+                f"Limine is running, but {LIMINE_DEFAULT} and limine-update weren't both "
+                "found. This script handles Limine the way CachyOS sets it up, through "
+                "that file. Add acpi_backlight=native to your Limine configuration by hand; "
+                f"the modprobe rule is the same everywhere. Manual steps:\n{DOC_URL}"
+            )
         return (
             f"No supported way to set kernel parameters was found. This script handles "
-            f"GRUB ({GRUB_DEFAULT}, {GRUB_CFG} and grub-mkconfig) and rpm-ostree. With "
-            "systemd-boot or Limine, add acpi_backlight=native by hand; the modprobe "
+            f"GRUB ({GRUB_DEFAULT}, {GRUB_CFG} and grub-mkconfig), Limine on CachyOS "
+            f"({LIMINE_DEFAULT} and limine-update) and rpm-ostree. With systemd-boot or "
+            "another boot loader, add acpi_backlight=native by hand; the modprobe "
             f"rule is the same everywhere. Manual steps:\n{DOC_URL}"
         )
 
@@ -646,6 +757,11 @@ class BacklightFix:
         if self.backend == "ostree":
             res = subprocess.run(["rpm-ostree", "kargs"], capture_output=True, text=True)
             return res.stdout.split() if res.returncode == 0 else None
+        if self.backend == "limine":
+            try:
+                return self.limine_params(LIMINE_DEFAULT.read_text(encoding="utf-8"))
+            except OSError:
+                return None
         return self.grub_params()
 
     def state(self) -> State:
@@ -688,15 +804,17 @@ class BacklightFix:
                               capture_output=True, text=True)
 
     def _apply(self, karg: str | None, rule: str | None,
-               grub: tuple[str, str] | None = None) -> bool:
+               config: tuple[str, str] | None = None) -> bool:
         """
         Change the kernel parameter and/or the modprobe rule, in one prompt.
 
-        karg is 'enable', 'disable' or None, and grub carries (original, new)
-        contents of the GRUB defaults file on that backend.
+        karg is 'enable', 'disable' or None, and config carries (original, new)
+        contents of the GRUB or Limine defaults file on those backends.
 
-        Order is deliberate: the kernel parameter goes first, and on GRUB the old
-        file is put back if grub-mkconfig fails or the run is interrupted. Only
+        Order is deliberate: the kernel parameter goes first, and on GRUB and
+        Limine the old file is put back if grub-mkconfig or limine-update fails
+        or the run is interrupted. On Limine it is regenerated again from the old
+        file then, so the boot menu matches what is on disk. Only
         after that is the modprobe rule touched. That ordering can't make the two
         atomic together across independent privileged mechanisms, so a modprobe
         failure after the kernel parameter already changed leaves the kernel
@@ -732,24 +850,33 @@ class BacklightFix:
                 script.append(
                     f"rpm-ostree kargs {flag}={q(param)} "
                     '|| { echo RPM_OSTREE_FAILED >&2; exit 5; }')
-        elif karg and grub is not None:
-            original, new_grub = grub
+        elif karg and config is not None:
+            original, new_text = config
+            limine = self.backend == "limine"
+            target = LIMINE_DEFAULT if limine else GRUB_DEFAULT
+            regenerate = "limine-update" if limine else f"grub-mkconfig -o {q(str(GRUB_CFG))}"
+            # Limine's boot menu was already rebuilt from the new file when this
+            # fails, so after putting the old file back it is rebuilt once more.
+            rebuild_again = f"{regenerate} >/dev/null 2>&1 || true" if limine else ":"
             # Only enable snapshots the persistent backup, and only a successful
-            # disable clears it; see the docstring above.
-            snapshot = f"cp -p {q(str(GRUB_DEFAULT))} {q(str(GRUB_BACKUP))}" if karg == "enable" else ":"
-            cleanup_backup = f"rm -f {q(str(GRUB_BACKUP))}" if karg == "disable" else ":"
+            # disable clears it; see the docstring above. Only GRUB has one: on
+            # Limine nothing is replaced, so disable has nothing to put back.
+            snapshot = (f"cp -p {q(str(GRUB_DEFAULT))} {q(str(GRUB_BACKUP))}"
+                        if karg == "enable" and not limine else ":")
+            cleanup_backup = f"rm -f {q(str(GRUB_BACKUP))}" if karg == "disable" and not limine else ":"
             script.append(f"""
 printf '%s' {q(original)} > "$work/expected"
-printf '%s' {q(new_grub)} > "$work/proposed"
-cmp -s "$work/expected" {q(str(GRUB_DEFAULT))} || {{ echo CHANGED_ON_DISK >&2; exit 3; }}
-cp -p {q(str(GRUB_DEFAULT))} "$work/rollback"
-put_back() {{ cp -p "$work/rollback" {q(str(GRUB_DEFAULT))} || {{ echo PUT_BACK_FAILED >&2; exit 6; }}; }}
+printf '%s' {q(new_text)} > "$work/proposed"
+cmp -s "$work/expected" {q(str(target))} || {{ echo CHANGED_ON_DISK >&2; exit 3; }}
+cp -p {q(str(target))} "$work/rollback"
+put_back() {{ cp -p "$work/rollback" {q(str(target))} || {{ echo PUT_BACK_FAILED >&2; exit 6; }}; }}
 {snapshot}
-# Ctrl+C lands here too: grub-mkconfig is slow enough that people reach for it.
-trap 'put_back; exit 130' INT TERM
-install -m 644 "$work/proposed" {q(str(GRUB_DEFAULT))}
-if ! out=$(grub-mkconfig -o {q(str(GRUB_CFG))} 2>&1); then
+# Ctrl+C lands here too: {regenerate.split()[0]} is slow enough that people reach for it.
+trap 'put_back; {rebuild_again}; exit 130' INT TERM
+install -m 644 "$work/proposed" {q(str(target))}
+if ! out=$({regenerate} 2>&1); then
     put_back
+    {rebuild_again}
     printf '%s\\n' "$out" >&2
     exit 4
 fi
@@ -782,8 +909,13 @@ fi""")
 
         res = self.run_privileged("\n".join(script))
 
+        limine = self.backend == "limine"
+        target = LIMINE_DEFAULT if limine else GRUB_DEFAULT
         if res.returncode == 130:
-            self.show_message("Interrupted. Nothing was changed.", is_error=True)
+            self.show_message(
+                f"Interrupted. {target} was put back and limine-update was run again, so "
+                "the boot menu matches it." if limine else "Interrupted. Nothing was changed.",
+                is_error=True)
             return False
         if res.returncode == 0:
             return True
@@ -792,13 +924,20 @@ fi""")
                               is_error=True)
         elif res.returncode == 3:
             self.show_message(
-                f"{GRUB_DEFAULT} changed while this script was running. Nothing was "
+                f"{target} changed while this script was running. Nothing was "
                 "changed. Run it again.", is_error=True)
         elif res.returncode == 4:
             print(res.stderr.strip(), file=sys.stderr)
-            self.show_message(
-                f"grub-mkconfig failed, so {GRUB_DEFAULT} was put back and nothing else "
-                "was changed. Its output is in the terminal.", is_error=True)
+            if limine:
+                self.show_message(
+                    f"limine-update failed, so {LIMINE_DEFAULT} was put back and limine-update "
+                    "was run once more to bring the boot menu in line with it. Nothing else was "
+                    "changed. Its output is in the terminal. Check that the boot menu still "
+                    "lists your kernel before you reboot.", is_error=True)
+            else:
+                self.show_message(
+                    f"grub-mkconfig failed, so {GRUB_DEFAULT} was put back and nothing else "
+                    "was changed. Its output is in the terminal.", is_error=True)
         elif res.returncode == 5:
             print(res.stderr.strip() or res.stdout.strip(), file=sys.stderr)
             self.show_message(
@@ -807,11 +946,13 @@ fi""")
                 "'rpm-ostree cleanup -p' clears that.", is_error=True)
         elif res.returncode == 6:
             print(res.stderr.strip() or res.stdout.strip(), file=sys.stderr)
+            tool = "limine-update" if limine else "grub-mkconfig"
+            kept = "" if limine else (f" The last known-good copy this script kept is at "
+                                      f"{GRUB_BACKUP}, if it exists.")
             self.show_message(
-                f"grub-mkconfig failed or was interrupted, and restoring the previous "
-                f"{GRUB_DEFAULT} then failed too. It may now hold the attempted change "
-                f"rather than what it had before; check it by hand. The last known-good "
-                f"copy this script kept is at {GRUB_BACKUP}, if it exists.", is_error=True)
+                f"{tool} failed or was interrupted, and restoring the previous "
+                f"{target} then failed too. It may now hold the attempted change "
+                f"rather than what it had before; check it by hand.{kept}", is_error=True)
         else:
             print(res.stderr.strip() or res.stdout.strip(), file=sys.stderr)
             self.show_message(
@@ -841,6 +982,12 @@ fi""")
                   "is what this looks like when it is working. Let it run.\n"
                   "Ctrl+C isn't fatal if you do lose patience: rpm-ostree writes the\n"
                   "deployment in one transaction through its daemon, which rolls itself back.\n")
+        elif self.backend == "limine":
+            print("\nTHIS TAKES A WHILE. limine-update rebuilds the boot images and the boot menu\n"
+                  "for every kernel. That can take a minute or more, and it prints nothing\n"
+                  "until it is done. Let it finish.\n"
+                  "If you do interrupt it, this script puts the old "
+                  f"{LIMINE_DEFAULT} back and runs\nlimine-update again, which takes just as long.\n")
         else:
             print("\nTHIS TAKES A WHILE. grub-mkconfig scans the disks for kernels and other\n"
                   "operating systems. That is a few seconds, sometimes longer, and it prints\n"
@@ -858,14 +1005,16 @@ fi""")
             self.fail(problem)
 
     def _karg_location(self) -> str:
-        return "the ostree deployment" if self.backend == "ostree" else str(GRUB_DEFAULT)
+        if self.backend == "ostree":
+            return "the ostree deployment"
+        return str(LIMINE_DEFAULT if self.backend == "limine" else GRUB_DEFAULT)
 
     def _karg_plan(self, enable: bool) -> tuple[bool, list[str], tuple[str, str] | None]:
         """
         What the kernel parameter step has to do: (needs changing, values it
-        replaces, GRUB file contents as (original, new)).
+        replaces, GRUB or Limine file contents as (original, new)).
 
-        The GRUB tuple is None on ostree, where rpm-ostree edits the parameters
+        The tuple is None on ostree, where rpm-ostree edits the parameters
         itself and there's no file for this script to rewrite. Nothing is replaced
         there either: --append-if-missing leaves any acpi_backlight= value already
         in the deployment alone, and the kernel takes the last one on the line.
@@ -879,16 +1028,21 @@ fi""")
             changes = len(present) != len(KERNEL_PARAMS) if enable else bool(present)
             return changes, [], None
 
-        original = GRUB_DEFAULT.read_text(encoding="utf-8")
+        limine = self.backend == "limine"
+        path = LIMINE_DEFAULT if limine else GRUB_DEFAULT
+        original = path.read_text(encoding="utf-8")
         try:
-            new_grub, replaced = self.rewrite_grub(
-                original, enable=enable,
-                restore=None if enable else self.replaced_by_enable())
+            if limine:
+                new_text, replaced = self.rewrite_limine(original, enable=enable)
+            else:
+                new_text, replaced = self.rewrite_grub(
+                    original, enable=enable,
+                    restore=None if enable else self.replaced_by_enable())
         except ValueError as error:
-            self.fail(f"Can't edit the GRUB defaults safely: {error}. "
+            self.fail(f"Can't edit the {'Limine' if limine else 'GRUB'} defaults safely: {error}. "
                       f"{'Add' if enable else 'Remove'} acpi_backlight=native by hand "
                       f"instead:\n{DOC_URL}")
-        return new_grub != original, replaced, (original, new_grub)
+        return new_text != original, replaced, (original, new_text)
 
     def _print_steps(self, karg_changes: bool, replaced: list[str], rule_before: str,
                      enabling: bool, had_backup: bool = False):
@@ -924,6 +1078,9 @@ fi""")
             print("[3/3] ostree deployment")
             print("      -> staged for the next boot" if karg_changes
                   else "      -> unchanged, nothing staged")
+        elif self.backend == "limine":
+            print("[3/3] Limine boot menu (limine-update)")
+            print("      -> regenerated" if karg_changes else "      -> unchanged, not regenerated")
         else:
             print(f"[3/3] GRUB configuration ({GRUB_CFG})")
             print("      -> regenerated" if karg_changes else "      -> unchanged, not regenerated")
@@ -939,7 +1096,7 @@ fi""")
         self._require_supported_platform()
         self.require_pkexec()
 
-        karg_changes, replaced, grub = self._karg_plan(enable=True)
+        karg_changes, replaced, config = self._karg_plan(enable=True)
         rule_before = self.rule_state()
         running = all(p in self._read(Path("/proc/cmdline")).split() for p in KERNEL_PARAMS)
 
@@ -956,7 +1113,7 @@ fi""")
 
         self._announce_slow_step("enable" if karg_changes else None)
         if not self._apply("enable" if karg_changes else None,
-                           None if rule_before == "installed" else "write", grub):
+                           None if rule_before == "installed" else "write", config):
             return
 
         self._print_steps(karg_changes, replaced, rule_before, enabling=True)
@@ -987,7 +1144,7 @@ fi""")
         self._require_supported_platform()
         self.require_pkexec()
 
-        karg_changes, replaced, grub = self._karg_plan(enable=False)
+        karg_changes, replaced, config = self._karg_plan(enable=False)
         rule_before = self.rule_state()
 
         print("=== Disabling the backlight fix ===")
@@ -999,7 +1156,7 @@ fi""")
         had_backup = MODPROBE_BACKUP.exists()
         self._announce_slow_step("disable" if karg_changes else None)
         if not self._apply("disable" if karg_changes else None,
-                           None if rule_before == "absent" else "remove", grub):
+                           None if rule_before == "absent" else "remove", config):
             return
 
         self._print_steps(karg_changes, replaced, rule_before, enabling=False,
@@ -1124,8 +1281,9 @@ fi""")
 
         def params_line(params: list[str] | None) -> str:
             if params is None:
-                return ("couldn't be read" if s["backend"] == "ostree"
-                        else "can't read a single quoted GRUB_CMDLINE_LINUX_DEFAULT line")
+                return {"ostree": "couldn't be read",
+                        "limine": "no KERNEL_CMDLINE[default] line to read"}.get(
+                    s["backend"] or "", "can't read a single quoted GRUB_CMDLINE_LINUX_DEFAULT line")
             return ", ".join(f"{p}: {yes_no(p in params)}" for p in KERNEL_PARAMS)
 
         try:
@@ -1150,13 +1308,14 @@ fi""")
 
         out.append("")
         out.append("-- Configured (takes effect at boot) --")
-        source = {"ostree": "rpm-ostree kargs", "grub": str(GRUB_DEFAULT)}.get(
-            s["backend"] or "", "kernel parameters")
+        source = {"ostree": "rpm-ostree kargs", "grub": str(GRUB_DEFAULT),
+                  "limine": str(LIMINE_DEFAULT)}.get(s["backend"] or "", "kernel parameters")
         out.append(f"{source}: {params_line(s['configured'])}")
         out.append(f"{MODPROBE_CONF}: {s['rule']}")
         out.append({
             "ostree": "Kernel parameters: ostree deployment, set with rpm-ostree kargs",
             "grub": "Kernel parameters: GRUB",
+            "limine": "Kernel parameters: Limine, set in the defaults file and applied with limine-update",
         }.get(s["backend"] or "",
               "Kernel parameters: no supported method found (see the diagnosis)"))
 

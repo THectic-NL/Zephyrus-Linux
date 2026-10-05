@@ -4,11 +4,25 @@ weight: 1
 toc: false
 ---
 
-# Mijn setup-notities
+# Mijn Linux-setup
 
-Alles wat ik heb opgeschreven tijdens het draaien van Linux op de ROG Zephyrus G16 (GA605WV), voor de twee distributies die ik erop zou aanraden: **CachyOS** en **Bazzite**.
+Zo vind ik Linux fijn, opgeschreven zodat ik het snel opnieuw kan opbouwen en zodat jij dezelfde kunt maken. Het is gebouwd rond de ene laptop die ik heb, de ROG Zephyrus G16 (GA605WV), en dekt de twee distributies die ik erop zou aanraden: **CachyOS** en **Bazzite**.
 
-Ik ben geen developer, gewoon iemand die overstapte naar Linux en tegen van alles aanliep wat niet meteen werkte. Ik heb alles opgeschreven zodat anderen dat niet hoeven uit te zoeken. Als iets hier je helpt: mooi. Loop je ergens tegenaan wat ik niet behandeld heb, laat het weten.
+Het is eigenzinnig. Dit zijn mijn favoriete instellingen en de software die ik echt gebruik, geen overzicht van alle opties, en het meeste is omgezet in een script. Als iets hier je helpt: mooi. Loop je ergens tegenaan wat ik niet behandeld heb, laat het weten.
+
+## Richt een machine in zoals de mijne
+
+{{< cards >}}
+  {{< card link="/docs/setup-script" title="Setup-script" subtitle="Een menu dat laat zien wat er op jouw machine klaar is en wat openstaat, en mijn aanbevolen standaarden instelt, met bij elke stap een link naar de handleiding." >}}
+{{< /cards >}}
+
+## Wat is specifiek voor deze laptop
+
+Je hebt niet precies dit model nodig. Alleen de pagina's over de hardware van de laptop zelf zijn specifiek voor de G16. Al het andere werkt op elke machine.
+
+| Specifiek voor de Zephyrus G16 | Werkt op elke machine |
+|---|---|
+| [asusctl & ROG Control Center]({{< relref "/docs/hardware/asusctl-rog-control" >}}), [kleurprofielen voor het scherm]({{< relref "/docs/hardware/color-profiles" >}}), [MT7925 Wi-Fi-tuning]({{< relref "/docs/networking/mt7925-wifi-performance" >}}), de helderheidsfix in [Bekende problemen]({{< relref "/docs/known-issues" >}}) | [GNOME-bureaublad]({{< relref "/docs/desktop" >}}), [beveiliging]({{< relref "/docs/security" >}}), [applicaties]({{< relref "/docs/applications" >}}), [virtualisatie]({{< relref "/docs/virtualization" >}}), [gaming]({{< relref "/docs/gaming" >}}), [eduroam]({{< relref "/docs/networking/eduroam-network-installation" >}}) |
 
 ## Kies eerst een distributie
 
@@ -54,7 +68,7 @@ Dat werkt prima op deze laptop. Niets hier is een waarschuwing ertegen. Na het t
 
 ## Ze wisselen elkaar af
 
-Ik heb er niet één gekozen en het daarbij gelaten. Ik heb ze allebei als dagelijks systeem op deze laptop gedraaid en ben meer dan eens heen en weer geswitcht. Tegenwoordig is CachyOS mijn daily driver, vooral omdat een deel van wat ik doe die extra systeemcontrole wil, maar ik dualboot Bazzite nog steeds op dezelfde machine en ga er af en toe uit nieuwsgierigheid op terug, en gebruik het dan weer een tijdje voor ik terugschakel. Geen van beide blijft lang voorop lopen.
+Ik heb er niet één gekozen en het daarbij gelaten. Ik heb ze allebei als dagelijks systeem op deze laptop gedraaid en ben meer dan eens heen en weer geswitcht. Tegenwoordig is CachyOS mijn daily driver, vooral omdat een deel van wat ik doe die extra systeemcontrole wil, maar ik dualbootte Bazzite vroeger op dezelfde machine en ging er af en toe uit nieuwsgierigheid op terug, en gebruikte het dan weer een tijdje voor ik terugschakelde. Geen van beide blijft lang voorop lopen.
 
 Het gaat in golven. De ene maand landt er in Bazzite een kernel-bump of een Mesa-fix en is het de soepelste van de twee. Een maand later levert CachyOS een scheduler-wijziging of een `asusctl`-update en klapt de voorsprong terug. Het gat is nooit groot en het houdt nooit aan, want de dingen die er echt toe doen worden sowieso ge-backport. Een fix die in de kernel van de ene distributie of in mainline opduikt, zit meestal binnen een release of twee ook in de andere. Geef het een paar weken en ze lopen weer gelijk.
 

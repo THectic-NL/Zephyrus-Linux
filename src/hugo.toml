@@ -21,6 +21,10 @@ disableHugoGeneratorInject = true
     title = 'Zephyrus Linux'
     locale = 'nl-NL'
 
+    # Dutch puts the day first. Without this the Dutch pages print "september 16, 2026".
+    [languages.nl.params]
+      dateFormat = '2 January 2006'
+
 [menu]
   [[menu.main]]
     identifier = 'docs'
@@ -55,7 +59,12 @@ disableHugoGeneratorInject = true
       type = 'theme-toggle'
 
 [params]
-  description = 'Linux setup documentation for the ASUS ROG Zephyrus G16 GA605WV — NVIDIA drivers, Secure Boot, VM setup, YubiKey, and more.'
+  description = 'My Linux setup, written down and scripted: built on the ASUS ROG Zephyrus G16 GA605WV, usable on any laptop. Guides for CachyOS and Bazzite, plus a setup script with a guide link for every step.'
+
+  # Hextra reads these at the top level of [params]. In TOML a key written after a [params.*]
+  # table header belongs to that table, so they have to stay above the first one.
+  displayUpdatedDate = true
+  dateFormat = 'January 2, 2006'
 
   [params.navbar]
     displayTitle = true
@@ -71,9 +80,6 @@ disableHugoGeneratorInject = true
     displayCopyright = false
     displayPoweredBy = false
     width = 'normal'
-
-  displayUpdatedDate = true
-  dateFormat = 'January 2, 2006'
 
   [params.search]
     enable = true

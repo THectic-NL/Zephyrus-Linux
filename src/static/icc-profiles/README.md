@@ -6,12 +6,9 @@ Factory-calibrated and manufacturer-provided ICC profiles, organized per device.
 
 ```
 icc-profiles/
-├── Zephyrus G16 (2024) GA605WV/   # Profiles for the ASUS ROG Zephyrus G16 GA605WV
-│   └── SxxB80xT.icm               # Samsung Thunderbolt display profile (external monitor)
-├── LS27B800TGUXEN - S80TB/        # Profiles for the Samsung ViewFinity S8 Thunderbolt
-│   └── SxxB80xT.icm               # Samsung color profile
-├── GA605WV_*_CMDEF.icm            # Factory-calibrated profiles for the built-in OLED panel
+├── GA605WV_*_CMDEF.icm            # Factory-calibrated profiles for the built-in panel
 ├── ASUS_*.icm                     # Generic ASUS colorspace profiles
+├── archive/                       # Hardware I no longer use. Kept, but not maintained.
 └── README.md
 ```
 
@@ -52,7 +49,7 @@ Profiles were extracted from the ASUS Windows driver package by reverse engineer
 https://dlcdn-rogboxbu1.asus.com/pub/ASUS/APService/Gaming/SYS/ROGS/20016-BWVQPK-01624c1cdd5a3c05252bad472fab1240.zip
 ```
 
-The ICC metadata `desc` tags were modified so profiles appear with readable names in GNOME Color Management.
+The files keep ASUS's own technical names. The setup script (`zephyrus-setup.py`) installs them under readable names (it only rewrites the description tag) and adds them to the built-in screen in colord.
 
 ### Files
 
@@ -80,32 +77,3 @@ cp GA605WV_1002_104D158E_CMDEF.icm ~/.local/share/icc/
 ```
 
 Then activate in **GNOME Settings** → **Color Management** → select your display → **Add Profile** → select the profile matching your GPU and panel combination.
-
----
-
-## LS27B800TGUXEN - S80TB, Samsung ViewFinity S8 Thunderbolt
-
-Color profile for the Samsung ViewFinity S8 Thunderbolt (LS27B800TGUXEN) external monitor.
-
-### Source
-
-Extracted from the Samsung Windows driver package (`S80TB-INF-Driver-Win11x64`).
-
-### Files
-
-| Filename | Description |
-|---|---|
-| `SxxB80xT.icm` | Samsung factory color profile for the S80TB Thunderbolt display |
-
-### Install
-
-```bash
-# System-wide (all users):
-sudo cp SxxB80xT.icm /usr/share/color/icc/colord/
-
-# Or per-user:
-mkdir -p ~/.local/share/icc
-cp SxxB80xT.icm ~/.local/share/icc/
-```
-
-Then activate in **GNOME Settings** → **Color Management** → select the Samsung display → **Add Profile** → select `SxxB80xT`.

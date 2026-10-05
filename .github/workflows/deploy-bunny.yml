@@ -36,6 +36,10 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # Full history, for the "Last updated" date under every page. Hugo takes it from the
+          # last commit that touched the file (enableGitInfo). A shallow clone has one commit,
+          # so every page would show the date of the deploy instead.
+          fetch-depth: 0
 
       # This site pulls Hextra in as a Hugo Module (src/go.mod), so Hugo needs
       # Go on PATH before it can build. The other repos in the organisation are
