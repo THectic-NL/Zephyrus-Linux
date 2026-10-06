@@ -2887,8 +2887,10 @@ def build_items(catalog: ExtensionCatalog) -> list[Item]:
     add(package_item("standard-notes", "apps", "Standard Notes", "End-to-end encrypted notes, from Flathub",
                      prod + "#standard-notes", group="Notes and passwords",
                      flatpak=("org.standardnotes.standardnotes",)))
-    add(package_item("bitwarden", "apps", "Bitwarden", "Password manager, from Flathub", prod + "#bitwarden",
+    add(package_item("bitwarden", "apps", "Bitwarden", "Password manager, from Flathub", prod + "#password-manager",
                      group="Notes and passwords", flatpak=("com.bitwarden.desktop",)))
+    add(package_item("proton-pass", "apps", "Proton Pass", "Password manager, the native package",
+                     prod + "#password-manager", group="Notes and passwords", pacman=("proton-pass",)))
     add(package_item("onlyoffice", "apps", "OnlyOffice", "The closest thing to Microsoft 365", prod + "#onlyoffice",
                      group="Office", pacman=("onlyoffice-bin",)))
     add(package_item("libreoffice", "apps", "LibreOffice Fresh", "Built-in APA references", prod + "#libreoffice",

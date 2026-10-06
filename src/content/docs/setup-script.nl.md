@@ -15,11 +15,11 @@ Het verandert je systeem. Er gebeurt niets voordat je het plan hebt gelezen en o
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-setup.py
-echo "322df779f0553ef30cf1b045a4cb84c24a5f9d1af16522d0fda06aa3b8f3aa28  zephyrus-setup.py" | sha256sum -c
+echo "6e50654184045d14924905ec8c39fe586d7168ebe8f5fb1d303ff59de0016175  zephyrus-setup.py" | sha256sum -c
 python3 zephyrus-setup.py
 ```
 
-Bron: [zephyrus-setup.py](/scripts/zephyrus-setup.py). SHA-256 `322df779f0553ef30cf1b045a4cb84c24a5f9d1af16522d0fda06aa3b8f3aa28`.
+Bron: [zephyrus-setup.py](/scripts/zephyrus-setup.py). SHA-256 `6e50654184045d14924905ec8c39fe586d7168ebe8f5fb1d303ff59de0016175`.
 
 Je hebt Python 3.14 of nieuwer nodig en de GTK 4-bindings. Een standaard CachyOS-GNOME-installatie heeft die al. Zo niet: `sudo pacman -S python-gobject gtk4 libadwaita`.
 
