@@ -5,11 +5,52 @@ prev: docs/applications/browser
 next: docs/applications/development
 ---
 
-### Bitwarden
+### Wachtwoordmanager
 
-Wachtwoord manager. Beschikbaar via Flathub en werkt prima.
+Bitwarden en Proton Pass zijn allebei open source. Wissel met de tabbladen tussen de twee.
+
+{{< tabs >}}
+{{< tab name="Bitwarden" >}}
+
+Beschikbaar via Flathub en werkt prima. De Flatpak is geverifieerd op Flathub, dus Bitwarden publiceert hem zelf.
+
+```bash
+flatpak install flathub com.bitwarden.desktop
+```
 
 ![Bitwarden desktop app in Flathub](/images/bitwarden-flathub.avif)
+
+{{< /tab >}}
+{{< tab name="Proton Pass" >}}
+
+Proton Pass is gemaakt door Proton, het bedrijf achter Proton Mail (hieronder). Er is een gratis abonnement.
+
+**CachyOS / Arch (aanbevolen):**
+
+De [CachyOS repository](https://packages.cachyos.org/package/cachyos/x86_64/proton-pass) levert `proton-pass`, uit de broncode gebouwd. Het draait op de Electron van het systeem, dus Electron-updates komen mee met de rest van je systeem.
+
+```bash
+sudo pacman -S proton-pass
+```
+
+**Flatpak (Bazzite, of een alternatief):**
+
+```bash
+flatpak install flathub me.proton.Pass
+```
+
+Flathub toont deze Flatpak niet als geverifieerd, dus het is niet bevestigd dat hij van Proton komt. Proton's eigen [Linux-handleiding](https://proton.me/support/set-up-proton-pass-linux) biedt alleen `.deb`- en `.rpm`-bestanden aan.
+
+![Proton Pass desktop app](/images/proton-pass.avif)
+
+**Browserextensie**
+
+De extensie vult de logins in je browser in. Haal hem in de [Chrome Web Store](https://chromewebstore.google.com/detail/proton-pass-free-password/ghmbeldphafepmbegfdlkpapadhbakde) voor Brave en andere Chromium-browsers, of bij [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/proton-pass/). Proton opent daarna een pagina die zegt dat je hem aan de werkbalk moet vastzetten en moet inloggen.
+
+![De pagina die Proton opent na het installeren van de extensie](/images/proton-pass-extension.avif)
+
+{{< /tab >}}
+{{< /tabs >}}
 
 ### Signal Messenger
 
