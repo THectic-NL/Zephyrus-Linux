@@ -273,16 +273,20 @@ Archi's download page warns about possible UI issues on Wayland. In my experienc
 
 ![Archi download page - Linux version with Wayland note](/images/archi-download.avif)
 
-```bash
-# Download and extract
-cd /tmp
-curl -L https://github.com/archimatetool/archi.io/releases/download/5.9.0/Archi-Linux64-5.9.0.tgz | tar -xz
+Version 5.10.0 at the time of writing. Archi publishes a SHA-256 for every download on its [download page](https://www.archimatetool.com/download/), so check the archive before you unpack it. The release tags look like `5.10_0`, not `5.10.0`, which is why an older version of this command now returns a 404.
 
-# Move to /opt
-sudo mv Archi-Linux64-5.9.0/Archi /opt/
+```bash
+# Download and check
+cd /tmp
+curl -LO https://github.com/archimatetool/archi.io/releases/download/5.10_0/Archi-Linux64-5.10.0.tgz
+echo "f9422455a00a22f5340dc28692ceafe0ad720c8cde839eaafb0fab1cea57287f  Archi-Linux64-5.10.0.tgz" | sha256sum -c
+
+# Extract and move to /opt
+tar -xzf Archi-Linux64-5.10.0.tgz
+sudo mv Archi /opt/
 
 # Cleanup
-rm -rf Archi-Linux64-5.9.0
+rm Archi-Linux64-5.10.0.tgz
 cd ~
 
 # Create symlink so you can run 'archi' from the terminal
@@ -316,6 +320,8 @@ Replace `__ICON__` with the actual path (it includes a build timestamp that chan
 ```bash
 find /opt/Archi/plugins -name "app-128.png" | head -1
 ```
+
+The [setup window]({{< relref "/docs/setup-script" >}}) does all of this for you: it downloads this version, checks it against the same SHA-256, puts it in `/opt/Archi` and adds the launcher and the `archi` command.
 
 After saving, Archi appears in the GNOME app launcher:
 
