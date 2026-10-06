@@ -653,6 +653,8 @@ class Step:
     interactive: bool = False
     # Runs before anything is installed or removed, for steps that need a tool a removal is about to take away.
     early: bool = False
+    # Fetches something from the internet, so the plan warns when there is no connection.
+    network: bool = False
 
 
 @dataclass
@@ -666,6 +668,8 @@ class Plan:
     # Root snippets: 'root_early' runs first (stop a service before its package goes), 'root' after the installs.
     root_early: list[tuple[str, str]] = field(default_factory=list)
     root: list[tuple[str, str]] = field(default_factory=list)
+    # A root snippet fetches something from the internet. A Step says so itself, and the packages are counted apart.
+    network: bool = False
     steps: list[Step] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
     reboot_for: list[str] = field(default_factory=list)
@@ -686,8 +690,9 @@ class Plan:
     def add_flatpak(self, names: Iterable[str]) -> None:
         self._add(self.flatpak, names)
 
-    def add_root(self, desc: str, script: str, early: bool = False) -> None:
+    def add_root(self, desc: str, script: str, early: bool = False, network: bool = False) -> None:
         (self.root_early if early else self.root).append((desc, script))
+        self.network = self.network or network
 
     def add_remove(self, pacman: Iterable[str], flatpak: Iterable[str]) -> None:
         self._add(self.remove_pacman, pacman)
@@ -704,9 +709,8 @@ class Plan:
 
     @property
     def needs_network(self) -> bool:
-        texts = [desc for desc, _ in (*self.root_early, *self.root)] + [step.desc for step in self.steps]
-        return bool(self.pacman or self.aur or self.flatpak) or any(
-            "download" in text.lower() or "extensions.gnome.org" in text for text in texts)
+        return bool(self.pacman or self.aur or self.flatpak or self.network
+                    or any(step.network for step in self.steps))
 
 
 # --- items ------------------------------------------------------------------------------------
@@ -1430,7 +1434,7 @@ def extension_item(spec: ExtensionSpec, catalog: ExtensionCatalog) -> Item:
 
     def on(s: System, p: Plan) -> None:
         p.steps.append(Step(f"Install {spec.name} from extensions.gnome.org and switch it on",
-                            call=lambda: install_extension(spec)))
+                            call=lambda: install_extension(spec), network=True))
         p.relogin_for.append(f"{spec.name} (only if it does not show up by itself)")
 
     def off(s: System, p: Plan) -> None:
@@ -2544,7 +2548,7 @@ def on_virtio_iso(s: System, p: Plan) -> None:
                f"curl -fL --proto '=https' -o {part} {shlex.quote(VIRTIO_URL)}\n"
                f"[ \"$(stat -c %s {part})\" -gt 700000000 ] || "
                f"{{ rm -f {part}; echo 'The download is incomplete'; exit 1; }}\n"
-               f"mv -f {part} {shlex.quote(str(VIRTIO_ISO))}")
+               f"mv -f {part} {shlex.quote(str(VIRTIO_ISO))}", network=True)
 
 
 def off_virtio_iso(s: System, p: Plan) -> None:
@@ -2603,7 +2607,7 @@ def download_archi() -> Path:
 def on_archi(s: System, p: Plan) -> None:
     staged = CACHE_DIR / f"Archi-Linux64-{ARCHI_VERSION}.tgz"
     p.steps.append(Step(f"Download Archi {ARCHI_VERSION} (about 180 MB) and check it against the published SHA-256",
-                        call=download_archi, early=True))
+                        call=download_archi, early=True, network=True))
     desktop = ("[Desktop Entry]\nVersion=1.0\nType=Application\nName=Archi\nComment=ArchiMate Modelling Tool\n"
                "Exec=/opt/Archi/Archi\nIcon=__ICON__\nTerminal=false\nCategories=Development;IDE;\n"
                "StartupWMClass=Archi\n")
