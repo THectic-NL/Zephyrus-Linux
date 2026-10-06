@@ -16,6 +16,11 @@
 # pushes onto a branch someone is working on is exactly what that workflow
 # avoids.
 #
+# zephyrus-setup.py has the same problem one level down: it only runs the
+# dedicated scripts and installs the color profiles whose SHA-256 is written
+# into its own source. Those tables are checked first, because rewriting them
+# changes the setup script and with it the hash the documentation publishes.
+#
 # Usage:
 #   .github/scripts/check-doc-checksums.sh           # verify only
 #   .github/scripts/check-doc-checksums.sh --apply   # rewrite stale hashes
@@ -70,6 +75,52 @@ readonly CONTENT_DIR="src/content"
 [[ -d $SCRIPT_DIR ]]  || { Write-Log ERROR "$SCRIPT_DIR does not exist"; exit 1; }
 [[ -d $CONTENT_DIR ]] || { Write-Log ERROR "$CONTENT_DIR does not exist"; exit 1; }
 
+stale=0       # hashes that were wrong, whether or not --apply rewrote them
+unfixable=0   # hashes that were wrong and that --apply cannot rewrite
+
+# ── Hashes built into the setup script ──────────────────────────────────────
+#
+# Every entry in TOOL_SHA256 and PROFILE_SHA256 is a "file name": "hash" line.
+# The file is looked up next to the setup script and in the color profile
+# folder, and the hash has to be the one of the file as it is committed.
+
+readonly SETUP_SCRIPT="$SCRIPT_DIR/zephyrus-setup.py"
+readonly PROFILE_DIR="src/static/icc-profiles"
+
+embedded=0
+if [[ -f $SETUP_SCRIPT ]]; then
+    while IFS=: read -r line name hash; do
+        embedded=$((embedded + 1))
+        file=""
+        for folder in "$SCRIPT_DIR" "$PROFILE_DIR"; do
+            [[ -f $folder/$name ]] && file="$folder/$name" && break
+        done
+        if [[ -z $file ]]; then
+            stale=$((stale + 1))
+            unfixable=$((unfixable + 1))
+            Write-Log ERROR "$SETUP_SCRIPT:$line lists $name, which is not in $SCRIPT_DIR or $PROFILE_DIR"
+            [[ -n ${GITHUB_ACTIONS:-} ]] && \
+                echo "::error file=$SETUP_SCRIPT,line=$line::$name is listed here but does not exist"
+            continue
+        fi
+        want="$(sha256sum "$file" | awk '{print $1}')"
+        [[ $hash == "$want" ]] && continue
+
+        stale=$((stale + 1))
+        if [[ $APPLY == true ]]; then
+            sed -i "${line}s/$hash/$want/" "$SETUP_SCRIPT"
+            Write-Log SUCCESS "$SETUP_SCRIPT:$line updated to $want ($name)"
+        else
+            Write-Log ERROR "$SETUP_SCRIPT:$line has $hash for $name, the file is $want"
+            [[ -n ${GITHUB_ACTIONS:-} ]] && \
+                echo "::error file=$SETUP_SCRIPT,line=$line::SHA-256 of $name is stale. Run .github/scripts/check-doc-checksums.sh --apply"
+        fi
+    done < <(grep -nE '^[[:space:]]+"[A-Za-z0-9_.-]+": "[a-f0-9]{64}",$' "$SETUP_SCRIPT" \
+             | sed -E 's/^([0-9]+):[[:space:]]+"([^"]+)": "([a-f0-9]{64})",$/\1:\2:\3/' || true)
+    Write-Log INFO "$embedded hash(es) are built into $SETUP_SCRIPT."
+    echo
+fi
+
 # ── The scripts the documentation can publish a hash for ────────────────────
 
 declare -A HASH_OF
@@ -94,7 +145,6 @@ echo
 # 64-character hex string elsewhere in the documentation is left alone. Within
 # such a page every hash has to match one of the scripts that page mentions.
 
-stale=0
 checked=0
 
 while IFS= read -r -d '' page; do
@@ -127,6 +177,7 @@ while IFS= read -r -d '' page; do
                     echo "::error file=$page,line=$line::Published SHA-256 is stale. Run .github/scripts/check-doc-checksums.sh --apply"
             fi
         else
+            unfixable=$((unfixable + 1))
             Write-Log ERROR "$page:$line publishes $hash, which matches none of: ${referenced[*]}"
             [[ -n ${GITHUB_ACTIONS:-} ]] && \
                 echo "::error file=$page,line=$line::Published SHA-256 matches none of the scripts this page references"
@@ -140,9 +191,14 @@ if [[ $stale -eq 0 ]]; then
     exit 0
 fi
 
-if [[ $APPLY == true ]]; then
+if [[ $APPLY == true && $unfixable -eq 0 ]]; then
     Write-Log SUCCESS "Rewrote $stale stale checksum(s)."
     exit 0
+fi
+
+if [[ $APPLY == true ]]; then
+    Write-Log ERROR "$unfixable checksum(s) cannot be rewritten automatically, fix them by hand."
+    exit 1
 fi
 
 Write-Log ERROR "$stale stale checksum(s). Fix them with:"

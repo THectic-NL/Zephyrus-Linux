@@ -87,6 +87,8 @@ After changing a script, rewrite the published hashes:
 .github/scripts/check-doc-checksums.sh --apply
 ```
 
+The setup script (`zephyrus-setup.py`) only runs a dedicated script, or installs a color profile from `src/static/icc-profiles/`, when its SHA-256 matches the one written into the setup script itself. The same command rewrites those hashes first, and then the hash of the setup script that the guides publish. Run it after changing any script or profile.
+
 Commit the content change along with the script. A pull request that leaves them out of sync fails the `Check published script checksums` step in the quality checks.
 
 ---
