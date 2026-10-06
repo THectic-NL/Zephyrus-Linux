@@ -17,13 +17,14 @@ It needs Python 3.14 and, for the window, PyGObject with GTK 4 and libadwaita:
 Changes are made on Arch-based systems (it is built on CachyOS). Anywhere else
 the window opens read-only: you see what is set up and can open the guides.
 
-Everything that needs root runs as one script behind one polkit prompt. The
-bootloader, PAM and Secure Boot keys are never touched, because a mistake in
-any of those can lock you out. Those items are guides, not toggles.
+Everything that needs root runs as one script behind one polkit prompt. This
+script itself never edits the bootloader, PAM files or Secure Boot keys,
+because a mistake in any of those can lock you out. The AMD PSR fix, the
+YubiKey PAM setup and Secure Boot are guides, not toggles. The brightness fix
+runs its own script, which keeps a backup of what it changes.
 
 Author: Stensel8
-Standard library plus PyGObject. Structured like mt7925-tune.py and
-zephyrus-backlight.py.
+One file, standard library plus PyGObject, like the dedicated scripts next to it.
 """
 
 from __future__ import annotations
