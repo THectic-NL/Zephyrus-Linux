@@ -8,12 +8,12 @@ toc: false
 
 Zo vind ik Linux fijn, opgeschreven zodat ik het snel opnieuw kan opbouwen en zodat jij dezelfde kunt maken. Het is gebouwd rond de ene laptop die ik heb, de ROG Zephyrus G16 (GA605WV), en dekt de twee distributies die ik erop zou aanraden: **CachyOS** en **Bazzite**.
 
-Het is eigenzinnig. Dit zijn mijn favoriete instellingen en de software die ik echt gebruik, geen overzicht van alle opties, en het meeste is omgezet in een script. Als iets hier je helpt: mooi. Loop je ergens tegenaan wat ik niet behandeld heb, laat het weten.
+Het is eigenzinnig. Dit zijn mijn favoriete instellingen en de software die ik echt gebruik, geen overzicht van alle opties, en het meeste is omgezet in een setup-venster. Als iets hier je helpt: mooi. Loop je ergens tegenaan wat ik niet behandeld heb, laat het weten.
 
 ## Richt een machine in zoals de mijne
 
 {{< cards >}}
-  {{< card link="/docs/setup-script" title="Setup-script" subtitle="Een menu dat laat zien wat er op jouw machine klaar is en wat openstaat, en mijn aanbevolen standaarden instelt, met bij elke stap een link naar de handleiding." >}}
+  {{< card link="/docs/setup-script" title="Setup-script" subtitle="Een checklist die laat zien wat er op jouw machine klaar is en wat openstaat, en mijn aanbevolen standaarden instelt, met bij elke stap een link naar de handleiding." >}}
 {{< /cards >}}
 
 ## Wat is specifiek voor deze laptop

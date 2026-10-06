@@ -2,7 +2,7 @@
 
 Nederlands | [English](README.md)
 
-Mijn Linux-setup voor de ASUS ROG Zephyrus G16 GA605WV (2024), opgeschreven en gescript. Zo vind ik Linux fijn, en zo krijg ik een verse installatie precies in die staat: een menu dat laat zien wat er op jouw machine al klaar is, elke stap uitlegt en linkt naar de pagina in de handleiding. Je hebt niet precies deze laptop nodig. Alleen de pagina's en script-onderdelen die met de hardware praten zijn specifiek voor de G16, al het andere werkt op elke machine.
+Mijn Linux-setup voor de ASUS ROG Zephyrus G16 GA605WV (2024), opgeschreven en gescript. Zo vind ik Linux fijn, en zo krijg ik een verse installatie precies in die staat: een checklist-venster dat laat zien wat er op jouw machine al klaar is en elk onderdeel linkt naar de pagina in de handleiding. Je hebt niet precies deze laptop nodig. Alleen de pagina's en script-onderdelen die met de hardware praten zijn specifiek voor de G16, al het andere werkt op elke machine.
 
 **Bekijk de handleidingen: [zephyrus-linux.thectic.nl](https://zephyrus-linux.thectic.nl/nl/)**
 
@@ -11,18 +11,17 @@ Mijn Linux-setup voor de ASUS ROG Zephyrus G16 GA605WV (2024), opgeschreven en g
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-setup.py
-python3 zephyrus-setup.py                       # het menu
-python3 zephyrus-setup.py apply --recommended --dry-run   # of bekijk alleen het plan
+python3 zephyrus-setup.py
 ```
 
-Het setup-script laat zien wat er klaar is en wat nog openstaat, legt uit wat het toepassen van elk onderdeel zou doen en linkt naar de handleiding. Er verandert niets totdat je het plan hebt gezien en bevestigd. Controleer de SHA-256 op [de pagina van het script](https://zephyrus-linux.thectic.nl/nl/docs/setup-script/) voordat je het draait. Toepassen is gebouwd voor CachyOS en andere Arch-systemen met GNOME.
+Het opent een venster: vink aan wat je wilt, lees het plan en pas het toe. Het laat zien wat er op jouw machine al klaar is en linkt elk onderdeel naar de handleiding. Het wisselt ook het ingebouwde scherm tussen kleurstanden (Native, sRGB, DCI-P3, Display P3), zoals G-Helper dat op Windows doet. Er verandert niets totdat je het plan hebt gezien en op Apply hebt gedrukt. Controleer de SHA-256 op [de pagina van het script](https://zephyrus-linux.thectic.nl/nl/docs/setup-script/) voordat je het draait. Wijzigingen werken op CachyOS en andere Arch-systemen met GNOME. Overal elders is het venster alleen-lezen.
 
 
 ## Wat er in zit
 
 - **Handleidingen** voor CachyOS en Bazzite: de instellingen en software die ik echt gebruik, en waarom. Pagina's over de hardware van de laptop zelf (de ASUS-tools, helderheid, de Wi-Fi-kaart, de kleurprofielen) zijn specifiek voor de G16. De pagina's over het GNOME-bureaublad, beveiliging, applicaties, virtualisatie en gaming werken op elke machine.
-- **Een setup-script** dat het grootste deel daarvan omzet in een menu, met per onderdeel een "learn more"-link.
-- **Eigen scripts** voor de lastigere fixes (helderheid in elke GPU-modus, Wi-Fi-tuning, eduroam), die het setup-script voor je kan openen nadat het ze heeft gecontroleerd met de SHA-256 uit de handleidingen.
+- **Een setup-venster** dat het grootste deel daarvan omzet in een checklist met een schakelaar per onderdeel en een link naar de handleiding.
+- **Eigen scripts** voor de lastigere fixes (helderheid in elke GPU-modus, Wi-Fi-tuning, eduroam), die het setup-venster voor je draait nadat het ze heeft gecontroleerd met de SHA-256 die erin zit.
 
 
 ## Over dit project
@@ -104,7 +103,7 @@ for f in *.png; do avifenc -q 80 -s 6 "$f" "${f%.png}.avif" && rm "$f"; done
 Dit project zou niet bestaan zonder het werk van deze mensen en communities:
 
 - **[ASUS Linux community](https://asus-linux.org/)**: Het project achter `asusctl` en `rog-control-center`, tegenwoordig onderhouden onder het [Open Gaming Collective](https://github.com/OpenGamingCollective/asusctl). Luke Jones is hier een grote drijvende kracht achter geweest, en ook andere bijdragers hebben kernel patches ingediend, waarvan velen inmiddels in mainline Linux zijn gemerged, waardoor moderne ASUS ROG laptops echt bruikbaar zijn op Linux.
-- **[G-Helper](https://github.com/seerge/g-helper)**: De Windows-tool waarvan de manier om ASUS-kleurprofielen te behandelen (een zip per model van de ASUS CDN, aangeboden als Native, sRGB, DCI-P3 en Display P3) het voorbeeld is voor de kleurstanden in het setup-script.
+- **[G-Helper](https://github.com/seerge/g-helper)**: De Windows-tool waarvan de manier om ASUS-kleurprofielen te behandelen (een zip per model van de ASUS CDN, aangeboden als Native, sRGB, DCI-P3 en Display P3) het voorbeeld is voor de kleurstanden in het setup-venster.
 - **[CachyOS](https://cachyos.org/)**: Een op Arch gebaseerde distributie met uitgebreide hardware-specifieke tuning: een verbeterde scheduler (BORE/EEVDF), beter energiebeheer, ondersteuning voor dynamische verversingsfrequentie, en ingebouwde drivers voor zowel de AMD iGPU als de NVIDIA dGPU, inclusief geïntegreerde GPU-switching. Een van de twee distributies die deze handleidingen dekken.
 - **[Bazzite / Universal Blue](https://universal-blue.org/)**: De mensen die de atomic Fedora-images maken waarop deze laptop goed draait, en die veel van de patches hebben bijgedragen die hem beter laten presteren. De andere distributie die deze handleidingen dekken.
 - **[Foxboron/sbctl](https://github.com/Foxboron/sbctl)**: Beheertool voor Secure Boot-sleutels, gebruikt voor het inschrijven van eigen sleutels en het ondertekenen van de kernel en EFI-binaries. Onmisbaar voor het actief houden van Secure Boot met een aangepaste kernel.

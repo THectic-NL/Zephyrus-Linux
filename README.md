@@ -2,7 +2,7 @@
 
 English | [Nederlands](README.nl.md)
 
-My Linux setup for the ASUS ROG Zephyrus G16 GA605WV (2024), written down and scripted. It is how I like Linux, and how I get a fresh install to exactly that state: a menu that shows what is already done on your machine, explains every step and links to the guide page for it. You don't need this exact laptop. Only the pages and script items that talk to its hardware are specific to the G16, everything else works on any machine.
+My Linux setup for the ASUS ROG Zephyrus G16 GA605WV (2024), written down and scripted. It is how I like Linux, and how I get a fresh install to exactly that state: a checklist window that shows what is already done on your machine and links every item to its guide page. You don't need this exact laptop. Only the pages and script items that talk to its hardware are specific to the G16, everything else works on any machine.
 
 **Browse the guides: [zephyrus-linux.thectic.nl](https://zephyrus-linux.thectic.nl/)**
 
@@ -11,18 +11,17 @@ My Linux setup for the ASUS ROG Zephyrus G16 GA605WV (2024), written down and sc
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-setup.py
-python3 zephyrus-setup.py                       # the menu
-python3 zephyrus-setup.py apply --recommended --dry-run   # or just look at the plan
+python3 zephyrus-setup.py
 ```
 
-The setup script shows what is done and what is still open, explains what applying each item would do and links to the guide for it. Nothing changes until you have seen the plan and confirmed it. Check the SHA-256 on [the script's page](https://zephyrus-linux.thectic.nl/docs/setup-script/) before you run it. Applying is built for CachyOS and other Arch-based systems with GNOME.
+It opens a window: tick what you want, read the plan, apply it. It shows what is already done on your machine and links every item to its guide. It also switches the built-in screen between color modes (Native, sRGB, DCI-P3, Display P3), the way G-Helper does on Windows. Nothing changes until you have seen the plan and pressed Apply. Check the SHA-256 on [the script's page](https://zephyrus-linux.thectic.nl/docs/setup-script/) before you run it. Changes are made on CachyOS and other Arch-based systems with GNOME. Elsewhere the window is read-only.
 
 
 ## What is in here
 
 - **Guides** for CachyOS and Bazzite: the settings and software I actually use, and why. Pages about the laptop's own hardware (the ASUS tools, brightness, the Wi-Fi card, the color profiles) are G16-specific. The GNOME desktop, security, applications, virtualization and gaming pages work on any machine.
-- **A setup script** that turns most of that into a menu, with a "learn more" link per item.
-- **Dedicated scripts** for the harder fixes (brightness in every GPU mode, Wi-Fi tuning, eduroam), which the setup script can open for you after checking them against the SHA-256 published in the guides.
+- **A setup window** that turns most of that into a checklist with a switch per item and a guide link for each.
+- **Dedicated scripts** for the harder fixes (brightness in every GPU mode, Wi-Fi tuning, eduroam), which the setup window runs for you after checking them against the SHA-256 built into it.
 
 
 ## About this project
@@ -104,7 +103,7 @@ for f in *.png; do avifenc -q 80 -s 6 "$f" "${f%.png}.avif" && rm "$f"; done
 This project wouldn't exist without the work of these people and communities:
 
 - **[ASUS Linux community](https://asus-linux.org/)**: The project behind `asusctl` and `rog-control-center`, now maintained under the [Open Gaming Collective](https://github.com/OpenGamingCollective/asusctl). Luke Jones has been a major driving force, and numerous contributors have submitted kernel patches, many of which are now merged into mainline Linux, making modern ASUS ROG laptops genuinely usable on Linux.
-- **[G-Helper](https://github.com/seerge/g-helper)**: The Windows tool whose way of handling ASUS color profiles (a per-model zip from ASUS's CDN, offered as Native, sRGB, DCI-P3 and Display P3) is the model for the color modes in the setup script.
+- **[G-Helper](https://github.com/seerge/g-helper)**: The Windows tool whose way of handling ASUS color profiles (a per-model zip from ASUS's CDN, offered as Native, sRGB, DCI-P3 and Display P3) is the model for the color modes in the setup window.
 - **[CachyOS](https://cachyos.org/)**: An Arch-based distribution with extensive hardware-specific tuning: an improved scheduler (BORE/EEVDF), better power management, dynamic refresh rate support, and built-in drivers for both the AMD iGPU and NVIDIA dGPU, including integrated GPU switching. One of the two distributions these guides cover.
 - **[Bazzite / Universal Blue](https://universal-blue.org/)**: The people who make the atomic Fedora images this laptop runs well on, and who have contributed many of the patches that make it perform better. The other distribution these guides cover.
 - **[Foxboron/sbctl](https://github.com/Foxboron/sbctl)**: Secure Boot key management tool used to enroll custom keys and sign the kernel and EFI binaries. Essential for keeping Secure Boot enabled with a custom kernel.

@@ -3,111 +3,85 @@ title: "Setup-script"
 weight: 1
 ---
 
-Ik had er genoeg van om na elke herinstallatie dezelfde setup met de hand opnieuw te doen. Daarom staan de instellingen uit de handleidingen, de software die ik echt gebruik en mijn eigen aanbevolen standaarden in één script met een menu. Het laat zien wat er op jouw machine al klaar is, wat er nog openstaat en wat het toepassen van een onderdeel precies zou doen, en het verwijst naar de pagina uit de handleiding die het uitlegt.
+Ik had er genoeg van om na elke herinstallatie dezelfde setup opnieuw te doen, dus nu zit alles in één venster. Je vinkt aan wat je wilt, leest het plan en past het toe. Het venster laat ook zien wat er op jouw machine al klaar is, en elk onderdeel verwijst naar de handleiding die het uitlegt.
 
-Het richt een machine in zoals *ik* vind dat een goede Linux-machine eruit hoort te zien. Het is gebouwd en getest op de Zephyrus G16 GA605WV, maar alleen de onderdelen die met deze hardware praten maken uit welk model je hebt: de ASUS-tools, de helderheidsfix, de Wi-Fi-tuning en het fabrieks-kleurprofiel. Al het andere, de GNOME-instellingen, de sneltoetsen, de applicaties, containers en virtualisatie, is op elke laptop hetzelfde. Op andere machines staan de hardware-onderdelen als niet van toepassing en worden ze overgeslagen.
+Het richt een machine in zoals ik die zelf graag heb. Het is gebouwd en getest op de Zephyrus G16 (GA605WV), maar slechts een paar onderdelen maken uit welk model je hebt: de ASUS-tools, de helderheidsfix, de Wi-Fi-tuning en de kleurprofielen. De rest, de GNOME-instellingen, extensies, apps en virtuele machines, werkt op elke laptop.
 
 {{< callout type="warning" >}}
-Het script verandert je systeem. Het toont altijd eerst het plan en doet niets totdat je dat bevestigt, maar lees dat plan wel. Zoals alles hier is het op eigen risico.
+Het verandert je systeem. Er gebeurt niets voordat je het plan hebt gelezen en op Apply hebt gedrukt. Zoals alles hier is het op eigen risico.
 {{< /callout >}}
 
 ## Uitvoeren
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-setup.py
-echo "d7804d07c353f8d904436262754e095ed7891edbe9887b06c1e56ee6691a44aa  zephyrus-setup.py" | sha256sum -c
+echo "8a1eaa505dc72713b12fee7002cee32046ea1e31ec1915773f743e827660f249  zephyrus-setup.py" | sha256sum -c
 python3 zephyrus-setup.py
 ```
 
-Bron: [zephyrus-setup.py](/scripts/zephyrus-setup.py). SHA-256 `d7804d07c353f8d904436262754e095ed7891edbe9887b06c1e56ee6691a44aa`.
+Bron: [zephyrus-setup.py](/scripts/zephyrus-setup.py). SHA-256 `8a1eaa505dc72713b12fee7002cee32046ea1e31ec1915773f743e827660f249`.
 
-Het heeft Python 3.14 of nieuwer nodig en verder niets van Python (alleen de standaardbibliotheek). Toepassen is gebouwd voor CachyOS en andere Arch-systemen, met GNOME. Op Bazzite werken `list`, `show` en `learn`, en zegt `apply` waarom het niet draait. Het menu gebruikt dialogen als `zenity` is geïnstalleerd en anders de terminal; met `--terminal` forceer je de terminal.
+Je hebt Python 3.14 of nieuwer nodig en de GTK 4-bindings. Een standaard CachyOS-GNOME-installatie heeft die al. Zo niet: `sudo pacman -S python-gobject gtk4 libadwaita`.
 
-## Het menu
+Er zijn geen opdrachten of opties, het opent gewoon een venster. Wijzigingen werken op CachyOS en andere Arch-systemen. Overal elders, bijvoorbeeld op Bazzite, is het venster alleen-lezen: je kunt rondkijken en de handleidingen openen.
 
-Elk onderdeel heeft een status, bepaald op basis van de machine zelf:
+## Het venster
 
-| Symbool | Betekenis |
-|---|---|
-| `[x]` | Klaar |
-| `[~]` | Gedeeltelijk klaar |
-| `[ ]` | Nog te doen |
-| `[-]` | Niet van toepassing, bijvoorbeeld een ASUS-tool op een andere laptop |
-| `[?]` | Onbekend, of iets wat alleen jij kunt afmaken |
+Links staan de secties, rechts één rij per onderdeel. Een aangevinkt vakje betekent dat het onderdeel op deze machine klaar is, een streepje dat het gedeeltelijk klaar is. Vink een vakje aan om iets aan te zetten, haal het vinkje weg om het weer uit te zetten.
 
-Kies een sectie, vink aan wat je wilt en pas het toe. Bij elk onderdeel zitten nog vier dingen: **Details** (wat het precies zou doen en wat terugdraaien zou doen), **Learn more** (opent de pagina in deze handleiding die het behandelt), **Undo** (zet de aangevinkte onderdelen terug, zie [Terugdraaien](#terugdraaien)) en, voor onderdelen met een eigen script, **Open tool**. In het terminalmenu draai je onderdelen op nummer terug met `u2` of `u 2 4-6`.
+- De twee kleine knoppen op een rij openen de handleiding en laten zien wat aan- en uitvinken zou doen.
+- `AUR` markeert rijen die een pakket uit de AUR nodig hebben. `Advanced`-rijen blijven buiten **Select recommended**.
+- Als je iets aanvinkt, vinkt het venster ook aan wat dat nodig heeft, en het zegt dat erbij. Een rij die hier niet van toepassing is, is grijs met de reden erbij.
+- GNOME-extensies komen van extensions.gnome.org, dus je hebt geen browserplug-in nodig. Een extensie zonder build voor jouw GNOME-versie zegt dat, bijvoorbeeld "No build for GNOME 51 yet".
+- In het menu staan **Select recommended**, **Check again** en het logbestand.
 
-## Vanaf de opdrachtregel
+Er verandert niets voordat je op **Review and apply** drukt. Die controle toont de pakketten, wat als root draait, wat een herstart of opnieuw inloggen nodig heeft en wat er voor jou overblijft. **Show the exact commands** toont elke opdracht volledig. Als er iets mis is, blijft Apply grijs en staat de reden bovenaan.
 
-| Opdracht | Wat het doet |
-|---|---|
-| `list` | Elk onderdeel en hoe het ervoor staat. `--todo` voor alleen wat er nog open staat, `--section` voor één sectie, `--urls` om de link naar de handleiding erbij te zetten |
-| `show asus-tools` | Eén onderdeel in detail: status, plan, handmatige stappen, hoe je het terugdraait en de link. Het begin van een unieke id is genoeg |
-| `learn wsf` | Print de link naar de handleiding en opent hem in de browser |
-| `apply asus-tools nvidia-prime` | Plan, bevestig en pas die onderdelen toe |
-| `apply --recommended` | Alles wat aanbevolen is en nog niet klaar is |
-| `apply --section dev` | Elk open, niet-geavanceerd onderdeel van een sectie |
-| `apply --dry-run ...` | Toon het plan en stop. Werkt bij elke vorm van `apply` |
-| `undo wsf gnome-focus` | Plan, bevestig en zet die onderdelen terug naar de fabrieksstand. `--dry-run` toont het plan en stopt |
-| `tool backlight-fix` | Open het eigen script van een onderdeel, bijvoorbeeld de helderheidsfix |
-| `color set srgb` | Zet het ingebouwde scherm op een ASUS-kleurstand: `native`, `srgb`, `dcip3` of `displayp3`. `color` alleen toont ze |
+## Kleurstanden
 
-`--yes` slaat de bevestiging over en `--silent` zet alle dialogen en vragen uit, zodat je het vanuit een script kunt draaien. `--silent` heeft bij `apply` en `undo` ook `--yes` nodig.
+De sectie Display heeft een schakelaar die meteen werkt, zonder toepassen: **Native**, **sRGB**, **DCI-P3** en **Display P3**, dezelfde vier die G-Helper op Windows biedt. Wat elke stand op Linux doet, en wat niet kan, staat op de pagina [Kleurprofielen voor het scherm]({{< relref "/docs/hardware/color-profiles" >}}).
 
-## Wat er gebeurt als je iets toepast
+## Wat het controleert en wat het met rust laat
 
-- **Eerst het plan.** Dat noemt de pakketten (pacman, AUR, Flathub), de stappen met root, de stappen als jezelf, wat een herstart of opnieuw inloggen nodig heeft en wat er voor jou met de hand overblijft.
-- **Eén wachtwoordprompt.** Elke stap die root nodig heeft gaat in één script onder één `pkexec`-aanroep. AUR-pakketten worden gebouwd door `paru`, die elke PKGBUILD laat nakijken, dus daarvoor heb je een terminal nodig.
-- **De eigen scripts worden gecontroleerd.** De helderheidsfix, de Wi-Fi-tuning en de eduroam-setup zijn scripts op zich, elk met een SHA-256 die op de eigen pagina staat. Het setup-script gebruikt de kopie ernaast, of downloadt het script uit deze repository, en vergelijkt het met die gepubliceerde hash. Een script dat niet klopt wordt nooit uitgevoerd. Met `--ref` kies je een andere branch of tag om van op te halen, bijvoorbeeld om een wijziging te proberen voordat die gemerged is.
-- **Zo min mogelijk AUR.** Slechts vier onderdelen hebben een pakket uit de AUR nodig, en die staan in het menu gemarkeerd met `AUR`: Visual Studio Code (de Microsoft-build), Desktop Plus, wayland-scroll-factor en VMware. Apps die op Flathub staan, zoals Standard Notes en High Tide, komen daarvandaan. De AUR wordt alleen gebruikt voor een pakket dat in geen enkele repository staat: komt er later een in een repository terecht, dan installeert het script het met pacman.
-- **Riskante dingen blijven handmatig.** Het script past de bootloader of kernelparameters, PAM-bestanden en Secure Boot-sleutels niet aan en registreert geen YubiKey. Een fout in een van die dingen kan je buitensluiten. Die onderdelen tonen in plaats daarvan de stappen voor jouw bootloader, met een link naar de handleiding.
-- **Bijna alles is terug te draaien.** Zie hieronder.
+- **Eén wachtwoordprompt.** Alles wat root nodig heeft draait als één script via `pkexec`. AUR-pakketten worden door `paru` gebouwd in een terminalvenster, zodat je eerst elke PKGBUILD kunt lezen.
+- **Downloads worden gecontroleerd waar dat kan.** De eigen scripts, de kleurprofielen en Archi worden vergeleken met een SHA-256 die in het script zit, en een bestand dat niet klopt wordt nooit gebruikt. Een extensie-zip wordt gecontroleerd voordat hij wordt uitgepakt. pacman en Flatpak controleren hun eigen pakketten. De VirtIO-ISO heeft geen vaste hash, omdat Fedora hem bij elke release vervangt, dus die krijgt alleen een groottecontrole.
+- **Controles vooraf.** Pakketten uit de repositories moeten bestaan en samen te installeren zijn, wat het test met een proefrun. Het waarschuwt als pacman bezig is, als je offline bent en als je pakketdatabases oud zijn.
+- **Uitvinken is voorzichtig.** Pakketten worden één voor één verwijderd, en een pakket dat iets anders nog nodig heeft blijft staan. Instellingen gaan terug naar de GNOME-standaard, maar alleen als ze nog de waarde hebben die het script ze gaf. Pakketten die het systeem of het venster zelf nodig heeft worden nooit verwijderd. Je eigen bestanden blijven staan.
+- **Sommige dingen blijven handwerk.** Kernelparameters, PAM-bestanden en Secure Boot-sleutels kunnen je buitensluiten als het misgaat, dus de AMD PSR-fix, de YubiKey-PAM-setup en Secure Boot zijn handleidingen zonder vinkje. De helderheidsfix is de uitzondering: die draait zijn eigen script, dat een back-up bewaart en die terugzet als je het vinkje weghaalt.
+- **Een logboek.** Alles wat het draait staat in `~/.local/state/zephyrus-setup/setup.log`. Het venster kan niet worden gesloten terwijl er wijzigingen lopen.
 
-## Terugdraaien
+## Aanbevolen
 
-Terugdraaien zet een onderdeel terug naar de fabrieksstand, met dezelfde regels als toepassen: eerst het plan, het vraagt voordat het iets doet en elke stap die root nodig heeft gaat in één script onder één `pkexec`-aanroep. Alleen onderdelen die klaar of gedeeltelijk klaar zijn kun je terugdraaien.
-
-- **Het herstelt de fabrieksstand, niet je vorige waarde.** Een instelling die je zelf had aangepast gaat terug naar de standaard van GNOME of het systeem, niet naar wat het ervoor was. Een instelling die niet meer de waarde heeft die dit script gaf, blijft met rust, want die heb je sindsdien zelf veranderd.
-- **Pakketten worden één voor één verwijderd** met `pacman -Rs` of `flatpak uninstall`. Een pakket dat iets anders nog nodig heeft blijft staan en wordt gemeld, in plaats van dat het verwijderen van de rest mislukt. Je eigen data en config in je thuismap blijven staan.
-- **Sommige dingen vragen daarna om opnieuw inloggen of een herstart**, bijvoorbeeld wayland-scroll-factor. Het resultaat zegt dat erbij.
-- **Vijf onderdelen hebben geen automatische undo:** de AMD PSR-fix, de GNOME-extensies, Secure Boot, Archi en Tmog. Ze zijn handmatig of raken dingen die een script niet moet gokken. Waar er een weg terug met de hand is, print `show <id>` die.
-- **Het YubiKey-onderdeel is geblokkeerd zolang het in gebruik is.** Staat `pam_u2f` in `/etc/pam.d/sudo`, `polkit-1` of `gdm-password`, dan weigert het script de pakketten te verwijderen, want daarmee sluit je jezelf buiten je eigen login. Haal het eerst uit PAM.
-
-Zonder risico proberen kan met `undo --dry-run <id>`: dat print het plan en stopt.
-
-## De aanbevolen set
-
-`apply --recommended` is wat ik op elke verse installatie zou instellen:
+**Select recommended** vinkt deze aan, voor zover ze nog niet klaar zijn en op jouw machine van toepassing zijn:
 
 | Onderdeel | Wat het doet |
 |---|---|
-| `asus-tools` | asusctl en ROG Control Center |
-| `asus-battery-limit` | Stopt met laden op 80% |
-| `asus-ppd-mask` | Laat asusd de energieprofielen beheren |
-| `backlight-fix` | Helderheid in elke GPU-modus |
-| `nvidia-power-services` | NVIDIA suspend- en resume-units, alleen voor een driver die het videogeheugen niet zelf bewaart (niet `nvidia-open`) |
-| `nvidia-prime` | `prime-run` |
-| `display-color-modes` | Het fabrieksprofiel van het paneel plus de ASUS sRGB-, DCI-P3- en Display P3-profielen, voor color-managed apps. Ze veranderen niet hoe het bureaublad eruitziet |
-| `wifi-mt7925` | Wi-Fi-doorvoer tunen |
-| `gnome-window-buttons` | Minimaliseer- en maximaliseerknoppen |
-| `gnome-focus` | Nieuwe vensters komen naar voren |
-| `gnome-extension-manager` | Extension Manager |
-| `wsf` | Scrollsnelheid van het touchpad |
-| `git-github-cli` | Git en de GitHub CLI |
-| `git-gpg-signing` | Kleopatra en ondertekende commits |
+| asusctl and ROG Control Center | Fancurves, profielen en de Slash LED |
+| Battery charge limit of 80% | Stopt met laden op 80% |
+| Let asusd own the power profiles | Maskeert `power-profiles-daemon` |
+| Brightness in every GPU mode | De helderheidsfix, een herstart is nodig |
+| NVIDIA suspend and resume services | Alleen voor een driver die het videogeheugen niet zelf bewaart, dus niet `nvidia-open` |
+| prime-run | Draait een programma op de RTX 4060 |
+| ASUS color profiles | Het fabrieksprofiel en de ASUS sRGB-, DCI-P3- en Display P3-profielen |
+| Wi-Fi throughput tuning | Voor de MT7925-kaart |
+| Minimize and maximize buttons | GNOME toont standaard alleen de sluitknop |
+| New windows come to the front | Samen met Just Perfection |
+| Touchpad scroll speed | `wayland-scroll-factor`, uit de AUR |
+| Extension Manager en Just Perfection | Extensies zonder browserplug-in |
+| Git, de GitHub CLI en GPG-ondertekende commits | |
 
-Dingen die een kwestie van smaak zijn, zoals de Windows-achtige sneltoetsen, de applicaties en de virtualisatiestack, staan wel in het menu maar niet in de set. Dat geldt ook voor de geavanceerde onderdelen: YubiKey, Secure Boot, VMware en de AMD-fix tegen het vastlopen van het scherm.
+Smaak blijft erbuiten: de Windows-achtige sneltoetsen, de andere extensies, de apps en de virtualisatiestack staan wel in het venster, maar niet in de set. Net als de geavanceerde onderdelen: YubiKey, Secure Boot, VMware en de AMD-fix tegen het vastlopen van het scherm.
 
 ## Waar de keuzes vandaan komen
 
-De onderdelen volgen upstream waar upstream een mening heeft, en de handleidingspagina achter elk onderdeel geeft de redenering en de bronnen.
+Ik volg upstream waar upstream een mening heeft. De handleiding achter elk onderdeel geeft de redenering en de bronnen.
 
-- **ASUS-tools, profielen en `power-profiles-daemon`:** de [asusctl-documentatie van het Open Gaming Collective](https://opengamingcollective.github.io/asusctl/) en de [manual](https://github.com/OpenGamingCollective/asusctl/blob/main/MANUAL.md). `power-profiles-daemon` maskeren is wat de [Arch-](https://opengamingcollective.github.io/asusctl/distributions/arch.html) en [Bazzite-gids](https://opengamingcollective.github.io/asusctl/distributions/bazzite.html) zeggen. De [asusctl-pagina]({{< relref "/docs/hardware/asusctl-rog-control" >}}) legt uit waarom oudere gidsen het tegenovergestelde zeggen.
-- **NVIDIA suspend-units en `nvidia-powerd`:** NVIDIA's driver-README over [energiebeheer](https://download.nvidia.com/XFree86/Linux-x86_64/615.71.09/README/powermanagement.html) en [Dynamic Boost](https://download.nvidia.com/XFree86/Linux-x86_64/615.71.09/README/dynamicboost.html). De suspend-units worden overgeslagen op `nvidia-open`, dat het videogeheugen zelf bewaart; de [NVIDIA-pagina]({{< relref "/docs/cachyos/nvidia" >}}) heeft de details.
-- **Kleurstanden:** naar het voorbeeld van [G-Helper](https://github.com/seerge/g-helper), dat op Windows de ASUS-paneelprofielen laat zien.
+- **ASUS-tools en energieprofielen:** de [asusctl-documentatie van het Open Gaming Collective](https://opengamingcollective.github.io/asusctl/) en de [manual](https://github.com/OpenGamingCollective/asusctl/blob/main/MANUAL.md). `power-profiles-daemon` maskeren is wat de [Arch-](https://opengamingcollective.github.io/asusctl/distributions/arch.html) en [Bazzite-gids](https://opengamingcollective.github.io/asusctl/distributions/bazzite.html) zeggen. De [asusctl-pagina]({{< relref "/docs/hardware/asusctl-rog-control" >}}) legt uit waarom oudere gidsen het tegenovergestelde zeggen.
+- **NVIDIA suspend en `nvidia-powerd`:** NVIDIA's driver-README over [energiebeheer](https://download.nvidia.com/XFree86/Linux-x86_64/615.71.09/README/powermanagement.html) en [Dynamic Boost](https://download.nvidia.com/XFree86/Linux-x86_64/615.71.09/README/dynamicboost.html). `nvidia-open` bewaart het videogeheugen zelf, dus daar worden de suspend-units overgeslagen. De [NVIDIA-pagina]({{< relref "/docs/cachyos/nvidia" >}}) heeft de details.
+- **Kleurstanden:** [G-Helper](https://github.com/seerge/g-helper), dat op Windows de ASUS-paneelprofielen laat zien.
 - **Autologin en de YubiKey:** de [GNOME System Administrator's Guide](https://help.gnome.org/admin/system-admin-guide/stable/login-automatic.html.en) en de [pam-u2f README](https://github.com/Yubico/pam-u2f).
-- **De helderheidsfix:** uitgezocht op deze laptop, met de redenering op de pagina [Bekende problemen]({{< relref "/docs/known-issues" >}}).
+- **De helderheidsfix:** uitgezocht op deze laptop, zie [Bekende problemen]({{< relref "/docs/known-issues" >}}).
 
 ## Een onderdeel toevoegen of aanpassen
 
-Elk onderdeel is één regel in `build_items()` in het script: een id, de sectie waar het bij hoort, een korte samenvatting, de pagina in de handleiding waar het naar linkt, een functie die zijn status bepaalt en een functie die zegt wat toepassen doet. Een set pakketten is een one-liner. Pas je het script aan, draai dan `.github/scripts/check-doc-checksums.sh --apply` zodat de hash op deze pagina meegaat.
+Elk onderdeel is één regel in `build_items()` in het script: een id, een sectie, een korte samenvatting, de handleiding waar het naar linkt, een functie die zijn status bepaalt en een functie die zegt wat aanvinken doet. Een set pakketten is een one-liner. Pas je het script aan, draai dan `.github/scripts/check-doc-checksums.sh --apply` zodat de hashes in het script en die op deze pagina meegaan.
