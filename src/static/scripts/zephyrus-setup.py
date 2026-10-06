@@ -2553,8 +2553,12 @@ def off_virtio_iso(s: System, p: Plan) -> None:
 # Archi has no package. The project publishes a tarball and a SHA-256 for it next to every release, so this is
 # pinned to one release and checked, the way the guide does it by hand.
 ARCHI_VERSION = "5.10.0"
-ARCHI_URL = f"https://github.com/archimatetool/archi.io/releases/download/5.10_0/Archi-Linux64-{ARCHI_VERSION}.tgz"
 ARCHI_SHA256 = "f9422455a00a22f5340dc28692ceafe0ad720c8cde839eaafb0fab1cea57287f"
+# The project has renamed its release tags before (5.9.0, then 5.10_0, now 5.10) and the file under them stays the
+# same. The SHA-256 above is what makes any of them safe, so each spelling is tried, newest first.
+ARCHI_TAGS = ("5.10", "5.10_0", "5.10.0")
+ARCHI_BASE = "https://github.com/archimatetool/archi.io/releases/download"
+ARCHI_URLS = tuple(f"{ARCHI_BASE}/{tag}/Archi-Linux64-{ARCHI_VERSION}.tgz" for tag in ARCHI_TAGS)
 ARCHI_DIR = Path("/opt/Archi")
 
 
@@ -2576,7 +2580,18 @@ def check_archi(s: System) -> Check:
 
 
 def download_archi() -> Path:
-    data = curl_bytes(ARCHI_URL, limit=300_000_000)
+    data = None
+    for url in ARCHI_URLS:
+        try:
+            data = curl_bytes(url, limit=300_000_000)
+            break
+        except SetupError as exc:
+            if "404" not in str(exc):
+                raise
+            log.warning("archi: %s is gone, trying the next release tag", url)
+    if data is None:
+        raise SetupError("Archi's download link has moved again. Get the archive from archimatetool.com, "
+                         "the guide has the commands to check and install it")
     if sha256_of(data) != ARCHI_SHA256:
         raise SetupError("the Archi download does not match the SHA-256 the project publishes. Not installing it")
     staged, _ = stage_file(f"Archi-Linux64-{ARCHI_VERSION}.tgz", data)
@@ -2742,7 +2757,7 @@ def build_items(catalog: ExtensionCatalog) -> list[Item]:
     add(Item("display-color-profiles", "display", "ASUS color profiles",
              "The panel's factory profile and the ASUS sRGB profile, on the built-in screen "
              "in colord, for color-managed apps", "hardware/color-profiles", check_color_profiles, on_color_profiles,
-             off_color_profiles, group="Color profiles", recommended=True, hardware="g16"))
+             off_color_profiles, group="Color profiles", recommended=True, hardware="g16", needs_gnome=True))
 
     # Network
     add(Item("wifi-mt7925", "network", "Wi-Fi throughput tuning (MT7925)",
@@ -3749,6 +3764,7 @@ class ColorSection:
         self.checks: dict[str, "Gtk.CheckButton"] = {}
         self.rows: dict[str, "Adw.ActionRow"] = {}
         self.group_rows: list["Adw.ActionRow"] = []
+        self.read_more: "Gtk.Button | None" = None
         self.group = Adw.PreferencesGroup(title="Color mode", description=COLOR_INTRO)
         self.status = Adw.ActionRow(title="Reading this screen", use_markup=False, subtitle_lines=0)
         self.spinner = Gtk.Spinner(spinning=True, valign=Gtk.Align.CENTER)
@@ -3764,7 +3780,30 @@ class ColorSection:
         return [self.group, self.facts]
 
     def load(self) -> None:
+        if not self.window.backend.s.is_gnome:
+            self._elsewhere()
+            return
         background(self.controller.info, self._loaded)
+
+    def _elsewhere(self) -> None:
+        """The switch talks to GNOME's compositor. Under another desktop, say where the color settings are instead."""
+        desktop = self.window.backend.s.desktop or "this desktop"
+        self.spinner.set_visible(False)
+        self.facts.set_visible(False)
+        self.status.set_visible(True)
+        if "KDE" in desktop.upper():
+            self.status.set_title("KDE Plasma has its own color settings")
+            self.status.set_subtitle("Under Display & Monitor, pick a color profile and use the sRGB color intensity "
+                                     "slider. The guide has the commands for a terminal.")
+        else:
+            self.status.set_title("The color switch is for GNOME")
+            self.status.set_subtitle(f"{desktop} has its own display settings.")
+        if self.read_more is None:
+            self.read_more = Gtk.Button(label="Read more", valign=Gtk.Align.CENTER)
+            self.read_more.add_css_class("flat")
+            self.read_more.connect("clicked",
+                                   lambda _b: self.window.open_url(doc_url("hardware/color-profiles#on-kde-plasma")))
+            self.status.add_suffix(self.read_more)
 
     def _loaded(self, info: ColorInfo | None, error: Exception | None) -> None:
         self.spinner.set_visible(False)
