@@ -3764,7 +3764,6 @@ class ColorSection:
         self.checks: dict[str, "Gtk.CheckButton"] = {}
         self.rows: dict[str, "Adw.ActionRow"] = {}
         self.group_rows: list["Adw.ActionRow"] = []
-        self.read_more: "Gtk.Button | None" = None
         self.group = Adw.PreferencesGroup(title="Color mode", description=COLOR_INTRO)
         self.status = Adw.ActionRow(title="Reading this screen", use_markup=False, subtitle_lines=0)
         self.spinner = Gtk.Spinner(spinning=True, valign=Gtk.Align.CENTER)
@@ -3786,24 +3785,14 @@ class ColorSection:
         background(self.controller.info, self._loaded)
 
     def _elsewhere(self) -> None:
-        """The switch talks to GNOME's compositor. Under another desktop, say where the color settings are instead."""
-        desktop = self.window.backend.s.desktop or "this desktop"
+        """The switch talks to GNOME's compositor, so under any other desktop there is nothing to switch."""
+        desktop = self.window.backend.s.desktop
         self.spinner.set_visible(False)
         self.facts.set_visible(False)
         self.status.set_visible(True)
-        if "KDE" in desktop.upper():
-            self.status.set_title("KDE Plasma has its own color settings")
-            self.status.set_subtitle("Under Display & Monitor, pick a color profile and use the sRGB color intensity "
-                                     "slider. The guide has the commands for a terminal.")
-        else:
-            self.status.set_title("The color switch is for GNOME")
-            self.status.set_subtitle(f"{desktop} has its own display settings.")
-        if self.read_more is None:
-            self.read_more = Gtk.Button(label="Read more", valign=Gtk.Align.CENTER)
-            self.read_more.add_css_class("flat")
-            self.read_more.connect("clicked",
-                                   lambda _b: self.window.open_url(doc_url("hardware/color-profiles#on-kde-plasma")))
-            self.status.add_suffix(self.read_more)
+        self.status.set_title("The color switch needs GNOME")
+        note = f" This session runs {desktop}." if desktop else ""
+        self.status.set_subtitle("It talks to GNOME's compositor." + note)
 
     def _loaded(self, info: ColorInfo | None, error: Exception | None) -> None:
         self.spinner.set_visible(False)
