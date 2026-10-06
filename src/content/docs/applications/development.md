@@ -273,12 +273,12 @@ Archi's download page warns about possible UI issues on Wayland. In my experienc
 
 ![Archi download page - Linux version with Wayland note](/images/archi-download.avif)
 
-Version 5.10.0 at the time of writing. Archi publishes a SHA-256 for every download on its [download page](https://www.archimatetool.com/download/), so check the archive before you unpack it. The release tags look like `5.10_0`, not `5.10.0`, which is why an older version of this command now returns a 404.
+Version 5.10.0 at the time of writing. Archi publishes a SHA-256 for every download on its [download page](https://www.archimatetool.com/download/), so check the archive before you unpack it. The project has renamed its release tags more than once (this one is `5.10`), so if the link returns a 404, take the current one from the download page. The checksum below is for this file and stays valid.
 
 ```bash
 # Download and check
 cd /tmp
-curl -LO https://github.com/archimatetool/archi.io/releases/download/5.10_0/Archi-Linux64-5.10.0.tgz
+curl -LO https://github.com/archimatetool/archi.io/releases/download/5.10/Archi-Linux64-5.10.0.tgz
 echo "f9422455a00a22f5340dc28692ceafe0ad720c8cde839eaafb0fab1cea57287f  Archi-Linux64-5.10.0.tgz" | sha256sum -c
 
 # Extract and move to /opt
