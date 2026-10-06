@@ -9,7 +9,7 @@ ASUS kalibreert het paneel van elke GA605WV in de fabriek en levert de profielen
 
 ## Waarom van profiel wisselen in Instellingen niets doet
 
-In **Instellingen → Color** kun je een profiel aan het ingebouwde scherm toevoegen en er een kiezen. Dat bewaart de keuze in colord, en color-managed apps kunnen het gebruiken, maar GNOME past het profiel niet toe op het scherm. De compositor leest alleen de gammatabel (`vcgt`) uit een profiel, en dat is wat Night Light verandert, en geen van de ASUS-profielen heeft er een: de algemene sRGB-, DCI-P3- en Display P3-bestanden zijn kale matrixprofielen van minder dan 700 bytes. Wisselen tussen die profielen verandert dus niets wat je kunt zien. Ik heb alle vier in Instellingen geprobeerd, en Night Light veranderde het beeld terwijl de profielen dat niet deden.
+In **Instellingen → Color** kun je een profiel aan het ingebouwde scherm toevoegen en er een kiezen. Dat bewaart de keuze in colord, en color-managed apps kunnen het gebruiken, maar GNOME past het profiel niet toe op het scherm. Het paneel is gemaakt voor gekalibreerde profielen van een colorimeter. Die bevatten een gammatabel (`vcgt`) die GNOME in het scherm laadt, en apps lezen de rest. De compositor leest verder niets uit een profiel, en geen van de ASUS-profielen heeft een `vcgt`: de algemene sRGB-, DCI-P3- en Display P3-bestanden zijn kale matrixprofielen van minder dan 700 bytes. Wisselen tussen die profielen verandert dus niets wat je kunt zien. Ik heb alle vier in Instellingen geprobeerd, en Night Light veranderde het beeld terwijl de profielen dat niet deden.
 
 Dit is niet specifiek voor ASUS of deze laptop. Hetzelfde wordt upstream gemeld voor een wide gamut-monitor met een profiel zonder `vcgt`: [mutter issue 4597](https://gitlab.gnome.org/GNOME/mutter/-/issues/4597). GNOME 52 moet dat veranderen. De beeldschermconfiguratie krijgt dan een ICC-profiel en de compositor past het toe ([mutter merge request 5177](https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/5177), op het moment van schrijven nog open). Tot dat er is, kan GNOME voor het hele scherm alleen de kleurmodus hieronder.
 
@@ -45,6 +45,20 @@ Nadat je van GPU-modus wisselt (Hybrid, Integrated of Ultimate) hangt het scherm
 Op Windows draait G-Helper `AsusSplendid.exe` met een `GamutMode`-commando, en dat praat via het `ATKWMIACPIIO`-stuurprogramma met de firmware ([de broncode](https://raw.githubusercontent.com/seerge/g-helper/main/app/Display/VisualControl.cs)). Ik vond op Linux niets dergelijks: `asusctl` en de `asus-armoury`-interface van de kernel hebben `panel_overdrive` en niets voor gamut. De andere ASUS Visual-standen, bijvoorbeeld Vivid, doet dezelfde service, dus die zijn er ook niet. Native is de levendige.
 
 Wat nog ontbreekt is dat de compositor het fabrieksprofiel zelf toepast. Daarmee zou het scherm nauwkeurig zijn op basis van de gemeten waarden van jouw paneel in plaats van die in de EDID. Dat is het GNOME 52-werk hierboven.
+
+## Op KDE Plasma
+
+KDE doet wat GNOME nog niet kan. Op Wayland past Plasma 6 een ICC-profiel toe op het hele scherm, per scherm. Plasma 6.0 voegde het profiel toe, en 6.1 het profiel dat in het scherm zelf zit (uit de EDID). De schuifregelaar **sRGB color intensity** onder **Display & Monitor** verschijnt zodra je **ICC profile** of **Built-in** als kleurprofiel kiest, en loopt van nauwkeurige sRGB (0%) tot de hele gamut van het paneel (100%). Dat is G-Helper's sRGB en Native met de stappen ertussen, en het werkt live. Vanuit een terminal, met de schermnaam uit `kscreen-doctor -o`:
+
+```bash
+# het fabrieksprofiel voor het hele scherm
+kscreen-doctor output.eDP-1.colorProfileSource.ICC output.eDP-1.iccprofile.$HOME/.local/share/icc/GA605WV_1002_104D158E_CMDEF.icm
+# nauwkeurige sRGB, daarna levendig
+kscreen-doctor output.eDP-1.sdrGamut.0
+kscreen-doctor output.eDP-1.sdrGamut.100
+```
+
+Dit komt uit de release notes en de broncode van KDE. De rest van deze handleiding is voor GNOME geschreven, dus ik heb het niet op deze laptop geprobeerd, en het setup-venster stuurt KDE niet aan.
 
 ## Met de hand installeren
 

@@ -9,7 +9,7 @@ ASUS calibrates the panel of every GA605WV in the factory and ships the profiles
 
 ## Why switching profiles in Settings does nothing
 
-In **Settings → Color** you can add a profile to the built-in screen and pick one. That stores the choice in colord, and color-managed apps can use it, but GNOME does not apply the profile to the screen. The compositor only reads the gamma table (`vcgt`) out of a profile, which is what Night Light changes, and none of the ASUS profiles has one: the generic sRGB, DCI-P3 and Display P3 files are plain matrix profiles of under 700 bytes. So switching between them changes nothing you can see. I tried all four in Settings, and Night Light changed the picture while the profiles did not.
+In **Settings → Color** you can add a profile to the built-in screen and pick one. That stores the choice in colord, and color-managed apps can use it, but GNOME does not apply the profile to the screen. The panel was made for calibrated profiles from a colorimeter. Those contain a gamma table (`vcgt`) that GNOME loads into the screen, and apps read the rest. The compositor reads nothing else out of a profile, and none of the ASUS profiles has a `vcgt`: the generic sRGB, DCI-P3 and Display P3 files are plain matrix profiles of under 700 bytes. So switching between them changes nothing you can see. I tried all four in Settings, and Night Light changed the picture while the profiles did not.
 
 This is not specific to ASUS or to this laptop. The same thing is reported upstream for a wide gamut monitor with a profile and no `vcgt`: [mutter issue 4597](https://gitlab.gnome.org/GNOME/mutter/-/issues/4597). GNOME 52 is meant to change it. The display configuration then carries an ICC profile and the compositor applies it ([mutter merge request 5177](https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/5177), still open at the time of writing). Until that ships, the only thing GNOME can do for the whole screen is the color mode below.
 
@@ -45,6 +45,20 @@ After you switch GPU mode (Hybrid, Integrated or Ultimate), the screen hangs off
 On Windows, G-Helper runs `AsusSplendid.exe` with a `GamutMode` command, and that talks to the firmware through the `ATKWMIACPIIO` driver ([the source](https://raw.githubusercontent.com/seerge/g-helper/main/app/Display/VisualControl.cs)). I found nothing like it on Linux: `asusctl` and the kernel's `asus-armoury` interface have `panel_overdrive` and nothing for gamut. The other ASUS Visual modes, Vivid for example, are done by the same service, so they are not here either. Native is the vivid one.
 
 What is still missing is the compositor applying the factory profile itself. With that, the screen would be accurate from the measured values of your panel instead of the ones in its EDID. That is the GNOME 52 work above.
+
+## On KDE Plasma
+
+KDE does what GNOME cannot yet. On Wayland, Plasma 6 applies an ICC profile to the whole screen, per screen. Plasma 6.0 added the profile, and 6.1 added the profile built into the screen (from its EDID). The **sRGB color intensity** slider under **Display & Monitor** shows up once you pick **ICC profile** or **Built-in** as the color profile, and goes from accurate sRGB (0%) to the whole gamut of the panel (100%). That is G-Helper's sRGB and Native with the steps in between, and it works live. From a terminal, with the screen name from `kscreen-doctor -o`:
+
+```bash
+# the factory profile for the whole screen
+kscreen-doctor output.eDP-1.colorProfileSource.ICC output.eDP-1.iccprofile.$HOME/.local/share/icc/GA605WV_1002_104D158E_CMDEF.icm
+# accurate sRGB, then vivid
+kscreen-doctor output.eDP-1.sdrGamut.0
+kscreen-doctor output.eDP-1.sdrGamut.100
+```
+
+This comes from KDE's release notes and source. The rest of this guide is written for GNOME, so I have not tried it on this laptop, and the setup window does not drive KDE.
 
 ## Install them by hand
 
