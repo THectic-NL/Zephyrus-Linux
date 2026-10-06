@@ -12,11 +12,15 @@ Bitwarden en Proton Pass zijn allebei open source. Wissel met de tabbladen tusse
 {{< tabs >}}
 {{< tab name="Bitwarden" >}}
 
-Beschikbaar via Flathub en werkt prima. De Flatpak is geverifieerd op Flathub, dus Bitwarden publiceert hem zelf.
+Beschikbaar via Flathub en werkt prima. Bitwarden publiceert deze Flatpak zelf (Flathub markeert hem als geverifieerd) en hij werkt zichzelf bij.
 
 ```bash
 flatpak install flathub com.bitwarden.desktop
 ```
+
+CachyOS en Arch leveren ook een `bitwarden`-pakket, maar dat bouwt de distributie zelf en het loopt achter op Bitwarden's releases. Op het moment van schrijven is het 2026.3.1, wat Arch als verouderd heeft gemarkeerd, tegenover 2026.9.1 voor de Flatpak.
+
+[Bitwarden's vergelijkingstabel](https://bitwarden.com/help/desktop-app-feature-support/) noemt één addertje voor de Flatpak: ontgrendelen van de desktop-app met biometrie vraagt een Polkit-policy die je met de hand installeert.
 
 ![Bitwarden desktop app in Flathub](/images/bitwarden-flathub.avif)
 
