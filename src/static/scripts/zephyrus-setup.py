@@ -202,6 +202,8 @@ def stream(cmd: list[str], on_line: Callable[[str], None]) -> int:
     """Run a command, hand its output to on_line as it arrives, and return the exit code."""
     log.info("stream: %s", shlex.join(cmd))
     try:
+        # The script needs Python 3.14, so the warning that errors= only exists on Python 3.6+ cannot apply.
+        # nosemgrep: python.lang.compatibility.python36.python36-compatibility-Popen1
         with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
                               text=True, errors="replace", bufsize=1) as proc:
             for line in proc.stdout or []:
