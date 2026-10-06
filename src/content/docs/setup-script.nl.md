@@ -15,11 +15,11 @@ Het verandert je systeem. Er gebeurt niets voordat je het plan hebt gelezen en o
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-setup.py
-echo "56389692ed1d8635d33d07d981015f9ea6fe752713e761a95e90e9d1797206ac  zephyrus-setup.py" | sha256sum -c
+echo "1c4b7e07b5ffd9eacce6ffe0c7aadc62edc7f7716c5cde17c382ef9ded79c7c6  zephyrus-setup.py" | sha256sum -c
 python3 zephyrus-setup.py
 ```
 
-Bron: [zephyrus-setup.py](/scripts/zephyrus-setup.py). SHA-256 `56389692ed1d8635d33d07d981015f9ea6fe752713e761a95e90e9d1797206ac`.
+Bron: [zephyrus-setup.py](/scripts/zephyrus-setup.py). SHA-256 `1c4b7e07b5ffd9eacce6ffe0c7aadc62edc7f7716c5cde17c382ef9ded79c7c6`.
 
 Je hebt Python 3.14 of nieuwer nodig en de GTK 4-bindings. Een standaard CachyOS-GNOME-installatie heeft die al. Zo niet: `sudo pacman -S python-gobject gtk4 libadwaita`.
 
@@ -39,7 +39,7 @@ Er verandert niets voordat je op **Review and apply** drukt. Die controle toont 
 
 ## Kleurstanden
 
-De sectie Display heeft een schakelaar die meteen werkt, zonder toepassen: **Native**, **sRGB**, **DCI-P3** en **Display P3**, dezelfde vier die G-Helper op Windows biedt. Wat elke stand op Linux doet, en wat niet kan, staat op de pagina [Kleurprofielen voor het scherm]({{< relref "/docs/hardware/color-profiles" >}}).
+De sectie Display heeft een schakelaar die meteen werkt, zonder toepassen: **Native**, de levendige, en **sRGB**. G-Helper heeft er op Windows nog twee, DCI-P3 en Display P3, maar op Linux zouden die hetzelfde beeld tonen als Native, dus ze zijn er niet. De pagina [Kleurprofielen voor het scherm]({{< relref "/docs/hardware/color-profiles" >}}) legt dat uit, en waarom een ander profiel kiezen in GNOME's Instellingen niets doet.
 
 ## Wat het controleert en wat het met rust laat
 
@@ -62,7 +62,7 @@ De sectie Display heeft een schakelaar die meteen werkt, zonder toepassen: **Nat
 | Brightness in every GPU mode | De helderheidsfix, een herstart is nodig |
 | NVIDIA suspend and resume services | Alleen voor een driver die het videogeheugen niet zelf bewaart, dus niet `nvidia-open` |
 | prime-run | Draait een programma op de RTX 4060 |
-| ASUS color profiles | Het fabrieksprofiel en de ASUS sRGB-, DCI-P3- en Display P3-profielen |
+| ASUS color profiles | Het fabrieksprofiel van jouw paneel en het ASUS sRGB-profiel |
 | Wi-Fi throughput tuning | Voor de MT7925-kaart |
 | Minimize and maximize buttons | GNOME toont standaard alleen de sluitknop |
 | New windows come to the front | Samen met Just Perfection |

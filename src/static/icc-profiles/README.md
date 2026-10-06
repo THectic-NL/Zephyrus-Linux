@@ -49,7 +49,7 @@ Profiles were extracted from the ASUS Windows driver package by reverse engineer
 https://dlcdn-rogboxbu1.asus.com/pub/ASUS/APService/Gaming/SYS/ROGS/20016-BWVQPK-01624c1cdd5a3c05252bad472fab1240.zip
 ```
 
-The files keep ASUS's own technical names. The setup window installs them under readable names (it only rewrites the description tag) and adds them to the built-in screen in colord. Its **Color mode** switch picks the `GA605WV_*` file for your GPU and panel as **Native**, and `ASUS_sRGB`, `ASUS_DCIP3` and `ASUS_DisplayP3` for the other three modes.
+The files keep ASUS's own technical names. The setup window installs them under readable names (it only rewrites the description tag) and adds them to the built-in screen in colord. Its **Color mode** switch picks the `GA605WV_*` file for your GPU and panel as **Native** and `ASUS_sRGB` for **sRGB**. `ASUS_DCIP3` and `ASUS_DisplayP3` are not used: they describe modes that only exist on Windows, and on Linux they would tell color-managed apps something that is not true about the screen.
 
 The setup window only uses a file whose SHA-256 matches the one built into it. After changing or adding a file here, run `.github/scripts/check-doc-checksums.sh --apply`.
 
@@ -63,9 +63,9 @@ The setup window only uses a file whose SHA-256 matches the one built into it. A
 | `GA605WV_10DE_104D158E_CMDEF.icm` | NVIDIA RTX 4060 (`10DE`) | Sharp LQ160R1JW02 (`104D158E`) | For NVIDIA-primary mode |
 | `GA605WV_10DE_834C41AE_CMDEF.icm` | NVIDIA RTX 4060 (`10DE`) | Samsung ATNA60DL04-0 (`834C41AE`) | For NVIDIA-primary + Samsung panel |
 | `GA605WV_10DE_E5090C19_CMDEF.icm` | NVIDIA RTX 4060 (`10DE`) | Unknown (`E5090C19`) | For NVIDIA-primary + unknown panel |
-| `ASUS_sRGB.icm` | Any | Any | sRGB colorspace (web, photo) |
-| `ASUS_DisplayP3.icm` | Any | Any | Display P3 colorspace (Apple) |
-| `ASUS_DCIP3.icm` | Any | Any | DCI-P3 colorspace (cinema) |
+| `ASUS_sRGB.icm` | Any | Any | ASUS's sRGB mode. Used by the sRGB mode of the setup window |
+| `ASUS_DisplayP3.icm` | Any | Any | ASUS's Display P3 mode (Windows only, not used on Linux) |
+| `ASUS_DCIP3.icm` | Any | Any | ASUS's DCI-P3 mode, gamma 2.6 (Windows only, not used on Linux) |
 
 ### Install
 
@@ -79,3 +79,5 @@ cp GA605WV_1002_104D158E_CMDEF.icm ~/.local/share/icc/
 ```
 
 Then activate in **GNOME Settings** → **Color Management** → select your display → **Add Profile** → select the profile matching your GPU and panel combination.
+
+A profile tells color-managed apps what the screen does. GNOME 50 and 51 do not apply it to the screen itself, so picking one changes no colors you can see. The guide explains why, and what does change them: [Display Color Profiles](https://zephyrus-linux.thectic.nl/docs/hardware/color-profiles/).

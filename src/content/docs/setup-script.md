@@ -15,11 +15,11 @@ It changes your system. Nothing happens until you have read the plan and pressed
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-setup.py
-echo "56389692ed1d8635d33d07d981015f9ea6fe752713e761a95e90e9d1797206ac  zephyrus-setup.py" | sha256sum -c
+echo "1c4b7e07b5ffd9eacce6ffe0c7aadc62edc7f7716c5cde17c382ef9ded79c7c6  zephyrus-setup.py" | sha256sum -c
 python3 zephyrus-setup.py
 ```
 
-Source: [zephyrus-setup.py](/scripts/zephyrus-setup.py). SHA-256 `56389692ed1d8635d33d07d981015f9ea6fe752713e761a95e90e9d1797206ac`.
+Source: [zephyrus-setup.py](/scripts/zephyrus-setup.py). SHA-256 `1c4b7e07b5ffd9eacce6ffe0c7aadc62edc7f7716c5cde17c382ef9ded79c7c6`.
 
 You need Python 3.14 or newer and the GTK 4 bindings. A stock CachyOS GNOME install has them. If not: `sudo pacman -S python-gobject gtk4 libadwaita`.
 
@@ -39,7 +39,7 @@ Nothing changes until you press **Review and apply**. The review lists the packa
 
 ## Color modes
 
-The Display section has a switch that works right away, without applying: **Native**, **sRGB**, **DCI-P3** and **Display P3**, the same four G-Helper offers on Windows. What each one does on Linux, and what it cannot do, is on the [Display Color Profiles]({{< relref "/docs/hardware/color-profiles" >}}) page.
+The Display section has a switch that works right away, without applying: **Native**, which is vivid, and **sRGB**. G-Helper has two more on Windows, DCI-P3 and Display P3, but on Linux they would show the same picture as Native, so they are not here. The [Display Color Profiles]({{< relref "/docs/hardware/color-profiles" >}}) page explains that, and why picking another profile in GNOME's Settings does nothing.
 
 ## What it checks and what it leaves alone
 
@@ -62,7 +62,7 @@ The Display section has a switch that works right away, without applying: **Nati
 | Brightness in every GPU mode | The brightness fix, needs a reboot |
 | NVIDIA suspend and resume services | Only for a driver that does not save video memory itself, so not `nvidia-open` |
 | prime-run | Runs a program on the RTX 4060 |
-| ASUS color profiles | The factory profile and the ASUS sRGB, DCI-P3 and Display P3 profiles |
+| ASUS color profiles | The factory profile of your panel and the ASUS sRGB profile |
 | Wi-Fi throughput tuning | For the MT7925 card |
 | Minimize and maximize buttons | GNOME only shows the close button |
 | New windows come to the front | Together with Just Perfection |

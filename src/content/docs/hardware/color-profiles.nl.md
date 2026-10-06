@@ -5,7 +5,13 @@ prev: docs/hardware/asusctl-rog-control
 next: docs/desktop/gnome-extensions
 ---
 
-ASUS kalibreert het paneel van elke GA605WV in de fabriek en levert de profielen mee in het Windows-driverpakket. Op Linux past niets ze uit zichzelf toe, dus het ingebouwde scherm blijft op de standaardinstelling staan totdat je ze installeert. Het [setup-venster]({{< relref "/docs/setup-script" >}}) installeert ze voor je en wisselt tussen de standen, zoals G-Helper dat op Windows doet.
+ASUS kalibreert het paneel van elke GA605WV in de fabriek en levert de profielen mee in het Windows-driverpakket. Ze staan in deze repository. Het [setup-venster]({{< relref "/docs/setup-script" >}}) installeert het fabrieksprofiel van jouw paneel en wisselt het scherm tussen **Native** en **sRGB**, de twee G-Helper-standen die op Linux iets betekenen.
+
+## Waarom van profiel wisselen in Instellingen niets doet
+
+In **Instellingen → Color** kun je een profiel aan het ingebouwde scherm toevoegen en er een kiezen. Dat bewaart de keuze in colord, en color-managed apps kunnen het gebruiken, maar GNOME past het profiel niet toe op het scherm. De compositor leest alleen de gammatabel (`vcgt`) uit een profiel, en dat is wat Night Light verandert, en geen van de ASUS-profielen heeft er een: de algemene sRGB-, DCI-P3- en Display P3-bestanden zijn kale matrixprofielen van minder dan 700 bytes. Wisselen tussen die profielen verandert dus niets wat je kunt zien. Ik heb alle vier in Instellingen geprobeerd, en Night Light veranderde het beeld terwijl de profielen dat niet deden.
+
+Dit is niet specifiek voor ASUS of deze laptop. Hetzelfde wordt upstream gemeld voor een wide gamut-monitor met een profiel zonder `vcgt`: [mutter issue 4597](https://gitlab.gnome.org/GNOME/mutter/-/issues/4597). GNOME 52 moet dat veranderen. De beeldschermconfiguratie krijgt dan een ICC-profiel en de compositor past het toe ([mutter merge request 5177](https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/5177), op het moment van schrijven nog open). Tot dat er is, kan GNOME voor het hele scherm alleen de kleurmodus hieronder.
 
 ## Van stand wisselen
 
@@ -13,34 +19,40 @@ Open het setup-venster en ga naar **Display**. De schakelaar **Color mode** werk
 
 | Stand | Wat je ziet | Wat color-managed apps te horen krijgen |
 |---|---|---|
-| **Native** | Het paneel zoals het is, met zijn hele brede gamut. sRGB-inhoud ziet er levendig en een beetje oververzadigd uit | Het fabrieksprofiel van jouw paneel |
+| **Native** | Levendig. Het paneel zoals het is, met zijn hele brede gamut, zodat sRGB-inhoud erop wordt uitgerekt | Het fabrieksprofiel van jouw paneel |
 | **sRGB** | Kleuren zoals sRGB-inhoud bedoeld is | Het ASUS sRGB-profiel |
-| **DCI-P3** | Hetzelfde beeld als Native | Het ASUS DCI-P3-profiel |
-| **Display P3** | Hetzelfde beeld als Native | Het ASUS Display P3-profiel |
 
-Alleen **sRGB** verandert het beeld, en het heeft GNOME 50 of nieuwer op Wayland nodig. Het gebruikt GNOME's eigen kleurmodus `sdr-native`: GNOME leest de echte primaire kleuren van het paneel uit de EDID en zet sRGB-inhoud daarop om. Dat is een omzetting in software, het paneel zelf verandert niet. Op een oudere GNOME verandert de schakelaar alleen het profiel.
+**sRGB** heeft GNOME 50 of nieuwer op Wayland nodig. Het gebruikt GNOME's eigen kleurmodus `sdr-native`: GNOME leest de primaire kleuren, het witpunt en de gamma van het paneel uit de EDID en zet sRGB-inhoud daarop om. Dat is een omzetting in software, het paneel zelf verandert niet. Apps die Wayland color management ondersteunen kunnen er ook de hele gamut van het paneel mee gebruiken. GNOME biedt de modus alleen aan als de EDID alle drie heeft, en Instellingen heeft er geen schakelaar voor. De prijs is dat apps op volledig scherm de compositor meestal niet meer kunnen overslaan (direct scanout), dus een spel op volledig scherm kan wat meer vertraging krijgen. Schakel daarvoor terug naar Native als dat uitmaakt.
 
-De twee P3-standen vertellen alleen aan color-managed apps, zoals beeldbewerking, wat ze van het scherm kunnen verwachten. Voor het bureaublad zelf zien ze eruit als Native. Een snelle controle: open een kleurrijke afbeelding en wissel tussen Native en sRGB. Native hoort de meest verzadigde te zijn.
+Om te zien dat het werkt, toont het venster vijf verzadigde kleuren onder **Compare the colors**. In sRGB horen de rode en groene er rustiger uit te zien dan in Native.
 
-De Display-pagina van het venster toont ook het model, het paneel, de GPU waar het scherm aan hangt en hoeveel van sRGB en DCI-P3 het paneel dekt, voor zover de EDID dat zegt.
+Verandert er niets, kijk dan bij **This screen** op dezelfde pagina. **GNOME color mode** toont wat GNOME nu gebruikt en **GNOME offers** noemt wat het voor dit scherm kan. `sdr-native` moet in die lijst staan. `gdctl show --properties` toont hetzelfde onder `supported-color-modes`. **Copy details** zet alles wat het venster weet op het klembord, en dat is wat een bugmelding nodig heeft.
+
+### Waarom geen DCI-P3 of Display P3
+
+Het fabrieksprofiel van het IPS-paneel zegt dat het uit zichzelf ongeveer 94% van DCI-P3 dekt (het OLED-paneel dekt alles), dus Native is al de wide gamut-stand. G-Helper toont DCI-P3 en Display P3 op Windows omdat de eigen service van ASUS erheen kan schakelen: het toont een stand alleen als het bijbehorende profielbestand bestaat, en vraagt dan `AsusSplendid.exe` om de omschakeling. De profielen beschrijven het paneel nadat die omschakeling is gedaan.
+
+Op Linux doet niets die omschakeling. Een P3-stand zou hetzelfde beeld tonen als Native terwijl het color-managed apps vertelt dat het scherm DCI-P3 is, met een gamma van 2,6 waar het paneel ongeveer 2,15 heeft. Hun kleuren zouden verkeerd uitvallen. Daarom biedt het venster die twee standen niet aan, en installeert het alleen het profiel van jouw paneel en het sRGB-profiel.
 
 ### Hoe het de juiste profielen vindt
 
-G-Helper haalt de modelcode uit de BIOS-versie (`GA605WV.309` is een GA605WV) en gebruikt die om het profielpakket voor dat model bij ASUS op te halen. Het setup-venster doet dezelfde opzoeking. Daarna kiest het het fabrieksprofiel dat bij jouw GPU en paneel past. Dat staat in de bestandsnaam: het model, de GPU (`1002` is AMD, `10DE` is NVIDIA) en de paneel-ID uit de EDID, bijvoorbeeld `GA605WV_1002_104D158E_CMDEF`. De profielen staan in deze repository, dus er wordt niets bij ASUS gedownload, en elk bestand wordt gecontroleerd met een SHA-256 die in het script zit. De drie algemene (sRGB, DCI-P3, Display P3) zijn voor elk paneel hetzelfde.
+G-Helper haalt de modelcode uit de BIOS-versie (`GA605WV.309` is een GA605WV) en gebruikt die om het profielpakket voor dat model bij ASUS op te halen. Het setup-venster doet dezelfde opzoeking. Daarna kiest het het fabrieksprofiel dat bij jouw GPU en paneel past. Dat staat in de bestandsnaam: het model, de GPU (`1002` is AMD, `10DE` is NVIDIA) en de paneel-ID uit de EDID, bijvoorbeeld `GA605WV_1002_104D158E_CMDEF`. De profielen staan in deze repository, dus er wordt niets bij ASUS gedownload, en elk bestand wordt gecontroleerd met een SHA-256 die in het script zit.
 
 Nadat je van GPU-modus wisselt (Hybrid, Integrated of Ultimate) hangt het scherm aan een andere GPU en krijgt het een eigen profiel. Pas **ASUS color profiles** in het setup-venster dan nog een keer toe.
 
 ### Wat Linux niet kan
 
-Op Windows wisselt G-Helper de gamut van het paneel met ASUS's eigen software. Het draait `AsusSplendid.exe` met een `GamutMode`-commando, en dat praat via het `ATKWMIACPIIO`-stuurprogramma met de firmware ([de broncode](https://raw.githubusercontent.com/seerge/g-helper/main/app/Display/VisualControl.cs)). Ik vond op Linux niets dergelijks: `asusctl` en de `asus-armoury`-interface van de kernel hebben `panel_overdrive` en niets voor gamut. De andere ASUS Visual-standen, bijvoorbeeld Vivid, zijn ook firmware, dus die zijn er ook niet. Native is de levendige.
+Op Windows draait G-Helper `AsusSplendid.exe` met een `GamutMode`-commando, en dat praat via het `ATKWMIACPIIO`-stuurprogramma met de firmware ([de broncode](https://raw.githubusercontent.com/seerge/g-helper/main/app/Display/VisualControl.cs)). Ik vond op Linux niets dergelijks: `asusctl` en de `asus-armoury`-interface van de kernel hebben `panel_overdrive` en niets voor gamut. De andere ASUS Visual-standen, bijvoorbeeld Vivid, doet dezelfde service, dus die zijn er ook niet. Native is de levendige.
 
-Een profiel op zich verandert het beeld niet. GNOME leest er alleen de gammatabel (`vcgt`) uit, en dat is wat Night Light verandert, en geen van de vier ASUS-profielen heeft er een: de sRGB-, DCI-P3- en Display P3-bestanden zijn kale matrixprofielen van ongeveer 640 bytes. Ik heb alle vier in Instellingen geprobeerd zonder iets anders om te zetten. Er veranderde niets, terwijl Night Light wel iets veranderde. Daarom gebruikt de sRGB-stand GNOME's kleurmodus en is het profiel er alleen voor de apps.
-
-De sRGB-, DCI-P3- en Display P3-profielen beschrijven het paneel *nadat* ASUS's hardware-schakelaar is omgezet. Zonder die schakelaar vertellen ze color-managed apps iets wat niet klopt voor DCI-P3 en Display P3, dus **Native** is de veiligste om actief te laten.
+Wat nog ontbreekt is dat de compositor het fabrieksprofiel zelf toepast. Daarmee zou het scherm nauwkeurig zijn op basis van de gemeten waarden van jouw paneel in plaats van die in de EDID. Dat is het GNOME 52-werk hierboven.
 
 ## Met de hand installeren
 
 Het setup-venster doet dit allemaal. Dit is voor als je het zelf wilt doen. Niets hier is distributie-specifiek, behalve waar een profiel mag staan: `/usr/share` is beschrijfbaar op CachyOS en read-only op Bazzite. De locatie per gebruiker werkt op allebei hetzelfde, dus als je maar één account gebruikt, neem dan die.
+
+{{< callout type="warning" >}}
+Voeg alleen het bestand toe dat bij jouw GPU en paneel past. De algemene bestanden `ASUS_sRGB`, `ASUS_DCIP3` en `ASUS_DisplayP3` beschrijven de standen waar de Windows-service van ASUS naartoe schakelt. Op Linux actief gezet vertellen ze color-managed apps iets wat niet klopt over je scherm. `ASUS_sRGB` past alleen zolang het scherm in de sRGB-stand van het setup-venster staat.
+{{< /callout >}}
 
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
