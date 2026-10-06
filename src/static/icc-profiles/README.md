@@ -49,7 +49,9 @@ Profiles were extracted from the ASUS Windows driver package by reverse engineer
 https://dlcdn-rogboxbu1.asus.com/pub/ASUS/APService/Gaming/SYS/ROGS/20016-BWVQPK-01624c1cdd5a3c05252bad472fab1240.zip
 ```
 
-The files keep ASUS's own technical names. The setup script (`zephyrus-setup.py`) installs them under readable names (it only rewrites the description tag) and adds them to the built-in screen in colord.
+The files keep ASUS's own technical names. The setup window installs them under readable names (it only rewrites the description tag) and adds them to the built-in screen in colord. Its **Color mode** switch picks the `GA605WV_*` file for your GPU and panel as **Native**, and `ASUS_sRGB`, `ASUS_DCIP3` and `ASUS_DisplayP3` for the other three modes.
+
+The setup window only uses a file whose SHA-256 matches the one built into it. After changing or adding a file here, run `.github/scripts/check-doc-checksums.sh --apply`.
 
 ### Files
 
