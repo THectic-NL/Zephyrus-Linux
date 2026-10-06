@@ -78,7 +78,7 @@ Gewoon de hostname instellen via Systeeminstellingen zodat de machine een fatsoe
 
 ### GNOME-vensterknoppen: minimize en maximize terug
 
-Standaard toont GNOME 50 alleen de sluitknop. Eén commando lost het op:
+Standaard toont GNOME alleen de sluitknop. Eén commando lost het op:
 
 ```bash
 gsettings set org.gnome.desktop.wm.preferences button-layout 'appmenu:minimize,maximize,close'

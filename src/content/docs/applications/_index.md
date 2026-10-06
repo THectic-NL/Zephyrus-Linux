@@ -78,7 +78,7 @@ Nothing special here, just set the hostname via System Settings so the machine h
 
 ### GNOME window buttons: adding minimize & maximize back
 
-By default, GNOME 50 only shows the close button. One command fixes it:
+By default, GNOME only shows the close button. One command fixes it:
 
 ```bash
 gsettings set org.gnome.desktop.wm.preferences button-layout 'appmenu:minimize,maximize,close'

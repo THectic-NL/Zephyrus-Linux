@@ -5,7 +5,7 @@ prev: docs/desktop/astra-monitor
 next: docs/security/autologin
 ---
 
-As of GNOME 50, there is still no way to natively change trackpad scroll speed on Linux. Not in Settings, not anywhere. KDE Plasma has had this for years. The community has been asking for it for a long time too, with merge requests open in [mutter](https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1840) and [GNOME Control Center](https://gitlab.gnome.org/GNOME/gnome-control-center/-/merge_requests/991) that have gone essentially nowhere. See the [GNOME Discourse thread](https://discourse.gnome.org/t/adding-scroll-speed-setting-in-gnome/25893) for the full history.
+As of GNOME 51, there is still no way to natively change trackpad scroll speed on Linux. Not in Settings, not anywhere. KDE Plasma has had this for years. The community has been asking for it for a long time too, with merge requests open in [mutter](https://gitlab.gnome.org/GNOME/mutter/-/merge_requests/1840) and [GNOME Control Center](https://gitlab.gnome.org/GNOME/gnome-control-center/-/merge_requests/991) that have gone essentially nowhere. See the [GNOME Discourse thread](https://discourse.gnome.org/t/adding-scroll-speed-setting-in-gnome/25893) for the full history.
 
 Two third-party tools fill this gap. **wayland-scroll-factor** is the recommended option; **libinput-config** is the older system-wide alternative that's more awkward to set up.
 

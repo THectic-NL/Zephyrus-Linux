@@ -124,6 +124,8 @@ echo 'vmnet8 = "yes"' | sudo tee -a /etc/vmware/networking
 
 Op GNOME 49 met Wayland kan toetsenbordinvoer onjuist werken in VMware VM's. XWayland-toetsenbordovername moet expliciet worden toegestaan voor VMware-processen.
 
+Dit is gevonden op GNOME 49. Probeer op een nieuwere GNOME eerst de VM: werkt het toetsenbord zonder deze fix, sla die dan over.
+
 ```bash
 gsettings set org.gnome.mutter.wayland xwayland-allow-grabs true
 gsettings set org.gnome.mutter.wayland xwayland-grab-access-rules "['vmware', 'vmware-vmx']"
