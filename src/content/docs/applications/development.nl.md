@@ -273,16 +273,20 @@ Archi's download pagina waarschuwt voor mogelijke UI-problemen op Wayland. In mi
 
 ![Archi download pagina - Linux versie met Wayland notitie](/images/archi-download.avif)
 
-```bash
-# Download en extract
-cd /tmp
-curl -L https://github.com/archimatetool/archi.io/releases/download/5.9.0/Archi-Linux64-5.9.0.tgz | tar -xz
+Versie 5.10.0 op het moment van schrijven. Archi publiceert een SHA-256 voor elke download op de [downloadpagina](https://www.archimatetool.com/download/), dus controleer het archief voordat je het uitpakt. Het project heeft zijn release-tags al vaker hernoemd (deze heet `5.10`), dus geeft de link een 404, neem dan de actuele van de downloadpagina. De checksum hieronder is voor dit bestand en blijft geldig.
 
-# Verplaats naar /opt
-sudo mv Archi-Linux64-5.9.0/Archi /opt/
+```bash
+# Download en controleer
+cd /tmp
+curl -LO https://github.com/archimatetool/archi.io/releases/download/5.10/Archi-Linux64-5.10.0.tgz
+echo "f9422455a00a22f5340dc28692ceafe0ad720c8cde839eaafb0fab1cea57287f  Archi-Linux64-5.10.0.tgz" | sha256sum -c
+
+# Pak uit en verplaats naar /opt
+tar -xzf Archi-Linux64-5.10.0.tgz
+sudo mv Archi /opt/
 
 # Cleanup
-rm -rf Archi-Linux64-5.9.0
+rm Archi-Linux64-5.10.0.tgz
 cd ~
 
 # Maak symlink zodat je 'archi' kunt aanroepen vanuit de terminal
@@ -316,6 +320,8 @@ Vervang `__ICON__` met het werkelijke pad (het bevat een build-timestamp die per
 ```bash
 find /opt/Archi/plugins -name "app-128.png" | head -1
 ```
+
+Het [setup-venster]({{< relref "/docs/setup-script" >}}) doet dit allemaal voor je: het downloadt deze versie, controleert hem met dezelfde SHA-256, zet hem in `/opt/Archi` en voegt de launcher en het `archi`-commando toe.
 
 Na opslaan verschijnt Archi in de GNOME app launcher:
 

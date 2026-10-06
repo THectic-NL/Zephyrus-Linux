@@ -124,6 +124,8 @@ echo 'vmnet8 = "yes"' | sudo tee -a /etc/vmware/networking
 
 On GNOME 49 with Wayland, keyboard input may not work correctly inside VMware VMs. XWayland keyboard grab needs to be explicitly permitted for VMware processes.
 
+This was found on GNOME 49. On a newer GNOME, try the VM first: if the keyboard works without this fix, skip it.
+
 ```bash
 gsettings set org.gnome.mutter.wayland xwayland-allow-grabs true
 gsettings set org.gnome.mutter.wayland xwayland-grab-access-rules "['vmware', 'vmware-vmx']"

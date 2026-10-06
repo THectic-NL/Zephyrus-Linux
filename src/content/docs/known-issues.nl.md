@@ -48,6 +48,12 @@ Geprobeerd met `token-timeout=30` in crypttab en `rd.udev.settle-timeout=10` als
 **Status:**
 Nog steeds onopgelost, bijgehouden als [#108](https://github.com/THectic-NL/Zephyrus-Linux/issues/108). Onduidelijk of dit een echt hardware/firmware timingprobleem is, iets specifiek voor dit apparaat, of een configuratiefout van mijn kant. Mogelijk later nog een keer opgepakt. Voorlopig gebruik ik de YubiKey voor `sudo` en de GNOME-schermvergrendeling.
 
+**Nog te proberen:**
+
+- Opnieuw testen op een nieuwere systemd, en op een koude start tegenover een warme herstart, om te bevestigen dat warme herstarts het probleem zijn.
+- Het USB HID-stuurprogramma eerder laden, met `rd.driver.pre=usbhid` of een expliciete module in de initramfs, zodat de HID-stack er is voordat de token-query komt.
+- Als het alleen bij een warme herstart misgaat en ik het kan reproduceren, het bij systemd melden met het initramfs-log.
+
 Zie de sectie **Dingen die ik graag werkend had gezien** onderaan deze pagina voor de volledige context.
 
 {{% /details %}}

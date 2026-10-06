@@ -11,6 +11,8 @@ GNOME Shell-extensies zijn hoe dit bureaublad de dingen doet die het standaard n
 
 extensions.gnome.org wil een browserextensie plus een native-host-connector voordat je iets vanaf de website kunt installeren. Staat dat niet klaar, of heb je er geen zin in, sla het dan over en gebruik **Extension Manager**. Die praat rechtstreeks met GNOME Shell en heeft een eigen Bladeren-tabblad met dezelfde catalogus.
 
+Het [setup-venster]({{< relref "/docs/setup-script" >}}) kan hetzelfde voor de extensies op deze pagina: het installeert ze van extensions.gnome.org, zet ze aan en uit, en meldt het als er nog geen build voor jouw GNOME-versie is.
+
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
 
@@ -38,7 +40,7 @@ Extensies die je zo installeert staan in `~/.local/share/gnome-shell/extensions/
 
 ### PiP on Top
 
-[PiP on Top](https://extensions.gnome.org/extension/4691/pip-on-top/) van [Rafostar](https://github.com/Rafostar) houdt Picture-in-Picture-vensters bovenop alles, ook op Wayland, wat GNOME zelf niet doet. Hij is gebouwd voor Firefox maar werkt ook met een paar andere browsers. Ik gebruik deze constant, meestal om een video in de hoek te laten staan terwijl ik ergens anders in werk.
+[PiP on Top](https://extensions.gnome.org/extension/4691/pip-on-top/) van [Rafostar](https://github.com/Rafostar) houdt Picture-in-Picture-vensters bovenop alles, ook op Wayland, wat GNOME zelf niet doet. Hij is gebouwd voor Firefox maar werkt ook met een paar andere browsers. Ik gebruik deze constant, meestal om een video in de hoek te laten staan terwijl ik ergens anders in werk. Op het moment van schrijven houdt de nieuwste build op bij GNOME 50, dus op GNOME 51 blijft hij verouderd totdat er een update komt (zie [GNOME 51]({{< relref "/docs/desktop#gnome-51" >}})).
 
 - [extensions.gnome.org](https://extensions.gnome.org/extension/4691/pip-on-top/)
 - [Broncode op GitHub](https://github.com/Rafostar/gnome-shell-extension-pip-on-top)

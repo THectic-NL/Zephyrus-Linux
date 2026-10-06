@@ -48,6 +48,12 @@ Tried with `token-timeout=30` in crypttab and `rd.udev.settle-timeout=10` as a k
 **Status:**
 Still unresolved, tracked as [#108](https://github.com/THectic-NL/Zephyrus-Linux/issues/108). Not sure if this is a real hardware/firmware timing issue, something specific to this machine, or a misconfiguration on my end. Possibly revisiting later. For now, the YubiKey is used for `sudo` and the GNOME lock screen instead.
 
+**Next things to try:**
+
+- Retest on a newer systemd, and on a cold boot versus a warm reboot, to confirm that warm reboots are the problem.
+- Load the USB HID driver earlier, with `rd.driver.pre=usbhid` or an explicit module in the initramfs, so the HID stack is up before the token query.
+- If it only fails on a warm reboot and I can reproduce it, report it upstream to systemd with the initramfs log.
+
 See the **Things I Wished Had Worked** section at the bottom of this page for the full context.
 
 {{% /details %}}

@@ -8,12 +8,12 @@ toc: false
 
 This is how I like Linux, written down so I can rebuild it quickly and so you can build the same one. It is built around the one laptop I own, the ROG Zephyrus G16 (GA605WV), and covers the two distributions I'd recommend on it: **CachyOS** and **Bazzite**.
 
-It is opinionated. These are my favorite settings and the software I actually use, not a survey of every option, and most of it is turned into a script. If something here helps you, good. If you run into something I haven't covered, get in touch.
+It is opinionated. These are my favorite settings and the software I actually use, not a survey of every option, and most of it is turned into a setup window. If something here helps you, good. If you run into something I haven't covered, get in touch.
 
 ## Set up a machine like mine
 
 {{< cards >}}
-  {{< card link="/docs/setup-script" title="Setup script" subtitle="A menu that shows what is done and what is open on your machine, and sets up my recommended defaults, with a guide link for every step." >}}
+  {{< card link="/docs/setup-script" title="Setup script" subtitle="A checklist that shows what is done and what is open on your machine, and sets up my recommended defaults, with a guide link for every step." >}}
 {{< /cards >}}
 
 ## What is specific to this laptop

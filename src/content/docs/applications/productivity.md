@@ -5,11 +5,56 @@ prev: docs/applications/browser
 next: docs/applications/development
 ---
 
-### Bitwarden
+### Password manager
 
-Password manager. Available via Flathub and works well.
+Bitwarden and Proton Pass are both open source. Use the tabs to switch between them.
+
+{{< tabs >}}
+{{< tab name="Bitwarden" >}}
+
+Available via Flathub and works well. Bitwarden publishes this Flatpak itself (Flathub marks it as verified) and it updates itself.
+
+```bash
+flatpak install flathub com.bitwarden.desktop
+```
+
+CachyOS and Arch also ship a `bitwarden` package, but the distribution builds that one and it trails Bitwarden's releases. At the time of writing it is 2026.3.1, which Arch has flagged as out of date, against 2026.9.1 for the Flatpak.
+
+[Bitwarden's feature table](https://bitwarden.com/help/desktop-app-feature-support/) lists one catch for the Flatpak: unlocking the desktop app with biometrics needs a Polkit policy that you install by hand.
 
 ![Bitwarden desktop app in Flathub](/images/bitwarden-flathub.avif)
+
+{{< /tab >}}
+{{< tab name="Proton Pass" >}}
+
+Proton Pass is made by Proton, the company behind Proton Mail (below). It has a free plan.
+
+**CachyOS / Arch (recommended):**
+
+The [CachyOS repository](https://packages.cachyos.org/package/cachyos/x86_64/proton-pass) ships `proton-pass`, built from source. It runs on the system Electron, so Electron updates come with the rest of your system.
+
+```bash
+sudo pacman -S proton-pass
+```
+
+**Flatpak (Bazzite, or an alternative):**
+
+```bash
+flatpak install flathub me.proton.Pass
+```
+
+Flathub does not list this Flatpak as verified, so it is not confirmed to come from Proton. Proton's own [Linux guide](https://proton.me/support/set-up-proton-pass-linux) only offers `.deb` and `.rpm` files.
+
+![Proton Pass desktop app](/images/proton-pass.avif)
+
+**Browser extension**
+
+The extension is what fills in logins in your browser. Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/proton-pass-free-password/ghmbeldphafepmbegfdlkpapadhbakde) for Brave and other Chromium browsers, or from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/proton-pass/). Proton then opens a page that tells you to pin it to the toolbar and sign in.
+
+![The page Proton opens after installing the extension](/images/proton-pass-extension.avif)
+
+{{< /tab >}}
+{{< /tabs >}}
 
 ### Signal Messenger
 

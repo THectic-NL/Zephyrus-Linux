@@ -11,6 +11,8 @@ GNOME Shell extensions are how this desktop gets the things it doesn't do out of
 
 extensions.gnome.org wants a browser add-on plus a native host connector before it lets you install anything from the website. If that's not set up, or you can't be bothered, skip it and use **Extension Manager** instead. It talks to GNOME Shell directly and has its own Browse tab with the same catalog.
 
+The [setup window]({{< relref "/docs/setup-script" >}}) can do the same for the extensions on this page: it installs them from extensions.gnome.org, switches them on and off, and tells you when there is no build for your GNOME version yet.
+
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
 
@@ -38,7 +40,7 @@ Extensions installed this way live in `~/.local/share/gnome-shell/extensions/`, 
 
 ### PiP on Top
 
-[PiP on Top](https://extensions.gnome.org/extension/4691/pip-on-top/) by [Rafostar](https://github.com/Rafostar) keeps Picture-in-Picture windows on top of everything else, even on Wayland, which GNOME doesn't do on its own. It's built for Firefox but works with a few other browsers too. I use this one constantly, mostly to keep a video in the corner while I'm working in something else.
+[PiP on Top](https://extensions.gnome.org/extension/4691/pip-on-top/) by [Rafostar](https://github.com/Rafostar) keeps Picture-in-Picture windows on top of everything else, even on Wayland, which GNOME doesn't do on its own. It's built for Firefox but works with a few other browsers too. I use this one constantly, mostly to keep a video in the corner while I'm working in something else. At the time of writing its newest build stops at GNOME 50, so on GNOME 51 it stays out of date until an update is published (see [GNOME 51]({{< relref "/docs/desktop#gnome-51" >}})).
 
 - [extensions.gnome.org](https://extensions.gnome.org/extension/4691/pip-on-top/)
 - [Source on GitHub](https://github.com/Rafostar/gnome-shell-extension-pip-on-top)

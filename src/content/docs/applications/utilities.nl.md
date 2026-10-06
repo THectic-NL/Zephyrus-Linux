@@ -23,7 +23,7 @@ Zet "Run in the background" en "Minimize on exit" in op Smile's instellingen. Di
 
 **GNOME extensie**
 
-Installeer de [Smile complementaire extensie](https://extensions.gnome.org/extension/6096/smile-complementary-extension/) om automatisch emoji plakken op Wayland in te schakelen. Zonder het kan Smile alleen naar clipboard kopiëren.
+Installeer de [Smile complementaire extensie](https://extensions.gnome.org/extension/6096/smile-complementary-extension/) om automatisch emoji plakken op Wayland in te schakelen. Zonder het kan Smile alleen naar clipboard kopiëren. Op het moment van schrijven houdt de nieuwste build op bij GNOME 50, dus op GNOME 51 is hij verouderd totdat er een update komt (zie [GNOME 51]({{< relref "/docs/desktop#gnome-51" >}})).
 
 {{< callout type="warning" >}}
 In de Smile instellingen onder "Paste emojis automatically", zorg dat de extensie toggle is ingeschakeld na installatie.
@@ -193,3 +193,38 @@ Er bestaan ook unofficial AUR-packages (`tmog-bin`, `tmog-appimage`), maar de of
 Retro vormgegeven, animeert op 60 Hz in plaats van de gebruikelijke eens-per-seconde refresh, en geeft een behoorlijk diepe per-proces uitsplitsing, tot en met schijf- en netwerk-I/O per PID:
 
 ![Task Manager TMOG - Processes](/images/tmog-processes.avif)
+
+### Calibre: e-boekenbibliotheek
+
+[Calibre](https://calibre-ebook.com/) beheert een bibliotheek met e-books: het houdt je boeken gesorteerd, zet ze om tussen formaten en stuurt ze naar een e-reader. Ik gebruik het met een Kobo Libra 2 in plaats van Kobo Desktop.
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+In de Arch-repository `extra`, dus de AUR is niet nodig.
+
+```bash
+sudo pacman -S calibre
+```
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+```bash
+flatpak install flathub com.calibre_ebook.calibre
+```
+
+Deze Flatpak wordt niet door het Calibre-project zelf gepubliceerd.
+
+{{< /tab >}}
+{{< /tabs >}}
+
+![De Calibre-website op calibre-ebook.com](/images/calibre-website.avif)
+
+De bibliotheek toont je boeken als omslagen, met rechts de details van het geselecteerde boek. De werkbalk heeft wat je het vaakst gebruikt: boeken toevoegen, metadata bewerken, converteren en naar je apparaat sturen. De schermafbeelding toont een voorbeeldbibliotheek met boeken uit het publieke domein.
+
+![Calibre met een voorbeeldbibliotheek in de omslagweergave](/images/calibre-library.avif)
+
+{{< callout type="warning" >}}
+**Stel een nieuwe e-reader eerst op het apparaat zelf in.** Calibre kan geen e-reader instellen, het kan er alleen een beheren die al is ingesteld. De meeste e-readers hebben een internetverbinding nodig voordat ze iets doen, dus verbind de reader eerst op zijn eigen scherm met een wifi-netwerk. Daarna kan Calibre de boekenbibliotheek erop beheren.
+{{< /callout >}}

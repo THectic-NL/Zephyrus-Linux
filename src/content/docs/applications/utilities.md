@@ -23,7 +23,7 @@ Enable "Run in the background" and "Minimize on exit" in Smile's settings. This 
 
 **GNOME extension**
 
-Install the [Smile complementary extension](https://extensions.gnome.org/extension/6096/smile-complementary-extension/) to enable automatic emoji pasting on Wayland. Without it, Smile can only copy to clipboard.
+Install the [Smile complementary extension](https://extensions.gnome.org/extension/6096/smile-complementary-extension/) to enable automatic emoji pasting on Wayland. Without it, Smile can only copy to clipboard. At the time of writing its newest build stops at GNOME 50, so on GNOME 51 it is out of date until an update is published (see [GNOME 51]({{< relref "/docs/desktop#gnome-51" >}})).
 
 {{< callout type="warning" >}}
 In the Smile settings under "Paste emojis automatically", make sure the extension toggle is enabled after installing.
@@ -193,3 +193,38 @@ Unofficial AUR packages (`tmog-bin`, `tmog-appimage`) exist too, but the officia
 Retro-styled, animates at 60 Hz instead of the usual once-a-second refresh, and gives a genuinely deep per-process breakdown, down to disk and network I/O per PID:
 
 ![Task Manager TMOG - Processes](/images/tmog-processes.avif)
+
+### Calibre: e-book library
+
+[Calibre](https://calibre-ebook.com/) manages an e-book library: it keeps your books sorted, converts between formats and sends them to an e-reader. I use it with a Kobo Libra 2 instead of Kobo Desktop.
+
+{{< tabs >}}
+{{< tab name="CachyOS" >}}
+
+In the Arch `extra` repository, so no AUR is needed.
+
+```bash
+sudo pacman -S calibre
+```
+
+{{< /tab >}}
+{{< tab name="Bazzite" >}}
+
+```bash
+flatpak install flathub com.calibre_ebook.calibre
+```
+
+This Flatpak is not published by the Calibre project itself.
+
+{{< /tab >}}
+{{< /tabs >}}
+
+![The Calibre website at calibre-ebook.com](/images/calibre-website.avif)
+
+The library shows your books as covers, with the details of the selected book on the right. The toolbar has the things you use most: add books, edit metadata, convert, and send to your device. The screenshot shows a sample library of public-domain books.
+
+![Calibre with a sample library in the cover grid view](/images/calibre-library.avif)
+
+{{< callout type="warning" >}}
+**Set up a new e-reader on the device first.** Calibre cannot set up an e-reader, it can only manage one that is already set up. Most e-readers need an internet connection before they work at all, so connect the reader to a Wi-Fi network on its own screen first. After that, Calibre can manage the book library on it.
+{{< /callout >}}
