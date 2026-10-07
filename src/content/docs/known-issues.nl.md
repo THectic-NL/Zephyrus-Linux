@@ -53,6 +53,7 @@ Nog steeds onopgelost, bijgehouden als [#108](https://github.com/THectic-NL/Zeph
 - Opnieuw testen op een nieuwere systemd, en op een koude start tegenover een warme herstart, om te bevestigen dat warme herstarts het probleem zijn.
 - Het USB HID-stuurprogramma eerder laden, met `rd.driver.pre=usbhid` of een expliciete module in de initramfs, zodat de HID-stack er is voordat de token-query komt.
 - Als het alleen bij een warme herstart misgaat en ik het kan reproduceren, het bij systemd melden met het initramfs-log.
+- **GNOME 51 opmerking:** GNOME 51 voegt native FIDO2-ondersteuning toe aan GDM, waardoor de YubiKey betrouwbaar werkt voor desktop-inlogsessies, zelfs als de vroege LUKS-ontgrendeling tijdens boot de USB HID-timingrace tegenkomt.
 
 Zie de sectie **Dingen die ik graag werkend had gezien** onderaan deze pagina voor de volledige context.
 
