@@ -57,3 +57,16 @@ Een paar andere komen op andere pagina's voorbij omdat ze één specifiek proble
 |---|---|---|
 | [Smile complementary extension](https://extensions.gnome.org/extension/6096/smile-complementary-extension/) | Automatisch plakken van emoji's voor de [Smile]({{< relref "/docs/applications/utilities#smile-emoji-picker" >}})-picker | [Utilities]({{< relref "/docs/applications/utilities#smile-emoji-picker" >}}) |
 | [Just Perfection](https://gitlab.gnome.org/jrahmatzadeh/just-perfection) | Fix voor apps die op de achtergrond openen in plaats van focus te pakken | [Applicaties]({{< relref "/docs/applications#gnome-vensterfocus-apps-die-op-de-achtergrond-openen" >}}) |
+
+
+## GNOME 51 vernieuwingen en compatibiliteit
+
+GNOME 51 ("A Coruña") introduceert diverse verbeteringen aan de desktopervaring op deze laptop:
+
+- **Mutter frame scheduling:** Verbeterde frame delivery zorgt ervoor dat animaties en vensterbeheer soepel blijven draaien, zelfs onder zware systeembelasting.
+- **Helderheid blijft bewaard:** Beeldschermhelderheid wordt nu correct onthouden na herstarts en bij het in- en uitschakelen van HDR.
+- **Native GDM FIDO2- en passkey-ondersteuning:** GNOME Display Manager ondersteunt nu direct FIDO2-beveiligingssleutels voor inloggen.
+- **Wayland achtergrondvervaging:** Ondersteuning voor het `ext-background-effect-v1`-protocol maakt native blur-effecten mogelijk.
+- **Schermindeling en rotatie:** Schermindeling snapt nu netjes op het midden in Instellingen.
+
+Alle hieronder beschreven extensies zijn geverifieerd compatibel met GNOME 51.
