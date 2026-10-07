@@ -57,3 +57,16 @@ A couple of others show up on other pages because they fix one specific problem 
 |---|---|---|
 | [Smile complementary extension](https://extensions.gnome.org/extension/6096/smile-complementary-extension/) | Automatic emoji pasting for the [Smile]({{< relref "/docs/applications/utilities#smile-emoji-picker" >}}) picker | [Utilities]({{< relref "/docs/applications/utilities#smile-emoji-picker" >}}) |
 | [Just Perfection](https://gitlab.gnome.org/jrahmatzadeh/just-perfection) | Fixes apps opening in the background instead of taking focus | [Applications]({{< relref "/docs/applications#gnome-window-focus-apps-opening-in-the-background" >}}) |
+
+
+## GNOME 51 features and compatibility
+
+GNOME 51 ("A Coruña") brings several core desktop improvements that affect daily use on this laptop:
+
+- **Mutter frame scheduling:** Reworked frame delivery keeps animations and window dragging fluid even when heavy background tasks or compilation are running.
+- **Display brightness persistence:** Monitor brightness levels are now reliably retained across reboots and HDR toggles.
+- **Native GDM FIDO2 & passkey support:** GDM now natively supports FIDO2 security keys and passkeys for login sessions.
+- **Wayland background blur protocol:** Support for `ext-background-effect-v1` allows blur effects without custom compositor hacks.
+- **Display auto-rotation and alignment:** Refined display layout snapping with center alignment in Settings.
+
+Most extensions documented below (including In Picture, Astra Monitor, and Just Perfection) are confirmed compatible with GNOME 51. The notable exception is the **Smile complementary extension**, which currently stops at GNOME 50 and will be rejected as out of date by GNOME Shell until its upstream author publishes a 51 build (Smile itself remains functional for copying emojis to the clipboard).
