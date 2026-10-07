@@ -5,7 +5,7 @@ prev: docs/hardware/color-profiles
 next: docs/desktop/astra-monitor
 ---
 
-GNOME Shell-extensies zijn hoe dit bureaublad de dingen doet die het standaard niet kan: picture-in-picture-vensters die echt bovenop blijven, een systeemmonitor in de balk, fixes voor venstergedrag. Deze pagina behandelt het installeren in het algemeen. Extensies met genoeg haken en ogen om eigen instructies te verdienen krijgen een eigen pagina, hieronder gelinkt.
+GNOME Shell-extensies zijn hoe dit bureaublad de dingen doet die het standaard niet kan: picture-in-picture-vensters die blijven staan waar jij ze neerzet, bovenop, een systeemmonitor in de balk, fixes voor venstergedrag. Deze pagina behandelt het installeren in het algemeen. Extensies met genoeg haken en ogen om eigen instructies te verdienen krijgen een eigen pagina, hieronder gelinkt.
 
 ## Extensies installeren
 
@@ -38,12 +38,12 @@ Extensies die je zo installeert staan in `~/.local/share/gnome-shell/extensions/
 
 ## Extensies die ik gebruik
 
-### PiP on Top
+### In Picture
 
-[PiP on Top](https://extensions.gnome.org/extension/4691/pip-on-top/) van [Rafostar](https://github.com/Rafostar) houdt Picture-in-Picture-vensters bovenop alles, ook op Wayland, wat GNOME zelf niet doet. Hij is gebouwd voor Firefox maar werkt ook met een paar andere browsers. Ik gebruik deze constant, meestal om een video in de hoek te laten staan terwijl ik ergens anders in werk. Op het moment van schrijven houdt de nieuwste build op bij GNOME 50, dus op GNOME 51 blijft hij verouderd totdat er een update komt (zie [GNOME 51]({{< relref "/docs/desktop#gnome-51" >}})).
+[In Picture](https://extensions.gnome.org/extension/8692/in-picture/) van [Filip](https://codeberg.org/filiprund) verplaatst en schaalt Picture-in-Picture-vensters naar jouw voorkeur en kan ze bovenop alles houden, ook op Wayland, wat GNOME zelf niet doet. Hij is gebouwd voor PiP-vensters van webbrowsers en werkt goed met meerdere monitoren. Ik gebruik deze constant, meestal om een video in de hoek te laten staan terwijl ik ergens anders in werk. Er zijn builds voor GNOME 48 tot en met 51.
 
-- [extensions.gnome.org](https://extensions.gnome.org/extension/4691/pip-on-top/)
-- [Broncode op GitHub](https://github.com/Rafostar/gnome-shell-extension-pip-on-top)
+- [extensions.gnome.org](https://extensions.gnome.org/extension/8692/in-picture/)
+- [Broncode op Codeberg](https://codeberg.org/filiprund/in-picture)
 
 ### Astra Monitor
 
