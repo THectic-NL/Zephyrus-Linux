@@ -5,7 +5,7 @@ prev: docs/hardware/color-profiles
 next: docs/desktop/astra-monitor
 ---
 
-GNOME Shell extensions are how this desktop gets the things it doesn't do out of the box: picture-in-picture windows that actually stay on top, a system monitor in the panel, window behaviour fixes. This page covers installing them in general. Extensions with enough moving parts to need their own instructions get a dedicated page, linked below.
+GNOME Shell extensions are how this desktop gets the things it doesn't do out of the box: picture-in-picture windows that stay where you put them, on top, a system monitor in the panel, window behaviour fixes. This page covers installing them in general. Extensions with enough moving parts to need their own instructions get a dedicated page, linked below.
 
 ## Installing extensions
 
@@ -38,12 +38,12 @@ Extensions installed this way live in `~/.local/share/gnome-shell/extensions/`, 
 
 ## Extensions I use
 
-### PiP on Top
+### In Picture
 
-[PiP on Top](https://extensions.gnome.org/extension/4691/pip-on-top/) by [Rafostar](https://github.com/Rafostar) keeps Picture-in-Picture windows on top of everything else, even on Wayland, which GNOME doesn't do on its own. It's built for Firefox but works with a few other browsers too. I use this one constantly, mostly to keep a video in the corner while I'm working in something else. At the time of writing its newest build stops at GNOME 50, so on GNOME 51 it stays out of date until an update is published (see [GNOME 51]({{< relref "/docs/desktop#gnome-51" >}})).
+[In Picture](https://extensions.gnome.org/extension/8692/in-picture/) by [Filip](https://codeberg.org/filiprund) moves and resizes Picture-in-Picture windows to your preferences and can keep them on top of everything else, even on Wayland, which GNOME doesn't do on its own. It's built for web browser PiP windows and works well with multiple monitors. I use this one constantly, mostly to keep a video in the corner while I'm working in something else. It has builds for GNOME 48 through 51.
 
-- [extensions.gnome.org](https://extensions.gnome.org/extension/4691/pip-on-top/)
-- [Source on GitHub](https://github.com/Rafostar/gnome-shell-extension-pip-on-top)
+- [extensions.gnome.org](https://extensions.gnome.org/extension/8692/in-picture/)
+- [Source on Codeberg](https://codeberg.org/filiprund/in-picture)
 
 ### Astra Monitor
 
