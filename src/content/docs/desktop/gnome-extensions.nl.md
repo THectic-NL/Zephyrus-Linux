@@ -69,4 +69,4 @@ GNOME 51 ("A Coruña") introduceert diverse verbeteringen aan de desktopervaring
 - **Wayland achtergrondvervaging:** Ondersteuning voor het `ext-background-effect-v1`-protocol maakt native blur-effecten mogelijk.
 - **Schermindeling en rotatie:** Schermindeling snapt nu netjes op het midden in Instellingen.
 
-Alle hieronder beschreven extensies zijn geverifieerd compatibel met GNOME 51.
+De meeste hieronder beschreven extensies (waaronder In Picture, Astra Monitor en Just Perfection) zijn geverifieerd compatibel met GNOME 51. De uitzondering hierop is de **Smile complementary extension**, die momenteel stopt bij GNOME 50 en door GNOME Shell als verouderd wordt geweigerd totdat de maker een build voor 51 uitbrengt (Smile zelf blijft gewoon werken om emoji's naar het klembord te kopiëren).
