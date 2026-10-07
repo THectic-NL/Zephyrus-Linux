@@ -69,4 +69,4 @@ GNOME 51 ("A Coruña") brings several core desktop improvements that affect dail
 - **Wayland background blur protocol:** Support for `ext-background-effect-v1` allows blur effects without custom compositor hacks.
 - **Display auto-rotation and alignment:** Refined display layout snapping with center alignment in Settings.
 
-All extensions documented below have confirmed compatibility with GNOME 51.
+Most extensions documented below (including In Picture, Astra Monitor, and Just Perfection) are confirmed compatible with GNOME 51. The notable exception is the **Smile complementary extension**, which currently stops at GNOME 50 and will be rejected as out of date by GNOME Shell until its upstream author publishes a 51 build (Smile itself remains functional for copying emojis to the clipboard).
