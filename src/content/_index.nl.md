@@ -11,7 +11,7 @@ toc: false
 
 <div class="hx-mb-12">
 {{< hextra/hero-subtitle >}}
-  Zo vind ik Linux fijn, opgeschreven en gescript. Gebouwd op de ROG Zephyrus G16, bruikbaar op elke laptop.
+  Linux zoals ik het graag heb, opgeschreven en gescript. Gemaakt op de ROG Zephyrus G16, bruikbaar op elke laptop.
 {{< /hextra/hero-subtitle >}}
 </div>
 
@@ -25,17 +25,17 @@ toc: false
 <div class="hx-mt-6"></div>
 
 {{< callout type="info" >}}
-**Mijn setup, opgeschreven.** Zo vind ik Linux fijn, en zo stel ik het in op de ene laptop die ik heb, een ROG Zephyrus G16 GA605WV (2024). Ik heb alles opgeschreven zodat ik de machine in een middag opnieuw kan opbouwen, en daarna heb ik het grootste deel in een setup-venster gezet. Je hebt niet precies deze laptop nodig: alleen de pagina's die met de hardware praten zijn specifiek voor de G16, de rest werkt op elke machine. Het is eigenzinnig, getest op mijn eigen machine en op eigen risico. Kom je ergens niet uit, laat het gerust weten; ik denk graag mee.
+**Mijn setup, opgeschreven.** Zo heb ik Linux het liefst, en zo stel ik het in op mijn enige laptop, een ROG Zephyrus G16 GA605WV (2024). Ik heb alles opgeschreven zodat ik de machine in een middag opnieuw kan opbouwen, en het grootste deel daarvan heb ik omgezet in een setup-venster. Je hebt niet precies deze laptop nodig: alleen de pagina's over de hardware zelf zijn specifiek voor de G16, de rest werkt op elke machine. Het is eigenzinnig, getest op mijn eigen machine en op eigen risico. Kom je ergens niet uit, laat het gerust weten, dan denk ik graag mee.
 {{< /callout >}}
 
 ## Twee manieren om dit te gebruiken
 
 {{< cards >}}
-  {{< card link="/docs/setup-script" title="Richt een machine in zoals de mijne" subtitle="Een checklist die laat zien wat er klaar is en wat openstaat, en mijn aanbevolen standaarden instelt, met bij elke stap een link naar de handleiding." >}}
+  {{< card link="/docs/setup-script" title="Richt een machine in zoals de mijne" subtitle="Een checklist die laat zien wat er klaar is en wat nog openstaat, en die mijn aanbevolen instellingen toepast. Bij elk onderdeel staat een link naar de handleiding." >}}
   {{< card link="/docs/" title="Lees de handleidingen" subtitle="Hoe en waarom ik dingen zo heb ingesteld, voor CachyOS en Bazzite." >}}
 {{< /cards >}}
 
-## Huidige Systeemconfiguratie (op het moment van schrijven)
+## Huidige systeemconfiguratie (op het moment van schrijven)
 
 | Onderdeel | Specificatie |
 |-----------|--------------|

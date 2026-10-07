@@ -5,7 +5,7 @@ weight: 1
 
 Ik had er genoeg van om na elke herinstallatie dezelfde setup opnieuw te doen, dus nu zit alles in één venster. Je vinkt aan wat je wilt, leest het plan en past het toe. Het venster laat ook zien wat er op jouw machine al klaar is, en elk onderdeel verwijst naar de handleiding die het uitlegt.
 
-Het richt een machine in zoals ik die zelf graag heb. Het is gebouwd en getest op de Zephyrus G16 (GA605WV), maar slechts een paar onderdelen maken uit welk model je hebt: de ASUS-tools, de helderheidsfix, de Wi-Fi-tuning en de kleurprofielen. De rest, de GNOME-instellingen, extensies, apps en virtuele machines, werkt op elke laptop.
+Het richt een machine in zoals ik die zelf graag heb. Het is gebouwd en getest op de Zephyrus G16 (GA605WV), maar slechts een paar onderdelen hangen af van welk model je hebt: de ASUS-tools, de helderheidsfix, de Wi-Fi-tuning en de kleurprofielen. De rest, de GNOME-instellingen, extensies, apps en virtuele machines, werkt op elke laptop.
 
 {{< callout type="warning" >}}
 Het verandert je systeem. Er gebeurt niets voordat je het plan hebt gelezen en op Apply hebt gedrukt. Zoals alles hier is het op eigen risico.
@@ -23,7 +23,7 @@ Bron: [zephyrus-setup.py](/scripts/zephyrus-setup.py). SHA-256 `fe7e8bf50f9da726
 
 Je hebt Python 3.14 of nieuwer nodig en de GTK 4-bindings. Een standaard CachyOS-GNOME-installatie heeft die al. Zo niet: `sudo pacman -S python-gobject gtk4 libadwaita`.
 
-Er zijn geen opdrachten of opties, het opent gewoon een venster. Wijzigingen werken op CachyOS en andere Arch-systemen. Overal elders, bijvoorbeeld op Bazzite, is het venster alleen-lezen: je kunt rondkijken en de handleidingen openen.
+Er zijn geen opdrachten of opties, het script opent gewoon een venster. Het brengt alleen wijzigingen aan op CachyOS en andere Arch-systemen. Overal elders, bijvoorbeeld op Bazzite, is het venster alleen-lezen: je kunt rondkijken en de handleidingen openen.
 
 ## Het venster
 
@@ -31,7 +31,7 @@ Links staan de secties, rechts één rij per onderdeel. Een aangevinkt vakje bet
 
 - De twee kleine knoppen op een rij openen de handleiding en laten zien wat aan- en uitvinken zou doen.
 - `AUR` markeert rijen die een pakket uit de AUR nodig hebben. `Advanced`-rijen blijven buiten **Select recommended**.
-- Als je iets aanvinkt, vinkt het venster ook aan wat dat nodig heeft, en het zegt dat erbij. Een rij die hier niet van toepassing is, is grijs met de reden erbij.
+- Als je iets aanvinkt, vinkt het venster ook aan wat daarvoor nodig is, en vermeldt dat erbij. Een rij die op deze machine niet van toepassing is, is grijs, met de reden erbij.
 - GNOME-extensies komen van extensions.gnome.org, dus je hebt geen browserplug-in nodig. Een extensie zonder build voor jouw GNOME-versie zegt dat, bijvoorbeeld "No build for GNOME 51 yet".
 - In het menu staan **Select recommended**, **Check again** en het logbestand.
 
@@ -39,7 +39,7 @@ Er verandert niets voordat je op **Review and apply** drukt. Die controle toont 
 
 ## Kleurstanden
 
-De sectie Display heeft een schakelaar die meteen werkt, zonder toepassen: **Native**, de levendige, en **sRGB**. G-Helper heeft er op Windows nog twee, DCI-P3 en Display P3, maar op Linux zouden die hetzelfde beeld tonen als Native, dus ze zijn er niet. De pagina [Kleurprofielen voor het scherm]({{< relref "/docs/hardware/color-profiles" >}}) legt dat uit, en waarom een ander profiel kiezen in GNOME's Instellingen niets doet.
+De sectie Display heeft een schakelaar die meteen werkt, zonder toepassen: **Native**, de levendige, en **sRGB**. G-Helper heeft er op Windows nog twee, DCI-P3 en Display P3, maar op Linux zouden die hetzelfde beeld tonen als Native, dus ze zijn er niet. De pagina [Kleurprofielen voor het scherm]({{< relref "/docs/hardware/color-profiles" >}}) legt dat uit, en waarom een ander profiel kiezen in de GNOME-instellingen niets doet.
 
 ## Wat het controleert en wat het met rust laat
 
@@ -70,7 +70,7 @@ De sectie Display heeft een schakelaar die meteen werkt, zonder toepassen: **Nat
 | Extension Manager en Just Perfection | Extensies zonder browserplug-in |
 | Git, de GitHub CLI en GPG-ondertekende commits | |
 
-Smaak blijft erbuiten: de Windows-achtige sneltoetsen, de andere extensies, de apps en de virtualisatiestack staan wel in het venster, maar niet in de set. Net als de geavanceerde onderdelen: YubiKey, Secure Boot, VMware en de AMD-fix tegen het vastlopen van het scherm.
+Wat een kwestie van smaak is, zit er niet in: de Windows-achtige sneltoetsen, de andere extensies, de apps en de virtualisatiestack staan wel in het venster, maar niet in de aanbevolen set. Dat geldt ook voor de geavanceerde onderdelen: YubiKey, Secure Boot, VMware en de AMD-fix tegen het vastlopen van het scherm.
 
 ## Waar de keuzes vandaan komen
 
@@ -84,4 +84,4 @@ Ik volg upstream waar upstream een mening heeft. De handleiding achter elk onder
 
 ## Een onderdeel toevoegen of aanpassen
 
-Elk onderdeel is één regel in `build_items()` in het script: een id, een sectie, een korte samenvatting, de handleiding waar het naar linkt, een functie die zijn status bepaalt en een functie die zegt wat aanvinken doet. Een set pakketten is een one-liner. Pas je het script aan, draai dan `.github/scripts/check-doc-checksums.sh --apply` zodat de hashes in het script en die op deze pagina meegaan.
+Elk onderdeel is één regel in `build_items()` in het script: een id, een sectie, een korte samenvatting, de handleiding waar het naar linkt, een functie die zijn status bepaalt en een functie die zegt wat aanvinken doet. Een set pakketten is een one-liner. Pas je het script aan, draai dan `.github/scripts/check-doc-checksums.sh --apply` zodat de hashes in het script en op deze pagina worden bijgewerkt.

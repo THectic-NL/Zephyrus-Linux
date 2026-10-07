@@ -2,7 +2,7 @@
 
 Nederlands | [English](README.md)
 
-Mijn Linux-setup voor de ASUS ROG Zephyrus G16 GA605WV (2024), opgeschreven en gescript. Zo vind ik Linux fijn, en zo krijg ik een verse installatie precies in die staat: een checklist-venster dat laat zien wat er op jouw machine al klaar is en elk onderdeel linkt naar de pagina in de handleiding. Je hebt niet precies deze laptop nodig. Alleen de pagina's en script-onderdelen die met de hardware praten zijn specifiek voor de G16, al het andere werkt op elke machine.
+Mijn Linux-setup voor de ASUS ROG Zephyrus G16 GA605WV (2024), opgeschreven en gescript. Zo heb ik Linux het liefst, en zo krijg ik een verse installatie weer precies zoals ik hem wil: met een checklist-venster dat laat zien wat er op jouw machine al klaar is en bij elk onderdeel linkt naar de bijbehorende pagina in de handleiding. Je hebt niet precies deze laptop nodig. Alleen de pagina's en onderdelen van het script die de hardware van de laptop aansturen zijn specifiek voor de G16. Al het andere werkt op elke machine.
 
 **Bekijk de handleidingen: [zephyrus-linux.thectic.nl](https://zephyrus-linux.thectic.nl/nl/)**
 
@@ -14,25 +14,25 @@ curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-setup.py
 python3 zephyrus-setup.py
 ```
 
-Het opent een venster: vink aan wat je wilt, lees het plan en pas het toe. Het laat zien wat er op jouw machine al klaar is en linkt elk onderdeel naar de handleiding. Het wisselt ook het ingebouwde scherm tussen Native (levendig) en sRGB, zoals G-Helper dat op Windows doet. Er verandert niets totdat je het plan hebt gezien en op Apply hebt gedrukt. Controleer de SHA-256 op [de pagina van het script](https://zephyrus-linux.thectic.nl/nl/docs/setup-script/) voordat je het draait. Wijzigingen werken op CachyOS en andere Arch-systemen met GNOME. Overal elders is het venster alleen-lezen.
+Het script opent een venster: vink aan wat je wilt, lees het plan en pas het toe. Het laat zien wat er op jouw machine al klaar is en linkt elk onderdeel naar de handleiding. Je kunt er ook het ingebouwde scherm mee wisselen tussen Native (levendig) en sRGB, zoals G-Helper dat op Windows doet. Er verandert niets totdat je het plan hebt gezien en op Apply hebt gedrukt. Controleer de SHA-256 op [de pagina van het script](https://zephyrus-linux.thectic.nl/nl/docs/setup-script/) voordat je het draait. Het venster brengt alleen wijzigingen aan op CachyOS en andere Arch-systemen met GNOME. Overal elders is het alleen-lezen.
 
 
 ## Wat er in zit
 
 - **Handleidingen** voor CachyOS en Bazzite: de instellingen en software die ik echt gebruik, en waarom. Pagina's over de hardware van de laptop zelf (de ASUS-tools, helderheid, de Wi-Fi-kaart, de kleurprofielen) zijn specifiek voor de G16. De pagina's over het GNOME-bureaublad, beveiliging, applicaties, virtualisatie en gaming werken op elke machine.
-- **Een setup-venster** dat het grootste deel daarvan omzet in een checklist met een schakelaar per onderdeel en een link naar de handleiding.
-- **Eigen scripts** voor de lastigere fixes (helderheid in elke GPU-modus, Wi-Fi-tuning, eduroam), die het setup-venster voor je draait nadat het ze heeft gecontroleerd met de SHA-256 die erin zit.
+- **Een setup-venster** dat het grootste deel daarvan omzet in een checklist met per onderdeel een schakelaar en een link naar de handleiding.
+- **Eigen scripts** voor de lastigere fixes (helderheid in elke GPU-modus, Wi-Fi-tuning, eduroam), die het setup-venster voor je draait, nadat het ze heeft gecontroleerd met de SHA-256 die het zelf bevat.
 
 
 ## Over dit project
 
-Dit is mijn eigen setup, geen neutraal overzicht. Het is eigenzinnig: mijn favoriete instellingen en de software die ik echt gebruik, op de ene laptop die ik heb. Ik heb het opgeschreven zodat ik de machine snel opnieuw kan opbouwen, en zodat anderen die hetzelfde fijn vinden er sneller komen. Ik ben geen developer, gewoon iemand die naar Linux is overgestapt en daarna tegen van alles aanliep wat niet meteen werkte, en veel hiervan heb ik gaandeweg uitgezocht.
+Dit is mijn eigen setup, geen neutraal overzicht. Het is eigenzinnig: mijn favoriete instellingen en de software die ik echt gebruik, op de enige laptop die ik heb. Ik heb het opgeschreven zodat ik de machine snel opnieuw kan opbouwen, en zodat anderen die dezelfde dingen fijn vinden sneller bij hetzelfde resultaat uitkomen. Ik ben geen developer, gewoon iemand die naar Linux is overgestapt en daarna tegen van alles aanliep wat niet meteen werkte, en veel hiervan heb ik gaandeweg uitgezocht.
 
-CachyOS (Arch) is mijn daily driver, vooral omdat een deel van wat ik doe net wat directere systeemcontrole wil dan een atomic image je geeft. Ik dualbootte het vroeger met Bazzite (Fedora Atomic) op dezelfde machine en houd die handleidingen aan. De [Aan de slag](https://zephyrus-linux.thectic.nl/nl/docs/)-pagina legt de keuze uit, en een switcher bovenaan elke pagina brengt je tussen de twee sets handleidingen.
+CachyOS (Arch) is mijn daily driver, vooral omdat een deel van wat ik doe wat directere controle over het systeem vraagt dan een atomic image je geeft. Vroeger draaide ik het in dualboot met Bazzite (Fedora Atomic) op dezelfde machine, en die handleidingen houd ik bij. De [Aan de slag](https://zephyrus-linux.thectic.nl/nl/docs/)-pagina legt de keuze uit, en met de schakelaar bovenaan elke pagina wissel je tussen de twee sets handleidingen.
 
 Ik ben nog actief aan het testen en experimenteren: dingen kunnen veranderen, kapot gaan of achteraf onjuist blijken. Alles wat hier staat is gebaseerd op mijn eigen ervaring en is op eigen risico.
 
-Ik ben niet gelieerd aan, goedgekeurd door, of handelend namens ASUS, NVIDIA, Microsoft, CachyOS, Universal Blue, of enig ander bedrijf of project dat hier wordt genoemd.
+Ik ben niet gelieerd aan ASUS, NVIDIA, Microsoft, CachyOS, Universal Blue of enig ander bedrijf of project dat hier wordt genoemd, word er niet door goedgekeurd en spreek niet namens hen.
 
 ![Systeeminformatie-overzicht](src/static/images/system-info.avif)
 
@@ -58,7 +58,7 @@ git clone https://github.com/THectic-NL/Zephyrus-Linux.git
 cd Zephyrus-Linux
 ```
 
-Hugo downloadt de thema-module automatisch bij de eerste keer uitvoeren.
+Hugo downloadt de thema-module automatisch de eerste keer dat je het uitvoert.
 
 **Ontwikkelserver starten:**
 ```bash
@@ -102,15 +102,15 @@ for f in *.png; do avifenc -q 80 -s 6 "$f" "${f%.png}.avif" && rm "$f"; done
 
 Dit project zou niet bestaan zonder het werk van deze mensen en communities:
 
-- **[ASUS Linux community](https://asus-linux.org/)**: Het project achter `asusctl` en `rog-control-center`, tegenwoordig onderhouden onder het [Open Gaming Collective](https://github.com/OpenGamingCollective/asusctl). Luke Jones is hier een grote drijvende kracht achter geweest, en ook andere bijdragers hebben kernel patches ingediend, waarvan velen inmiddels in mainline Linux zijn gemerged, waardoor moderne ASUS ROG laptops echt bruikbaar zijn op Linux.
-- **[G-Helper](https://github.com/seerge/g-helper)**: De Windows-tool waarvan de manier om ASUS-kleurprofielen te behandelen (een zip per model van de ASUS CDN, aangeboden als Native, sRGB, DCI-P3 en Display P3) het voorbeeld is voor de kleurschakelaar in het setup-venster, dat de twee standen houdt die op Linux iets betekenen.
+- **[ASUS Linux community](https://asus-linux.org/)**: Het project achter `asusctl` en `rog-control-center`, tegenwoordig onderhouden onder het [Open Gaming Collective](https://github.com/OpenGamingCollective/asusctl). Luke Jones is hier een grote drijvende kracht achter geweest, en ook andere bijdragers hebben kernelpatches ingediend, waarvan er veel inmiddels in mainline Linux zijn opgenomen, waardoor moderne ASUS ROG-laptops echt bruikbaar zijn op Linux.
+- **[G-Helper](https://github.com/seerge/g-helper)**: De Windows-tool die als voorbeeld diende voor de kleurschakelaar in het setup-venster. G-Helper haalt per model een zip met ASUS-kleurprofielen op van de ASUS CDN en biedt die aan als Native, sRGB, DCI-P3 en Display P3. Het setup-venster houdt alleen de twee standen over die op Linux iets veranderen.
 - **[CachyOS](https://cachyos.org/)**: Een op Arch gebaseerde distributie met uitgebreide hardware-specifieke tuning: een verbeterde scheduler (BORE/EEVDF), beter energiebeheer, ondersteuning voor dynamische verversingsfrequentie, en ingebouwde drivers voor zowel de AMD iGPU als de NVIDIA dGPU, inclusief geïntegreerde GPU-switching. Een van de twee distributies die deze handleidingen dekken.
 - **[Bazzite / Universal Blue](https://universal-blue.org/)**: De mensen die de atomic Fedora-images maken waarop deze laptop goed draait, en die veel van de patches hebben bijgedragen die hem beter laten presteren. De andere distributie die deze handleidingen dekken.
 - **[Foxboron/sbctl](https://github.com/Foxboron/sbctl)**: Beheertool voor Secure Boot-sleutels, gebruikt voor het inschrijven van eigen sleutels en het ondertekenen van de kernel en EFI-binaries. Onmisbaar voor het actief houden van Secure Boot met een aangepaste kernel.
 - **[sched-ext / scx_lavd](https://github.com/sched-ext/scx)**: Het Linux scheduler-extensibiliteitsframework achter de `scx_lavd` CPU-scheduler. Uitstekende latentie en responsiviteit voor desktop- en gamingworkloads.
 - **[lz42/libinput-config](https://github.com/lz42/libinput-config)**: Kernel-niveau workaround voor de ontbrekende scroll speed-instelling in GNOME/Wayland, door libinput-events te onderscheppen vóór de compositor ze verwerkt.
 - **[Yubico/pam-u2f](https://github.com/Yubico/pam-u2f)**: PAM-module voor FIDO2/WebAuthn hardware token-authenticatie bij sudo en het vergrendelscherm. Gebruikt samen met `systemd-cryptenroll` voor schijfversleuteling via YubiKey.
-- **[Looking Glass](https://looking-glass.io/)**: Low-latency GPU passthrough display project. Werkt niet op deze hardware, maar het project en de documentatie zijn uitstekend.
+- **[Looking Glass](https://looking-glass.io/)**: Een project dat het beeld van een VM met GPU-passthrough met lage latentie op de host toont. Werkt niet op deze hardware, maar het project en de documentatie zijn uitstekend.
 - **[Hugo](https://gohugo.io/)**: De statische sitegenerator waarmee de documentatiesite is gebouwd.
 - **[Hextra](https://imfing.github.io/hextra/)**: Het Hugo-thema waarop de documentatiesite is gebouwd.
 
