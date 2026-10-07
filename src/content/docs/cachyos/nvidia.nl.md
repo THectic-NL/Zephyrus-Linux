@@ -52,7 +52,7 @@ Als de modules zichtbaar zijn, is de driver geladen. Zo niet, en Secure Boot sta
 
 ### Suspend en resume: er valt niets aan te zetten
 
-Andere handleidingen zeggen dat je `nvidia-suspend.service`, `nvidia-resume.service` en `nvidia-hibernate.service` moet aanzetten. Op `nvidia-open` hoeft dat niet. [NVIDIA's README](https://download.nvidia.com/XFree86/Linux-x86_64/615.71.09/README/powermanagement.html) zegt dat die units bedoeld zijn voor de closed driver met `NVreg_PreserveVideoMemoryAllocations=1` (of geavanceerde CUDA-functies), en dat het bewaren van videogeheugen met de open kernelmodules "automatisch wordt afgehandeld als `NVreg_UseKernelSuspendNotifiers=1` aanstaat" (vrij vertaald uit "is handled automatically if `NVreg_UseKernelSuspendNotifiers=1` is enabled"). Arch's `nvidia-utils` zet precies dat in `/usr/lib/modprobe.d/nvidia-utils.conf`, dus op CachyOS staat het al aan en blijven de units uit. GDM 50 zoekt de units ook niet: ik vond geen verwijzing ernaar in het GDM 50.3-pakket.
+Andere handleidingen zeggen dat je `nvidia-suspend.service`, `nvidia-resume.service` en `nvidia-hibernate.service` moet aanzetten. Op `nvidia-open` hoeft dat niet. [NVIDIA's README](https://download.nvidia.com/XFree86/Linux-x86_64/615.71.09/README/powermanagement.html) zegt dat die units bedoeld zijn voor de closed driver met `NVreg_PreserveVideoMemoryAllocations=1` (of geavanceerde CUDA-functies), en dat het bewaren van videogeheugen met de open kernelmodules "automatisch wordt afgehandeld als `NVreg_UseKernelSuspendNotifiers=1` aanstaat" (vrij vertaald uit "is handled automatically if `NVreg_UseKernelSuspendNotifiers=1` is enabled"). Arch's `nvidia-utils` zet precies dat in `/usr/lib/modprobe.d/nvidia-utils.conf`, dus op CachyOS staat het al aan en blijven de units uit. GDM zoekt de units ook niet: ik vond geen verwijzing ernaar in het GDM 51.0-pakket.
 
 Controleer het met de dGPU wakker (Hybrid of Ultimate), of lees het config-bestand in elke modus:
 
@@ -77,12 +77,7 @@ Op deze laptop staat de service aan. In Integrated mode stopt hij direct bij het
 
 ## Kernelupdates
 
-De driver is een DKMS-module, dus een kernelupdate zet via pacman-hooks twee dingen in gang:
-
-1. DKMS herbouwt de NVIDIA-modules tegen de nieuwe kernel
-2. Heb je Secure Boot ingesteld, dan ondertekent sbctl de nieuwe kernel-EFI-image opnieuw
-
-Geen van beide vraagt handmatig ingrijpen. Wat de kernel *niet* doet is modulehandtekeningen afdwingen, en daarom blijft de NVIDIA-module werken terwijl de kernel als tainted wordt gemarkeerd. Zie [Secure Boot op CachyOS]({{< relref "/docs/cachyos/secure-boot" >}}).
+De NVIDIA-modules komen voorgebouwd: `linux-cachyos-nvidia-open` vereist precies de bijbehorende `linux-cachyos`, dus pacman werkt ze samen bij. Met Secure Boot laat een pacman-hook sbctl de nieuwe kernel opnieuw ondertekenen. Er wordt lokaal niets gebouwd, dus er is geen DKMS-stap. Wat de kernel *niet* doet is modulehandtekeningen afdwingen, en daarom blijft de NVIDIA-module werken terwijl de kernel als tainted wordt gemarkeerd. Zie [Secure Boot op CachyOS]({{< relref "/docs/cachyos/secure-boot" >}}).
 
 {{< callout type="info" >}}
 Bekende problemen en troubleshooting voor de NVIDIA-driver staan op de pagina [Bekende Problemen]({{< relref "/docs/known-issues" >}}).
@@ -90,10 +85,10 @@ Bekende problemen en troubleshooting voor de NVIDIA-driver staan op de pagina [B
 
 ## Meer lezen
 
-- [CachyOS Wiki: NVIDIA](https://wiki.cachyos.org/configuration/nvidia/)
+- [CachyOS Wiki: Dual GPU Setup](https://wiki.cachyos.org/configuration/dual_gpu/)
 - [Arch Wiki: NVIDIA](https://wiki.archlinux.org/title/NVIDIA)
 - [NVIDIA driver README: Power Management](https://download.nvidia.com/XFree86/Linux-x86_64/615.71.09/README/powermanagement.html)
 - [NVIDIA driver README: Dynamic Boost](https://download.nvidia.com/XFree86/Linux-x86_64/615.71.09/README/dynamicboost.html)
 - [Ryzen AI 9 HX 370 Linux Support](https://forums.linuxmint.com/viewtopic.php?t=429052)
 - [NVIDIA vs Nouveau Performance](https://machaddr.substack.com/p/nouveau-vs-nvidia-the-battle-between)
-- [Zephyrus G16 2024 Linux Guide](https://www.ehmiiz.se/blog/linux_asus_g16_2024/)
+- [Zephyrus G16 2024 Linux Guide](https://www.ehmiiz.se/posts/linux_asus_g16_2024/)

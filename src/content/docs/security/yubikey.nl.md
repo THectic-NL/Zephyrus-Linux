@@ -8,6 +8,15 @@ next: docs/applications
 De YubiKey voor `sudo` en de GNOME-schermvergrendeling werkt betrouwbaar via `pam-u2f`. LUKS-ontgrendeling bij het opstarten werkte niet door een USB timing race condition op deze hardware; zie de pagina [Bekende Problemen]({{< relref "/docs/known-issues" >}}) voor het volledige verslag van die poging.
 
 
+## Met het setup-script
+
+Vink in het [setup-script]({{< relref "/docs/setup-script" >}}) **YubiKey for sudo and the lock screen** aan. Het installeert ook de tools en registreert je key (inpluggen, Enter, aanraken). **Register a spare YubiKey** is optioneel.
+
+Elk PAM-bestand krijgt eerst een back-up, wordt achteraf gecontroleerd en teruggezet als die controle faalt. Uitvinken haalt de regel er weer uit. Test `sudo true` in een tweede terminal voordat je de eerste sluit.
+
+De rest van deze pagina is hetzelfde met de hand.
+
+
 ## Wat werkt
 
 - **OATH/TOTP**: Yubico Authenticator 7.3.1 werkt uitstekend voor 2FA-codes
@@ -62,7 +71,7 @@ flatpak install flathub com.yubico.yubioath
 
 ## pam-u2f
 
-YubiKey touch vereisen voor `sudo` en de GNOME-schermvergrendeling. Geen initramfs, geen boot-timingproblemen.
+YubiKey touch vereisen voor `sudo` en de GNOME-schermvergrendeling. Geen initramfs, geen boot-timingproblemen. Een key die met `pamu2fcfg` is geregistreerd bewijst alleen aanwezigheid: aanraken is genoeg, er is geen pincode tenzij je `-N` toevoegt.
 
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
@@ -147,14 +156,19 @@ Zonder YubiKey ingeplugd valt het terug op wachtwoord.
 
 ### Grafische sudo (polkit)
 
-De grafische authenticatiedialoog van GNOME gebruikt een aparte PAM-service: `polkit-1`. Dit bestand bestaat standaard niet op CachyOS, waardoor polkit terugvalt op alleen wachtwoord.
+De grafische authenticatiedialoog van GNOME gebruikt een aparte PAM-service: `polkit-1`. Het pakket levert hem mee in `/usr/lib/pam.d/`, niet in `/etc/pam.d/`. Kopieer hem en bewerk de kopie:
 
-Maak `/etc/pam.d/polkit-1` aan:
+```bash
+sudo cp /usr/lib/pam.d/polkit-1 /etc/pam.d/polkit-1
+```
+
+Zet de YubiKey-regel als eerste `auth`-regel:
 ```
 #%PAM-1.0
 auth       sufficient   pam_u2f.so cue
 auth       include      system-auth
 account    include      system-auth
+password   include      system-auth
 session    include      system-auth
 ```
 
@@ -162,7 +176,13 @@ session    include      system-auth
 
 ### GNOME-schermvergrendeling
 
-Bewerk `/etc/pam.d/gdm-password`:
+Hier ook: ontbreekt `/etc/pam.d/gdm-password`, kopieer hem dan eerst uit `/usr/lib/pam.d/`:
+
+```bash
+sudo cp /usr/lib/pam.d/gdm-password /etc/pam.d/gdm-password
+```
+
+Bewerk daarna `/etc/pam.d/gdm-password`:
 ```
 #%PAM-1.0
 auth       sufficient   pam_u2f.so cue
@@ -186,6 +206,10 @@ Vergrendel het scherm met `Super+L` en raak de YubiKey aan om te ontgrendelen.
 | YubiKey ingeplugd | Aanraken vereist om te ontgrendelen |
 | YubiKey niet aanwezig | Valt terug op wachtwoord |
 | Boot / autologin | Ongewijzigd (LUKS-wachtwoord, dan direct naar bureaublad) |
+
+Een aanraking vervangt het wachtwoord, ze komt er niet bovenop: wie de key heeft kan `sudo` gebruiken en het scherm ontgrendelen.
+
+Een kopie in `/etc/pam.d/` volgt het pakket niet meer. Vergelijk hem na updates met `/usr/lib/pam.d/`.
 
 `sufficient` betekent: als de YubiKey slaagt, sla de rest van de verificatiestappen over. Als hij niet aanwezig is of de aanraaktijd verstrijkt, gaat PAM door naar de volgende methode (wachtwoord). De [pam.d-manual](https://man7.org/linux/man-pages/man5/pam.d.5.html) zegt het zo: een `sufficient`-module die slaagt, zonder dat een eerdere `required`-module faalde, laat PAM meteen succes teruggeven, en "a failure of a sufficient module is ignored and processing of the PAM module stack continues unaffected". `cue` toont "Please touch the FIDO authenticator." als visuele hint; de [pam-u2f README](https://github.com/Yubico/pam-u2f) beschrijft het als de gebruiker vragen de authenticator aan te raken.
 

@@ -106,7 +106,7 @@ Bazzite has no `dnf` on the host, so the same file means `rpm-ostree install` on
 
 ### Standard Notes
 
-Standard Notes is part of the Proton ecosystem, with the same privacy-first philosophy as Proton Mail and end-to-end encrypted notes that sync across all your devices. It was [acquired by Proton in 2022](https://proton.me/blog/proton-standard-notes-join-forces).
+Standard Notes is part of the Proton ecosystem, with the same privacy-first philosophy as Proton Mail and end-to-end encrypted notes that sync across all your devices. It [joined Proton in April 2024](https://proton.me/blog/proton-standard-notes-join-forces).
 
 The feel is somewhere between a minimal text editor and OneNote: clean sidebar, quick note switching, tags, no bloat. Everything is encrypted before it leaves your device. The sync to Android (Samsung S24 in my case) is seamless and instant.
 

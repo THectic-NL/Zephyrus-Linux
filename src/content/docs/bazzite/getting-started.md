@@ -173,7 +173,7 @@ The ones that come up in these guides are `ujust update`, `ujust enroll-secure-b
 
 ### Hardware & Drivers
 
-The NVIDIA driver is already in the image, so this is verification plus enrolling the Secure Boot key. Then the ASUS ROG hardware features, which need `asusctl` layered from the Terra repository.
+The NVIDIA driver is already in the image, so this is verification plus enrolling the Secure Boot key. Then the ASUS ROG hardware features, which Bazzite installs for you with `ujust asus` (no layering, no reboot).
 
 → [NVIDIA Driver: Bazzite]({{< relref "/docs/bazzite/nvidia" >}})
 → [Secure Boot on Bazzite]({{< relref "/docs/bazzite/secure-boot" >}})

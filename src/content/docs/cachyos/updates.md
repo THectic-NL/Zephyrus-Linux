@@ -18,7 +18,7 @@ If an update breaks something, you roll it back by hand. Reinstall the previous 
 
 ## Doing it graphically
 
-If a terminal isn't where you want to be, [Shelly](https://github.com/Seafoam-Labs/Shelly-ALPM) — CachyOS's default graphical package manager — has an **Update** tab that does the same job: it checks for conflicts first, then upgrades each package with its own progress bar, with the same pacman transaction log available underneath if you want to watch it.
+If a terminal isn't where you want to be, [Shelly](https://github.com/Seafoam-Labs/Shelly-ALPM), CachyOS's default graphical package manager, has an **Update** tab that does the same job: it checks for conflicts first, then upgrades each package with its own progress bar, with the same pacman transaction log available underneath if you want to watch it.
 
 ![Shelly upgrading packages, with the pacman transaction log open below](/images/shelly-updating.avif)
 
@@ -51,11 +51,13 @@ Topgrade detects what's on the system rather than being told. On this laptop tha
 
 ### Install
 
+Topgrade is in the AUR, not in the Arch or CachyOS repositories:
+
 ```bash
-sudo pacman -S topgrade
+paru -S topgrade
 ```
 
-If it isn't in the repos on your install, the AUR has both `topgrade` and `topgrade-bin`.
+`topgrade-bin` is the prebuilt variant. paru shows the PKGBUILD for review before it builds anything.
 
 ### Running it
 

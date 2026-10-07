@@ -432,7 +432,7 @@ Bekende problemen en probleemoplossing voor asusctl & ROG Control Center staan o
 
 ### Kernel 6.19: asus-armoury driver in mainline Linux
 
-De `asus-armoury` driver is [gemerged in Linux 6.19](https://www.phoronix.com/news/ASUS-Armoury-Driver-Linux-6.19). Deze nieuwe `platform/x86` driver vervangt delen van de oudere `asus-wmi` met een schonere sysfs-gebaseerde API, waarmee o.a. paneelmodusschakeling, APU-geheugentoewijzing, PPT-tuning en meer mogelijk wordt direct vanuit de kernel. De driver is volledig door de community ontwikkeld door het [asus-linux team](https://asus-linux.org/), zonder enige betrokkenheid van ASUS zelf. Deze driver zit in elke CachyOS-kernel vanaf 6.19. De huidige kernel op het moment van schrijven is 7.2.4-1-cachyos.
+De `asus-armoury` driver is [gemerged in Linux 6.19](https://www.phoronix.com/news/ASUS-Armoury-Driver-Linux-6.19). Deze nieuwe `platform/x86` driver vervangt delen van de oudere `asus-wmi` met een schonere sysfs-gebaseerde API, waarmee o.a. paneelmodusschakeling, APU-geheugentoewijzing, PPT-tuning en meer mogelijk wordt direct vanuit de kernel. De driver is volledig door de community ontwikkeld door het [asus-linux team](https://asus-linux.org/), zonder enige betrokkenheid van ASUS zelf. Deze driver zit in elke CachyOS-kernel vanaf 6.19.
 
 **Voor**: basale asusctl-bediening zonder Armoury-instellingen:
 
@@ -446,7 +446,7 @@ De `asus-armoury` driver is [gemerged in Linux 6.19](https://www.phoronix.com/ne
 
 ### Kernel 7.0: ASUS laptop quirks + nieuw AMDGPU-werk
 
-Kernel 7.0 is in april 2026 uitgebracht en CachyOS pakte het snel op. Voor deze ASUS ROG G16 bracht het wat beloofd was: betere AMDGPU-ondersteuning voor nieuwere RDNA 3.5-klasse IP blocks (GFX11.5.4) en verder NVIDIA-werk. De gaming-performance op de Radeon 890M is merkbaar verbeterd, ruwweg in lijn met de ~20% uplift die werd verwacht. Samen met de verbeteringen uit 6.19 draait deze hardware eindelijk zoals het hoort op Linux. De huidige CachyOS-kernel is 7.2.4-1-cachyos.
+Kernel 7.0 is in april 2026 uitgebracht en CachyOS pakte het snel op. Voor deze ASUS ROG G16 bracht het wat beloofd was: betere AMDGPU-ondersteuning voor nieuwere RDNA 3.5-klasse IP blocks (GFX11.5.4) en verder NVIDIA-werk. De gaming-performance op de Radeon 890M is merkbaar verbeterd, ruwweg in lijn met de ~20% uplift die werd verwacht. Samen met de verbeteringen uit 6.19 draait deze hardware eindelijk zoals het hoort op Linux.
 
 **Bronnen:** [Linus bevestigt Linux 7.0](https://www.phoronix.com/news/Linux-7.0-Is-Next) · [HID laptop quirks voor ASUS ROG modellen](https://www.phoronix.com/news/Linux-7.0-HID) · [Linux 7.0 DRM/AMDGPU updates](https://www.phoronix.com/news/Linux-7.0-Graphics-Drivers)
 

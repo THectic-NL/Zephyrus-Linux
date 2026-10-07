@@ -31,7 +31,7 @@ In the Smile settings under "Paste emojis automatically", make sure the extensio
 
 **Keyboard shortcut: repurposing the Copilot key**
 
-The Copilot key on the Zephyrus G16 is otherwise useless on Linux. GNOME registers it as `Shift+Super+TouchpadOff`. Repurpose it as an emoji picker shortcut:
+The Copilot key on the Zephyrus G16 is otherwise useless on Linux. GNOME registers it as `Shift+Super+F23`. If the shortcut dialog shows something else on your machine (this guide used to show `TouchpadOff`), use what it shows. Repurpose the key as an emoji picker shortcut:
 
 Go to **Settings → Keyboard → Custom Shortcuts** and add:
 

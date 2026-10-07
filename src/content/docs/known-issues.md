@@ -53,7 +53,7 @@ Still unresolved, tracked as [#108](https://github.com/THectic-NL/Zephyrus-Linux
 - Retest on a newer systemd, and on a cold boot versus a warm reboot, to confirm that warm reboots are the problem.
 - Load the USB HID driver earlier, with `rd.driver.pre=usbhid` or an explicit module in the initramfs, so the HID stack is up before the token query.
 - If it only fails on a warm reboot and I can reproduce it, report it upstream to systemd with the initramfs log.
-- **GNOME 51 note:** GNOME 51 adds native FIDO2 passkey support in GDM, ensuring the YubiKey works reliably for desktop sessions even if early boot LUKS unlock encounters the USB HID init race.
+- **GNOME 51 note:** GDM 51 adds FIDO2 and passkey login to the login screen. That is a way to log in after the disk is unlocked. It does not change the LUKS unlock in the initramfs, so it does not help with this problem.
 
 See the **Things I Wished Had Worked** section at the bottom of this page for the full context.
 
@@ -84,7 +84,7 @@ echo "47999987b8dba31fed6f8931a3ef50d23ed0e8dad32dbb890a40c2f5f92c087f  zephyrus
 python3 zephyrus-backlight.py
 ```
 
-Without an action it opens a menu. From the terminal: `status`, `test`, `enable` or `disable`, plus `--silent` for no dialogs. It sets the kernel parameter through GRUB, through Limine (the CachyOS way, via `/etc/default/limine` and `limine-update`) or through `rpm-ostree kargs`, whichever the system uses, and only enables the fix on a GA605WV. `disable` reverts what `enable` changed rather than just deleting it: an `acpi_backlight=` value it replaced on GRUB, and a modprobe rule of your own that it moved aside, both come back. On Limine it adds a comment and one `KERNEL_CMDLINE[default]+=` line at the end of `/etc/default/limine`, and `disable` removes exactly those two lines. If that file already sets a different `acpi_backlight=`, it stops and says so instead of guessing, because that value would override the fix. The Limine method has been run on a real CachyOS install, and `enable` and `disable` both regenerated the boot menu correctly, but it has not been through a reboot yet. Source: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py), SHA-256 `47999987b8dba31fed6f8931a3ef50d23ed0e8dad32dbb890a40c2f5f92c087f`.
+Without an action it opens a menu. From the terminal: `status`, `test`, `enable` or `disable`, plus `--silent` for no dialogs. It sets the kernel parameter through GRUB, through Limine (the CachyOS way, via `/etc/default/limine` and `limine-update`) or through `rpm-ostree kargs`, whichever the system uses, and only enables the fix on a GA605WV. `disable` reverts what `enable` changed rather than just deleting it: an `acpi_backlight=` value it replaced on GRUB, and a modprobe rule of your own that it moved aside, both come back. On Limine it adds a comment and one `KERNEL_CMDLINE[default]+=` line at the end of `/etc/default/limine`, and `disable` removes exactly those two lines. If that file already sets a different `acpi_backlight=`, it stops and says so instead of guessing, because that value would override the fix. The Limine method has been run on a real CachyOS install, and `enable` and `disable` both regenerated the boot menu correctly, and Integrated mode works after a reboot. Hybrid and Ultimate mode have not been tested on Limine yet. Source: [zephyrus-backlight.py](/scripts/zephyrus-backlight.py), SHA-256 `47999987b8dba31fed6f8931a3ef50d23ed0e8dad32dbb890a40c2f5f92c087f`.
 
 By hand:
 
@@ -205,20 +205,10 @@ amdgpu 0000:66:00.0: amdgpu: GPU reset begin!
 This laptop has dual GPUs (AMD Radeon 890M integrated + NVIDIA RTX 4060 discrete). On those kernels, the AMD GPU's PSR (Panel Self Refresh) feature had a bug causing crashes with external Thunderbolt monitors.
 
 **Fix:**
-Only if you still see these errors: disable AMD PSR by adding a kernel parameter. Edit `/etc/default/grub` and add `amdgpu.dcdebugmask=0x600` to `GRUB_CMDLINE_LINUX_DEFAULT`, then regenerate:
-
-```bash
-sudo nano /etc/default/grub
-sudo grub2-mkconfig -o /boot/efi/EFI/fedora/grub.cfg
-```
-
-Reboot:
-```bash
-sudo reboot
-```
+Only if you still see these errors: add `amdgpu.dcdebugmask=0x600` to the kernel command line (same method as the brightness fix above), then reboot.
 
 **What this does:**
-- `amdgpu.dcdebugmask=0x600` disables PSR (Panel Self Refresh) on the AMD GPU
+- `0x600` is PSR-SU (`0x200`) plus Panel Replay (`0x400`). PSR1 stays on, `0x10` disables all PSR
 - PSR is a power-saving feature where the display refreshes itself without GPU involvement
 - The PSR implementation had bugs with Thunderbolt/USB-C external monitors on kernels 6.15 to 6.18
 
@@ -383,15 +373,14 @@ sudo journalctl -b | grep nvidia
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
 
-The driver is a DKMS module, so this usually means the rebuild against the current kernel failed. Check and force it:
+The modules come prebuilt (`linux-cachyos-nvidia-open`), so this usually means the running kernel has no matching modules, for example right after an update but before the reboot. Compare:
 
 ```bash
-sudo dkms status
-sudo dkms autoinstall
-sudo reboot
+uname -r
+pacman -Q linux-cachyos linux-cachyos-nvidia-open
 ```
 
-If the build itself fails, the kernel headers for the running kernel are the thing to check. `linux-cachyos-headers` has to match the kernel you actually booted.
+If they differ, run `sudo pacman -Syu` and reboot.
 
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
@@ -455,11 +444,9 @@ sudo mokutil --reset
 
 {{% /details %}}
 
-{{% details title="Kernel module build failures" closed="true" %}}
+{{% details title="Kernel module build failures (only with nvidia-dkms)" closed="true" %}}
 
-**CachyOS only.** On Bazzite nothing is built locally. The kernel and the NVIDIA modules ship together in the image, which is why this failure mode doesn't exist there.
-
-Make sure the headers match the running kernel:
+**Only if you replaced the prebuilt `linux-cachyos-nvidia-open` with `nvidia-dkms`.** The default CachyOS setup builds nothing locally, and on Bazzite the kernel and the NVIDIA modules ship together in the image. With DKMS, make sure the headers match the running kernel:
 
 ```bash
 uname -r
@@ -567,7 +554,7 @@ __GL_CONSTANT_FRAME_RATE_HINT=3 steam
 ```
 
 **Resolution:**
-This issue has since resolved itself. Steam now launches normally; the `__GL_CONSTANT_FRAME_RATE_HINT` workaround is no longer required. Install Steam from the [CachyOS repository](https://packages.cachyos.org/package/cachyos/x86_64/steam) via `sudo pacman -S steam`.
+This issue has since resolved itself. Steam now launches normally; the `__GL_CONSTANT_FRAME_RATE_HINT` workaround is no longer required. Install Steam from the [multilib repository](https://archlinux.org/packages/multilib/x86_64/steam/) via `sudo pacman -S steam`.
 
 {{% /details %}}
 
@@ -580,7 +567,7 @@ This issue has since resolved itself. Steam now launches normally; the `__GL_CON
 ROG Control Center shows a warning that the `asus-armoury` kernel driver is not loaded. Some advanced features (PPT power limits, APU memory allocation, MUX switch control) are unavailable.
 
 **Cause:**
-The `asus-armoury` driver was merged into the Linux mainline kernel in version 6.19. This driver has been included from kernel 6.19 onwards; the current CachyOS kernel at the time of writing is 7.2.4-1-cachyos.
+The `asus-armoury` driver was merged into the Linux mainline kernel in version 6.19. This driver has been included from kernel 6.19 onwards.
 
 **Fix:**
 Verify the driver is loaded:
@@ -658,9 +645,9 @@ sudo sbctl-batch-sign
 
 If you enrolled FIDO2 and cannot boot, spam-tap the YubiKey immediately after the BIOS screen. The touch window is very short.
 
-Once in the system, revert immediately:
+Once in the system, revert immediately (replace `<luks-partition>` with your LUKS partition, which `lsblk -f` shows as `crypto_LUKS`):
 ```bash
-sudo systemd-cryptenroll --wipe-slot=fido2 /dev/nvme1n1p3
+sudo systemd-cryptenroll --wipe-slot=fido2 /dev/<luks-partition>
 sudo nano /etc/crypttab  # remove fido2-device=auto
 sudo rm /etc/dracut.conf.d/fido2.conf
 sudo dracut --force --regenerate-all
@@ -671,7 +658,7 @@ sudo dracut --force --regenerate-all
 {{% details title="Verify LUKS keyslots" closed="true" %}}
 
 ```bash
-sudo cryptsetup luksDump /dev/nvme1n1p3 | grep -E "^\s+[0-9]+:"
+sudo cryptsetup luksDump /dev/<luks-partition> | grep -E "^\s+[0-9]+:"
 ```
 
 Should show only `0: luks2` after reverting. If slot 1 is still present, FIDO2 is still enrolled.
@@ -732,7 +719,7 @@ If you still see the error after logging back in, add the connection manually:
 
 {{% details title="VirtIO ISO download is incomplete" closed="true" %}}
 
-The ISO must be exactly ~753 MB. If smaller:
+The ISO is about 880 MB. If it is much smaller:
 ```bash
 # Remove incomplete download
 sudo rm /var/lib/libvirt/images/virtio-win.iso
@@ -1196,7 +1183,7 @@ sudo systemd-cryptenroll \
   --fido2-with-client-pin=no \
   --fido2-with-user-presence=yes \
   --fido2-with-user-verification=no \
-  /dev/nvme1n1p2
+  /dev/<luks-partition>
 ```
 
 **crypttab:**
@@ -1226,7 +1213,7 @@ systemd-cryptsetup: Failed to ask token for assertion: FIDO_ERR_RX
 **What was reverted:**
 ```bash
 # Remove FIDO2 from LUKS
-sudo systemd-cryptenroll --wipe-slot=fido2 /dev/nvme1n1p2
+sudo systemd-cryptenroll --wipe-slot=fido2 /dev/<luks-partition>
 
 # Restore crypttab to passphrase-only (discard only, no fido2-device=auto)
 

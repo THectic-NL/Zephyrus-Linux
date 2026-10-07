@@ -14,12 +14,12 @@ It changes your system. Nothing happens until you have read the plan and pressed
 ## Run it
 
 ```bash
-curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-setup.py
-echo "fe7e8bf50f9da7260bd5e6ec17e63b3fbbaddc6b04b9fa74ae41a75a6ee21b77  zephyrus-setup.py" | sha256sum -c
-python3 zephyrus-setup.py
+curl -LO https://zephyrus-linux.thectic.nl/scripts/quicksetup.py
+echo "bf60bf040e93068fbfb84dd9c0f2e93a6886cd59d6e1d11609067fc473acb85e  quicksetup.py" | sha256sum -c
+python3 quicksetup.py
 ```
 
-Source: [zephyrus-setup.py](/scripts/zephyrus-setup.py). SHA-256 `fe7e8bf50f9da7260bd5e6ec17e63b3fbbaddc6b04b9fa74ae41a75a6ee21b77`.
+Source: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `bf60bf040e93068fbfb84dd9c0f2e93a6886cd59d6e1d11609067fc473acb85e`.
 
 You need Python 3.14 or newer and the GTK 4 bindings. A stock CachyOS GNOME install has them. If not: `sudo pacman -S python-gobject gtk4 libadwaita`.
 
@@ -47,7 +47,7 @@ The Display section has a switch that works right away, without applying: **Nati
 - **Downloads are checked where that is possible.** The dedicated scripts, the color profiles and Archi are compared with a SHA-256 built into the script, and a file that does not match is never used. An extension zip is checked before it is unpacked. pacman and Flatpak verify their own packages. The VirtIO ISO has no fixed hash, because Fedora replaces it with every release, so it only gets a size check.
 - **Checks before it starts.** Packages from the repositories have to exist and install together, which it tests with a dry run. It warns when pacman is busy, when you are offline and when your package databases are old.
 - **Unticking is careful.** Packages are removed one by one, and one that something else still needs is kept. Settings go back to the GNOME default, but only if they still have the value the script gave them. Packages the system or the window itself needs are never removed. Your own files stay.
-- **Some things stay manual.** Kernel parameters, PAM files and Secure Boot keys can lock you out when they go wrong, so the AMD PSR fix, the YubiKey PAM setup and Secure Boot are guides without a checkbox. The brightness fix is the exception: it runs its own script, which keeps a backup and puts it back when you untick it.
+- **Some things stay manual.** Kernel parameters and Secure Boot keys can stop the machine from booting when they go wrong, so the AMD PSR fix and Secure Boot are guides without a checkbox. The brightness fix is the exception: it runs its own script, which keeps a backup and puts it back when you untick it. The YubiKey is the other exception, and the only PAM edit the window makes: it adds one `sufficient` line, keeps the old file, checks the result and puts the old file back when the check fails. The [YubiKey page]({{< relref "/docs/security/yubikey" >}}) has the details.
 - **A log.** Everything it runs is in `~/.local/state/zephyrus-setup/setup.log`. The window cannot be closed while changes are running.
 
 ## Recommended

@@ -16,7 +16,7 @@
 # pushes onto a branch someone is working on is exactly what that workflow
 # avoids.
 #
-# zephyrus-setup.py has the same problem one level down: it only runs the
+# quicksetup.py has the same problem one level down: it only runs the
 # dedicated scripts and installs the color profiles whose SHA-256 is written
 # into its own source. Those tables are checked first, because rewriting them
 # changes the setup script and with it the hash the documentation publishes.
@@ -84,7 +84,7 @@ unfixable=0   # hashes that were wrong and that --apply cannot rewrite
 # The file is looked up next to the setup script and in the color profile
 # folder, and the hash has to be the one of the file as it is committed.
 
-readonly SETUP_SCRIPT="$SCRIPT_DIR/zephyrus-setup.py"
+readonly SETUP_SCRIPT="$SCRIPT_DIR/quicksetup.py"
 readonly PROFILE_DIR="src/static/icc-profiles"
 
 embedded=0

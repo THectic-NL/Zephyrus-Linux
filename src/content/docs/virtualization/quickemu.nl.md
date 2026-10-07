@@ -34,8 +34,10 @@ Eronder zit dezelfde hypervisor als bij virt-manager, dus een Quickemu-VM is nie
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
 
+Quickemu zit in de AUR, niet in de Arch- of CachyOS-repositories:
+
 ```bash
-sudo pacman -S quickemu
+paru -S quickemu
 ```
 
 {{< /tab >}}
@@ -113,7 +115,7 @@ quickget windows 11
 quickemu --vm windows-11.conf
 ```
 
-Alles op de pagina [Virt-Manager / KVM]({{< relref "/docs/virtualization/vm-setup" >}}) over Windows-licenties en ISO-keuzes geldt hier ook. De evaluatie-ISO, de Media Creation Tool en AtlasOS zijn allemaal gewoon ISO's, en Quickemu start ze allemaal op.
+Alles op de pagina [Virt-Manager / KVM]({{< relref "/docs/virtualization/vm-setup" >}}) over Windows-licenties en ISO-keuzes geldt hier ook. De evaluatie-ISO, de officiële download en AtlasOS zijn allemaal gewoon ISO's, en Quickemu start ze allemaal op.
 
 {{< callout type="warning" >}}
 `swtpm` moet aanwezig zijn voor het TPM 2.0-apparaat waar Windows 11 op controleert. Die zit in de CachyOS-packagelijst op de virt-manager-pagina, en in `ujust setup-virtualization` op Bazzite. Klaagt Windows Setup dat de pc niet aan de eisen voldoet, kijk daar dan naar.

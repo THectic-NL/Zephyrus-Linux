@@ -10,8 +10,8 @@ My Linux setup for the ASUS ROG Zephyrus G16 GA605WV (2024), written down and sc
 ## Set up a machine like mine
 
 ```bash
-curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-setup.py
-python3 zephyrus-setup.py
+curl -LO https://zephyrus-linux.thectic.nl/scripts/quicksetup.py
+python3 quicksetup.py
 ```
 
 It opens a window: tick what you want, read the plan, apply it. It shows what is already done on your machine and links every item to its guide. It also switches the built-in screen between Native (vivid) and sRGB, like G-Helper does on Windows. Nothing changes until you have seen the plan and pressed Apply. Check the SHA-256 on [the script's page](https://zephyrus-linux.thectic.nl/docs/setup-script/) before you run it. Changes are made on CachyOS and other Arch-based systems with GNOME. Elsewhere the window is read-only.
@@ -109,7 +109,7 @@ This project wouldn't exist without the work of these people and communities:
 - **[Foxboron/sbctl](https://github.com/Foxboron/sbctl)**: Secure Boot key management tool used to enroll custom keys and sign the kernel and EFI binaries. Essential for keeping Secure Boot enabled with a custom kernel.
 - **[sched-ext / scx_lavd](https://github.com/sched-ext/scx)**: The Linux scheduler extensibility framework powering the `scx_lavd` CPU scheduler. Excellent latency and responsiveness for desktop and gaming workloads.
 - **[lz42/libinput-config](https://github.com/lz42/libinput-config)**: Kernel-level workaround for GNOME/Wayland's missing scroll speed setting, intercepting libinput events before they reach the compositor.
-- **[Yubico/pam-u2f](https://github.com/Yubico/pam-u2f)**: PAM module enabling FIDO2/WebAuthn hardware token authentication for sudo and the lock screen. Used alongside `systemd-cryptenroll` for full-disk encryption unlock via YubiKey.
+- **[Yubico/pam-u2f](https://github.com/Yubico/pam-u2f)**: PAM module that lets a FIDO2 hardware key (a YubiKey touch) stand in for the password at sudo, the graphical sudo prompt and the lock screen.
 - **[Looking Glass](https://looking-glass.io/)**: Low-latency GPU passthrough display project. Didn't work on this hardware, but the project and documentation are excellent.
 - **[Hugo](https://gohugo.io/)**: The static site generator used to build the documentation site.
 - **[Hextra](https://imfing.github.io/hextra/)**: The Hugo theme powering the documentation site.

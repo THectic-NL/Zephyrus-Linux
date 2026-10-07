@@ -106,7 +106,7 @@ Bazzite heeft geen `dnf` op de host, dus hetzelfde bestand betekent daar `rpm-os
 
 ### Standard Notes
 
-Standard Notes maakt deel uit van het Proton-ecosysteem, met dezelfde privacy-first filosofie als Proton Mail en end-to-end versleutelde notities die op al je apparaten synnen. Het werd [in 2022 overgenomen door Proton](https://proton.me/blog/proton-standard-notes-join-forces).
+Standard Notes maakt deel uit van het Proton-ecosysteem, met dezelfde privacy-first filosofie als Proton Mail en end-to-end versleutelde notities die op al je apparaten synnen. Het kwam [in april 2024 bij Proton](https://proton.me/blog/proton-standard-notes-join-forces).
 
 Het voelt ergens tussen een minimale teksteditor en OneNote: schoon sidebar, snelle notitiewisseling, tags, geen rommel. Alles is versleuteld voordat het je apparaat verlaat. De sync naar Android (Samsung S24 in mijn geval) is naadloos en instant.
 

@@ -72,10 +72,7 @@ sudo pacman -S amdgpu_top
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
-```bash
-rpm-ostree install amdgpu_top
-systemctl reboot
-```
+Zit niet in de repositories van Fedora 44, dus er valt niets te layeren. Sla het op Bazzite over en je mist alleen de Radeon 890M-uitlezing, of bouw het vanuit de [amdgpu_top-repository](https://github.com/Umio-Yasuno/amdgpu_top) in een distrobox.
 
 {{< /tab >}}
 {{< /tabs >}}

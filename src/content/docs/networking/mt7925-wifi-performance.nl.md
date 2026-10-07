@@ -7,16 +7,16 @@ next: docs/virtualization/vm-setup
 
 De G16 GA605WV heeft een MediaTek Wi-Fi 7 MT7925-kaart. Wegvallende verbindingen, traag roamen tussen mesh-nodes, of downloadsnelheden ruim onder wat de verbinding zou moeten geven: deze pagina behandelt alle drie.
 
-Dit is een script dat drie fixes tegelijk toepast (NetworkManager-powersave, PCIe ASPM en een wireless-stack-queuelimiet), elk met een echt effect gemeten op deze hardware, plus een optionele extra (Bluetooth uit) die je zelf kunt aanzetten. Het heeft Python 3.14+ nodig (alleen standaardbibliotheek) en `pkexec` voor de bevoegde stappen -- één wachtwoordprompt per commando, die alle bevoegde stappen in dat commando dekt, niet één prompt per stap.
+Dit is een script dat drie fixes tegelijk toepast (NetworkManager-powersave, PCIe ASPM en een wireless-stack-queuelimiet), elk met een echt effect gemeten op deze hardware, plus een optionele extra (Bluetooth uit) die je zelf kunt aanzetten. Het heeft Python 3.14+ nodig (alleen standaardbibliotheek) en `pkexec` voor de bevoegde stappen: één wachtwoordprompt per commando, die alle bevoegde stappen in dat commando dekt, niet één prompt per stap.
 
 {{< callout type="info" >}}
-**Geverifieerd op deze hardware.** Getest met `iperf3` tegen een lokale server op een 2,5GbE-netwerk met UniFi. Stock: ~300 Mbit/s. Getuned: 500-608 Mbit/s, meestal 560+. Jouw cijfers variëren met AP, signaalsterkte en kernelversie, maar de fixes zelf zijn bevestigd, niet theoretisch.
+**Geverifieerd op deze hardware.** Getest met `iperf3` tegen een lokale server op een 2,5GbE-netwerk met UniFi. Stock: ~300 Mbit/s. Getuned (alle drie de fixes plus de optionele Bluetooth-uit-extra): 500-608 Mbit/s, meestal 560+. Jouw cijfers variëren met AP, signaalsterkte en kernelversie, maar de fixes zelf zijn bevestigd, niet theoretisch.
 
 Testomstandigheden, want die beïnvloeden de cijfers: een UniFi U7 Pro access point, in een houten kast, ongeveer 10 meter van de laptop met een muur ertussen. 6GHz-band, 160MHz-kanaal (het maximum van deze kaart), signaal variërend van -62 tot -71 dBm over de runs, meestal -63 tot -66 dBm. Dat is een realistische alledaagse afstand, geen beste-geval-test in dezelfde kamer, dus zie de cijfers hierboven als een redelijke baseline en niet als plafond.
 {{< /callout >}}
 
 {{< callout type="warning" >}}
-**Is dit nog steeds de moeite waard?** Voorlopig wel -- elke fix hieronder heeft een gemeten, reproduceerbaar effect en kost niets behalve een herstart. Maar zie het niet aan voor "de kaart gefixt": dit zijn workarounds voor driver-defaults die nooit getuned hadden hoeven worden, geen herschrijving van wat de silicon kan. Afgezet tegen de wifi-chip van een telefoon van twee jaar oud (zie [Resultaten](#resultaten) hieronder) is de eerlijke conclusie dat de MT7925 zelf gewoon een middelmatige Wi-Fi 7-kaart is, en geen enkele tuning verandert dat. Het goede nieuws: dit is geen doodlopende weg. MediaTek's Wi-Fi 7-stack wordt nog steeds actief upstream ontwikkeld, met patches die nog deze testweek van deze pagina landden -- zie [Meer lezen](#meer-lezen) hieronder. Liever wachten tot de driver volwassener is dan zelf tunen? Ook een prima keuze.
+**Is dit nog steeds de moeite waard?** Voorlopig wel, elke fix hieronder heeft een gemeten, reproduceerbaar effect en kost niets behalve een herstart. Maar zie het niet aan voor "de kaart gefixt": dit zijn workarounds voor driver-defaults die nooit getuned hadden hoeven worden, geen herschrijving van wat de silicon kan. Afgezet tegen de wifi-chip van een telefoon van twee jaar oud (zie [Resultaten](#resultaten) hieronder) is de eerlijke conclusie dat de MT7925 zelf gewoon een middelmatige Wi-Fi 7-kaart is, en geen enkele tuning verandert dat. Het goede nieuws: dit is geen doodlopende weg. MediaTek's Wi-Fi 7-stack wordt nog steeds actief upstream ontwikkeld, met patches die nog deze testweek van deze pagina landden, zie [Meer lezen](#meer-lezen) hieronder. Liever wachten tot de driver volwassener is dan zelf tunen? Ook een prima keuze.
 {{< /callout >}}
 
 ## Installatie
@@ -56,12 +56,12 @@ Bron: [mt7925-tune.py](/scripts/mt7925-tune.py). SHA-256 `cf5aa114d872c6480525b5
 
 | Optionele extra (`--bluetooth-off`, niet standaard toegepast) | Wat het doet |
 |---|---|
-| Bluetooth uit | De MT7925 is een combo Wi-Fi+Bluetooth-chip die dezelfde silicon en antennepaden deelt. Haalt een bron van variatie weg, ten koste van Bluetooth. Geen van de gemeten fixes hierboven, dus jouw keuze, niet die van het script |
+| Bluetooth uit | De MT7925 is een combo Wi-Fi+Bluetooth-chip die dezelfde silicon en antennepaden deelt. Haalt een bron van variatie weg, ten koste van Bluetooth. Niet los gemeten, dus jouw keuze, niet die van het script |
 
 `python3 mt7925-tune.py status` laat precies zien wat nu actief is, wat nog een herstart nodig heeft, en welke hardware en driver/firmwareversie gedetecteerd zijn. `python3 mt7925-tune.py disable` maakt alles ongedaan, Bluetooth inbegrepen.
 
 {{< callout type="info" >}}
-**Bewust weggelaten:** `disable_eht=1` duikt op in sommige externe gidsen, maar bestaat alleen in out-of-tree patchsets, niet in de mainline-driver die deze G16 draait. CPU-governor- en power-profile-wijzigingen hielpen ook in tests, maar dat is een systeembrede afweging, geen wifi-specifieke, dus het script raakt ze niet aan. Oudere gidsen noemen ook het vastzetten van de `power_save`-moduleparameter van de driver zelf; op de kernel van deze G16 (7.2.4) bestaat die parameter niet meer (`dmesg` toont `mt7925e: unknown parameter 'power_save' ignored`), dus het script slaat die ook over.
+**Bewust weggelaten:** `disable_eht=1` duikt op in sommige externe gidsen, maar bestaat alleen in out-of-tree patchsets, niet in de mainline-driver die deze G16 draait. CPU-governor- en power-profile-wijzigingen hielpen ook in tests, maar dat is een systeembrede afweging, geen wifi-specifieke, dus het script raakt ze niet aan. Oudere gidsen noemen ook het vastzetten van de `power_save`-moduleparameter van de driver zelf; op actuele kernels bestaat die parameter niet meer (`dmesg` toont `mt7925e: unknown parameter 'power_save' ignored`), dus het script slaat die ook over.
 {{< /callout >}}
 
 ## Resultaten
@@ -74,7 +74,7 @@ Bron: [mt7925-tune.py](/scripts/mt7925-tune.py). SHA-256 `cf5aa114d872c6480525b5
 
 Ter referentie: een telefoon (Samsung Galaxy S24 Ultra) op dezelfde AP mat 439-811 Mbit/s over meerdere runs, gemiddeld rond de 545 Mbit/s, dus de getunede G16 zit nu in hetzelfde bereik als de wifi-radio van een moderne telefoon hier. Op een sterkere/dichterbije AP haalde diezelfde telefoon 1,24 Gbit/s, ruim boven wat het 160MHz-plafond van de MT7925 ooit kan bereiken, ongeacht signaalkwaliteit (zie [hardware-plafond](#het-hardware-plafond) hieronder).
 
-Om even bij stil te staan: die telefoon kwam uit in januari 2024. Een speciaal gebouwde M.2 2230 Wi-Fi 7-kaart in een 2024/2025-gaminglaptop, getuned tot zijn eigen plafond, verliest nog steeds van de wifi-chip van een telefoon van twee jaar oud. Dat is geen configuratieprobleem dat dit script kan wegtunen -- de MT7925 is, op basis van dit bewijs, gewoon een middelmatige kaart. De fixes hierboven brengen 'm waar hij uit de doos had moeten zitten, niet waar hij eigenlijk zou moeten zitten.
+Om even bij stil te staan: die telefoon kwam uit in januari 2024. Een speciaal gebouwde M.2 2230 Wi-Fi 7-kaart in een 2024/2025-gaminglaptop, getuned tot zijn eigen plafond, verliest nog steeds van de wifi-chip van een telefoon van twee jaar oud. Dat is geen configuratieprobleem dat dit script kan wegtunen: de MT7925 is, op basis van dit bewijs, gewoon een middelmatige kaart. De fixes hierboven brengen 'm waar hij uit de doos had moeten zitten, niet waar hij eigenlijk zou moeten zitten.
 
 {{< callout type="warning" >}}
 Verwacht variatie tussen runs, ook in een stabiele, getunede staat (herhaalde runs van 20s liepen uiteen van 509-598 Mbit/s zonder dat er iets veranderde). Direct na een herstart of reconnect is het erger: retries kunnen fors pieken voordat de verbinding settelt (gezien: 3000+ retries in één run). Beoordeel de fix op een paar runs, niet op één, en nooit op de allereerste test na een herstart.
@@ -88,7 +88,7 @@ De MT7925 is hardware-gelimiteerd tot 160MHz-kanaalbreedte en 2×2 MIMO, bevesti
 
 ## Als jouw cijfers niet overeenkomen met die van deze pagina
 
-De cijfers hierboven gaan uit van een redelijk sterk 6GHz-signaal. 6GHz heeft minder bereik en muurpenetratie dan 5GHz, en de MT7925 valt stilletjes terug van 2 spatial streams naar 1 ruim voordat de verbinding daadwerkelijk wegvalt -- wat het plafond ruwweg halveert, bovenop wat het zwakkere signaal al kost.
+De cijfers hierboven gaan uit van een redelijk sterk 6GHz-signaal. 6GHz heeft minder bereik en muurpenetratie dan 5GHz, en de MT7925 valt stilletjes terug van 2 spatial streams naar 1 ruim voordat de verbinding daadwerkelijk wegvalt, wat het plafond ruwweg halveert, bovenop wat het zwakkere signaal al kost.
 
 Echt voorbeeld, dezelfde laptop en access point, alleen de afstand veranderde:
 
@@ -98,7 +98,7 @@ Echt voorbeeld, dezelfde laptop en access point, alleen de afstand veranderde:
 | Onderhandelde rate (ook in `status`'s "Current link") | `EHT-NSS 1`, 432-576 Mbit/s | `EHT-NSS 2`, 1152,8 Mbit/s |
 | `iperf3 -P 4`-doorvoer | ~170-260 Mbit/s | 583-594 Mbit/s |
 
-Zelfde script, zelfde tuning, verder alles gelijk -- de enige variabele was afstand. `python3 mt7925-tune.py status` toont signaal en `EHT-NSS` in het "Current link"-onderdeel precies om deze reden: check eerst of je niet gewoon naar een signaalprobleem kijkt voordat je aanneemt dat een fix niet werkt. Springt `EHT-NSS` terug naar 2 en stijgt de doorvoer als je dichterbij gaat staan? Dan is het bereik, geen kapotte kaart.
+Zelfde script, zelfde tuning, verder alles gelijk: de enige variabele was afstand. `python3 mt7925-tune.py status` toont signaal en `EHT-NSS` in het "Current link"-onderdeel precies om deze reden: check eerst of je niet gewoon naar een signaalprobleem kijkt voordat je aanneemt dat een fix niet werkt. Springt `EHT-NSS` terug naar 2 en stijgt de doorvoer als je dichterbij gaat staan? Dan is het bereik, geen kapotte kaart.
 
 ## Drops en roaming-problemen diagnosticeren
 
@@ -166,5 +166,5 @@ Recent bewijs dat dit beweegt, niet stilstaat: een [patch die scans tijdens susp
 - [wifi: mt76: mt7925: disable ASPM for MT7927 to fix throughput collapse](https://lkml.iu.edu/hypermail/linux/kernel/2603.0/12526.html): upstream-werk aan hetzelfde ASPM-probleem voor de nieuwere MT7927.
 - [MT7927 WiFi on Linux: Making It Work](https://jetm.github.io/blog/posts/mt7927-wifi-making-it-work/): de community reverse-engineering-inspanning achter MT7927-support.
 - [Known Issues, Linux MT7921/MT7925 WiFi Driver Fixes](https://zbowling.github.io/mt7925/issues/known-issues/): een lopende lijst van chip-niveau issues en hun status.
-- [From "Replace It with Intel" to Upstream: Bringing MediaTek Bluetooth/WiFi 7 to Linux](https://www.linaro.org/blog/from-replace-it-with-intel-to-upstream-bringing-mediatek-bluetooth-wifi-7-to-linux/): Linaro's verhaal over hoe MediaTek's Wi-Fi 7-support van "niet te ondersteunen, vervang de kaart" naar actief geüpstreamd ging -- nuttige context voor waarom de situatie van deze chip er over een jaar beter uitziet dan vandaag.
-- [MT7925 WiFi Driver Fixes, nu als DKMS-package](https://community.frame.work/t/mt7925-wifi-driver-fixes-now-available-as-dkms-package/79777): een community-fixset voor deze chip, nu installeerbaar als DKMS-module in plaats van handmatig patchen -- een teken dat fixes voor deze chip stabiel genoeg worden om te packagen voor eindgebruikers.
+- [From "Replace It with Intel" to Upstream: Bringing MediaTek Bluetooth/WiFi 7 to Linux](https://www.linaro.org/blog/from-replace-it-with-intel-to-upstream-bringing-mediatek-bluetooth-wifi-7-to-linux/): Linaro's verhaal over hoe MediaTek's Wi-Fi 7-support van "niet te ondersteunen, vervang de kaart" naar actief geüpstreamd ging, nuttige context voor waarom de situatie van deze chip er over een jaar beter uitziet dan vandaag.
+- [MT7925 WiFi Driver Fixes, nu als DKMS-package](https://community.frame.work/t/mt7925-wifi-driver-fixes-now-available-as-dkms-package/79777): een community-fixset voor deze chip, nu installeerbaar als DKMS-module in plaats van handmatig patchen, een teken dat fixes voor deze chip stabiel genoeg worden om te packagen voor eindgebruikers.

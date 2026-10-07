@@ -30,8 +30,10 @@ Voeg `AutomaticLoginEnable` en `AutomaticLogin` toe onder `[daemon]`, zoals de [
 ```ini
 [daemon]
 AutomaticLoginEnable=True
-AutomaticLogin=sten
+AutomaticLogin=your-username
 ```
+
+Vervang `your-username` door je eigen inlognaam (`whoami` toont hem).
 
 Volledig bestand ter referentie:
 
@@ -39,7 +41,7 @@ Volledig bestand ter referentie:
 # GDM configuration storage
 [daemon]
 AutomaticLoginEnable=True
-AutomaticLogin=sten
+AutomaticLogin=your-username
 
 [security]
 
@@ -70,7 +72,7 @@ sudo cat /etc/gdm/custom.conf | grep -i auto
 Verwachte output:
 ```
 AutomaticLoginEnable=True
-AutomaticLogin=sten
+AutomaticLogin=your-username
 ```
 
 ## Opmerkingen
@@ -94,7 +96,7 @@ Verwijder of becommentarieer de twee regels:
 
 ```ini
 #AutomaticLoginEnable=True
-#AutomaticLogin=sten
+#AutomaticLogin=your-username
 ```
 
 Herstart om toe te passen.

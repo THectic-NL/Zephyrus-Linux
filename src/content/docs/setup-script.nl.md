@@ -14,12 +14,12 @@ Het verandert je systeem. Er gebeurt niets voordat je het plan hebt gelezen en o
 ## Uitvoeren
 
 ```bash
-curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-setup.py
-echo "fe7e8bf50f9da7260bd5e6ec17e63b3fbbaddc6b04b9fa74ae41a75a6ee21b77  zephyrus-setup.py" | sha256sum -c
-python3 zephyrus-setup.py
+curl -LO https://zephyrus-linux.thectic.nl/scripts/quicksetup.py
+echo "bf60bf040e93068fbfb84dd9c0f2e93a6886cd59d6e1d11609067fc473acb85e  quicksetup.py" | sha256sum -c
+python3 quicksetup.py
 ```
 
-Bron: [zephyrus-setup.py](/scripts/zephyrus-setup.py). SHA-256 `fe7e8bf50f9da7260bd5e6ec17e63b3fbbaddc6b04b9fa74ae41a75a6ee21b77`.
+Bron: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `bf60bf040e93068fbfb84dd9c0f2e93a6886cd59d6e1d11609067fc473acb85e`.
 
 Je hebt Python 3.14 of nieuwer nodig en de GTK 4-bindings. Een standaard CachyOS-GNOME-installatie heeft die al. Zo niet: `sudo pacman -S python-gobject gtk4 libadwaita`.
 
@@ -47,7 +47,7 @@ De sectie Display heeft een schakelaar die meteen werkt, zonder toepassen: **Nat
 - **Downloads worden gecontroleerd waar dat kan.** De eigen scripts, de kleurprofielen en Archi worden vergeleken met een SHA-256 die in het script zit, en een bestand dat niet klopt wordt nooit gebruikt. Een extensie-zip wordt gecontroleerd voordat hij wordt uitgepakt. pacman en Flatpak controleren hun eigen pakketten. De VirtIO-ISO heeft geen vaste hash, omdat Fedora hem bij elke release vervangt, dus die krijgt alleen een groottecontrole.
 - **Controles vooraf.** Pakketten uit de repositories moeten bestaan en samen te installeren zijn, wat het test met een proefrun. Het waarschuwt als pacman bezig is, als je offline bent en als je pakketdatabases oud zijn.
 - **Uitvinken is voorzichtig.** Pakketten worden één voor één verwijderd, en een pakket dat iets anders nog nodig heeft blijft staan. Instellingen gaan terug naar de GNOME-standaard, maar alleen als ze nog de waarde hebben die het script ze gaf. Pakketten die het systeem of het venster zelf nodig heeft worden nooit verwijderd. Je eigen bestanden blijven staan.
-- **Sommige dingen blijven handwerk.** Kernelparameters, PAM-bestanden en Secure Boot-sleutels kunnen je buitensluiten als het misgaat, dus de AMD PSR-fix, de YubiKey-PAM-setup en Secure Boot zijn handleidingen zonder vinkje. De helderheidsfix is de uitzondering: die draait zijn eigen script, dat een back-up bewaart en die terugzet als je het vinkje weghaalt.
+- **Sommige dingen blijven handwerk.** Kernelparameters en Secure Boot-sleutels kunnen ervoor zorgen dat de machine niet meer opstart als het misgaat, dus de AMD PSR-fix en Secure Boot zijn handleidingen zonder vinkje. De helderheidsfix is de uitzondering: die draait zijn eigen script, dat een back-up bewaart en die terugzet als je het vinkje weghaalt. De YubiKey is de andere uitzondering en de enige PAM-wijziging die het venster doet: het voegt één `sufficient`-regel toe, bewaart het oude bestand, controleert het resultaat en zet het oude bestand terug als die controle faalt. De [YubiKey-pagina]({{< relref "/docs/security/yubikey" >}}) heeft de details.
 - **Een logboek.** Alles wat het draait staat in `~/.local/state/zephyrus-setup/setup.log`. Het venster kan niet worden gesloten terwijl er wijzigingen lopen.
 
 ## Aanbevolen

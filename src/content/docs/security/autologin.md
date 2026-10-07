@@ -29,8 +29,10 @@ Add `AutomaticLoginEnable` and `AutomaticLogin` under `[daemon]`, as the [GNOME 
 ```ini
 [daemon]
 AutomaticLoginEnable=True
-AutomaticLogin=sten
+AutomaticLogin=your-username
 ```
+
+Replace `your-username` with your own login name (`whoami` prints it).
 
 Full example for reference:
 
@@ -38,7 +40,7 @@ Full example for reference:
 # GDM configuration storage
 [daemon]
 AutomaticLoginEnable=True
-AutomaticLogin=sten
+AutomaticLogin=your-username
 
 [security]
 
@@ -69,7 +71,7 @@ sudo cat /etc/gdm/custom.conf | grep -i auto
 Expected output:
 ```
 AutomaticLoginEnable=True
-AutomaticLogin=sten
+AutomaticLogin=your-username
 ```
 
 ## Notes
@@ -93,7 +95,7 @@ Remove or comment out the two lines:
 
 ```ini
 #AutomaticLoginEnable=True
-#AutomaticLogin=sten
+#AutomaticLogin=your-username
 ```
 
 Reboot to apply.

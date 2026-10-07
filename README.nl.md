@@ -10,8 +10,8 @@ Mijn Linux-setup voor de ASUS ROG Zephyrus G16 GA605WV (2024), opgeschreven en g
 ## Richt een machine in zoals de mijne
 
 ```bash
-curl -LO https://zephyrus-linux.thectic.nl/scripts/zephyrus-setup.py
-python3 zephyrus-setup.py
+curl -LO https://zephyrus-linux.thectic.nl/scripts/quicksetup.py
+python3 quicksetup.py
 ```
 
 Het script opent een venster: vink aan wat je wilt, lees het plan en pas het toe. Het laat zien wat er op jouw machine al klaar is en linkt elk onderdeel naar de handleiding. Je kunt er ook het ingebouwde scherm mee wisselen tussen Native (levendig) en sRGB, zoals G-Helper dat op Windows doet. Er verandert niets totdat je het plan hebt gezien en op Apply hebt gedrukt. Controleer de SHA-256 op [de pagina van het script](https://zephyrus-linux.thectic.nl/nl/docs/setup-script/) voordat je het draait. Het venster brengt alleen wijzigingen aan op CachyOS en andere Arch-systemen met GNOME. Overal elders is het alleen-lezen.
@@ -79,7 +79,7 @@ De output wordt geschreven naar `./src/public/`. Bij een push naar `main` bouwt 
 
 ## Afbeeldingen
 
-Alle afbeeldingen in deze repository gebruiken het [AVIF](https://nl.wikipedia.org/wiki/AVIF)-formaat: open, royaltyvrij en efficiënter dan PNG of JPEG bij vergelijkbare kwaliteit. AVIF is de moderne standaard voor webafbeeldingen.
+Alle afbeeldingen in deze repository gebruiken het [AVIF](https://en.wikipedia.org/wiki/AVIF)-formaat: open, royaltyvrij en efficiënter dan PNG of JPEG bij vergelijkbare kwaliteit. AVIF is de moderne standaard voor webafbeeldingen.
 
 Installeer `avifenc` uit het `libavif`-pakket om PNG-screenshots om te zetten naar AVIF:
 
@@ -109,7 +109,7 @@ Dit project zou niet bestaan zonder het werk van deze mensen en communities:
 - **[Foxboron/sbctl](https://github.com/Foxboron/sbctl)**: Beheertool voor Secure Boot-sleutels, gebruikt voor het inschrijven van eigen sleutels en het ondertekenen van de kernel en EFI-binaries. Onmisbaar voor het actief houden van Secure Boot met een aangepaste kernel.
 - **[sched-ext / scx_lavd](https://github.com/sched-ext/scx)**: Het Linux scheduler-extensibiliteitsframework achter de `scx_lavd` CPU-scheduler. Uitstekende latentie en responsiviteit voor desktop- en gamingworkloads.
 - **[lz42/libinput-config](https://github.com/lz42/libinput-config)**: Kernel-niveau workaround voor de ontbrekende scroll speed-instelling in GNOME/Wayland, door libinput-events te onderscheppen vóór de compositor ze verwerkt.
-- **[Yubico/pam-u2f](https://github.com/Yubico/pam-u2f)**: PAM-module voor FIDO2/WebAuthn hardware token-authenticatie bij sudo en het vergrendelscherm. Gebruikt samen met `systemd-cryptenroll` voor schijfversleuteling via YubiKey.
+- **[Yubico/pam-u2f](https://github.com/Yubico/pam-u2f)**: PAM-module waarmee een FIDO2-hardwaresleutel (een aanraking van de YubiKey) het wachtwoord vervangt bij sudo, de grafische sudo-prompt en het vergrendelscherm.
 - **[Looking Glass](https://looking-glass.io/)**: Een project dat het beeld van een VM met GPU-passthrough met lage latentie op de host toont. Werkt niet op deze hardware, maar het project en de documentatie zijn uitstekend.
 - **[Hugo](https://gohugo.io/)**: De statische sitegenerator waarmee de documentatiesite is gebouwd.
 - **[Hextra](https://imfing.github.io/hextra/)**: Het Hugo-thema waarop de documentatiesite is gebouwd.

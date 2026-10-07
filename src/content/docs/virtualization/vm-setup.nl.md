@@ -23,17 +23,9 @@ microsoft.com/en-us/evalcenter/download-windows-11-enterprise
 
 90 dagen gratis, geen bloatware, geen verplichte Microsoft-account.
 
-**Optie 2: Media Creation Tool + Activatiescript**
+**Optie 2: Officiële download (licentie nodig)**
 
-Gebruik de officiële Windows 11 Media Creation Tool met een activatiemethode:
-
-1. Download [Windows 11 Media Creation Tool](https://www.microsoft.com/software-download/windows11)
-2. Maak installatiemedium aan op een USB-stick of ISO-bestand
-3. Gebruik [MAS (Microsoft Activation Scripts)](https://massgrave.dev/) voor activatie:
-   - Open PowerShell als Administrator in Windows
-   - Voer uit: `irm https://get.activated.win | iex`
-   - Selecteer de juiste activatiemethode voor je setup
-   - Geen 90-daagse beperking, volledige Windows 11-ervaring
+Download de Windows 11 ISO van [Microsoft](https://www.microsoft.com/software-download/windows11) en activeer hem met een licentie die je zelf bezit.
 
 **Optie 3: AtlasOS (Geoptimaliseerd voor prestaties)**
 
@@ -58,8 +50,6 @@ Het opzetten van de stack is het deel dat verschilt. Alles vanaf het standaardne
 ```bash
 sudo pacman -S virt-manager qemu-full swtpm edk2-ovmf dnsmasq
 ```
-
-**Let op:** Het `virtio-win` pakket is beschikbaar vanuit de AUR (`yay -S virtio-win`) of je kunt de ISO direct downloaden in een latere stap.
 
 **2. Gebruiker toevoegen aan libvirt-groep:**
 ```bash
@@ -142,11 +132,11 @@ sudo firewall-cmd --get-active-zones
 
 **5. VirtIO drivers ISO downloaden:**
 ```bash
-# Download de officiële stable VirtIO drivers ISO (~753 MB)
+# Download de officiële stable VirtIO drivers ISO (~880 MB)
 sudo curl -L -o /var/lib/libvirt/images/virtio-win.iso \
   https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
 
-# Controleer de download (moet ~753 MB zijn)
+# Controleer de download (moet ~880 MB zijn)
 ls -lh /var/lib/libvirt/images/virtio-win.iso
 ```
 Laat de download volledig afronden; het is een groot bestand.

@@ -90,7 +90,7 @@ disableHugoGeneratorInject = true
 
   [params.editURL]
     enable = true
-    base = 'https://github.com/THectic-NL/Zephyrus-Linux/edit/main/content'
+    base = 'https://github.com/THectic-NL/Zephyrus-Linux/edit/main/src/content'
 
   [params.highlight]
     [params.highlight.copy]

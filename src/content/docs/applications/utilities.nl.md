@@ -31,7 +31,7 @@ In de Smile instellingen onder "Paste emojis automatically", zorg dat de extensi
 
 **Sneltoets: de Copilot-toets hergebruiken**
 
-De Copilot-toets op de Zephyrus G16 is anders waardeloos op Linux. GNOME registreert het als `Shift+Super+TouchpadOff`. Hergebruik het als emoji picker sneltoets:
+De Copilot-toets op de Zephyrus G16 is anders waardeloos op Linux. GNOME registreert het als `Shift+Super+F23`. Toont het sneltoetsvenster op jouw machine iets anders (deze handleiding toonde eerst `TouchpadOff`), gebruik dan wat het toont. Hergebruik de toets als emoji picker sneltoets:
 
 Ga naar **Settings → Keyboard → Custom Shortcuts** en voeg toe:
 

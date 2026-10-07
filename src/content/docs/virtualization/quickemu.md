@@ -34,8 +34,10 @@ Same hypervisor underneath as virt-manager, so a Quickemu VM isn't slower. It's 
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
 
+Quickemu is in the AUR, not in the Arch or CachyOS repositories:
+
 ```bash
-sudo pacman -S quickemu
+paru -S quickemu
 ```
 
 {{< /tab >}}
@@ -113,7 +115,7 @@ quickget windows 11
 quickemu --vm windows-11.conf
 ```
 
-Everything on the [Virt-Manager / KVM]({{< relref "/docs/virtualization/vm-setup" >}}) page about Windows licensing and ISO choices applies here too. The evaluation ISO, the Media Creation Tool and AtlasOS are all just ISOs, and Quickemu will boot any of them.
+Everything on the [Virt-Manager / KVM]({{< relref "/docs/virtualization/vm-setup" >}}) page about Windows licensing and ISO choices applies here too. The evaluation ISO, the official download and AtlasOS are all just ISOs, and Quickemu will boot any of them.
 
 {{< callout type="warning" >}}
 `swtpm` has to be present for the TPM 2.0 device Windows 11 checks for. It comes with the CachyOS package list on the virt-manager page, and with `ujust setup-virtualization` on Bazzite. If Windows setup complains the PC doesn't meet requirements, that's the thing to check.

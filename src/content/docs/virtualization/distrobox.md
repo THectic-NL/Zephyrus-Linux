@@ -127,7 +127,7 @@ Keep per-project state inside the project directory, and be deliberate about any
 ## On Bazzite specifically
 
 - **`/var/home`.** Your home directory is `/var/home/<user>` with `/home` a symlink to it. Distrobox handles this, but a script inside a container that hardcodes `/home/<user>` may not. If a path "doesn't exist" inside a container while clearly existing outside it, this is why.
-- **What still belongs on the host.** Anything the kernel or the login session has to load (drivers, kernel modules, PAM modules, system services) cannot come from a container. That's what layering is for, and it's why [`asusctl`]({{< relref "/docs/hardware/asusctl-rog-control" >}}) and `pam-u2f` are layered rather than containerised.
+- **What still belongs on the host.** Anything the kernel or the login session has to load (drivers, kernel modules, PAM modules, system services) cannot come from a container. That's what layering is for, and it's why `pam-u2f` is layered rather than containerised. [`asusctl`]({{< relref "/docs/hardware/asusctl-rog-control" >}}) is the exception: Bazzite installs it for you with `ujust asus`, no layering needed.
 - **Homebrew first for plain CLI tools.** If a tool is a single binary with no system integration, `brew install` is simpler than a container. Distrobox is for when you need a distribution's package manager, not for every command-line program.
 
 ## References

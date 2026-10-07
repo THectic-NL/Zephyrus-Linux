@@ -10,7 +10,7 @@ next: docs/applications/utilities
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
 
-Steam is direct beschikbaar uit de [CachyOS repository](https://packages.cachyos.org/package/cachyos/x86_64/steam), geen extra repos nodig.
+Steam zit in Arch's [multilib-repository](https://archlinux.org/packages/multilib/x86_64/steam/), die CachyOS standaard aanzet, dus je hebt geen extra repos nodig.
 
 ```bash
 sudo pacman -S steam
@@ -30,7 +30,7 @@ which steam
 
 ![Steam in GNOME Software](/images/steam-website.avif)
 
-Herstart na installatie. Steam inclusief Proton out of the box voor het draaien van Windows games op Linux.
+Steam downloadt Proton zelf zodra een Windows-game het nodig heeft, zie [Proton en de Steam Linux Runtime]({{< relref "/docs/gaming/proton-slr" >}}).
 
 ### Tidal
 

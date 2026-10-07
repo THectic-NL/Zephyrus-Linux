@@ -18,7 +18,7 @@ Both are in CachyOS repositories:
 sudo pacman -S git github-cli
 ```
 
-- `git` is in the core repo (usually pre-installed)
+- `git` is in the `extra` repo (usually pre-installed)
 - `github-cli` is in `cachyos-extra` or `extra`
 
 {{< /tab >}}
@@ -146,7 +146,7 @@ If your workflow relies on any of these, especially remote development, containe
 - **Microsoft build:** Syncs via Microsoft/GitHub account, cross-device sync works out of the box
 - **OSS builds:** Settings Sync unavailable; requires manual configuration with third-party services
 
-**Portable config:** Both OSS and Microsoft variants read `~/.config/Code`, so you can switch between packages and keep your settings and extensions intact.
+**Config is not shared:** Code - OSS uses `~/.config/Code - OSS` and `~/.vscode-oss`, the Microsoft build `~/.config/Code` and `~/.vscode`. Copy `User/settings.json` across by hand when you switch.
 
 #### Installation & Switching
 
@@ -180,7 +180,7 @@ sudo pacman -S code       # Code - OSS from CachyOS extra
 sudo pacman -S vscodium   # VSCodium from CachyOS repo
 ```
 
-Both keep your existing settings when you later switch to the Microsoft build.
+Settings are not shared between the two (see above).
 
 {{< /tab >}}
 {{< tab name="Bazzite" >}}

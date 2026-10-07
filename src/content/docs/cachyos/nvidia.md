@@ -52,7 +52,7 @@ If the modules are listed, the driver is loaded. If they are not and Secure Boot
 
 ### Suspend and resume: nothing to enable
 
-Other guides tell you to enable `nvidia-suspend.service`, `nvidia-resume.service` and `nvidia-hibernate.service`. On `nvidia-open` you don't have to. [NVIDIA's README](https://download.nvidia.com/XFree86/Linux-x86_64/615.71.09/README/powermanagement.html) says those units are for the proprietary driver with `NVreg_PreserveVideoMemoryAllocations=1` (or advanced CUDA features), and that with the open kernel modules saving video memory "is handled automatically if `NVreg_UseKernelSuspendNotifiers=1` is enabled". Arch's `nvidia-utils` sets exactly that in `/usr/lib/modprobe.d/nvidia-utils.conf`, so CachyOS has it on already and the units stay disabled. GDM 50 doesn't look for the units either: I found no reference to them in the GDM 50.3 package.
+Other guides tell you to enable `nvidia-suspend.service`, `nvidia-resume.service` and `nvidia-hibernate.service`. On `nvidia-open` you don't have to. [NVIDIA's README](https://download.nvidia.com/XFree86/Linux-x86_64/615.71.09/README/powermanagement.html) says those units are for the proprietary driver with `NVreg_PreserveVideoMemoryAllocations=1` (or advanced CUDA features), and that with the open kernel modules saving video memory "is handled automatically if `NVreg_UseKernelSuspendNotifiers=1` is enabled". Arch's `nvidia-utils` sets exactly that in `/usr/lib/modprobe.d/nvidia-utils.conf`, so CachyOS has it on already and the units stay disabled. GDM doesn't look for the units either: I found no reference to them in the GDM 51.0 package.
 
 Check it with the dGPU awake (Hybrid or Ultimate mode), or read the config file in any mode:
 
@@ -77,12 +77,7 @@ On this laptop the service is enabled. In Integrated mode it exits right at boot
 
 ## Kernel Updates
 
-The driver is a DKMS module, so a kernel update triggers two things through pacman hooks:
-
-1. DKMS rebuilds the NVIDIA modules against the new kernel
-2. If you set up Secure Boot, sbctl re-signs the new kernel EFI image
-
-Neither needs manual intervention. What the kernel does *not* do is enforce module signatures, which is why the NVIDIA module keeps working while marking the kernel as tainted. See [Secure Boot on CachyOS]({{< relref "/docs/cachyos/secure-boot" >}}).
+The NVIDIA modules come prebuilt: `linux-cachyos-nvidia-open` requires exactly the matching `linux-cachyos`, so pacman updates them together. With Secure Boot, a pacman hook has sbctl re-sign the new kernel. Nothing is built locally, so there is no DKMS step. What the kernel does *not* do is enforce module signatures, which is why the NVIDIA module keeps working while marking the kernel as tainted. See [Secure Boot on CachyOS]({{< relref "/docs/cachyos/secure-boot" >}}).
 
 {{< callout type="info" >}}
 Known issues and troubleshooting for the NVIDIA driver are documented on the [Known Issues]({{< relref "/docs/known-issues" >}}) page.
@@ -90,10 +85,10 @@ Known issues and troubleshooting for the NVIDIA driver are documented on the [Kn
 
 ## Additional Resources
 
-- [CachyOS Wiki: NVIDIA](https://wiki.cachyos.org/configuration/nvidia/)
+- [CachyOS Wiki: Dual GPU Setup](https://wiki.cachyos.org/configuration/dual_gpu/)
 - [Arch Wiki: NVIDIA](https://wiki.archlinux.org/title/NVIDIA)
 - [NVIDIA driver README: Power Management](https://download.nvidia.com/XFree86/Linux-x86_64/615.71.09/README/powermanagement.html)
 - [NVIDIA driver README: Dynamic Boost](https://download.nvidia.com/XFree86/Linux-x86_64/615.71.09/README/dynamicboost.html)
 - [Ryzen AI 9 HX 370 Linux Support](https://forums.linuxmint.com/viewtopic.php?t=429052)
 - [NVIDIA vs Nouveau Performance](https://machaddr.substack.com/p/nouveau-vs-nvidia-the-battle-between)
-- [Zephyrus G16 2024 Linux Guide](https://www.ehmiiz.se/blog/linux_asus_g16_2024/)
+- [Zephyrus G16 2024 Linux Guide](https://www.ehmiiz.se/posts/linux_asus_g16_2024/)

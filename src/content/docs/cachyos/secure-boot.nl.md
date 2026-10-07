@@ -24,7 +24,7 @@ Dan is er nog het Microsoft-aspect. Stap 3 vereist de `--microsoft`-vlag, want z
 
 Waar Secure Boot eigenlijk tegen beschermt is het scenario waarbij iemand met fysieke toegang je bootloader vervangt terwijl je er niet bij bent. Als dat een echte zorg is, is volledige schijfversleuteling een veel directere oplossing, en CachyOS stelt dat al in tijdens de installatie.
 
-In de praktijk zorgt Secure Boot inschakelen ervoor dat `fwupdmgr security` en het GNOME-beveiligingspaneel er netjes uitzien en de HSI-score van 2 naar 3 gaat. Dat is zo'n beetje de winst. Ik heb het toch ingesteld omdat ik wilde begrijpen hoe het werkt, en de betere score is een leuke bijkomstigheid. Maar als je het wilt overslaan, is dat ook prima.
+In de praktijk zorgt Secure Boot inschakelen ervoor dat `fwupdmgr security` en het GNOME-beveiligingspaneel er netjes uitzien en de regel UEFI Secure Boot van mislukt naar geslaagd gaat. De totale HSI-score blijft 3. Dat is zo'n beetje de winst. Ik heb het toch ingesteld omdat ik wilde begrijpen hoe het werkt. Maar als je het wilt overslaan, is dat ook prima.
 
 
 ## Context van het beveiligingsrapport
@@ -193,15 +193,11 @@ GNOME Instellingen → Privacy & Beveiliging → Apparaatbeveiliging bevestigt o
 
 ## NVIDIA en kernelupdates
 
-UEFI Secure Boot verifieert alleen de bootloader en het kernel-EFI-image. De NVIDIA-driver wordt als DKMS-module door de kernel geladen. In deze configuratie staat de kernel module-signatures niet af te dwingen, waardoor de NVIDIA-module blijft werken, maar de kernel als tainted wordt gemarkeerd. Extra module-signing voor NVIDIA valt daarom buiten de scope van deze handleiding.
+UEFI Secure Boot verifieert alleen de bootloader en het kernel-EFI-image. De NVIDIA-driver is een out-of-tree module (`linux-cachyos-nvidia-open`) die de kernel laadt. In deze configuratie staat de kernel module-signatures niet af te dwingen, waardoor de NVIDIA-module blijft werken, maar de kernel als tainted wordt gemarkeerd. Extra module-signing voor NVIDIA valt daarom buiten de scope van deze handleiding.
 
 > Wie ook kernelmodules cryptografisch wil afdwingen, moet de NVIDIA-modules met dezelfde sleutel signen, of Nouveau gebruiken.
 
-Na een kernelupdate activeert pacman beide:
-1. sbctl-hook → ondertekent het nieuwe kernel EFI-image opnieuw
-2. DKMS → bouwt NVIDIA-modules voor de nieuwe kernel opnieuw
-
-Na updates is geen handmatige actie nodig.
+Na een kernelupdate installeert pacman de nieuwe kernel samen met de bijbehorende `linux-cachyos-nvidia-open`, en ondertekent de sbctl-hook het nieuwe kernel EFI-image opnieuw. Na updates is geen handmatige actie nodig.
 
 > **Kernelvervuiling:** De NVIDIA-module blijft de kernel taint geven. `nvidia-open` is GPL-compatibel en zet dus niet de proprietary-module-vlag, maar hij is nog steeds out-of-tree, wat de `O`-vlag zet. Dit verschijnt als `Linux Kernel Verification: Tainted` in het HSI-rapport. Het betekent dat een out-of-tree module is geladen, niet dat het systeem is aangetast.
 

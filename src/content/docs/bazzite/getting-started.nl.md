@@ -173,7 +173,7 @@ In deze handleidingen komen `ujust update`, `ujust enroll-secure-boot-key` en `u
 
 ### Hardware & Drivers
 
-De NVIDIA-driver zit al in de image, dus dit is controleren plus de Secure Boot-sleutel inschrijven. Daarna de ASUS ROG hardware-functies, waarvoor `asusctl` vanuit de Terra-repository gelaagd moet worden.
+De NVIDIA-driver zit al in de image, dus dit is controleren plus de Secure Boot-sleutel inschrijven. Daarna de ASUS ROG hardware-functies, die Bazzite voor je installeert met `ujust asus` (geen layeren, geen herstart).
 
 → [NVIDIA Driver: Bazzite]({{< relref "/docs/bazzite/nvidia" >}})
 → [Secure Boot op Bazzite]({{< relref "/docs/bazzite/secure-boot" >}})

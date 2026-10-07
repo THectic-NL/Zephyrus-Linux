@@ -24,7 +24,7 @@ Three places, in this order:
 
 3. **[Flathub](https://flathub.org/)**: Flatpak packages that bundle all their own dependencies. Install with `flatpak install flathub <app-id>`, run with `flatpak run <app-id>`.
 
-CachyOS also ships **[Shelly](https://github.com/Seafoam-Labs/Shelly-ALPM)** as its default graphical package manager, replacing the older Octopi since the April 2026 ISO. It talks to `libalpm` directly rather than wrapping `pacman`, and puts all three sources above in one GTK4 app — official packages, AUR builds and Flathub, plus AppImages — behind **Recommended**, **Package**, **AUR**, **Flatpak**, **AppImage** and **Update** tabs. On an older install that predates it, `sudo pacman -S shelly` retrofits it.
+CachyOS also ships **[Shelly](https://github.com/Seafoam-Labs/Shelly-ALPM)** as its default graphical package manager, replacing the older Octopi since the April 2026 ISO. It talks to `libalpm` directly rather than wrapping `pacman`, and puts all three sources above in one GTK4 app: official packages, AUR builds and Flathub, plus AppImages, behind **Recommended**, **Package**, **AUR**, **Flatpak**, **AppImage** and **Update** tabs. On an older install that predates it, `sudo pacman -S shelly` retrofits it.
 
 ![Shelly browsing Flathub apps in its Flatpak tab](/images/shelly-flatpak.avif)
 
@@ -118,12 +118,12 @@ There is a `gsettings` key that's supposed to control this:
 gsettings set org.gnome.desktop.wm.preferences focus-new-windows 'smart'
 ```
 
-The default is `strict` (never auto-focus new windows). `smart` is supposed to let GNOME decide and bring new windows to the front. In practice, **this alone is not reliable**. Windows still end up minimized in the background in many cases, because the underlying issue is that apps need to implement the [XDG Activation protocol](https://wayland.app/protocols/xdg-activation-v1) to properly request focus, and many don't. The GNOME Shell dev blog has [a thorough write-up](https://blogs.gnome.org/shell-dev/2024/09/20/understanding-gnome-shells-focus-stealing-prevention/) on why this is fundamentally broken for a large part of the app ecosystem.
+`smart` is already GNOME's default, so the command only matters if yours was set to `strict`. Even `smart` is **not reliable**. Windows still end up minimized in the background in many cases, because the underlying issue is that apps need to implement the [XDG Activation protocol](https://wayland.app/protocols/xdg-activation-v1) to properly request focus, and many don't. The GNOME Shell dev blog has [a thorough write-up](https://blogs.gnome.org/shell-dev/2024/09/20/understanding-gnome-shells-focus-stealing-prevention/) on why this is fundamentally broken for a large part of the app ecosystem.
 
-The fix that actually works is applying **both** settings together: the `gsettings` key above, plus enabling **Window Demands Attention Focus** in the [Just Perfection](https://gitlab.gnome.org/jrahmatzadeh/just-perfection) GNOME Shell extension. In its **Behavior** tab:
+The fix that actually works is keeping the `gsettings` key on `smart` and also enabling **Window Demands Attention Focus** in the [Just Perfection](https://gitlab.gnome.org/jrahmatzadeh/just-perfection) GNOME Shell extension. In its **Behavior** tab:
 
 ![Just Perfection extension settings panel, Behavior tab](/images/just-perfection-panel.avif)
 
 ![Just Perfection: Window Demands Attention Focus setting enabled](/images/just-perfection-window-raise.avif)
 
-Using Just Perfection alone without the `gsettings` change may still leave edge cases. Using only `gsettings` is not enough for apps that don't implement the activation protocol. Both together covers the vast majority of cases.
+Using only `gsettings` is not enough for apps that don't implement the activation protocol, which is what the extension makes up for. Together they cover the vast majority of cases.

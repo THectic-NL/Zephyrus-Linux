@@ -22,17 +22,9 @@ microsoft.com/en-us/evalcenter/download-windows-11-enterprise
 
 90 days free, no bloatware, no mandatory Microsoft account.
 
-**Option 2: Media Creation Tool + Activation Script**
+**Option 2: Official download (needs a license)**
 
-Use the official Windows 11 Media Creation Tool with an activation method:
-
-1. Download [Windows 11 Media Creation Tool](https://www.microsoft.com/software-download/windows11)
-2. Create installation media on a USB drive or ISO file
-3. Use [MAS (Microsoft Activation Scripts)](https://massgrave.dev/) for activation:
-   - Open PowerShell as Administrator in Windows
-   - Run: `irm https://get.activated.win | iex`
-   - Select the appropriate activation method for your setup
-   - No 90-day limit, full Windows 11 experience
+Download the Windows 11 ISO from [Microsoft](https://www.microsoft.com/software-download/windows11) and activate it with a license you own.
 
 **Option 3: AtlasOS (Optimized for Performance)**
 
@@ -57,8 +49,6 @@ Getting the stack in place is the part that differs. Everything from the default
 ```bash
 sudo pacman -S virt-manager qemu-full swtpm edk2-ovmf dnsmasq
 ```
-
-**Note:** The `virtio-win` package is available from the AUR (`yay -S virtio-win`) or you can download the ISO directly in a later step.
 
 **2. Add user to libvirt group:**
 ```bash
@@ -141,11 +131,11 @@ sudo firewall-cmd --get-active-zones
 
 **5. Download VirtIO drivers ISO:**
 ```bash
-# Download the official stable VirtIO drivers ISO (~753 MB)
+# Download the official stable VirtIO drivers ISO (~880 MB)
 sudo curl -L -o /var/lib/libvirt/images/virtio-win.iso \
   https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
 
-# Verify the download (should be ~753 MB)
+# Verify the download (should be ~880 MB)
 ls -lh /var/lib/libvirt/images/virtio-win.iso
 ```
 Let the download finish; it is large.

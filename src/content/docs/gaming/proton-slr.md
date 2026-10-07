@@ -91,13 +91,13 @@ prime-run %command%
 {{< /tab >}}
 {{< tab name="Bazzite" >}}
 
-There is no `prime-run` here, so set the variables directly:
+`prime-run` is a script from the Arch `nvidia-prime` package, so set the variables it sets yourself:
 
 ```
-__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia %command%
+__NV_PRIME_RENDER_OFFLOAD=1 __VK_LAYER_NV_optimus=NVIDIA_only __GLX_VENDOR_LIBRARY_NAME=nvidia %command%
 ```
 
-Same thing, spelled out. It is what `prime-run` does on the other tab.
+Same thing, spelled out. `__VK_LAYER_NV_optimus=NVIDIA_only` is the one that matters for Vulkan, which DXVK and VKD3D-Proton use.
 
 {{< /tab >}}
 {{< /tabs >}}

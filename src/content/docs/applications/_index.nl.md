@@ -118,12 +118,12 @@ Er is een `gsettings`-sleutel die dit zou moeten regelen:
 gsettings set org.gnome.desktop.wm.preferences focus-new-windows 'smart'
 ```
 
-De standaard is `strict` (nieuwe vensters nooit automatisch focussen). `smart` laat GNOME zelf beslissen en zou nieuwe vensters naar voren moeten brengen. In de praktijk **is dit alleen niet betrouwbaar**. Vensters belanden alsnog geminimaliseerd op de achtergrond in veel gevallen, omdat het onderliggende probleem is dat apps het [XDG Activation-protocol](https://wayland.app/protocols/xdg-activation-v1) moeten implementeren om focus correct aan te vragen, en veel doen dat niet. De GNOME Shell dev-blog heeft [een uitgebreide uitleg](https://blogs.gnome.org/shell-dev/2024/09/20/understanding-gnome-shells-focus-stealing-prevention/) over waarom dit voor een groot deel van het app-ecosysteem fundamenteel kapot is.
+`smart` is al de standaard van GNOME, dus het commando doet alleen iets als de jouwe op `strict` stond. Zelfs `smart` is **niet betrouwbaar**. Vensters belanden alsnog geminimaliseerd op de achtergrond in veel gevallen, omdat het onderliggende probleem is dat apps het [XDG Activation-protocol](https://wayland.app/protocols/xdg-activation-v1) moeten implementeren om focus correct aan te vragen, en veel doen dat niet. De GNOME Shell dev-blog heeft [een uitgebreide uitleg](https://blogs.gnome.org/shell-dev/2024/09/20/understanding-gnome-shells-focus-stealing-prevention/) over waarom dit voor een groot deel van het app-ecosysteem fundamenteel kapot is.
 
-De oplossing die wel werkt is het toepassen van **beide** instellingen tegelijk: de `gsettings`-sleutel hierboven, plus **Window Demands Attention Focus** inschakelen in de [Just Perfection](https://gitlab.gnome.org/jrahmatzadeh/just-perfection) GNOME Shell-extensie. In het tabblad **Behavior**:
+De oplossing die wel werkt is de `gsettings`-sleutel op `smart` houden en daarnaast **Window Demands Attention Focus** inschakelen in de [Just Perfection](https://gitlab.gnome.org/jrahmatzadeh/just-perfection) GNOME Shell-extensie. In het tabblad **Behavior**:
 
 ![Just Perfection extensie-instellingen, tabblad Behavior](/images/just-perfection-panel.avif)
 
 ![Just Perfection: Window Demands Attention Focus ingeschakeld](/images/just-perfection-window-raise.avif)
 
-Alleen Just Perfection gebruiken zonder de `gsettings`-wijziging kan nog steeds randgevallen opleveren. Alleen `gsettings` is niet voldoende voor apps die het activatieprotocol niet implementeren. Beide samen dekt de grote meerderheid van de gevallen.
+Alleen `gsettings` is niet voldoende voor apps die het activatieprotocol niet implementeren, en dat vangt de extensie op. Samen dekken ze de grote meerderheid van de gevallen.

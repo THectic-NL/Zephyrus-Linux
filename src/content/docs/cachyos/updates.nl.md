@@ -18,7 +18,7 @@ Breekt een update iets, dan draai je hem met de hand terug. Herinstalleer het vo
 
 ## Grafisch bijwerken
 
-Wil je liever geen terminal gebruiken? [Shelly](https://github.com/Seafoam-Labs/Shelly-ALPM) — de standaard grafische package manager van CachyOS — heeft een tabblad **Update** dat hetzelfde doet: eerst een conflictcheck, dan elk package bijwerken met een eigen voortgangsbalk, met daaronder hetzelfde pacman-transactielog als je wilt meekijken.
+Wil je liever geen terminal gebruiken? [Shelly](https://github.com/Seafoam-Labs/Shelly-ALPM), de standaard grafische package manager van CachyOS, heeft een tabblad **Update** dat hetzelfde doet: eerst een conflictcheck, dan elk package bijwerken met een eigen voortgangsbalk, met daaronder hetzelfde pacman-transactielog als je wilt meekijken.
 
 ![Shelly werkt packages bij, met het pacman-transactielog eronder open](/images/shelly-updating.avif)
 
@@ -51,11 +51,13 @@ Topgrade detecteert wat er op het systeem staat in plaats van dat je het vertelt
 
 ### Installeren
 
+Topgrade zit in de AUR, niet in de Arch- of CachyOS-repositories:
+
 ```bash
-sudo pacman -S topgrade
+paru -S topgrade
 ```
 
-Zit hij niet in de repos op jouw installatie, dan heeft de AUR zowel `topgrade` als `topgrade-bin`.
+`topgrade-bin` is de voorgebouwde variant. paru toont de PKGBUILD ter controle voordat het iets bouwt.
 
 ### Draaien
 

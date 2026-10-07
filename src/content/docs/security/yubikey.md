@@ -8,6 +8,15 @@ next: docs/applications
 Using the YubiKey for `sudo` and the GNOME lock screen works reliably via `pam-u2f`. LUKS unlock at boot did not work due to a USB timing race condition on this hardware; see the [Known Issues]({{< relref "/docs/known-issues" >}}) page for the full attempt log.
 
 
+## With the setup script
+
+Tick **YubiKey for sudo and the lock screen** in the [setup script]({{< relref "/docs/setup-script" >}}). It installs the tools and registers your key (plug it in, press Enter, touch it) as well. **Register a spare YubiKey** is optional.
+
+Every PAM file is backed up before it is edited, checked afterwards, and restored if the check fails. Unticking removes the line again. Test `sudo true` in a second terminal before closing the first.
+
+The rest of this page is the same by hand.
+
+
 ## What Works
 
 - **OATH/TOTP**: Yubico Authenticator 7.3.1 works perfectly for 2FA codes
@@ -62,7 +71,7 @@ flatpak install flathub com.yubico.yubioath
 
 ## pam-u2f
 
-Require YubiKey touch for `sudo` and the GNOME lock screen. No initramfs, no boot-timing issues.
+Require YubiKey touch for `sudo` and the GNOME lock screen. No initramfs, no boot-timing issues. A key registered with `pamu2fcfg` only proves presence: touching it is enough, there is no PIN unless you add `-N`.
 
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
@@ -147,14 +156,19 @@ Without the YubiKey plugged in, it falls through to password as normal.
 
 ### Graphical sudo (polkit)
 
-GNOME's graphical authentication dialog uses a separate PAM service: `polkit-1`. This file doesn't exist by default on CachyOS, so polkit falls back to password-only.
+GNOME's graphical authentication dialog uses a separate PAM service: `polkit-1`. The package ships it in `/usr/lib/pam.d/`, not in `/etc/pam.d/`. Copy it, then edit the copy:
 
-Create `/etc/pam.d/polkit-1`:
+```bash
+sudo cp /usr/lib/pam.d/polkit-1 /etc/pam.d/polkit-1
+```
+
+Add the YubiKey line as the first `auth` line:
 ```
 #%PAM-1.0
 auth       sufficient   pam_u2f.so cue
 auth       include      system-auth
 account    include      system-auth
+password   include      system-auth
 session    include      system-auth
 ```
 
@@ -162,7 +176,13 @@ session    include      system-auth
 
 ### GNOME lock screen
 
-Edit `/etc/pam.d/gdm-password`:
+Same here: if `/etc/pam.d/gdm-password` is missing, copy it from `/usr/lib/pam.d/` first:
+
+```bash
+sudo cp /usr/lib/pam.d/gdm-password /etc/pam.d/gdm-password
+```
+
+Then edit `/etc/pam.d/gdm-password`:
 ```
 #%PAM-1.0
 auth       sufficient   pam_u2f.so cue
@@ -186,6 +206,10 @@ Lock the screen with `Super+L` and touch the YubiKey to unlock.
 | YubiKey plugged in | Touch required to unlock |
 | YubiKey absent | Falls back to password |
 | Boot / autologin | Unaffected (LUKS password, then straight to desktop) |
+
+A touch replaces the password, it does not come on top of it: whoever holds the key can use `sudo` and unlock the screen.
+
+A copy in `/etc/pam.d/` stops following the package. Compare it with `/usr/lib/pam.d/` after updates.
 
 `sufficient` means: if the YubiKey succeeds, skip remaining auth steps. If absent or touch times out, PAM continues to the next method (password). The [pam.d manual](https://man7.org/linux/man-pages/man5/pam.d.5.html) puts it this way: a `sufficient` module that succeeds, with no earlier `required` module having failed, makes PAM return success at once, and "a failure of a sufficient module is ignored and processing of the PAM module stack continues unaffected". `cue` prints "Please touch the FIDO authenticator." as a visual hint; the [pam-u2f README](https://github.com/Yubico/pam-u2f) describes it as prompting the user to touch the authenticator.
 

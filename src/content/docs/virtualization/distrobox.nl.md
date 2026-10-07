@@ -127,7 +127,7 @@ Houd projectstatus binnen de projectmap en wees bewust met alles wat naar `~` sc
 ## Specifiek op Bazzite
 
 - **`/var/home`.** Je home-map is `/var/home/<gebruiker>` met `/home` als symlink daarnaartoe. Distrobox gaat daar goed mee om, maar een script binnen een container dat `/home/<gebruiker>` hardcodeert misschien niet. "Bestaat niet" binnen een container terwijl het er buiten duidelijk wél is: dit is waarom.
-- **Wat op de host hoort.** Alles wat de kernel of de inlogsessie moet laden (drivers, kernelmodules, PAM-modules, systeemdiensten) kan niet uit een container komen. Daar is layeren voor, en daarom zijn [`asusctl`]({{< relref "/docs/hardware/asusctl-rog-control" >}}) en `pam-u2f` gelaagd en niet gecontaineriseerd.
+- **Wat op de host hoort.** Alles wat de kernel of de inlogsessie moet laden (drivers, kernelmodules, PAM-modules, systeemdiensten) kan niet uit een container komen. Daar is layeren voor, en daarom is `pam-u2f` gelaagd en niet gecontaineriseerd. [`asusctl`]({{< relref "/docs/hardware/asusctl-rog-control" >}}) is de uitzondering: Bazzite installeert het voor je met `ujust asus`, zonder layeren.
 - **Eerst Homebrew voor kale CLI-tools.** Is een tool één binary zonder systeemintegratie, dan is `brew install` eenvoudiger dan een container. Distrobox is voor als je de package manager van een distributie nodig hebt, niet voor elk commandline-programma.
 
 ## Referenties

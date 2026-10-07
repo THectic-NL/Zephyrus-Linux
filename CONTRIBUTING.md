@@ -51,7 +51,7 @@ style: fix Dutch translation typos
 - Update both EN (`*.md`) and NL (`*.nl.md`) versions where applicable
 - All images must be in **AVIF format**. No PNG or JPG in `src/static/images/`
 - Test locally with `cd src && hugo server` before opening a PR
-- Target the `development` branch, not `main`
+- Target `main`
 
 ---
 
@@ -87,7 +87,7 @@ After changing a script, rewrite the published hashes:
 .github/scripts/check-doc-checksums.sh --apply
 ```
 
-The setup script (`zephyrus-setup.py`) only runs a dedicated script, or installs a color profile from `src/static/icc-profiles/`, when its SHA-256 matches the one written into the setup script itself. The same command rewrites those hashes first, and then the hash of the setup script that the guides publish. Run it after changing any script or profile.
+The setup script (`quicksetup.py`) only runs a dedicated script, or installs a color profile from `src/static/icc-profiles/`, when its SHA-256 matches the one written into the setup script itself. The same command rewrites those hashes first, and then the hash of the setup script that the guides publish. Run it after changing any script or profile.
 
 Commit the content change along with the script. A pull request that leaves them out of sync fails the `Check published script checksums` step in the quality checks.
 
@@ -107,7 +107,7 @@ This site is bilingual (EN + NL). When updating content:
 The guides cover two distributions.
 
 **Pages that work fundamentally differently per distribution** live in
-`content/docs/cachyos/` and `content/docs/bazzite/`. The file names mirror each
+`src/content/docs/cachyos/` and `src/content/docs/bazzite/`. The file names mirror each
 other (`cachyos/nvidia.md` has a `bazzite/nvidia.md`), because the navbar
 distribution switcher moves between them by swapping the path segment. Set
 `distro: cachyos` or `distro: bazzite` in the front matter of every page in
@@ -115,7 +115,7 @@ those two trees, and add a matching page on the other side.
 
 **Everything that doesn't depend on the distribution** stays in the shared
 sections (`hardware/`, `security/`, `networking/`, `virtualization/`,
-`desktop/`, `gaming/`, plus `applications.md` and `known-issues.md`). Where a
+`desktop/`, `gaming/`, `applications/` and `known-issues.md`, all under `src/content/docs/`). Where a
 shared page has a step that differs only by package manager, use a tab:
 
 ```markdown

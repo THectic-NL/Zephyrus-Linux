@@ -6,7 +6,7 @@ A checklist for setting up Linux the way the guides at
 https://zephyrus-linux.thectic.nl describe it. Tick what you want, untick what
 you don't, read the plan, apply it.
 
-    python3 zephyrus-setup.py
+    python3 quicksetup.py
 
 That is all of it: no commands, no options.
 
@@ -18,10 +18,12 @@ Changes are made on Arch-based systems (it is built on CachyOS). Anywhere else
 the window opens read-only: you see what is set up and can open the guides.
 
 Everything that needs root runs as one script behind one polkit prompt. This
-script itself never edits the bootloader, PAM files or Secure Boot keys,
-because a mistake in any of those can lock you out. The AMD PSR fix, the
-YubiKey PAM setup and Secure Boot are guides, not toggles. The brightness fix
-runs its own script, which keeps a backup of what it changes.
+script never edits the bootloader or the Secure Boot keys, because a mistake in
+either can stop the machine from booting: the AMD PSR fix and Secure Boot are
+guides, not toggles. The PAM files are the exception, only for the YubiKey: it
+adds one 'sufficient' line, keeps a backup, checks the result and puts the old
+file back when the check fails. The brightness fix runs its own script, which
+keeps a backup of what it changes.
 
 Author: Stensel8
 One file, standard library plus PyGObject, like the dedicated scripts next to it.
@@ -655,6 +657,8 @@ class Step:
     early: bool = False
     # Fetches something from the internet, so the plan warns when there is no connection.
     network: bool = False
+    # What an error message calls the program of an interactive step, when its last argument says nothing.
+    name: str = ""
 
 
 @dataclass
@@ -745,7 +749,7 @@ class Item:
     # Other items this one cannot work without, and items it cannot be on together with.
     requires: tuple[str, ...] = ()
     conflicts: tuple[str, ...] = ()
-    # No toggle: the steps touch the bootloader, PAM or Secure Boot, so they stay yours.
+    # No toggle: the steps touch the bootloader or Secure Boot, so they stay yours.
     # The row is a status and a guide.
     guide_only: bool = False
 
@@ -1170,6 +1174,8 @@ def off_shortcuts(s: System, p: Plan) -> None:
 CUSTOM_KEYS = MEDIA_KEYS + ".custom-keybinding"
 CUSTOM_BASE = "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings"
 SMILE_ID = "it.mijorus.smile"
+# What GNOME 51 on the G16 reports for the Copilot key (it used to show up as XF86TouchpadOff).
+COPILOT_KEY_BINDING = "<Shift><Super>F23"
 
 
 def custom_keybindings(s: System) -> list[str]:
@@ -1192,7 +1198,7 @@ def add_smile_shortcut() -> None:
         number += 1
     path = f"{CUSTOM_BASE}/custom{number}/"
     for key, value in (("name", "Emoji picker"), ("command", f"flatpak run {SMILE_ID}"),
-                       ("binding", "<Shift><Super>XF86TouchpadOff")):
+                       ("binding", COPILOT_KEY_BINDING)):
         res = run(["gsettings", "set", f"{CUSTOM_KEYS}:{path}", key, value])
         if not res.ok:
             raise SetupError(res.text or f"gsettings set {key} failed")
@@ -1598,11 +1604,100 @@ def off_autologin(s: System, p: Plan) -> None:
 
 
 YUBIKEY_PACKAGES = ("pam-u2f", "ccid", "pcsclite")
+# The services where a touch of the key can answer a password prompt: sudo, the graphical prompt of polkit and the
+# GNOME lock screen (GDM uses the same service for its login screen).
 YUBIKEY_PAM_FILES = ("sudo", "polkit-1", "gdm-password")
+PAM_DIR = Path("/etc/pam.d")
+# PAM reads a service from /etc/pam.d first and falls back to the file the package ships here. polkit-1 and
+# gdm-password live only here on a fresh install, so wiring them means putting a copy in /etc/pam.d.
+PAM_VENDOR_DIR = Path("/usr/lib/pam.d")
+PAM_U2F_MODULE = Path("/usr/lib/security/pam_u2f.so")
+PAM_U2F_MARKER = "# Added by Zephyrus Setup: touch the YubiKey instead of typing the password"
+PAM_U2F_LINE = "auth       sufficient   pam_u2f.so cue"
+PAM_U2F_AUTH = re.compile(r"\s*auth\s+sufficient\s+pam_u2f\.so(?:\s.*)?")
+# One registration as pamu2fcfg prints it: key handle, public key, key type and options.
+U2F_CREDENTIAL = re.compile(r"[A-Za-z0-9+/=_-]+,[A-Za-z0-9+/=_-]+,(?:es256|eddsa|rs256)(?:,[+A-Za-z]*)?")
+
+
+def pam_source(name: str) -> Path | None:
+    """The file PAM reads for a service: yours in /etc/pam.d, else the one the package ships."""
+    for folder in (PAM_DIR, PAM_VENDOR_DIR):
+        if (folder / name).is_file():
+            return folder / name
+    return None
+
+
+def pam_targets() -> list[str]:
+    """The services from YUBIKEY_PAM_FILES that exist here. polkit-1 and gdm-password need polkit and GDM."""
+    return [name for name in YUBIKEY_PAM_FILES if pam_source(name)]
+
+
+def pam_text(name: str) -> str:
+    source = pam_source(name)
+    try:
+        return source.read_text(encoding="utf-8") if source else ""
+    except OSError:
+        return ""
+
+
+def pam_calls_u2f(text: str) -> bool:
+    return any("pam_u2f.so" in line for line in text.splitlines() if not line.lstrip().startswith("#"))
 
 
 def yubikey_wired() -> list[str]:
-    return [name for name in YUBIKEY_PAM_FILES if "pam_u2f" in read_text(Path("/etc/pam.d") / name)]
+    return [name for name in pam_targets() if pam_calls_u2f(pam_text(name))]
+
+
+def yubikey_wired_elsewhere() -> list[str]:
+    """Services outside YUBIKEY_PAM_FILES that call pam_u2f. Someone added those by hand."""
+    try:
+        files = sorted(PAM_DIR.iterdir())
+    except OSError:
+        return []
+    found = []
+    for path in files:
+        if path.name in YUBIKEY_PAM_FILES or path.name.endswith(".bak") or not path.is_file():
+            continue
+        try:
+            if pam_calls_u2f(path.read_text(encoding="utf-8", errors="replace")):
+                found.append(path.name)
+        except OSError:
+            continue
+    return found
+
+
+def pam_with_u2f(text: str) -> str:
+    """The PAM file with the YubiKey line as its first auth line, so a touch is tried before the password."""
+    lines = text.splitlines()
+    for number, line in enumerate(lines):
+        if re.match(r"\s*auth\s", line):
+            return "\n".join([*lines[:number], PAM_U2F_MARKER, PAM_U2F_LINE, *lines[number:]]) + "\n"
+    raise SetupError("it has no auth line, so there is no sensible place for the YubiKey line")
+
+
+def pam_without_u2f(text: str) -> str:
+    """The PAM file without the YubiKey line (and the note above it), whoever added it."""
+    kept = [line for line in text.splitlines()
+            if line.strip() != PAM_U2F_MARKER and not PAM_U2F_AUTH.fullmatch(line)]
+    if pam_calls_u2f("\n".join(kept)):
+        raise SetupError("it calls pam_u2f in a form this window did not write. Take that line out yourself")
+    return "\n".join(kept) + "\n"
+
+
+def pam_install_snippet(name: str, staged: Path, digest: str, existed: bool) -> str:
+    """
+    Root snippet that puts a prepared PAM file in place and checks it afterwards. The old file is kept next to it.
+    When the check fails the old file comes back (or the new copy goes away again), so a bad edit never stays.
+    """
+    target = shlex.quote(str(PAM_DIR / name))
+    backup = shlex.quote(str(PAM_DIR / name) + ".zephyrus-setup.bak")
+    undo = f"cp -a {backup} {target}" if existed else f"rm -f {target}"
+    return (f"[ -e {shlex.quote(str(PAM_U2F_MODULE))} ] || "
+            "{ echo 'pam_u2f.so is not installed, so PAM would have nothing to call'; exit 1; }\n"
+            + (f"[ -e {backup} ] || cp -a {target} {backup}\n" if existed else "")
+            + staged_install(staged, digest, str(PAM_DIR / name)) + "\n"
+            f"grep -Eq '^auth[[:space:]]+sufficient[[:space:]]+pam_u2f\\.so' {target} || "
+            f"{{ {undo}; echo 'The PAM check failed, the old file is back'; exit 1; }}")
 
 
 def check_yubikey(s: System) -> Check:
@@ -1619,8 +1714,6 @@ def on_yubikey(s: System, p: Plan) -> None:
     p.add_pacman([x for x in YUBIKEY_PACKAGES if x not in s.pacman_installed()])
     p.add_flatpak([x for x in ("com.yubico.yubioath",) if x not in s.flatpaks()])
     p.add_root("Start the smart card daemon now and at boot", "systemctl enable --now pcscd.socket")
-    p.note("This only installs the tools. Registering the key and wiring it into sudo and the lock screen stays "
-           "manual: see the YubiKey guide row.")
 
 
 def off_yubikey(s: System, p: Plan) -> None:
@@ -1631,22 +1724,219 @@ def off_yubikey(s: System, p: Plan) -> None:
 
 
 def yubikey_off_blocker(s: System) -> str | None:
-    wired = yubikey_wired()
-    if wired:
-        return ("pam_u2f is still referenced in /etc/pam.d/" + ", /etc/pam.d/".join(wired) + ". Remove those lines "
-                "first: taking the module away while they are there can lock you out of sudo and the lock screen")
+    """The three services this window wires are covered by 'requires'. Anything else would be someone's own edit."""
+    elsewhere = yubikey_wired_elsewhere()
+    if elsewhere:
+        return ("pam_u2f is also used in /etc/pam.d/" + ", /etc/pam.d/".join(elsewhere) + ", which this window did "
+                "not set up. Take those lines out first: removing the module while they are there can lock you out")
     return None
 
 
-def check_yubikey_guide(s: System) -> Check:
+# --- the registration: which keys may answer for you --------------------------------------
+
+def u2f_keys_file(home: Path) -> Path:
+    """Where pam_u2f looks by default. The line is 'user:key1:key2', one credential per registered key."""
+    return home / ".config" / "Yubico" / "u2f_keys"
+
+
+def u2f_credentials(text: str, user: str) -> list[str]:
+    for line in text.splitlines():
+        name, _, rest = line.partition(":")
+        if name == user:
+            return [part for part in rest.split(":") if part]
+    return []
+
+
+def u2f_with_credential(text: str, user: str, credential: str) -> str:
+    """The key file with one more credential on the user's line. Other users' lines stay as they are."""
+    if not U2F_CREDENTIAL.fullmatch(credential):
+        raise SetupError("what the key returned does not look like a registration, so it was not saved")
+    lines = text.splitlines()
+    for number, line in enumerate(lines):
+        name, _, rest = line.partition(":")
+        if name == user:
+            lines[number] = f"{line}:{credential}" if rest else f"{user}:{credential}"
+            break
+    else:
+        lines.append(f"{user}:{credential}")
+    return "\n".join(lines) + "\n"
+
+
+def u2f_first_credential_only(text: str, user: str) -> str:
+    lines = text.splitlines()
+    for number, line in enumerate(lines):
+        name, _, _rest = line.partition(":")
+        if name == user:
+            lines[number] = ":".join([user, *u2f_credentials(text, user)[:1]])
+    return "\n".join(lines) + "\n"
+
+
+def write_private(path: Path, text: str) -> None:
+    """Replace a file in one step, readable by you only (this is a key file)."""
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    temp = path.with_name(path.name + ".tmp")
+    fd = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as handle:
+        handle.write(text)
+    os.replace(temp, path)
+
+
+def registered_keys(s: System) -> int:
+    try:
+        return len(u2f_credentials(u2f_keys_file(s.home).read_text(encoding="utf-8"), s.user))
+    except OSError:
+        return 0
+
+
+def staged_registration() -> Path:
+    return CACHE_DIR / "yubikey-registration"
+
+
+def register_command(spare: bool) -> list[str]:
+    """
+    What the terminal window runs: ask for the key, let pamu2fcfg talk to it (it asks for the key's PIN itself when
+    the key has one) and keep what it prints. Only the part that needs you sits in the terminal.
+    """
+    staged = shlex.quote(str(staged_registration()))
+    ask = ("Take the first key out and plug in the spare one, then press Enter. " if spare
+           else "Plug in your YubiKey, then press Enter. ")
+    script = (f'umask 077; mkdir -p "$(dirname {staged})"; rm -f {staged}\n'
+              f'read -r -p {shlex.quote(ask)} _\n'
+              'echo "Touch the key when it blinks. If it asks for a PIN, that is the PIN of the key itself."\n'
+              f'pamu2fcfg -n > {staged} || {{ code=$?; rm -f {staged}; exit "$code"; }}')
+    return ["bash", "-c", script]
+
+
+def save_registration(s: System) -> None:
+    """Add what the terminal step got from the key to your key file, and never leave the raw output lying around."""
+    staged = staged_registration()
+    try:
+        credential = staged.read_text(encoding="utf-8").strip().lstrip(":")
+    except OSError:
+        credential = ""
+    finally:
+        staged.unlink(missing_ok=True)
+    if not credential:
+        raise SetupError("the key did not return a registration. Run the step again with the key plugged in")
+    path = u2f_keys_file(s.home)
+    try:
+        existing = path.read_text(encoding="utf-8")
+    except OSError:
+        existing = ""
+    write_private(path, u2f_with_credential(existing, s.user, credential))
+    log.info("saved a U2F registration for %s (%d now)", s.user, registered_keys(s))
+
+
+def plan_registration(s: System, p: Plan, spare: bool) -> None:
+    what = "spare YubiKey" if spare else "YubiKey"
+    p.steps.append(Step(f"Register your {what}: plug it in, and touch it when it blinks",
+                        argv_factory=lambda: register_command(spare), interactive=True, name="pamu2fcfg"))
+    p.steps.append(Step(f"Save the registration of your {what} in ~/.config/Yubico/u2f_keys",
+                        call=lambda: save_registration(s)))
+
+
+def check_yubikey_key(s: System) -> Check:
+    count = registered_keys(s)
+    if count:
+        return Check(State.DONE, f"{plural(count, 'key', 'keys')} registered for {s.user}")
+    return Check(State.TODO, "no key registered yet")
+
+
+def on_yubikey_key(s: System, p: Plan) -> None:
+    plan_registration(s, p, spare=False)
+
+
+def off_yubikey_key(s: System, p: Plan) -> None:
+    path = u2f_keys_file(s.home)
+    backup = path.with_name(path.name + ".zephyrus-setup.bak")
+    p.steps.append(Step("Forget the registered keys (the file is kept as u2f_keys.zephyrus-setup.bak)",
+                        call=lambda: path.replace(backup)))
+    p.note("The keys themselves are not touched. Registering again takes a few seconds.")
+
+
+def check_yubikey_spare(s: System) -> Check:
+    count = registered_keys(s)
+    if count >= 2:
+        return Check(State.DONE, f"{count} keys registered for {s.user}")
+    return Check(State.TODO, "one key registered, no spare yet" if count else "register your first key first")
+
+
+def on_yubikey_spare(s: System, p: Plan) -> None:
+    plan_registration(s, p, spare=True)
+
+
+def off_yubikey_spare(s: System, p: Plan) -> None:
+    path = u2f_keys_file(s.home)
+
+    def keep_first() -> None:
+        write_private(path, u2f_first_credential_only(path.read_text(encoding="utf-8"), s.user))
+
+    p.steps.append(Step("Forget the spare key (the first registered key stays)", call=keep_first))
+
+
+# --- the PAM wiring: a touch instead of the password --------------------------------------
+
+def check_yubikey_pam(s: System) -> Check:
+    wired, targets = yubikey_wired(), pam_targets()
+    if wired and "pam-u2f" not in s.pacman_installed():
+        return Check(State.PARTIAL, "PAM calls pam_u2f but the pam-u2f package is not installed. Fix this first")
     if "pam-u2f" not in s.pacman_installed():
         return Check(State.TODO, "install the YubiKey tools first")
-    keys = (s.home / ".config" / "Yubico" / "u2f_keys").exists() or Path("/etc/u2f_mappings").exists()
-    wired = yubikey_wired()
-    detail = f"key registered: {'yes' if keys else 'no'}, wired into PAM: {', '.join(wired) or 'nowhere'}"
-    if keys and len(wired) == len(YUBIKEY_PAM_FILES):
-        return Check(State.DONE, detail)
-    return Check(State.PARTIAL if keys or wired else State.TODO, detail)
+    if not targets:
+        return Check(State.NA, "none of sudo, polkit or GDM has a PAM file here")
+    if len(wired) == len(targets):
+        return Check(State.DONE, "a touch works for " + ", ".join(wired))
+    if wired:
+        return Check(State.PARTIAL, "a touch works for " + ", ".join(wired) + ", not yet for "
+                     + ", ".join(name for name in targets if name not in wired))
+    return Check(State.TODO, "sudo, the graphical prompt and the lock screen still ask for the password")
+
+
+def on_yubikey_pam(s: System, p: Plan) -> None:
+    targets = pam_targets()
+    if "sudo" not in targets:
+        raise SetupError("there is no PAM file for sudo, so there is nothing to wire")
+    for name in targets:
+        text = pam_text(name)
+        if pam_calls_u2f(text):
+            continue
+        try:
+            new = pam_with_u2f(text)
+        except SetupError as exc:
+            raise SetupError(f"{PAM_DIR / name}: {exc}") from exc
+        existed = (PAM_DIR / name).is_file()
+        staged, digest = stage_file(f"pam-{name}", new.encode("utf-8"))
+        how = ("the old file is kept as " + name + ".zephyrus-setup.bak" if existed
+               else "a copy of the file the package ships, in /etc/pam.d")
+        p.add_root(f"Put the YubiKey line first in /etc/pam.d/{name} ({how})",
+                   pam_install_snippet(name, staged, digest, existed))
+    p.note("A touch of the key now replaces the password for sudo, the graphical prompt and the lock screen, so "
+           "whoever holds the key can use them. Without the key plugged in, the password works as before.")
+    p.note("Test sudo in a second terminal before you close this one.")
+
+
+def off_yubikey_pam(s: System, p: Plan) -> None:
+    for name in pam_targets():
+        target = PAM_DIR / name
+        try:
+            text = target.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        if not pam_calls_u2f(text):
+            continue
+        try:
+            stripped = pam_without_u2f(text)
+        except SetupError as exc:
+            raise SetupError(f"{target}: {exc}") from exc
+        backup = shlex.quote(str(target) + ".zephyrus-setup.bak")
+        vendor = PAM_VENDOR_DIR / name
+        if vendor.is_file() and stripped.split() == vendor.read_text(encoding="utf-8").split():
+            p.add_root(f"Take the YubiKey line out of /etc/pam.d/{name} by removing the copy, so the file the "
+                       "package ships is used again", f"rm -f {shlex.quote(str(target))} {backup}", early=True)
+        else:
+            staged, digest = stage_file(f"pam-{name}", stripped.encode("utf-8"))
+            p.add_root(f"Take the YubiKey line out of /etc/pam.d/{name}",
+                       staged_install(staged, digest, str(target)) + f"\nrm -f {backup}", early=True)
 
 
 def check_secure_boot(s: System) -> Check:
@@ -2534,16 +2824,16 @@ def check_virtio_iso(s: System) -> Check:
     except OSError:
         return Check(State.TODO, "no VirtIO drivers ISO yet")
     return Check(State.DONE if size > 700_000_000 else State.PARTIAL,
-                 f"{size // 1_000_000} MB (a complete download is about 753 MB)")
+                 f"{size // 1_000_000} MB (a complete download is about 880 MB)")
 
 
 def on_virtio_iso(s: System, p: Plan) -> None:
     target = VIRTIO_ISO.parent if VIRTIO_ISO.parent.exists() else Path("/var/lib")
     free = shutil.disk_usage(target).free
     if free < 1_300_000_000:
-        raise SetupError(f"only {free // 1_000_000} MB is free in {target}, and the ISO needs about 800 MB")
+        raise SetupError(f"only {free // 1_000_000} MB is free in {target}, and the ISO needs about 900 MB")
     part = shlex.quote(str(VIRTIO_ISO) + ".part")
-    p.add_root("Download the VirtIO drivers ISO (about 753 MB)",
+    p.add_root("Download the VirtIO drivers ISO (about 880 MB)",
                f"mkdir -p {shlex.quote(str(VIRTIO_ISO.parent))}\n"
                f"curl -fL --proto '=https' -o {part} {shlex.quote(VIRTIO_URL)}\n"
                f"[ \"$(stat -c %s {part})\" -gt 700000000 ] || "
@@ -2828,17 +3118,23 @@ def build_items(catalog: ExtensionCatalog) -> list[Item]:
              "One password at boot (LUKS), then straight to the desktop. The lock screen still asks",
              "security/autologin", check_autologin, on_autologin, off_autologin, group="Login", needs_gnome=True))
     add(Item("yubikey-tools", "security", "YubiKey tools",
-             "pam-u2f, the smart card daemon and Yubico Authenticator. Registering the key is up to you",
-             "security/yubikey", check_yubikey, on_yubikey, off_yubikey, group="Hardware keys",
-             off_blocker=yubikey_off_blocker, advanced=True))
+             "pam-u2f, the smart card daemon and Yubico Authenticator", "security/yubikey", check_yubikey,
+             on_yubikey, off_yubikey, group="Hardware keys", off_blocker=yubikey_off_blocker, advanced=True))
+    add(Item("yubikey-key", "security", "Register your YubiKey",
+             "Plug it in and touch it when it blinks. It is saved for your account and nothing else changes",
+             "security/yubikey#pam-u2f", check_yubikey_key, on_yubikey_key, off_yubikey_key, group="Hardware keys",
+             requires=("yubikey-tools",), advanced=True))
+    add(Item("yubikey-spare", "security", "Register a spare YubiKey",
+             "A second key for the same account, for the day the first one is lost. Optional",
+             "security/yubikey#pam-u2f", check_yubikey_spare, on_yubikey_spare, off_yubikey_spare,
+             group="Hardware keys", requires=("yubikey-key",), advanced=True))
     add(Item("yubikey-pam", "security", "YubiKey for sudo and the lock screen",
-             "Needs edits to the PAM files, which can lock you out when they go wrong, so you do them yourself",
-             "security/yubikey#wiring-it-into-pam", check_yubikey_guide, group="Hardware keys", guide_only=True,
-             advanced=True,
-             manual=["Register the key: mkdir -p ~/.config/Yubico && pamu2fcfg > ~/.config/Yubico/u2f_keys",
-                     "Add 'auth sufficient pam_u2f.so cue' as the first auth line of /etc/pam.d/sudo, "
-                     "/etc/pam.d/polkit-1 and /etc/pam.d/gdm-password (the guide has the full files)",
-                     "Test sudo in a second terminal before you close the first one"]))
+             "A touch replaces typing the password, also in the graphical sudo prompt. Without the key the password "
+             "still works", "security/yubikey#wiring-it-into-pam", check_yubikey_pam, on_yubikey_pam,
+             off_yubikey_pam, group="Hardware keys", requires=("yubikey-key",), advanced=True,
+             manual=["Open a second terminal and run: sudo true. Touch the key when it blinks. Keep the first terminal "
+                     "open until that works",
+                     "Lock the screen with Super+L and touch the key to unlock it"]))
     add(package_item("sbctl", "security", "sbctl", "The tool that creates and enrolls your own Secure Boot keys",
                      "cachyos/secure-boot", group="Secure Boot", pacman=("sbctl",), advanced=True))
     add(Item("secure-boot", "security", "Secure Boot with your own keys",
@@ -2875,7 +3171,7 @@ def build_items(catalog: ExtensionCatalog) -> list[Item]:
                      pacman=("aws-cli-v2",), on_blocker=aws_on_blocker,
                      manual=("Sign in: aws configure sso (or aws configure)",)))
     add(package_item("topgrade", "dev", "Topgrade", "Updates pacman, the AUR, Flatpaks and more in one command",
-                     "cachyos/updates", group="Tools", pacman=("topgrade",), extra_check=check_topgrade,
+                     "cachyos/updates", group="Tools", aur=("topgrade",), extra_check=check_topgrade,
                      extra_on=on_topgrade, extra_off=off_topgrade))
     add(Item("archi", "dev", "Archi (ArchiMate)",
              f"Version {ARCHI_VERSION} from the project, checked against its published SHA-256, in /opt/Archi",
@@ -2939,10 +3235,10 @@ def build_items(catalog: ExtensionCatalog) -> list[Item]:
     add(package_item("kvm", "virt", "virt-manager and KVM", "A Windows 11 VM with VirtIO and SPICE", virt + "vm-setup",
                      group="Virtual machines", pacman=("virt-manager", "qemu-full", "swtpm", "edk2-ovmf", "dnsmasq"),
                      extra_check=check_kvm, extra_on=on_kvm, extra_off=off_kvm, keep=("dnsmasq",)))
-    add(Item("virtio-iso", "virt", "VirtIO drivers ISO", "The Windows guest drivers, about 753 MB", virt + "vm-setup",
+    add(Item("virtio-iso", "virt", "VirtIO drivers ISO", "The Windows guest drivers, about 880 MB", virt + "vm-setup",
              check_virtio_iso, on_virtio_iso, off_virtio_iso, group="Virtual machines", requires=("kvm",)))
     add(package_item("quickemu", "virt", "Quickemu", "Throwaway VMs in two commands", virt + "quickemu",
-                     group="Virtual machines", pacman=("quickemu",)))
+                     group="Virtual machines", aur=("quickemu",)))
     add(package_item("winboat", "virt", "WinBoat",
                      "Windows apps as windows on your desktop (beta). Needs Podman or Docker",
                      virt + "winboat", group="Virtual machines", pacman=("winboat",)))
@@ -3536,7 +3832,8 @@ class Executor:
                     raise SetupError("this needs a terminal window and none could be opened. Run this yourself: "
                                      + shlex.join(argv))
                 if code != 0:
-                    raise SetupError(f"{Path(argv[-1]).name if argv else 'the command'} exited with code {code}")
+                    raise SetupError(f"{step.name or (Path(argv[-1]).name if argv else 'the command')} "
+                                     f"exited with code {code}")
             elif step.call is not None:
                 step.call()
             elif step.argv:
