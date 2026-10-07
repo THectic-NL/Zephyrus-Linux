@@ -53,6 +53,7 @@ Still unresolved, tracked as [#108](https://github.com/THectic-NL/Zephyrus-Linux
 - Retest on a newer systemd, and on a cold boot versus a warm reboot, to confirm that warm reboots are the problem.
 - Load the USB HID driver earlier, with `rd.driver.pre=usbhid` or an explicit module in the initramfs, so the HID stack is up before the token query.
 - If it only fails on a warm reboot and I can reproduce it, report it upstream to systemd with the initramfs log.
+- **GNOME 51 note:** GNOME 51 adds native FIDO2 passkey support in GDM, ensuring the YubiKey works reliably for desktop sessions even if early boot LUKS unlock encounters the USB HID init race.
 
 See the **Things I Wished Had Worked** section at the bottom of this page for the full context.
 
