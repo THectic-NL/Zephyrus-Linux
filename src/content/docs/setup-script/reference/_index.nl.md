@@ -11,7 +11,7 @@ De pagina's worden bij elke build van de site uit het script gegenereerd: [`quic
 
 - [ASUS hardware](hardware/): asusctl, acculimiet, energieprofielen, helderheid
 - [Graphics](gpu/): NVIDIA-services, PRIME offload, schermvastlopers
-- [Display](display/): kleurstanden en de kleurprofielen uit de fabriek
+- [Display](display/): het fabrieksprofiel van het ingebouwde scherm
 - [Network](network/): Wi-Fi-tuning, eduroam
 - [GNOME desktop](desktop/): vensterknoppen, sneltoetsen, extensies, touchpad
 - [Security and login](security/): autologin, YubiKey, Secure Boot

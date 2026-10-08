@@ -7,25 +7,14 @@ next: docs/hardware/color-profiles
 
 The Zephyrus G16 has a lot of hardware features that don't work out of the box on Linux: fan curves, performance profiles, the Slash LED on the lid, GPU switching, battery charge limiting. This page documents how I got all of it working using asusctl and the ASUS Linux project tools. Everything below the installation step is identical on both distributions, since it's the same daemon reading the same hardware. Only getting it installed differs.
 
-{{< callout type="warning" >}}
-**supergfxctl is abandoned.** If you come across guides that mention `supergfxctl` or `supergfxd` for GPU switching on ASUS laptops: don't use them. The [Arch Wiki](https://wiki.archlinux.org/title/Supergfxctl) calls it deprecated and unmaintained, and asusctl's [changelog](https://github.com/OpenGamingCollective/asusctl/blob/main/CHANGELOG.md) lists "Remove supergfxctl completely" in 6.3.9. GPU mode switching is now part of `asusctl` (`asusctl armoury`) and ROG Control Center, which are actively maintained by the Open Gaming Collective.
-{{< /callout >}}
-
-**Package Information (at the time of writing):**
+**Package information (at the time of writing):**
 - `asusctl` 6.5.0: CLI frontend for fan curves, profiles, battery limit, RGB, Slash LED, GPU switching. Also ships `asusd`, the background daemon that actually talks to the hardware, and its systemd service. There's no separate `asusd` package to install: `pacman -Q asusd` / `rpm -q asusd` will come back empty even though the daemon is very much there.
 - `rog-control-center` 6.5.0: graphical frontend, communicates with asusd
 - Source: [asusctl releases](https://github.com/OpenGamingCollective/asusctl/releases) · in the CachyOS/Arch repos, and in [Terra](https://terra.fyralabs.com/) for Fedora
+- Check what is installed with `asusctl info` (prints the asusctl version alongside the detected hardware) or `pacman -Q asusctl rog-control-center` / `rpm -q asusctl rog-control-center`
 
-{{< callout type="info" >}}
-**6.5.0** ([release notes](https://github.com/OpenGamingCollective/asusctl/releases/tag/6.5.0), tagged September 13, 2026) is mostly a stability and validation pass: a fix for MUX writes failing in certain cases, better fan-curve and firmware-attribute write validation, GPU wake-up by telemetry fixed, fan curves now update after a profile change, and new Aura lighting support for several other Strix models. That MUX-write fix lines up with the batch-write bug tracked in [Known Issues]({{< relref "/docs/known-issues" >}}) (`asusctl#318`): its two upstream commits landed in late August, before this tag, so 6.5.0 is the first tagged release that should carry it. Confirm with `asusctl info` once your distro packages the update.
-{{< /callout >}}
-
-{{< callout type="info" >}}
-Verify what's actually installed with `asusctl info` (prints the asusctl version alongside detected hardware) or `pacman -Q asusctl rog-control-center` / `rpm -q asusctl rog-control-center`.
-{{< /callout >}}
-
-{{< callout type="info" >}}
-The project moved in 2026. Development used to live in the `asus-linux` GitLab organisation (now archived, read-only); `asusctl`, `asusd` and `rog-control-center` are now maintained under the [Open Gaming Collective](https://github.com/OpenGamingCollective/asusctl) on GitHub. [asus-linux.org](https://asus-linux.org/) is still the project site. Older guides that point at `gitlab.com/asus-linux` or the `lukenukem` Fedora COPR are out of date.
+{{< callout type="warning" >}}
+**Older guides are out of date.** `supergfxctl` and `supergfxd` are abandoned: the [Arch Wiki](https://wiki.archlinux.org/title/Supergfxctl) calls them deprecated and unmaintained, and asusctl's [changelog](https://github.com/OpenGamingCollective/asusctl/blob/main/CHANGELOG.md) lists "Remove supergfxctl completely" in 6.3.9. GPU mode switching is now part of `asusctl` (`asusctl armoury`) and ROG Control Center. The project moved in 2026 as well, from the archived `asus-linux` GitLab organisation to the [Open Gaming Collective](https://github.com/OpenGamingCollective/asusctl) on GitHub ([asus-linux.org](https://asus-linux.org/) is still the project site), so guides that point at `gitlab.com/asus-linux` or the `lukenukem` Fedora COPR are out of date too.
 {{< /callout >}}
 
 ROG Control Center describes itself, via its own **About** tab, as "a powerful graphical interface for managing ASUS ROG, TUF, and ProArt laptops on Linux... the official GUI for the asusctl toolset." It currently requires kernel 6.19, ships under the MPL-2.0 license, and lists its own work-in-progress items (widget theming, a CPU/GPU temp/fan info bar, Screenpad and ROG Ally-specific settings). Worth checking there yourself before assuming a missing feature is a bug.
@@ -450,9 +439,9 @@ Kernel 7.0 shipped in April 2026 and CachyOS picked it up fast. For this ASUS RO
 
 **Sources:** [Linus confirms Linux 7.0](https://www.phoronix.com/news/Linux-7.0-Is-Next) · [HID laptop quirks for ASUS ROG models](https://www.phoronix.com/news/Linux-7.0-HID) · [Linux 7.0 DRM/AMDGPU updates](https://www.phoronix.com/news/Linux-7.0-Graphics-Drivers)
 
-### Linux 7.3: scheduler rework and storage/memory wins (not out yet)
+### Linux 7.3: scheduler rework and storage/memory wins
 
-Not released yet, but close. `7.3-rc1` landed August 30, 2026 and `rc3` on September 13, one rc every Sunday since; going by Linus's usual pattern of releasing about a week after rc7, that puts the final release around October 18, 2026 (October 25 if an extra rc8 turns out to be needed). Worth planning for: a scheduler rework that's measured up to 25% better average FPS on older/low-power hardware, with improved cluster-aware scheduling across core types. That's directly relevant here, not just an Intel P/E-core story: the Ryzen AI 9 HX 370 in this laptop is itself a mixed Zen5/Zen5c-core design. Alongside the scheduler work: Direct I/O now runs through an iomap bounce buffer instead of falling back to buffered I/O (roughly half of theoretical throughput up to close to 95%), Btrfs skips slow paths on Direct I/O and `fsync()`, a KSM reverse-mapping lock fix drops a worst-case stall from ~700ms to under 2ms, and `zsmalloc` sees less lock contention when several processes free compressed memory at once.
+Linux 7.3, the October 2026 release, brings a scheduler rework that measured up to 25% better average FPS on older and low-power hardware, with improved cluster-aware scheduling across core types. That's directly relevant here, not just an Intel P/E-core story: the Ryzen AI 9 HX 370 in this laptop is itself a mixed Zen5/Zen5c-core design. Alongside the scheduler work: Direct I/O now runs through an iomap bounce buffer instead of falling back to buffered I/O (roughly half of theoretical throughput up to close to 95%), Btrfs skips slow paths on Direct I/O and `fsync()`, a KSM reverse-mapping lock fix drops a worst-case stall from ~700ms to under 2ms, and `zsmalloc` sees less lock contention when several processes free compressed memory at once.
 
 **Sources:** [Phoronix: Linux 7.3 features overview](https://www.phoronix.com/review/linux-73-features) · [Phoronix: Linux 7.3 "flattens the pick" (scheduler)](https://www.phoronix.com/news/Linux-7.3-Flattens-The-Pick) · [9to5Linux: Linux 7.3-rc1 announced](https://9to5linux.com/linus-torvalds-announces-first-linux-kernel-7-3-release-candidate)
 

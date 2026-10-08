@@ -11,7 +11,7 @@ The pages are generated from the script each time the site is built: [`quicksetu
 
 - [ASUS hardware](hardware/): asusctl, battery limit, power profiles, brightness
 - [Graphics](gpu/): NVIDIA services, PRIME offload, display freezes
-- [Display](display/): color modes and the factory color profiles
+- [Display](display/): the factory color profile of the built-in screen
 - [Network](network/): Wi-Fi tuning, eduroam
 - [GNOME desktop](desktop/): window buttons, shortcuts, extensions, touchpad
 - [Security and login](security/): autologin, YubiKey, Secure Boot

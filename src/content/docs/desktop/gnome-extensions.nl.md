@@ -5,13 +5,13 @@ prev: docs/hardware/color-profiles
 next: docs/desktop/astra-monitor
 ---
 
-GNOME Shell-extensies zijn hoe dit bureaublad de dingen doet die het standaard niet kan: picture-in-picture-vensters die blijven staan waar jij ze neerzet, bovenop, een systeemmonitor in de balk, fixes voor venstergedrag. Deze pagina behandelt het installeren in het algemeen. Extensies met genoeg haken en ogen om eigen instructies te verdienen krijgen een eigen pagina, hieronder gelinkt.
+GNOME Shell-extensies zijn hoe dit bureaublad de dingen doet die het standaard niet kan: picture-in-picture-vensters die blijven staan waar jij ze neerzet, bovenop, een dock, een systeemmonitor in de balk, fixes voor venstergedrag. Deze pagina behandelt het installeren in het algemeen. Extensies met genoeg haken en ogen om eigen instructies te verdienen krijgen een eigen pagina, hieronder gelinkt.
 
 ## Extensies installeren
 
 extensions.gnome.org wil een browserextensie plus een native-host-connector voordat je iets vanaf de website kunt installeren. Staat dat niet klaar, of heb je er geen zin in, sla het dan over en gebruik **Extension Manager**. Die praat rechtstreeks met GNOME Shell en heeft een eigen Bladeren-tabblad met dezelfde catalogus.
 
-Het [setup-venster]({{< relref "/docs/setup-script" >}}) kan hetzelfde voor de extensies op deze pagina: het installeert ze van extensions.gnome.org, zet ze aan en uit, en meldt het als er nog geen build voor jouw GNOME-versie is.
+Het [setup-venster]({{< relref "/docs/setup-script" >}}) kan hetzelfde voor de extensies op deze pagina: het installeert ze van extensions.gnome.org en zet ze aan en uit. GNOME Shell zoekt alleen naar extensies als hij opstart, dus een extensie die zo is geïnstalleerd verschijnt pas in Extension Manager nadat je uit- en weer inlogt. Het venster zegt dat erbij.
 
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
@@ -45,6 +45,13 @@ Extensies die je zo installeert staan in `~/.local/share/gnome-shell/extensions/
 - [extensions.gnome.org](https://extensions.gnome.org/extension/8692/in-picture/)
 - [Broncode op Codeberg](https://codeberg.org/filiprund/in-picture)
 
+### Dash to Dock
+
+[Dash to Dock](https://extensions.gnome.org/extension/307/dash-to-dock/) van micheleg haalt de dash uit het overzicht en maakt er een dock van, aan de zijkant of onderkant van het scherm, zodat je apps start en tussen vensters wisselt zonder het overzicht te openen. De nieuwste build ondersteunt GNOME 45 tot en met 51.
+
+- [extensions.gnome.org](https://extensions.gnome.org/extension/307/dash-to-dock/)
+- [Projectwebsite](https://micheleg.github.io/dash-to-dock/)
+
 ### Astra Monitor
 
 CPU, geheugen, schijf, netwerk en GPU in de bovenbalk, de Radeon 890M en de RTX 4060 naast elkaar. Hij heeft optionele dependencies afhankelijk van wat je wilt uitlezen, dus krijgt hij een eigen pagina: [Astra Monitor]({{< relref "/docs/desktop/astra-monitor" >}}).
@@ -69,4 +76,4 @@ GNOME 51 ("A Coruña") introduceert diverse verbeteringen aan de desktopervaring
 - **Wayland achtergrondvervaging:** Ondersteuning voor het `ext-background-effect-v1`-protocol maakt native blur-effecten mogelijk.
 - **Schermindeling en rotatie:** Schermindeling snapt nu netjes op het midden in Instellingen.
 
-De meeste hieronder beschreven extensies (waaronder In Picture, Astra Monitor en Just Perfection) zijn geverifieerd compatibel met GNOME 51. De uitzondering hierop is de **Smile complementary extension**, die momenteel stopt bij GNOME 50 en door GNOME Shell als verouderd wordt geweigerd totdat de maker een build voor 51 uitbrengt (Smile zelf blijft gewoon werken om emoji's naar het klembord te kopiëren).
+De meeste hieronder beschreven extensies (waaronder In Picture, Astra Monitor, Dash to Dock en Just Perfection) zijn geverifieerd compatibel met GNOME 51. De uitzondering hierop is de **Smile complementary extension**, die momenteel stopt bij GNOME 50 en door GNOME Shell als verouderd wordt geweigerd totdat de maker een build voor 51 uitbrengt (Smile zelf blijft gewoon werken om emoji's naar het klembord te kopiëren). Het setup-venster houdt hem niet tegen: het installeert de nieuwste build die er is en laat de rest aan GNOME Shell.
