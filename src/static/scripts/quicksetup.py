@@ -141,12 +141,13 @@ class SetupError(Exception):
 
 # --- small helpers ---------------------------------------------------------------------
 
-def read_text(path: Path) -> str:
-    """The file's text, or an empty string when it is missing or unreadable."""
+def read_text(path: Path, raw: bool = False) -> str:
+    """The file's text (as it is on disk with raw), or an empty string when it is missing or unreadable."""
     try:
-        return path.read_text(encoding="utf-8", errors="replace").strip()
+        text = path.read_text(encoding="utf-8", errors="replace")
     except OSError:
         return ""
+    return text if raw else text.strip()
 
 
 def doc_url(spec: str) -> str:
@@ -169,17 +170,9 @@ def shell_line(argv: Iterable[str]) -> str:
     return " ".join(shell_word(word) for word in argv)
 
 
-def read_raw(path: Path) -> str:
-    """The file's text exactly as it is on disk, or an empty string when it is missing or unreadable."""
-    try:
-        return path.read_text(encoding="utf-8", errors="replace")
-    except OSError:
-        return ""
-
-
-def file_diff(old_path: str, new_path: str, old: str, new: str) -> str:
-    """The change to a text file as a unified diff, the way 'diff -u' would print it."""
-    return "\n".join(difflib.unified_diff(old.splitlines(), new.splitlines(), old_path, new_path, lineterm=""))
+def file_diff(path: Path, old: str, new: str, to: Path | None = None) -> str:
+    """The change to a text file as a unified diff, the way 'diff -u' would print it. 'to' is a different new path."""
+    return "\n".join(difflib.unified_diff(old.splitlines(), new.splitlines(), str(path), str(to or path), lineterm=""))
 
 
 def reference_url(section: str, item_id: str) -> str:
@@ -825,11 +818,6 @@ class Item:
         return doc_url(self.doc)
 
     @property
-    def reference_url(self) -> str:
-        """The item's entry in the reference on the site: the exact commands for turning it on and off."""
-        return reference_url(self.section, self.id)
-
-    @property
     def toggleable(self) -> bool:
         return not self.guide_only and self.on is not None and self.off is not None
 
@@ -967,24 +955,22 @@ def run_tool(name: str, *args: str) -> None:
         raise SetupError(f"{name} exited with code {code}" + (f": {tail}" if tail else ""))
 
 
-def tool_lines(script: str, *args: str, changes: Iterable[str] = ()) -> list[str]:
+def tool_lines(script: str, *args: str, guide: str) -> list[str]:
     """
-    How a dedicated script shows up in a plan: the command, which script that is and the hash it has to match, and a
-    summary of what it changes. The script is the source of truth for the last part, so keep the summary next to
-    the call and in step with it. The site publishes the script, and every guide says what it does.
+    How a dedicated script shows up in a plan: the command, where the script comes from, the hash it has to match and
+    the guide that says what it changes. What the script does is its own business: it is published, and pinned by hash.
     """
     return [shell_line(["python3", script, *args]),
             f"# {script} is the copy next to quicksetup.py, or else",
             f"#   {RAW_BASE}/src/static/scripts/{script}",
             f"# It only runs when its SHA-256 is {TOOL_SHA256[script]}",
             f"#   which is the one published at {SITE}/scripts/{script}",
-            *(f"# {line}" for line in changes)]
+            f"# What it changes, and why: {doc_url(guide)}"]
 
 
-def plan_tool(p: Plan, desc: str, script: str, *args: str, reboot: str = "", relogin: str = "",
-              changes: Iterable[str] = ()) -> None:
+def plan_tool(p: Plan, desc: str, script: str, *args: str, guide: str, reboot: str = "", relogin: str = "") -> None:
     p.steps.append(Step(f"{desc} (checked against the SHA-256 built into this setup)",
-                        call=lambda: run_tool(script, *args), shown=tool_lines(script, *args, changes=changes)))
+                        call=lambda: run_tool(script, *args), shown=tool_lines(script, *args, guide=guide)))
     if reboot:
         p.reboot_for.append(reboot)
     if relogin:
@@ -1090,34 +1076,9 @@ BACKLIGHT_MANUAL = {
 }
 
 
-BACKLIGHT_ENABLE = (
-    "It asks for your password once and changes, as root:",
-    "  the kernel parameter acpi_backlight=native, wherever this machine keeps its kernel parameters:",
-    "    Limine (CachyOS): two lines appended to /etc/default/limine, then limine-update",
-    "        # Added by zephyrus-backlight.py: the Zephyrus G16 brightness fix",
-    '        KERNEL_CMDLINE[default]+="acpi_backlight=native"',
-    "    GRUB: GRUB_CMDLINE_LINUX_DEFAULT in /etc/default/grub (the old file is kept as "
-    "/etc/default/grub.zephyrus-backlight.bak), then grub-mkconfig -o /boot/grub/grub.cfg",
-    "    ostree (Bazzite): rpm-ostree kargs --append-if-missing=acpi_backlight=native",
-    "    systemd-boot: refused, the guide has the manual steps",
-    "  the modprobe rule /etc/modprobe.d/nvidia-wmi-ec-backlight.conf (a different rule that is already there is "
-    "kept in /var/lib/zephyrus-backlight/)",
-    "If limine-update or grub-mkconfig fails, the old file is put back. Both parts are read at boot.",
-)
-BACKLIGHT_DISABLE = (
-    "It asks for your password once and changes, as root:",
-    "  takes acpi_backlight=native out of the kernel parameters again:",
-    "    Limine: removes exactly those two lines from /etc/default/limine, then limine-update",
-    "    GRUB: puts back the value GRUB_CMDLINE_LINUX_DEFAULT had before, from the backup, then grub-mkconfig",
-    "    ostree (Bazzite): rpm-ostree kargs --delete-if-present=acpi_backlight=native",
-    "  removes /etc/modprobe.d/nvidia-wmi-ec-backlight.conf, but only while it is still exactly the rule this script "
-    "wrote (a rule that was there before comes back from /var/lib/zephyrus-backlight/)",
-)
-
-
 def on_backlight(s: System, p: Plan) -> None:
     plan_tool(p, "Apply the brightness fix with zephyrus-backlight.py", "zephyrus-backlight.py", "enable", "--silent",
-              reboot="the brightness fix", changes=BACKLIGHT_ENABLE)
+              guide="known-issues", reboot="the brightness fix")
     if s.bootloader() == "limine":
         p.note("This machine boots with Limine: limine-update rebuilds the boot images, which takes a minute or "
                "more and prints nothing until it is done.")
@@ -1125,7 +1086,7 @@ def on_backlight(s: System, p: Plan) -> None:
 
 def off_backlight(s: System, p: Plan) -> None:
     plan_tool(p, "Remove the brightness fix with zephyrus-backlight.py", "zephyrus-backlight.py", "disable",
-              "--silent", reboot="removing the brightness fix", changes=BACKLIGHT_DISABLE)
+              "--silent", guide="known-issues", reboot="removing the brightness fix")
     p.note("Without the fix, brightness does not work in Integrated mode.")
 
 
@@ -1199,14 +1160,6 @@ PSR_MANUAL = {
     "systemd-boot": ["Add amdgpu.dcdebugmask=0x600 to LINUX_OPTIONS in /etc/sdboot-manage.conf",
                      "Run: sudo sdboot-manage gen", "Reboot"],
 }
-PSR_REVERT = {
-    "limine": ["Remove amdgpu.dcdebugmask=0x600 from KERNEL_CMDLINE in /etc/default/limine",
-               "Run: sudo limine-update", "Reboot"],
-    "grub": ["Remove amdgpu.dcdebugmask=0x600 from GRUB_CMDLINE_LINUX_DEFAULT in /etc/default/grub",
-             "Run: sudo grub-mkconfig -o /boot/grub/grub.cfg", "Reboot"],
-    "systemd-boot": ["Remove amdgpu.dcdebugmask=0x600 from LINUX_OPTIONS in /etc/sdboot-manage.conf",
-                     "Run: sudo sdboot-manage gen", "Reboot"],
-}
 
 
 # --- networking ---------------------------------------------------------------------------------
@@ -1221,30 +1174,17 @@ def check_mt7925(s: System) -> Check:
     return Check(State.PARTIAL if modprobe or nm else State.TODO, detail)
 
 
-WIFI_ENABLE = (
-    "It asks for your password once and changes, as root:",
-    "  /etc/modprobe.d/mt7925e.conf:  options mt7925e disable_aspm=1   (read at boot, so this needs a reboot)",
-    "  /etc/NetworkManager/conf.d/wifi-powersave.conf:  [connection] wifi.powersave = 2   (then it restarts "
-    "NetworkManager)",
-    "  /sys/kernel/debug/ieee80211/<phy>/aql_txq_limit:  2 20000 40000   (live, and gone again after a reboot)",
-)
-WIFI_DISABLE = (
-    "It asks for your password once and changes, as root:",
-    "  removes /etc/modprobe.d/mt7925e.conf and /etc/NetworkManager/conf.d/wifi-powersave.conf, then restarts "
-    "NetworkManager",
-    "  rfkill unblock bluetooth   (in case the optional --bluetooth-off had been used)",
-    "  /sys/kernel/debug/ieee80211/<phy>/aql_txq_limit:  2 5000 12000   (the stock values)",
-)
+MT7925_GUIDE = "networking/mt7925-wifi-performance"
 
 
 def on_mt7925(s: System, p: Plan) -> None:
-    plan_tool(p, "Apply the Wi-Fi tuning with mt7925-tune.py", "mt7925-tune.py", "enable", reboot="PCIe ASPM",
-              changes=WIFI_ENABLE)
+    plan_tool(p, "Apply the Wi-Fi tuning with mt7925-tune.py", "mt7925-tune.py", "enable", guide=MT7925_GUIDE,
+              reboot="PCIe ASPM")
 
 
 def off_mt7925(s: System, p: Plan) -> None:
-    plan_tool(p, "Revert the Wi-Fi tuning with mt7925-tune.py", "mt7925-tune.py", "disable",
-              reboot="reverting the PCIe ASPM override", changes=WIFI_DISABLE)
+    plan_tool(p, "Revert the Wi-Fi tuning with mt7925-tune.py", "mt7925-tune.py", "disable", guide=MT7925_GUIDE,
+              reboot="reverting the PCIe ASPM override")
 
 
 def check_eduroam(s: System) -> Check:
@@ -1256,26 +1196,14 @@ def check_eduroam(s: System) -> Check:
     return Check(State.TODO, "no eduroam connection (only needed at Saxion)")
 
 
+EDUROAM_GUIDE = "networking/eduroam-network-installation"
 EDUROAM_CA_DIR = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "saxion-eduroam"
-
-EDUROAM_ENABLE = (
-    "It asks for your Saxion login in the terminal window, then, as you:",
-    "  writes the pinned certificate authority to ~/.config/saxion-eduroam/saxion-eduroam-ca.pem (mode 600)",
-    "  nmcli connection delete eduroam   (an old profile of that name goes first)",
-    "  nmcli connection add type wifi con-name eduroam ssid eduroam wifi-sec.key-mgmt wpa-eap 802-1x.eap peap "
-    "802-1x.phase2-auth mschapv2 ...",
-    "      802-1x.identity <your Saxion login>  802-1x.anonymous-identity anonymous@saxion.nl",
-    "      802-1x.domain-suffix-match ise.infra.saxion.net  802-1x.ca-cert <the file above>  connection.permissions "
-    "user:<you>",
-    "  nmcli --wait 45 connection up eduroam, then nmcli connection modify eduroam connection.autoconnect yes",
-    "The password is asked for by your desktop keyring and stored there, never in a file.",
-)
 
 
 def on_eduroam(s: System, p: Plan) -> None:
     p.steps.append(Step("Set up eduroam with saxion-eduroam.py in a terminal window (it asks for your login)",
                         argv_factory=lambda: tool_argv("saxion-eduroam.py"), interactive=True,
-                        shown=tool_lines("saxion-eduroam.py", changes=EDUROAM_ENABLE)))
+                        shown=tool_lines("saxion-eduroam.py", guide=EDUROAM_GUIDE)))
 
 
 def off_eduroam(s: System, p: Plan) -> None:
@@ -1554,15 +1482,13 @@ def remove_extension(spec: ExtensionSpec) -> None:
 
 
 def install_lines(spec: ExtensionSpec) -> list[str]:
-    """What install_extension() amounts to, as commands. The build number and the enabled list are known at run time."""
+    """What install_extension() amounts to. The build number and what is switched on now are known at run time."""
     archive = f"{CACHE_DIR / 'extensions' / spec.key}-<build>.zip"
     return [
-        "# quicksetup.py does this itself (install_extension), step by step:",
-        f"curl -fsSL '{EGO}/extension-info/?pk={spec.pk}&shell_version=<your GNOME Shell version>'",
-        "# ^ says which build of the extension fits your GNOME Shell, or that none does",
+        "# quicksetup.py does this itself (install_extension), and it amounts to:",
+        f"curl -fsSL '{EGO}/extension-info/?pk={spec.pk}&shell_version=<your GNOME Shell version>'   # which build",
         f"curl -fsSL -o {archive} '{EGO}/download-extension/{spec.uuid}.shell-extension.zip?version_tag=<build>'",
-        "# ^ refused unless it is a zip with no path that leaves its folder, no symbolic link, at most 60 MB unpacked",
-        f"#   and a metadata.json for {spec.uuid}",
+        "# ^ refused unless it is a sane zip: no path out of its folder, no symlink, under 60 MB, this UUID's metadata",
         f"gnome-extensions install --force {archive}",
         f"gsettings set {SHELL_SCHEMA} enabled-extensions \"[<what is switched on now>, '{spec.uuid}']\"",
         f"gnome-extensions enable {spec.uuid}",
@@ -1570,14 +1496,12 @@ def install_lines(spec: ExtensionSpec) -> list[str]:
 
 
 def remove_lines(spec: ExtensionSpec) -> list[str]:
-    """What remove_extension() amounts to, as commands."""
+    """What remove_extension() amounts to."""
     return [
-        "# quicksetup.py does this itself (remove_extension):",
+        "# quicksetup.py does this itself (remove_extension), and it amounts to:",
         f"gsettings set {SHELL_SCHEMA} enabled-extensions \"[<what is switched on now, without '{spec.uuid}'>]\"",
         f"gnome-extensions uninstall {spec.uuid}",
-        f"# ^ only for a copy in your home folder. When the shell does not answer, {EXT_USER_DIR / spec.uuid} is "
-        "deleted instead.",
-        "# An extension that came from a package is switched off, not removed.",
+        f"# ^ a copy in your home folder only. If the shell does not answer, {EXT_USER_DIR / spec.uuid} is deleted",
     ]
 
 
@@ -1694,15 +1618,13 @@ def set_ini_keys(text: str, section: str, values: dict[str, str]) -> str:
     lines = text.splitlines()
     done: set[str] = set()
     current = ""
-    section_start = section_end = None
+    section_end = None
     for index, line in enumerate(lines):
         header = re.match(r"\s*\[([^\]]+)\]\s*$", line)
         if header:
             if current == section and section_end is None:
                 section_end = index
             current = header.group(1)
-            if current == section and section_start is None:
-                section_start = index
             continue
         if current != section:
             continue
@@ -1717,8 +1639,7 @@ def set_ini_keys(text: str, section: str, values: dict[str, str]) -> str:
         if section_end is None:
             lines += ["", f"[{section}]", *pending]
         else:
-            # Straight after the last line that says something, so the blank line before the next section stays.
-            while section_end - 1 > section_start and not lines[section_end - 1].strip():
+            while not lines[section_end - 1].strip():  # straight after the last line that says something
                 section_end -= 1
             lines[section_end:section_end] = pending
     return "\n".join(lines) + "\n"
@@ -1783,7 +1704,7 @@ def on_autologin(s: System, p: Plan) -> None:
                f"[ -e {backup} ] || cp -a {conf} {backup}\n" + staged_install(staged, digest, str(GDM_CONF)) + "\n"
                f"grep -q '^AutomaticLogin={s.user}$' {conf} || {{ cp -a {backup} {conf}; "
                f"echo 'The GDM config check failed, the old file is back'; exit 1; }}",
-               diff=file_diff(str(GDM_CONF), str(GDM_CONF), read_raw(GDM_CONF), new))
+               diff=file_diff(GDM_CONF, read_text(GDM_CONF, raw=True), new))
     p.reboot_for.append("GDM autologin")
     p.note("Anyone who can unlock the disk lands in your session. The lock screen still asks for your password.")
 
@@ -1794,12 +1715,12 @@ def off_autologin(s: System, p: Plan) -> None:
     if backup_path.exists():
         backup = shlex.quote(str(backup_path))
         p.add_root("Put the GDM config back as it was before", f"cp -a {backup} {conf}\nrm -f {backup}", early=True,
-                   diff=file_diff(str(GDM_CONF), str(GDM_CONF), read_raw(GDM_CONF), read_raw(backup_path)))
+                   diff=file_diff(GDM_CONF, read_text(GDM_CONF, raw=True), read_text(backup_path, raw=True)))
     else:
         new = set_ini_keys(read_text(GDM_CONF) + "\n", "daemon", {"AutomaticLoginEnable": "False"})
         staged, digest = stage_file("gdm-custom.conf", new.encode("utf-8"))
         p.add_root("Turn GDM autologin off", staged_install(staged, digest, str(GDM_CONF)), early=True,
-                   diff=file_diff(str(GDM_CONF), str(GDM_CONF), read_raw(GDM_CONF), new))
+                   diff=file_diff(GDM_CONF, read_text(GDM_CONF, raw=True), new))
     p.reboot_for.append("turning autologin off")
 
 
@@ -2035,13 +1956,10 @@ def plan_registration(s: System, p: Plan, spare: bool) -> None:
                         shown=[register_command(spare)[-1]]))
     p.steps.append(Step(f"Save the registration of your {what} in ~/.config/Yubico/u2f_keys",
                         call=lambda: save_registration(s),
-                        shown=["# quicksetup.py does this itself (save_registration), and it amounts to:",
-                               "umask 077",
-                               f"mkdir -p {shlex.quote(str(u2f_keys_file(s.home).parent))}",
-                               f"# a first key adds the line '{s.user}:<registration>' to {keys}; a spare adds "
-                               f"':<registration>' to the end of your line there",
-                               f"# the file pamu2fcfg wrote in the step above is deleted either way: "
-                               f"rm -f {shlex.quote(str(staged_registration()))}"]))
+                        shown=["# quicksetup.py does this itself (save_registration), with umask 077:",
+                               f"# a first key adds the line '{s.user}:<registration>' to {keys},",
+                               "# a spare adds ':<registration>' to the end of your line there",
+                               f"rm -f {shlex.quote(str(staged_registration()))}   # either way the staged file goes"]))
 
 
 def check_yubikey_key(s: System) -> Check:
@@ -2081,9 +1999,7 @@ def off_yubikey_spare(s: System, p: Plan) -> None:
         write_private(path, u2f_first_credential_only(path.read_text(encoding="utf-8"), s.user))
 
     p.steps.append(Step("Forget the spare key (the first registered key stays)", call=keep_first,
-                        shown=["# quicksetup.py does this itself (keep_first): your line in the key file keeps its "
-                               "first registration and loses the rest,",
-                               f"# the file stays readable by you only (mode 600): {shlex.quote(str(path))}",
+                        shown=["# quicksetup.py does this itself (keep_first): your line keeps its first key, mode 600",
                                f"sed -E -i 's/^({s.user}:[^:]*).*$/\\1/' {shlex.quote(str(path))}"]))
 
 
@@ -2123,7 +2039,7 @@ def on_yubikey_pam(s: System, p: Plan) -> None:
                else "a copy of the file the package ships, in /etc/pam.d")
         p.add_root(f"Put the YubiKey line first in /etc/pam.d/{name} ({how})",
                    pam_install_snippet(name, staged, digest, existed),
-                   diff=file_diff(str(pam_source(name)), str(PAM_DIR / name), text, new))
+                   diff=file_diff(pam_source(name), text, new, PAM_DIR / name))
     p.note("A touch of the key now replaces the password for sudo, the graphical prompt and the lock screen, so "
            "whoever holds the key can use them. Without the key plugged in, the password works as before.")
     p.note("Test sudo in a second terminal before you close this one.")
@@ -2147,12 +2063,12 @@ def off_yubikey_pam(s: System, p: Plan) -> None:
         if vendor.is_file() and stripped.split() == vendor.read_text(encoding="utf-8").split():
             p.add_root(f"Take the YubiKey line out of /etc/pam.d/{name} by removing the copy, so the file the "
                        "package ships is used again", f"rm -f {shlex.quote(str(target))} {backup}", early=True,
-                       diff=file_diff(str(target), str(vendor), text, read_raw(vendor)))
+                       diff=file_diff(target, text, read_text(vendor, raw=True), vendor))
         else:
             staged, digest = stage_file(f"pam-{name}", stripped.encode("utf-8"))
             p.add_root(f"Take the YubiKey line out of /etc/pam.d/{name}",
                        staged_install(staged, digest, str(target)) + f"\nrm -f {backup}", early=True,
-                       diff=file_diff(str(target), str(target), text, stripped))
+                       diff=file_diff(target, text, stripped))
 
 
 def secure_boot_enabled(s: System) -> bool:
@@ -2708,22 +2624,16 @@ class ColorController:
 def color_runs(connector: str) -> str:
     """What switching a color mode does, in plain text: the two calls the window makes, and the way back."""
     return (
-        "A switch needs no root and downloads nothing. It makes two calls, as you.\n\n"
-        "1. GNOME's display service, the call Settings > Displays makes:\n"
-        f"   D-Bus {MUTTER_NAME}, object {MUTTER_PATH},\n"
-        f"   method ApplyMonitorsConfig (persistent), for {connector} only:\n"
-        "     color-mode = 0 (default)     Native\n"
-        "     color-mode = 2 (sdr-native)  sRGB\n"
-        "   The layout, scale, resolution, refresh rate and every other screen are sent back exactly as they "
-        "are.\n\n"
-        "2. colord, for color-managed apps. Only once 'ASUS color profiles' is ticked:\n"
-        "     colormgr device-add-profile <Built-in Screen> <profile>\n"
-        "     colormgr device-make-profile-default <Built-in Screen> <profile>\n"
-        "   Native uses the panel's factory profile, sRGB uses ASUS_sRGB.icm.\n\n"
-        "When the second call fails, the first one is put back.\n\n"
-        "The way back: pick the other mode, or press Undo in the message that shows for a few seconds after a "
-        "switch.\n\n"
-        "The code is ColorController.switch and DisplayConfig.set_color_mode in quicksetup.py.\n")
+        "A switch needs no root and downloads nothing. It makes two calls, as you:\n\n"
+        f"1. GNOME's display service, the call Settings > Displays makes: D-Bus {MUTTER_NAME},\n"
+        f"   {MUTTER_PATH}, ApplyMonitorsConfig (persistent) for {connector} only,\n"
+        "   with color-mode 0 (default) for Native or 2 (sdr-native) for sRGB. The layout, scale, resolution,\n"
+        "   refresh rate and every other screen are sent back as they are.\n"
+        "2. colord, for color-managed apps, once 'ASUS color profiles' is ticked: colormgr device-add-profile and\n"
+        "   device-make-profile-default <Built-in Screen> <profile>. Native uses the panel's factory profile,\n"
+        "   sRGB uses ASUS_sRGB.icm.\n\n"
+        "When the second call fails, the first is put back. The way back: pick the other mode, or press Undo in\n"
+        "the message that shows for a few seconds after a switch. The code: ColorController.switch.\n")
 
 
 # --- color: installing the profiles (an item in the list) --------------------------------------------
@@ -2805,35 +2715,22 @@ def on_color_profiles(s: System, p: Plan) -> None:
 
 
 def register_lines(names: list[str]) -> list[str]:
-    """What register_color_profiles() amounts to, as commands. The object paths are colord's, known at run time."""
-    lines = ["# quicksetup.py does this itself (register_color_profiles), with colord's own tool:",
-             "colormgr get-devices-by-kind display",
-             "# ^ the Built-in Screen is the display colord marks as embedded (eDP)"]
-    for name in names:
-        lines += [f"colormgr find-profile-by-filename {COLORD_STORE / name}",
-                  "# ^ colord reads a new file a moment after it lands, so this is retried for up to 10 seconds"]
-    lines += ["colormgr device-add-profile <Built-in Screen> <each of the profiles above>",
-              "# ^ unless the screen lists it already",
-              "colormgr device-make-profile-default <Built-in Screen> <the factory profile>",
-              "# ^ only when nothing but the automatic profile (the edid-*.icc colord makes itself) was in charge"]
-    return lines
+    """What register_color_profiles() amounts to. The object paths are colord's own, known at run time."""
+    return ["# quicksetup.py does this itself (register_color_profiles), and it amounts to, with colord's colormgr:",
+            "colormgr get-devices-by-kind display   # the Built-in Screen is the display colord marks as embedded",
+            *[f"colormgr find-profile-by-filename {COLORD_STORE / name}   # retried for up to 10 seconds"
+              for name in names],
+            "colormgr device-add-profile <Built-in Screen> <profile>   # each of them, unless the screen lists it",
+            "colormgr device-make-profile-default <Built-in Screen> <factory profile>   # only if just the automatic "
+            "profile was in charge"]
 
 
 def release_lines(names: list[str]) -> list[str]:
-    """What release_color_profiles() amounts to, as commands."""
+    """What release_color_profiles() amounts to."""
     return ["# quicksetup.py does this itself (release_color_profiles), and it amounts to:",
-            "colormgr device-make-profile-default <Built-in Screen> <the automatic profile>",
-            "# ^ only when one of these profiles is the active one right now. The automatic profile is the edid-*.icc "
-            "colord made for the screen",
-            "rm -f " + " ".join(shlex.quote(str(OLD_ICC_DIR / name)) for name in names),
-            "# ^ copies an earlier version of this setup put in your home folder",
+            "colormgr device-make-profile-default <Built-in Screen> <automatic profile>   # only if one was active",
+            "rm -f " + " ".join(shlex.quote(str(OLD_ICC_DIR / name)) for name in names) + "   # older copies",
             f"rm -rf {shlex.quote(str(STAGE_DIR))}"]
-
-
-RESTORE_LINES = ["# quicksetup.py does this itself (restore_automatic_profile): when the screen is left with no "
-                 "profile at all,",
-                 "colormgr device-add-profile <Built-in Screen> <the automatic profile>",
-                 "colormgr device-make-profile-default <Built-in Screen> <the automatic profile>"]
 
 
 def register_color_profiles(s: System) -> None:
@@ -2919,7 +2816,8 @@ def off_color_profiles(s: System, p: Plan) -> None:
         p.add_root("Remove the profiles from colord's own profile folder",
                    "rm -f -- " + " ".join(shlex.quote(str(path)) for path in copies), early=True)
     p.steps.append(Step("Check that the screen kept its automatic profile", call=lambda: restore_automatic_profile(s),
-                        shown=RESTORE_LINES))
+                        shown=["# quicksetup.py does this itself (restore_automatic_profile): a screen left without "
+                               "any profile gets its automatic one back"]))
 
 
 # --- development, applications and virtualization ----------------------------------------------
@@ -3184,11 +3082,9 @@ def on_archi(s: System, p: Plan) -> None:
     p.steps.append(Step(f"Download Archi {ARCHI_VERSION} (about 180 MB) and check it against the published SHA-256",
                         call=download_archi, early=True, network=True,
                         shown=["# quicksetup.py does this itself (download_archi), and it amounts to:",
-                               f"curl -fsSL {ARCHI_URLS[0]} -o {shlex.quote(str(staged))}",
-                               f"# ^ the project has renamed its release tags before, so {', '.join(ARCHI_TAGS)} are "
-                               "tried in that order",
-                               f"echo {shlex.quote(ARCHI_SHA256 + '  ' + str(staged))} | sha256sum -c -",
-                               "# ^ nothing is installed unless this matches"]))
+                               f"curl -fsSL {ARCHI_URLS[0]} -o {shlex.quote(str(staged))}   # the tags "
+                               f"{', '.join(ARCHI_TAGS[1:])} follow when this one is gone",
+                               f"echo {shlex.quote(ARCHI_SHA256 + '  ' + str(staged))} | sha256sum -c -"]))
     desktop = ("[Desktop Entry]\nVersion=1.0\nType=Application\nName=Archi\nComment=ArchiMate Modelling Tool\n"
                "Exec=/opt/Archi/Archi\nIcon=__ICON__\nTerminal=false\nCategories=Development;IDE;\n"
                "StartupWMClass=Archi\n")
@@ -3339,7 +3235,9 @@ def build_items(catalog: ExtensionCatalog) -> list[Item]:
              "Only if the system still freezes with an external monitor over USB-C or Thunderbolt. The bug was mostly "
              "on kernels 6.15 to 6.18", "known-issues", check_psr, group="AMD",
              manual=lambda s: PSR_MANUAL.get(s.bootloader(), []),
-             manual_off=lambda s: PSR_REVERT.get(s.bootloader(), []), advanced=True, hardware="g16", guide_only=True))
+             manual_off=lambda s: [step.replace("Add ", "Remove ").replace(" to ", " from ")
+                                   for step in PSR_MANUAL.get(s.bootloader(), [])],
+             advanced=True, hardware="g16", guide_only=True))
 
     # Display: the live color modes have a page of their own, the profiles are an item
     add(Item("display-color-profiles", "display", "ASUS color profiles",
@@ -3350,11 +3248,11 @@ def build_items(catalog: ExtensionCatalog) -> list[Item]:
     # Network
     add(Item("wifi-mt7925", "network", "Wi-Fi throughput tuning (MT7925)",
              "No PCIe ASPM, no Wi-Fi power saving, a bigger AQL queue: about double the speed",
-             "networking/mt7925-wifi-performance", check_mt7925, on_mt7925, off_mt7925,
+             MT7925_GUIDE, check_mt7925, on_mt7925, off_mt7925,
              group="Wi-Fi", recommended=True, hardware="mt7925"))
     add(Item("eduroam-saxion", "network", "eduroam at Saxion",
              "Connects to eduroam with the right pinned certificates. Saxion only",
-             "networking/eduroam-network-installation", check_eduroam, on_eduroam, off_eduroam, group="Campus"))
+             EDUROAM_GUIDE, check_eduroam, on_eduroam, off_eduroam, group="Campus"))
 
     # GNOME desktop
     add(Item("gnome-window-buttons", "desktop", "Minimize and maximize buttons",
@@ -3795,14 +3693,13 @@ def plan_commands(plan: Plan) -> list[Command]:
     return commands
 
 
-def render_commands(commands: list[Command]) -> str:
-    """The commands as plain text, grouped by when they run. Nothing is cut short: this is what runs."""
-    lines: list[str] = []
+def render_plan(plan: Plan) -> str:
+    """The plan as plain text, grouped by when it runs: every command a run would start, in full."""
+    commands, lines = plan_commands(plan), []
     for phase, title in PHASE_TITLES.items():
         group = [command for command in commands if command.phase == phase]
-        if not group:
-            continue
-        lines += [f"{title}:", ""]
+        if group:
+            lines += [f"{title}:", ""]
         for command in group:
             lines.append(f"  # {command.desc}")
             lines += [f"  {line}".rstrip() for line in command.text.splitlines()]
@@ -3811,11 +3708,6 @@ def render_commands(commands: list[Command]) -> str:
                 lines += [f"  {line}".rstrip() for line in command.diff.splitlines()]
             lines.append("")
     return "\n".join(lines).rstrip() + "\n" if lines else "Nothing to run.\n"
-
-
-def render_plan(built: Built) -> str:
-    """The plan as plain text: every command a run would start, in full."""
-    return render_commands(plan_commands(built.plan))
 
 
 class Backend:
@@ -4039,7 +3931,7 @@ class Backend:
         if not built.plan.empty:
             if built.blockers:
                 lines.append("Once that is sorted out, it runs:")
-            lines += ["", *render_plan(built).splitlines()]
+            lines += ["", *render_plan(built.plan).splitlines()]
         facts = [f"Note: {note}" for note in built.plan.notes]
         if built.plan.reboot_for:
             facts.append("Needs a reboot: " + ", ".join(built.plan.reboot_for))
@@ -4055,7 +3947,7 @@ class Backend:
         check = self.check(item)
         lines = [item.title, "", item.summary, "", f"Status: {check.state.value}"
                  + (f" ({check.detail})" if check.detail else ""), f"Guide:  {item.url}",
-                 f"Exact commands, with the way back: {item.reference_url}"]
+                 f"Exact commands, with the way back: {reference_url(item.section, item.id)}"]
         reason = item.not_applicable(self.s) or (item.unavailable(self.s) if item.unavailable else None)
         if reason:
             lines += ["", f"Not available: {reason}"]
@@ -4997,22 +4889,19 @@ class SetupWindow(_Window):
 
     # --- details ------------------------------------------------------------
 
-    def link_bar(self, text: str, links: list[tuple[str, str]]) -> "Gtk.Box":
-        """The buttons under a dialog full of commands: the pages that explain them, and a copy of the text."""
+    def link_bar(self, links: list[tuple[str, str]]) -> "Gtk.Box":
+        """The buttons under a dialog full of commands: the pages that explain them."""
         bar = Gtk.Box(spacing=8, halign=Gtk.Align.END, margin_top=8, margin_bottom=10, margin_end=12)
         for label, url in links:
             button = Gtk.Button(label=label)
             button.connect("clicked", lambda _b, link=url: self.open_url(link))
             bar.append(button)
-        copy = Gtk.Button(label="Copy")
-        copy.connect("clicked", lambda _b: self.copy_text(text))
-        bar.append(copy)
         return bar
 
     def show_text(self, title: str, text: str, links: list[tuple[str, str]]) -> None:
         dialog, view = dialog_shell(title, 700, 560)
         view.set_content(scrolled(text_view(text)))
-        view.add_bottom_bar(self.link_bar(text, links))
+        view.add_bottom_bar(self.link_bar(links))
         dialog.present(self)
 
     @guarded
@@ -5026,8 +4915,9 @@ class SetupWindow(_Window):
         def done(text: object, error: Exception | None) -> None:
             body = str(text) if error is None else f"Could not work this out: {error}"
             view.set_content(scrolled(text_view(body)))
-            view.add_bottom_bar(self.link_bar(body, [("Open the guide", item.url),
-                                                     ("Exact commands on the site", item.reference_url)]))
+            reference = reference_url(item.section, item.id)
+            view.add_bottom_bar(self.link_bar([("Open the guide", item.url),
+                                               ("Exact commands on the site", reference)]))
 
         background(lambda: self.backend.describe(item), done)
 
@@ -5093,7 +4983,7 @@ class SetupWindow(_Window):
         commands = Adw.PreferencesGroup()
         commands.add(self._command_expander("Show the exact commands",
                                             "Everything that will run, in order, nothing cut short",
-                                            render_plan(built)))
+                                            render_plan(built.plan)))
         if plan.pacman or plan.root or plan.root_early or plan.remove_pacman:
             commands.add(self._command_expander("Show the root script, word for word",
                                                 "The one script that goes to pkexec, as it is passed on",
@@ -5117,15 +5007,12 @@ class SetupWindow(_Window):
         dialog.present(self)
 
     def _command_expander(self, title: str, subtitle: str, text: str) -> "Adw.ExpanderRow":
-        """A row that unfolds into commands you can select, with a button that copies all of them."""
+        """A row that unfolds into commands you can select."""
         expander = Adw.ExpanderRow(title=title, subtitle=subtitle)
         label = Gtk.Label(label=text.rstrip(), selectable=True, xalign=0, wrap=True, margin_top=10,
                           margin_bottom=10, margin_start=12, margin_end=12)
         label.add_css_class("zs-log")
         expander.add_row(Gtk.ListBoxRow(activatable=False, selectable=False, child=label))
-        copy = Gtk.Button(label="Copy", halign=Gtk.Align.END, margin_top=4, margin_bottom=8, margin_end=12)
-        copy.connect("clicked", lambda _b: self.copy_text(text))
-        expander.add_row(Gtk.ListBoxRow(activatable=False, selectable=False, child=copy))
         return expander
 
     def _apply(self, built: Built) -> None:

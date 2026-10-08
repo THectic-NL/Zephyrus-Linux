@@ -15,11 +15,11 @@ It changes your system. Nothing happens until you have read the plan and pressed
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/quicksetup.py
-echo "f85b85d303f495d401e40aee790485462e9727759875a5e1131562117a1899fe  quicksetup.py" | sha256sum -c
+echo "ee38f3eb5f0c26504b25f2f681e74ae28f24fd37e545e9c8a22eb09a484bd961  quicksetup.py" | sha256sum -c
 python3 quicksetup.py
 ```
 
-Source: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `f85b85d303f495d401e40aee790485462e9727759875a5e1131562117a1899fe`.
+Source: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `ee38f3eb5f0c26504b25f2f681e74ae28f24fd37e545e9c8a22eb09a484bd961`.
 
 You need Python 3.14 or newer and the GTK 4 bindings. A stock CachyOS GNOME install has them. If not: `sudo pacman -S python-gobject gtk4 libadwaita`.
 
@@ -42,7 +42,7 @@ Nothing changes until you press **Review and apply**. The review lists the packa
 Nothing in the window is a black box. Every command is on screen before anything happens, and on this site:
 
 - The **info button** on a row lists, for your machine, the exact commands that ticking it runs and that unticking it runs, with a diff for every file they edit. It links to the guide and to the item's entry in the [reference]({{< relref "/docs/setup-script/reference" >}}).
-- In the review, **Show the exact commands** lists everything the run starts, in order, and nothing is cut short. **Show the root script, word for word** prints the one script that goes to `pkexec`. Both can be copied.
+- In the review, **Show the exact commands** lists everything the run starts, in order, and nothing is cut short. **Show the root script, word for word** prints the one script that goes to `pkexec`.
 - The [reference]({{< relref "/docs/setup-script/reference" >}}) has an entry for every item: the commands for both directions, the diffs, and links to the exact lines of the script behind them. It is generated from the script itself, so it cannot say anything the window does not do.
 - A step that is Python rather than a command has to say what it amounts to, as commands. The script refuses to build a step that does not.
 
@@ -99,4 +99,4 @@ I follow upstream wherever upstream has an opinion. The guide behind each item h
 
 ## Adding or changing an item
 
-Every item is one entry in `build_items()` in the script: an id, a section, a one-line summary, the guide it links to, a function that works out its status and one that says what ticking it does, and one for what unticking it does. A set of packages is a one-liner. When you change the script, run `.github/scripts/check-doc-checksums.sh --apply` so the hashes built into it and the one on this page follow, and then `.github/scripts/generate-setup-reference.py` so the [reference]({{< relref "/docs/setup-script/reference" >}}) follows. The quality checks fail until both are done.
+Every item is one entry in `build_items()` in the script: an id, a section, a one-line summary, the guide it links to, a function that works out its status and one that says what ticking it does, and one for what unticking it does. A set of packages is a one-liner. When you change the script, run `.github/scripts/check-doc-checksums.sh --apply` so the hashes built into it and the one on this page follow. The [reference]({{< relref "/docs/setup-script/reference" >}}) needs nothing: it is written from the script when the site is built.

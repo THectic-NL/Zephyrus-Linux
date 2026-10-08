@@ -16,6 +16,7 @@ on:
       - 'src/**'
       - '.github/workflows/deploy-bunny.yml'
       - '.github/actions/setup-hugo/**'
+      - '.github/scripts/generate-setup-reference.py'
   workflow_dispatch:
 
 concurrency:
@@ -53,6 +54,11 @@ jobs:
       # one in quality.yml always use the same Hugo.
       - name: Set up Hugo
         uses: ./.github/actions/setup-hugo
+
+      # The reference of the setup script is written from quicksetup.py here and
+      # not committed, so the site can only show what the script does.
+      - name: Write the setup reference
+        run: python3 .github/scripts/generate-setup-reference.py
 
       # No --baseURL: it lives in src/hugo.toml and belongs on one line only, so
       # a domain change happens in one place. HUGO_ENVIRONMENT=production is what

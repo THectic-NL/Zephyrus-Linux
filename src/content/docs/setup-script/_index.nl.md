@@ -15,11 +15,11 @@ Het verandert je systeem. Er gebeurt niets voordat je het plan hebt gelezen en o
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/quicksetup.py
-echo "f85b85d303f495d401e40aee790485462e9727759875a5e1131562117a1899fe  quicksetup.py" | sha256sum -c
+echo "ee38f3eb5f0c26504b25f2f681e74ae28f24fd37e545e9c8a22eb09a484bd961  quicksetup.py" | sha256sum -c
 python3 quicksetup.py
 ```
 
-Bron: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `f85b85d303f495d401e40aee790485462e9727759875a5e1131562117a1899fe`.
+Bron: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `ee38f3eb5f0c26504b25f2f681e74ae28f24fd37e545e9c8a22eb09a484bd961`.
 
 Je hebt Python 3.14 of nieuwer nodig en de GTK 4-bindings. Een standaard CachyOS-GNOME-installatie heeft die al. Zo niet: `sudo pacman -S python-gobject gtk4 libadwaita`.
 
@@ -42,7 +42,7 @@ Er verandert niets voordat je op **Review and apply** drukt. Die controle toont 
 Niets in het venster is een black box. Elke opdracht staat op het scherm voordat er iets gebeurt, en op deze site:
 
 - De **infoknop** op een rij toont, voor jouw machine, de exacte opdrachten die aanvinken draait en die uitvinken draait, met een diff voor elk bestand dat ze bewerken. Hij verwijst naar de handleiding en naar de regel van het onderdeel in de [referentie]({{< relref "/docs/setup-script/reference" >}}).
-- In de controle toont **Show the exact commands** alles wat de run start, op volgorde, en er wordt niets afgekapt. **Show the root script, word for word** toont het ene script dat naar `pkexec` gaat. Beide zijn te kopiëren.
+- In de controle toont **Show the exact commands** alles wat de run start, op volgorde, en er wordt niets afgekapt. **Show the root script, word for word** toont het ene script dat naar `pkexec` gaat.
 - De [referentie]({{< relref "/docs/setup-script/reference" >}}) heeft voor elk onderdeel een regel: de opdrachten voor beide richtingen, de diffs en links naar de exacte regels van het script erachter. Ze wordt uit het script zelf gegenereerd, dus er kan niets op staan wat het venster niet doet.
 - Een stap die Python is in plaats van een opdracht moet als opdrachten zeggen waar hij op neerkomt. Het script weigert een stap te bouwen die dat niet doet.
 
@@ -99,4 +99,4 @@ Ik volg upstream waar upstream een mening heeft. De handleiding achter elk onder
 
 ## Een onderdeel toevoegen of aanpassen
 
-Elk onderdeel is één regel in `build_items()` in het script: een id, een sectie, een korte samenvatting, de handleiding waar het naar linkt, een functie die zijn status bepaalt, een functie die zegt wat aanvinken doet en een voor wat uitvinken doet. Een set pakketten is een one-liner. Pas je het script aan, draai dan `.github/scripts/check-doc-checksums.sh --apply` zodat de hashes in het script en op deze pagina worden bijgewerkt, en daarna `.github/scripts/generate-setup-reference.py` zodat de [referentie]({{< relref "/docs/setup-script/reference" >}}) meegaat. De kwaliteitscontroles falen totdat allebei zijn gedaan.
+Elk onderdeel is één regel in `build_items()` in het script: een id, een sectie, een korte samenvatting, de handleiding waar het naar linkt, een functie die zijn status bepaalt, een functie die zegt wat aanvinken doet en een voor wat uitvinken doet. Een set pakketten is een one-liner. Pas je het script aan, draai dan `.github/scripts/check-doc-checksums.sh --apply` zodat de hashes in het script en op deze pagina worden bijgewerkt. De [referentie]({{< relref "/docs/setup-script/reference" >}}) hoeft niets: ze wordt bij het bouwen van de site uit het script geschreven.

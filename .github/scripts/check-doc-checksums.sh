@@ -145,9 +145,8 @@ echo
 # 64-character hex string elsewhere in the documentation is left alone. Within
 # such a page every hash has to match one of the scripts that page mentions.
 #
-# The pages under setup-script/reference/ are left out. They are generated from
-# quicksetup.py, hashes included, and generate-setup-reference.py --check fails
-# on any that are stale. A page that names two scripts could not be fixed here.
+# The pages under setup-script/reference/ are left out: they are generated from
+# quicksetup.py at build time, hashes included.
 
 checked=0
 

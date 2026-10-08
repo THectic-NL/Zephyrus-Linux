@@ -46,6 +46,13 @@ jobs:
       - name: Set up Hugo
         uses: ./.github/actions/setup-hugo
 
+      # The reference of the setup script is not committed: it is written from
+      # quicksetup.py right before the build, so the site can only show what the
+      # script does. The runner's own python3 is enough, nothing is installed.
+      - name: Write the setup reference
+        if: ${{ !cancelled() }}
+        run: python3 .github/scripts/generate-setup-reference.py
+
       # Every step runs on !cancelled(), so a red markdown check does not hide
       # the Hugo build. You want every failure in one run, not the second only
       # after fixing the first. The job still fails as soon as anything does.
@@ -240,13 +247,3 @@ jobs:
       - name: Check published script checksums
         if: ${{ !cancelled() }}
         run: .github/scripts/check-doc-checksums.sh
-
-      # The reference of the setup script on the site is generated from
-      # quicksetup.py: the script is imported and every item's own builders run
-      # on a described machine, so the pages cannot say anything the window
-      # does not do. A change to the script that is not carried over into them
-      # fails here, with the diff and the command that rewrites them. Needs
-      # nothing installed: PyGObject is optional for an import.
-      - name: Check the setup reference is current
-        if: ${{ !cancelled() }}
-        run: python3 .github/scripts/generate-setup-reference.py --check
