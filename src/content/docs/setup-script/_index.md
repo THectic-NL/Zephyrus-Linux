@@ -15,11 +15,11 @@ It changes your system. Nothing happens until you have read the plan and pressed
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/quicksetup.py
-echo "bf60bf040e93068fbfb84dd9c0f2e93a6886cd59d6e1d11609067fc473acb85e  quicksetup.py" | sha256sum -c
+echo "f85b85d303f495d401e40aee790485462e9727759875a5e1131562117a1899fe  quicksetup.py" | sha256sum -c
 python3 quicksetup.py
 ```
 
-Source: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `bf60bf040e93068fbfb84dd9c0f2e93a6886cd59d6e1d11609067fc473acb85e`.
+Source: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `f85b85d303f495d401e40aee790485462e9727759875a5e1131562117a1899fe`.
 
 You need Python 3.14 or newer and the GTK 4 bindings. A stock CachyOS GNOME install has them. If not: `sudo pacman -S python-gobject gtk4 libadwaita`.
 
@@ -29,17 +29,32 @@ There are no commands or options, it just opens a window. Changes work on CachyO
 
 The sections are on the left, one row per item on the right. A ticked box means the item is set up on this machine, a dash means it is partly done. Tick a box to turn something on, untick it to turn it off again.
 
-- The two small buttons on a row open the guide and show what ticking and unticking would do.
+- The two small buttons on a row show the exact commands that ticking and unticking it run, and open the guide.
 - `AUR` marks rows that need a package from the AUR. `Advanced` rows stay out of **Select recommended**.
 - Ticking an item ticks what it needs, and the window says so. A row that does not apply here is greyed out with the reason.
 - GNOME extensions come from extensions.gnome.org, so you do not need a browser add-on. An extension without a build for your GNOME version says so, for example "No build for GNOME 51 yet".
 - The menu has **Select recommended**, **Check again** and the log file.
 
-Nothing changes until you press **Review and apply**. The review lists the packages, what runs as root, what needs a reboot or a new login and what is left for you to do. **Show the exact commands** prints every command in full. If something is wrong, Apply stays greyed out and the reason is at the top.
+Nothing changes until you press **Review and apply**. The review lists the packages, what runs as root, what needs a reboot or a new login and what is left for you to do. If something is wrong, Apply stays greyed out and the reason is at the top.
+
+## Exactly what runs
+
+Nothing in the window is a black box. Every command is on screen before anything happens, and on this site:
+
+- The **info button** on a row lists, for your machine, the exact commands that ticking it runs and that unticking it runs, with a diff for every file they edit. It links to the guide and to the item's entry in the [reference]({{< relref "/docs/setup-script/reference" >}}).
+- In the review, **Show the exact commands** lists everything the run starts, in order, and nothing is cut short. **Show the root script, word for word** prints the one script that goes to `pkexec`. Both can be copied.
+- The [reference]({{< relref "/docs/setup-script/reference" >}}) has an entry for every item: the commands for both directions, the diffs, and links to the exact lines of the script behind them. It is generated from the script itself, so it cannot say anything the window does not do.
+- A step that is Python rather than a command has to say what it amounts to, as commands. The script refuses to build a step that does not.
+
+## The way back
+
+Unticking is the way back. The window lists what it runs before it does it, and the reference lists it for every item. It removes what ticking installed, puts settings back to the GNOME default and puts an edited file back from the backup that was made. Your own files and settings stay, and so does a package something else still needs.
+
+Two rows have no checkbox, because a mistake in their steps can stop the machine from booting: the AMD display freeze fix and Secure Boot. Their entries in the reference list the steps for setting them up and for undoing them by hand. The window will not remove `sbctl` while Secure Boot is on, because it is what signs every new kernel.
 
 ## Color modes
 
-The Display section has a switch that works right away, without applying: **Native**, which is vivid, and **sRGB**. G-Helper has two more on Windows, DCI-P3 and Display P3, but on Linux they would show the same picture as Native, so they are not here. The [Display Color Profiles]({{< relref "/docs/hardware/color-profiles" >}}) page explains that, and why picking another profile in GNOME's Settings does nothing.
+The Display section has a switch that works right away, without applying: **Native**, which is vivid, and **sRGB**. The **What a switch runs** row there lists the two calls behind it. G-Helper has two more on Windows, DCI-P3 and Display P3, but on Linux they would show the same picture as Native, so they are not here. The [Display Color Profiles]({{< relref "/docs/hardware/color-profiles" >}}) page explains that, and why picking another profile in GNOME's Settings does nothing.
 
 ## What it checks and what it leaves alone
 
@@ -84,4 +99,4 @@ I follow upstream wherever upstream has an opinion. The guide behind each item h
 
 ## Adding or changing an item
 
-Every item is one entry in `build_items()` in the script: an id, a section, a one-line summary, the guide it links to, a function that works out its status and one that says what ticking it does. A set of packages is a one-liner. When you change the script, run `.github/scripts/check-doc-checksums.sh --apply` so the hashes built into it and the one on this page follow.
+Every item is one entry in `build_items()` in the script: an id, a section, a one-line summary, the guide it links to, a function that works out its status and one that says what ticking it does, and one for what unticking it does. A set of packages is a one-liner. When you change the script, run `.github/scripts/check-doc-checksums.sh --apply` so the hashes built into it and the one on this page follow, and then `.github/scripts/generate-setup-reference.py` so the [reference]({{< relref "/docs/setup-script/reference" >}}) follows. The quality checks fail until both are done.

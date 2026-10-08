@@ -30,6 +30,7 @@ One file, standard library plus PyGObject, like the dedicated scripts next to it
 """
 
 from __future__ import annotations
+import difflib
 import enum
 import getpass
 import hashlib
@@ -154,6 +155,36 @@ def doc_url(spec: str) -> str:
     page = page.strip("/")
     url = f"{SITE}/docs/{page}/" if page else f"{SITE}/docs/"
     return f"{url}#{anchor}" if anchor else url
+
+
+def shell_word(word: str) -> str:
+    """One word the way it is written in a shell. Double quotes when single quotes are in it, which reads far better."""
+    if "'" in word and not re.search(r'["$`\\!]', word):
+        return f'"{word}"'
+    return shlex.quote(word)
+
+
+def shell_line(argv: Iterable[str]) -> str:
+    """A command as a line of shell: pasted into a shell it passes exactly these arguments."""
+    return " ".join(shell_word(word) for word in argv)
+
+
+def read_raw(path: Path) -> str:
+    """The file's text exactly as it is on disk, or an empty string when it is missing or unreadable."""
+    try:
+        return path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
+
+
+def file_diff(old_path: str, new_path: str, old: str, new: str) -> str:
+    """The change to a text file as a unified diff, the way 'diff -u' would print it."""
+    return "\n".join(difflib.unified_diff(old.splitlines(), new.splitlines(), old_path, new_path, lineterm=""))
+
+
+def reference_url(section: str, item_id: str) -> str:
+    """Where the reference on the site lists one item: a page per section of the window, an anchor per item."""
+    return f"{SITE}/docs/setup-script/reference/{section}/#{item_id}"
 
 
 def sha256_of(data: bytes) -> str:
@@ -659,6 +690,40 @@ class Step:
     network: bool = False
     # What an error message calls the program of an interactive step, when its last argument says nothing.
     name: str = ""
+    # What the step runs, as the lines a shell would show. A command shows itself, so this is for a step that is a
+    # Python function, or whose command is only known when it runs: it has to say what it amounts to, because the
+    # review and the reference on the site list nothing else. A step that says nothing about itself cannot be made.
+    shown: list[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        if not (self.argv or self.shown):
+            raise ValueError(f"the step {self.desc!r} does not say what it runs")
+
+    def commands(self) -> list[str]:
+        """The lines to show for this step: what it says it runs, otherwise its own command."""
+        return self.shown or [shell_line(self.argv or [])]
+
+
+def shell_step(desc: str, script: str, **options) -> Step:
+    """A step that is a few lines of shell, run as you. The script is what the review shows, word for word."""
+    return Step(desc, ["bash", "-euo", "pipefail", "-c", script], shown=[script], **options)
+
+
+@dataclass(frozen=True)
+class Snippet:
+    """A piece of the root script: what it is for, the shell it runs and, for a file it edits, the change as a diff."""
+    desc: str
+    script: str
+    diff: str = ""
+
+
+# The package manager commands live here and nowhere else: the root script and the Executor build their command lines
+# from these and the review prints them, so what is listed is what runs.
+PACMAN_INSTALL = ("pacman", "-S", "--needed", "--noconfirm", "--noprogressbar")
+PACMAN_REMOVE = ("pacman", "-Rs", "--noconfirm", "--noprogressbar")
+PARU_INSTALL = ("paru", "-S", "--needed")
+FLATPAK_INSTALL = ("flatpak", "install", "-y", "flathub")
+FLATPAK_REMOVE = ("flatpak", "uninstall", "-y")
 
 
 @dataclass
@@ -670,8 +735,8 @@ class Plan:
     remove_pacman: list[str] = field(default_factory=list)
     remove_flatpak: list[str] = field(default_factory=list)
     # Root snippets: 'root_early' runs first (stop a service before its package goes), 'root' after the installs.
-    root_early: list[tuple[str, str]] = field(default_factory=list)
-    root: list[tuple[str, str]] = field(default_factory=list)
+    root_early: list[Snippet] = field(default_factory=list)
+    root: list[Snippet] = field(default_factory=list)
     # A root snippet fetches something from the internet. A Step says so itself, and the packages are counted apart.
     network: bool = False
     steps: list[Step] = field(default_factory=list)
@@ -694,8 +759,8 @@ class Plan:
     def add_flatpak(self, names: Iterable[str]) -> None:
         self._add(self.flatpak, names)
 
-    def add_root(self, desc: str, script: str, early: bool = False, network: bool = False) -> None:
-        (self.root_early if early else self.root).append((desc, script))
+    def add_root(self, desc: str, script: str, early: bool = False, network: bool = False, diff: str = "") -> None:
+        (self.root_early if early else self.root).append(Snippet(desc, script, diff))
         self.network = self.network or network
 
     def add_remove(self, pacman: Iterable[str], flatpak: Iterable[str]) -> None:
@@ -733,6 +798,8 @@ class Item:
     group: str = ""
     # Steps left for you, as a list or as a function of the machine (the bootloader decides some of them).
     manual: list[str] | Callable[[System], list[str]] = field(default_factory=list)
+    # The same for undoing it by hand: for a row with no switch of its own, and for what an untick leaves behind.
+    manual_off: list[str] | Callable[[System], list[str]] = field(default_factory=list)
     # Reasons to refuse right now (a login that still depends on it, a package that clashes), or None.
     on_blocker: Callable[[System], str | None] | None = None
     off_blocker: Callable[[System], str | None] | None = None
@@ -758,6 +825,11 @@ class Item:
         return doc_url(self.doc)
 
     @property
+    def reference_url(self) -> str:
+        """The item's entry in the reference on the site: the exact commands for turning it on and off."""
+        return reference_url(self.section, self.id)
+
+    @property
     def toggleable(self) -> bool:
         return not self.guide_only and self.on is not None and self.off is not None
 
@@ -767,6 +839,9 @@ class Item:
 
     def manual_steps(self, s: System) -> list[str]:
         return self.manual(s) if callable(self.manual) else list(self.manual)
+
+    def manual_off_steps(self, s: System) -> list[str]:
+        return self.manual_off(s) if callable(self.manual_off) else list(self.manual_off)
 
     def not_applicable(self, s: System) -> str | None:
         if self.hardware == "asus" and not s.is_asus:
@@ -892,9 +967,24 @@ def run_tool(name: str, *args: str) -> None:
         raise SetupError(f"{name} exited with code {code}" + (f": {tail}" if tail else ""))
 
 
-def plan_tool(p: Plan, desc: str, script: str, *args: str, reboot: str = "", relogin: str = "") -> None:
+def tool_lines(script: str, *args: str, changes: Iterable[str] = ()) -> list[str]:
+    """
+    How a dedicated script shows up in a plan: the command, which script that is and the hash it has to match, and a
+    summary of what it changes. The script is the source of truth for the last part, so keep the summary next to
+    the call and in step with it. The site publishes the script, and every guide says what it does.
+    """
+    return [shell_line(["python3", script, *args]),
+            f"# {script} is the copy next to quicksetup.py, or else",
+            f"#   {RAW_BASE}/src/static/scripts/{script}",
+            f"# It only runs when its SHA-256 is {TOOL_SHA256[script]}",
+            f"#   which is the one published at {SITE}/scripts/{script}",
+            *(f"# {line}" for line in changes)]
+
+
+def plan_tool(p: Plan, desc: str, script: str, *args: str, reboot: str = "", relogin: str = "",
+              changes: Iterable[str] = ()) -> None:
     p.steps.append(Step(f"{desc} (checked against the SHA-256 built into this setup)",
-                        call=lambda: run_tool(script, *args)))
+                        call=lambda: run_tool(script, *args), shown=tool_lines(script, *args, changes=changes)))
     if reboot:
         p.reboot_for.append(reboot)
     if relogin:
@@ -1000,9 +1090,34 @@ BACKLIGHT_MANUAL = {
 }
 
 
+BACKLIGHT_ENABLE = (
+    "It asks for your password once and changes, as root:",
+    "  the kernel parameter acpi_backlight=native, wherever this machine keeps its kernel parameters:",
+    "    Limine (CachyOS): two lines appended to /etc/default/limine, then limine-update",
+    "        # Added by zephyrus-backlight.py: the Zephyrus G16 brightness fix",
+    '        KERNEL_CMDLINE[default]+="acpi_backlight=native"',
+    "    GRUB: GRUB_CMDLINE_LINUX_DEFAULT in /etc/default/grub (the old file is kept as "
+    "/etc/default/grub.zephyrus-backlight.bak), then grub-mkconfig -o /boot/grub/grub.cfg",
+    "    ostree (Bazzite): rpm-ostree kargs --append-if-missing=acpi_backlight=native",
+    "    systemd-boot: refused, the guide has the manual steps",
+    "  the modprobe rule /etc/modprobe.d/nvidia-wmi-ec-backlight.conf (a different rule that is already there is "
+    "kept in /var/lib/zephyrus-backlight/)",
+    "If limine-update or grub-mkconfig fails, the old file is put back. Both parts are read at boot.",
+)
+BACKLIGHT_DISABLE = (
+    "It asks for your password once and changes, as root:",
+    "  takes acpi_backlight=native out of the kernel parameters again:",
+    "    Limine: removes exactly those two lines from /etc/default/limine, then limine-update",
+    "    GRUB: puts back the value GRUB_CMDLINE_LINUX_DEFAULT had before, from the backup, then grub-mkconfig",
+    "    ostree (Bazzite): rpm-ostree kargs --delete-if-present=acpi_backlight=native",
+    "  removes /etc/modprobe.d/nvidia-wmi-ec-backlight.conf, but only while it is still exactly the rule this script "
+    "wrote (a rule that was there before comes back from /var/lib/zephyrus-backlight/)",
+)
+
+
 def on_backlight(s: System, p: Plan) -> None:
     plan_tool(p, "Apply the brightness fix with zephyrus-backlight.py", "zephyrus-backlight.py", "enable", "--silent",
-              reboot="the brightness fix")
+              reboot="the brightness fix", changes=BACKLIGHT_ENABLE)
     if s.bootloader() == "limine":
         p.note("This machine boots with Limine: limine-update rebuilds the boot images, which takes a minute or "
                "more and prints nothing until it is done.")
@@ -1010,7 +1125,7 @@ def on_backlight(s: System, p: Plan) -> None:
 
 def off_backlight(s: System, p: Plan) -> None:
     plan_tool(p, "Remove the brightness fix with zephyrus-backlight.py", "zephyrus-backlight.py", "disable",
-              "--silent", reboot="removing the brightness fix")
+              "--silent", reboot="removing the brightness fix", changes=BACKLIGHT_DISABLE)
     p.note("Without the fix, brightness does not work in Integrated mode.")
 
 
@@ -1039,12 +1154,13 @@ def check_nvidia_services(s: System) -> Check:
 
 def on_nvidia_services(s: System, p: Plan) -> None:
     p.add_root("Enable the NVIDIA suspend, resume and hibernate services", "systemctl enable " + " ".join(NVIDIA_UNITS))
-    p.note("nvidia-suspend-then-hibernate.service stays off: enable it only if you use that sleep mode.")
+    p.note(f"{NVIDIA_SLEEP_UNIT} stays as it is: enable it only if you use that sleep mode.")
 
 
 def off_nvidia_services(s: System, p: Plan) -> None:
     p.add_root("Disable the NVIDIA suspend, resume and hibernate services",
-               "systemctl disable " + " ".join((*NVIDIA_UNITS, NVIDIA_SLEEP_UNIT)), early=True)
+               "systemctl disable " + " ".join(NVIDIA_UNITS), early=True)
+    p.note(f"{NVIDIA_SLEEP_UNIT} is left alone: this never enabled it.")
 
 
 def check_nvidia_powerd(s: System) -> Check:
@@ -1083,6 +1199,14 @@ PSR_MANUAL = {
     "systemd-boot": ["Add amdgpu.dcdebugmask=0x600 to LINUX_OPTIONS in /etc/sdboot-manage.conf",
                      "Run: sudo sdboot-manage gen", "Reboot"],
 }
+PSR_REVERT = {
+    "limine": ["Remove amdgpu.dcdebugmask=0x600 from KERNEL_CMDLINE in /etc/default/limine",
+               "Run: sudo limine-update", "Reboot"],
+    "grub": ["Remove amdgpu.dcdebugmask=0x600 from GRUB_CMDLINE_LINUX_DEFAULT in /etc/default/grub",
+             "Run: sudo grub-mkconfig -o /boot/grub/grub.cfg", "Reboot"],
+    "systemd-boot": ["Remove amdgpu.dcdebugmask=0x600 from LINUX_OPTIONS in /etc/sdboot-manage.conf",
+                     "Run: sudo sdboot-manage gen", "Reboot"],
+}
 
 
 # --- networking ---------------------------------------------------------------------------------
@@ -1097,6 +1221,32 @@ def check_mt7925(s: System) -> Check:
     return Check(State.PARTIAL if modprobe or nm else State.TODO, detail)
 
 
+WIFI_ENABLE = (
+    "It asks for your password once and changes, as root:",
+    "  /etc/modprobe.d/mt7925e.conf:  options mt7925e disable_aspm=1   (read at boot, so this needs a reboot)",
+    "  /etc/NetworkManager/conf.d/wifi-powersave.conf:  [connection] wifi.powersave = 2   (then it restarts "
+    "NetworkManager)",
+    "  /sys/kernel/debug/ieee80211/<phy>/aql_txq_limit:  2 20000 40000   (live, and gone again after a reboot)",
+)
+WIFI_DISABLE = (
+    "It asks for your password once and changes, as root:",
+    "  removes /etc/modprobe.d/mt7925e.conf and /etc/NetworkManager/conf.d/wifi-powersave.conf, then restarts "
+    "NetworkManager",
+    "  rfkill unblock bluetooth   (in case the optional --bluetooth-off had been used)",
+    "  /sys/kernel/debug/ieee80211/<phy>/aql_txq_limit:  2 5000 12000   (the stock values)",
+)
+
+
+def on_mt7925(s: System, p: Plan) -> None:
+    plan_tool(p, "Apply the Wi-Fi tuning with mt7925-tune.py", "mt7925-tune.py", "enable", reboot="PCIe ASPM",
+              changes=WIFI_ENABLE)
+
+
+def off_mt7925(s: System, p: Plan) -> None:
+    plan_tool(p, "Revert the Wi-Fi tuning with mt7925-tune.py", "mt7925-tune.py", "disable",
+              reboot="reverting the PCIe ASPM override", changes=WIFI_DISABLE)
+
+
 def check_eduroam(s: System) -> Check:
     if not s.has_cmd("nmcli"):
         return Check(State.UNKNOWN, "NetworkManager is not available")
@@ -1106,13 +1256,33 @@ def check_eduroam(s: System) -> Check:
     return Check(State.TODO, "no eduroam connection (only needed at Saxion)")
 
 
+EDUROAM_CA_DIR = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "saxion-eduroam"
+
+EDUROAM_ENABLE = (
+    "It asks for your Saxion login in the terminal window, then, as you:",
+    "  writes the pinned certificate authority to ~/.config/saxion-eduroam/saxion-eduroam-ca.pem (mode 600)",
+    "  nmcli connection delete eduroam   (an old profile of that name goes first)",
+    "  nmcli connection add type wifi con-name eduroam ssid eduroam wifi-sec.key-mgmt wpa-eap 802-1x.eap peap "
+    "802-1x.phase2-auth mschapv2 ...",
+    "      802-1x.identity <your Saxion login>  802-1x.anonymous-identity anonymous@saxion.nl",
+    "      802-1x.domain-suffix-match ise.infra.saxion.net  802-1x.ca-cert <the file above>  connection.permissions "
+    "user:<you>",
+    "  nmcli --wait 45 connection up eduroam, then nmcli connection modify eduroam connection.autoconnect yes",
+    "The password is asked for by your desktop keyring and stored there, never in a file.",
+)
+
+
 def on_eduroam(s: System, p: Plan) -> None:
     p.steps.append(Step("Set up eduroam with saxion-eduroam.py in a terminal window (it asks for your login)",
-                        argv_factory=lambda: tool_argv("saxion-eduroam.py"), interactive=True))
+                        argv_factory=lambda: tool_argv("saxion-eduroam.py"), interactive=True,
+                        shown=tool_lines("saxion-eduroam.py", changes=EDUROAM_ENABLE)))
 
 
 def off_eduroam(s: System, p: Plan) -> None:
     p.steps.append(Step("Remove the eduroam connection", ["nmcli", "connection", "delete", "eduroam"]))
+    ca_file = shlex.quote(str(EDUROAM_CA_DIR / "saxion-eduroam-ca.pem"))
+    p.steps.append(shell_step("Remove the pinned certificate authority the setup wrote",
+                              f"rm -f {ca_file}\nrmdir {shlex.quote(str(EDUROAM_CA_DIR))} 2>/dev/null || true"))
 
 
 # --- GNOME settings ---------------------------------------------------------------------------
@@ -1189,9 +1359,8 @@ def check_smile_shortcut(s: System) -> Check:
     return Check(State.TODO, "no shortcut for Smile yet")
 
 
-def add_smile_shortcut() -> None:
-    """Add a custom GNOME shortcut that opens Smile on the Copilot key."""
-    s = System()
+def on_smile_shortcut(s: System, p: Plan) -> None:
+    """A custom GNOME shortcut that opens Smile on the Copilot key, as plain gsettings commands."""
     existing = custom_keybindings(s)
     number = 0
     while f"{CUSTOM_BASE}/custom{number}/" in existing:
@@ -1199,35 +1368,28 @@ def add_smile_shortcut() -> None:
     path = f"{CUSTOM_BASE}/custom{number}/"
     for key, value in (("name", "Emoji picker"), ("command", f"flatpak run {SMILE_ID}"),
                        ("binding", COPILOT_KEY_BINDING)):
-        res = run(["gsettings", "set", f"{CUSTOM_KEYS}:{path}", key, value])
-        if not res.ok:
-            raise SetupError(res.text or f"gsettings set {key} failed")
-    listing = "[" + ", ".join(f"'{p}'" for p in [*existing, path]) + "]"
-    res = run(["gsettings", "set", MEDIA_KEYS, "custom-keybindings", listing])
-    if not res.ok:
-        raise SetupError(res.text or "gsettings set custom-keybindings failed")
-
-
-def remove_smile_shortcut() -> None:
-    s = System()
-    keep = []
-    for path in custom_keybindings(s):
-        if SMILE_ID in (s.gsettings(f"{CUSTOM_KEYS}:{path}", "command") or ""):
-            run(["gsettings", "reset-recursively", f"{CUSTOM_KEYS}:{path}"])
-        else:
-            keep.append(path)
-    if keep:
-        run(["gsettings", "set", MEDIA_KEYS, "custom-keybindings", "[" + ", ".join(f"'{x}'" for x in keep) + "]"])
-    else:
-        run(["gsettings", "reset", MEDIA_KEYS, "custom-keybindings"])
-
-
-def on_smile_shortcut(s: System, p: Plan) -> None:
-    p.steps.append(Step("Add a GNOME shortcut: the Copilot key opens Smile", call=add_smile_shortcut))
+        p.steps.append(gsettings_step(f"{CUSTOM_KEYS}:{path}", key, value, f"Shortcut for Smile: set its {key}"))
+    listing = "[" + ", ".join(f"'{x}'" for x in [*existing, path]) + "]"
+    p.steps.append(gsettings_step(MEDIA_KEYS, "custom-keybindings", listing,
+                                  "Shortcut for Smile: add it to the custom shortcuts"))
 
 
 def off_smile_shortcut(s: System, p: Plan) -> None:
-    p.steps.append(Step("Remove the Copilot key shortcut for Smile", call=remove_smile_shortcut))
+    keep, removed = [], False
+    for path in custom_keybindings(s):
+        if SMILE_ID in (s.gsettings(f"{CUSTOM_KEYS}:{path}", "command") or ""):
+            p.steps.append(Step("Remove the Copilot key shortcut for Smile",
+                                ["gsettings", "reset-recursively", f"{CUSTOM_KEYS}:{path}"]))
+            removed = True
+        else:
+            keep.append(path)
+    if not removed:
+        return
+    if keep:
+        p.steps.append(gsettings_step(MEDIA_KEYS, "custom-keybindings", "[" + ", ".join(f"'{x}'" for x in keep) + "]",
+                                      "Keep your other custom shortcuts"))
+    else:
+        p.steps.append(gsettings_reset(MEDIA_KEYS, "custom-keybindings", "Reset the list of custom shortcuts"))
 
 
 # --- GNOME Shell extensions -----------------------------------------------------------------------
@@ -1391,6 +1553,34 @@ def remove_extension(spec: ExtensionSpec) -> None:
             raise SetupError(f"could not remove {spec.name}: {res.text or 'the folder is still there'}")
 
 
+def install_lines(spec: ExtensionSpec) -> list[str]:
+    """What install_extension() amounts to, as commands. The build number and the enabled list are known at run time."""
+    archive = f"{CACHE_DIR / 'extensions' / spec.key}-<build>.zip"
+    return [
+        "# quicksetup.py does this itself (install_extension), step by step:",
+        f"curl -fsSL '{EGO}/extension-info/?pk={spec.pk}&shell_version=<your GNOME Shell version>'",
+        "# ^ says which build of the extension fits your GNOME Shell, or that none does",
+        f"curl -fsSL -o {archive} '{EGO}/download-extension/{spec.uuid}.shell-extension.zip?version_tag=<build>'",
+        "# ^ refused unless it is a zip with no path that leaves its folder, no symbolic link, at most 60 MB unpacked",
+        f"#   and a metadata.json for {spec.uuid}",
+        f"gnome-extensions install --force {archive}",
+        f"gsettings set {SHELL_SCHEMA} enabled-extensions \"[<what is switched on now>, '{spec.uuid}']\"",
+        f"gnome-extensions enable {spec.uuid}",
+    ]
+
+
+def remove_lines(spec: ExtensionSpec) -> list[str]:
+    """What remove_extension() amounts to, as commands."""
+    return [
+        "# quicksetup.py does this itself (remove_extension):",
+        f"gsettings set {SHELL_SCHEMA} enabled-extensions \"[<what is switched on now, without '{spec.uuid}'>]\"",
+        f"gnome-extensions uninstall {spec.uuid}",
+        f"# ^ only for a copy in your home folder. When the shell does not answer, {EXT_USER_DIR / spec.uuid} is "
+        "deleted instead.",
+        "# An extension that came from a package is switched off, not removed.",
+    ]
+
+
 class ExtensionCatalog:
     """What extensions.gnome.org says per extension for the running GNOME Shell. Fetched in the background once."""
 
@@ -1440,11 +1630,12 @@ def extension_item(spec: ExtensionSpec, catalog: ExtensionCatalog) -> Item:
 
     def on(s: System, p: Plan) -> None:
         p.steps.append(Step(f"Install {spec.name} from extensions.gnome.org and switch it on",
-                            call=lambda: install_extension(spec), network=True))
+                            call=lambda: install_extension(spec), network=True, shown=install_lines(spec)))
         p.relogin_for.append(f"{spec.name} (only if it does not show up by itself)")
 
     def off(s: System, p: Plan) -> None:
-        p.steps.append(Step(f"Switch {spec.name} off and remove it", call=lambda: remove_extension(spec)))
+        p.steps.append(Step(f"Switch {spec.name} off and remove it", call=lambda: remove_extension(spec),
+                            shown=remove_lines(spec)))
         p.note("Settings of a removed extension stay in your home folder, so installing it again brings them back.")
 
     return Item(f"ext-{spec.key}", "desktop", spec.name, spec.summary, spec.doc, check, on, off, group="Extensions",
@@ -1503,13 +1694,15 @@ def set_ini_keys(text: str, section: str, values: dict[str, str]) -> str:
     lines = text.splitlines()
     done: set[str] = set()
     current = ""
-    section_end = None
+    section_start = section_end = None
     for index, line in enumerate(lines):
         header = re.match(r"\s*\[([^\]]+)\]\s*$", line)
         if header:
             if current == section and section_end is None:
                 section_end = index
             current = header.group(1)
+            if current == section and section_start is None:
+                section_start = index
             continue
         if current != section:
             continue
@@ -1524,6 +1717,9 @@ def set_ini_keys(text: str, section: str, values: dict[str, str]) -> str:
         if section_end is None:
             lines += ["", f"[{section}]", *pending]
         else:
+            # Straight after the last line that says something, so the blank line before the next section stays.
+            while section_end - 1 > section_start and not lines[section_end - 1].strip():
+                section_end -= 1
             lines[section_end:section_end] = pending
     return "\n".join(lines) + "\n"
 
@@ -1562,7 +1758,8 @@ def staged_install(staged: Path, digest: str, target: str, mode: str = "644") ->
     The prepared file sits in a folder you own, so any program running as you could swap it while the password
     dialog is open. Root therefore only installs it when it still has the content this window computed.
     """
-    return (f"echo {shlex.quote(digest + '  ' + str(staged))} | sha256sum -c --quiet -\n"
+    return ("# prepared in your cache folder by this setup: root installs it only while its SHA-256 still matches\n"
+            f"echo {shlex.quote(digest + '  ' + str(staged))} | sha256sum -c --quiet -\n"
             f"install -m {mode} -o root -g root {shlex.quote(str(staged))} {shlex.quote(target)}")
 
 
@@ -1585,7 +1782,8 @@ def on_autologin(s: System, p: Plan) -> None:
     p.add_root(f"Turn on GDM autologin for {s.user} (the old file is kept as custom.conf.zephyrus-setup.bak)",
                f"[ -e {backup} ] || cp -a {conf} {backup}\n" + staged_install(staged, digest, str(GDM_CONF)) + "\n"
                f"grep -q '^AutomaticLogin={s.user}$' {conf} || {{ cp -a {backup} {conf}; "
-               f"echo 'The GDM config check failed, the old file is back'; exit 1; }}")
+               f"echo 'The GDM config check failed, the old file is back'; exit 1; }}",
+               diff=file_diff(str(GDM_CONF), str(GDM_CONF), read_raw(GDM_CONF), new))
     p.reboot_for.append("GDM autologin")
     p.note("Anyone who can unlock the disk lands in your session. The lock screen still asks for your password.")
 
@@ -1595,11 +1793,13 @@ def off_autologin(s: System, p: Plan) -> None:
     conf = shlex.quote(str(GDM_CONF))
     if backup_path.exists():
         backup = shlex.quote(str(backup_path))
-        p.add_root("Put the GDM config back as it was before", f"cp -a {backup} {conf}\nrm -f {backup}", early=True)
+        p.add_root("Put the GDM config back as it was before", f"cp -a {backup} {conf}\nrm -f {backup}", early=True,
+                   diff=file_diff(str(GDM_CONF), str(GDM_CONF), read_raw(GDM_CONF), read_raw(backup_path)))
     else:
         new = set_ini_keys(read_text(GDM_CONF) + "\n", "daemon", {"AutomaticLoginEnable": "False"})
         staged, digest = stage_file("gdm-custom.conf", new.encode("utf-8"))
-        p.add_root("Turn GDM autologin off", staged_install(staged, digest, str(GDM_CONF)), early=True)
+        p.add_root("Turn GDM autologin off", staged_install(staged, digest, str(GDM_CONF)), early=True,
+                   diff=file_diff(str(GDM_CONF), str(GDM_CONF), read_raw(GDM_CONF), new))
     p.reboot_for.append("turning autologin off")
 
 
@@ -1829,10 +2029,19 @@ def save_registration(s: System) -> None:
 
 def plan_registration(s: System, p: Plan, spare: bool) -> None:
     what = "spare YubiKey" if spare else "YubiKey"
+    keys = shlex.quote(str(u2f_keys_file(s.home)))
     p.steps.append(Step(f"Register your {what}: plug it in, and touch it when it blinks",
-                        argv_factory=lambda: register_command(spare), interactive=True, name="pamu2fcfg"))
+                        argv_factory=lambda: register_command(spare), interactive=True, name="pamu2fcfg",
+                        shown=[register_command(spare)[-1]]))
     p.steps.append(Step(f"Save the registration of your {what} in ~/.config/Yubico/u2f_keys",
-                        call=lambda: save_registration(s)))
+                        call=lambda: save_registration(s),
+                        shown=["# quicksetup.py does this itself (save_registration), and it amounts to:",
+                               "umask 077",
+                               f"mkdir -p {shlex.quote(str(u2f_keys_file(s.home).parent))}",
+                               f"# a first key adds the line '{s.user}:<registration>' to {keys}; a spare adds "
+                               f"':<registration>' to the end of your line there",
+                               f"# the file pamu2fcfg wrote in the step above is deleted either way: "
+                               f"rm -f {shlex.quote(str(staged_registration()))}"]))
 
 
 def check_yubikey_key(s: System) -> Check:
@@ -1850,7 +2059,7 @@ def off_yubikey_key(s: System, p: Plan) -> None:
     path = u2f_keys_file(s.home)
     backup = path.with_name(path.name + ".zephyrus-setup.bak")
     p.steps.append(Step("Forget the registered keys (the file is kept as u2f_keys.zephyrus-setup.bak)",
-                        call=lambda: path.replace(backup)))
+                        ["mv", "-f", str(path), str(backup)]))
     p.note("The keys themselves are not touched. Registering again takes a few seconds.")
 
 
@@ -1871,7 +2080,11 @@ def off_yubikey_spare(s: System, p: Plan) -> None:
     def keep_first() -> None:
         write_private(path, u2f_first_credential_only(path.read_text(encoding="utf-8"), s.user))
 
-    p.steps.append(Step("Forget the spare key (the first registered key stays)", call=keep_first))
+    p.steps.append(Step("Forget the spare key (the first registered key stays)", call=keep_first,
+                        shown=["# quicksetup.py does this itself (keep_first): your line in the key file keeps its "
+                               "first registration and loses the rest,",
+                               f"# the file stays readable by you only (mode 600): {shlex.quote(str(path))}",
+                               f"sed -E -i 's/^({s.user}:[^:]*).*$/\\1/' {shlex.quote(str(path))}"]))
 
 
 # --- the PAM wiring: a touch instead of the password --------------------------------------
@@ -1909,7 +2122,8 @@ def on_yubikey_pam(s: System, p: Plan) -> None:
         how = ("the old file is kept as " + name + ".zephyrus-setup.bak" if existed
                else "a copy of the file the package ships, in /etc/pam.d")
         p.add_root(f"Put the YubiKey line first in /etc/pam.d/{name} ({how})",
-                   pam_install_snippet(name, staged, digest, existed))
+                   pam_install_snippet(name, staged, digest, existed),
+                   diff=file_diff(str(pam_source(name)), str(PAM_DIR / name), text, new))
     p.note("A touch of the key now replaces the password for sudo, the graphical prompt and the lock screen, so "
            "whoever holds the key can use them. Without the key plugged in, the password works as before.")
     p.note("Test sudo in a second terminal before you close this one.")
@@ -1932,16 +2146,30 @@ def off_yubikey_pam(s: System, p: Plan) -> None:
         vendor = PAM_VENDOR_DIR / name
         if vendor.is_file() and stripped.split() == vendor.read_text(encoding="utf-8").split():
             p.add_root(f"Take the YubiKey line out of /etc/pam.d/{name} by removing the copy, so the file the "
-                       "package ships is used again", f"rm -f {shlex.quote(str(target))} {backup}", early=True)
+                       "package ships is used again", f"rm -f {shlex.quote(str(target))} {backup}", early=True,
+                       diff=file_diff(str(target), str(vendor), text, read_raw(vendor)))
         else:
             staged, digest = stage_file(f"pam-{name}", stripped.encode("utf-8"))
             p.add_root(f"Take the YubiKey line out of /etc/pam.d/{name}",
-                       staged_install(staged, digest, str(target)) + f"\nrm -f {backup}", early=True)
+                       staged_install(staged, digest, str(target)) + f"\nrm -f {backup}", early=True,
+                       diff=file_diff(str(target), str(target), text, stripped))
+
+
+def secure_boot_enabled(s: System) -> bool:
+    state = s.out(["bootctl", "status"]) if s.has_cmd("bootctl") else ""
+    return re.search(r"Secure Boot:\s*enabled", state, re.IGNORECASE) is not None
+
+
+def sbctl_off_blocker(s: System) -> str | None:
+    """sbctl signs every new kernel through a pacman hook. Without it, Secure Boot refuses the next kernel."""
+    if secure_boot_enabled(s):
+        return ("Secure Boot is on, and sbctl is what signs every new kernel. Turn Secure Boot off in the UEFI "
+                "first, or the next kernel update will not boot")
+    return None
 
 
 def check_secure_boot(s: System) -> Check:
-    state = s.out(["bootctl", "status"]) if s.has_cmd("bootctl") else ""
-    enabled = re.search(r"Secure Boot:\s*enabled", state, re.IGNORECASE) is not None
+    enabled = secure_boot_enabled(s)
     has_sbctl = "sbctl" in s.pacman_installed()
     if enabled and has_sbctl:
         return Check(State.DONE, "Secure Boot is on and sbctl is installed")
@@ -2477,6 +2705,27 @@ class ColorController:
         return []
 
 
+def color_runs(connector: str) -> str:
+    """What switching a color mode does, in plain text: the two calls the window makes, and the way back."""
+    return (
+        "A switch needs no root and downloads nothing. It makes two calls, as you.\n\n"
+        "1. GNOME's display service, the call Settings > Displays makes:\n"
+        f"   D-Bus {MUTTER_NAME}, object {MUTTER_PATH},\n"
+        f"   method ApplyMonitorsConfig (persistent), for {connector} only:\n"
+        "     color-mode = 0 (default)     Native\n"
+        "     color-mode = 2 (sdr-native)  sRGB\n"
+        "   The layout, scale, resolution, refresh rate and every other screen are sent back exactly as they "
+        "are.\n\n"
+        "2. colord, for color-managed apps. Only once 'ASUS color profiles' is ticked:\n"
+        "     colormgr device-add-profile <Built-in Screen> <profile>\n"
+        "     colormgr device-make-profile-default <Built-in Screen> <profile>\n"
+        "   Native uses the panel's factory profile, sRGB uses ASUS_sRGB.icm.\n\n"
+        "When the second call fails, the first one is put back.\n\n"
+        "The way back: pick the other mode, or press Undo in the message that shows for a few seconds after a "
+        "switch.\n\n"
+        "The code is ColorController.switch and DisplayConfig.set_color_mode in quicksetup.py.\n")
+
+
 # --- color: installing the profiles (an item in the list) --------------------------------------------
 
 def check_color_profiles(s: System) -> Check:
@@ -2539,13 +2788,52 @@ def on_color_profiles(s: System, p: Plan) -> None:
     # A file that is already there with the same contents is left alone: colord drops a profile when its file is
     # overwritten and does not always read it again. So nothing here ever touches a profile that is already in place.
     p.add_root("Put the profiles in colord's own profile folder, where it reads them reliably",
+               "# prepared in your cache folder by this setup: the files published in the repository (the copy in this "
+               "checkout,\n"
+               f"# or else {RAW_BASE}/src/static/icc-profiles/), checked against the SHA-256 built into the setup, "
+               "with the\n"
+               "# description rewritten to the name GNOME shows. Root installs them only while their SHA-256 still "
+               "matches.\n"
                f"install -d -m 755 -o colord -g colord {shlex.quote(str(COLORD_STORE))}\n{copies}")
     if retired := system_color_copies(s, retired_only=True):
         p.add_root("Remove the DCI-P3 and Display P3 profiles that an earlier version put there",
                    "rm -f -- " + " ".join(shlex.quote(str(path)) for path in retired), early=True)
-    p.steps.append(Step("Add the profiles to the Built-in Screen in colord", call=lambda: register_color_profiles(s)))
+    p.steps.append(Step("Add the profiles to the Built-in Screen in colord", call=lambda: register_color_profiles(s),
+                        shown=register_lines([name for _, _, name in staged])))
     p.note("After switching GPU mode (Hybrid, Integrated, Ultimate), tick this again: each mode has its own display "
            "and its own profile.")
+
+
+def register_lines(names: list[str]) -> list[str]:
+    """What register_color_profiles() amounts to, as commands. The object paths are colord's, known at run time."""
+    lines = ["# quicksetup.py does this itself (register_color_profiles), with colord's own tool:",
+             "colormgr get-devices-by-kind display",
+             "# ^ the Built-in Screen is the display colord marks as embedded (eDP)"]
+    for name in names:
+        lines += [f"colormgr find-profile-by-filename {COLORD_STORE / name}",
+                  "# ^ colord reads a new file a moment after it lands, so this is retried for up to 10 seconds"]
+    lines += ["colormgr device-add-profile <Built-in Screen> <each of the profiles above>",
+              "# ^ unless the screen lists it already",
+              "colormgr device-make-profile-default <Built-in Screen> <the factory profile>",
+              "# ^ only when nothing but the automatic profile (the edid-*.icc colord makes itself) was in charge"]
+    return lines
+
+
+def release_lines(names: list[str]) -> list[str]:
+    """What release_color_profiles() amounts to, as commands."""
+    return ["# quicksetup.py does this itself (release_color_profiles), and it amounts to:",
+            "colormgr device-make-profile-default <Built-in Screen> <the automatic profile>",
+            "# ^ only when one of these profiles is the active one right now. The automatic profile is the edid-*.icc "
+            "colord made for the screen",
+            "rm -f " + " ".join(shlex.quote(str(OLD_ICC_DIR / name)) for name in names),
+            "# ^ copies an earlier version of this setup put in your home folder",
+            f"rm -rf {shlex.quote(str(STAGE_DIR))}"]
+
+
+RESTORE_LINES = ["# quicksetup.py does this itself (restore_automatic_profile): when the screen is left with no "
+                 "profile at all,",
+                 "colormgr device-add-profile <Built-in Screen> <the automatic profile>",
+                 "colormgr device-make-profile-default <Built-in Screen> <the automatic profile>"]
 
 
 def register_color_profiles(s: System) -> None:
@@ -2624,12 +2912,14 @@ def system_color_copies(s: System, retired_only: bool = False) -> list[Path]:
 
 
 def off_color_profiles(s: System, p: Plan) -> None:
+    names = [name for _, name in profile_set(s, internal_panel())] + list(RETIRED_PROFILES)
     p.steps.append(Step("Switch the screen back to its automatic profile and remove older copies",
-                        call=lambda: release_color_profiles(s), early=True))
+                        call=lambda: release_color_profiles(s), early=True, shown=release_lines(names)))
     if copies := system_color_copies(s):
         p.add_root("Remove the profiles from colord's own profile folder",
                    "rm -f -- " + " ".join(shlex.quote(str(path)) for path in copies), early=True)
-    p.steps.append(Step("Check that the screen kept its automatic profile", call=lambda: restore_automatic_profile(s)))
+    p.steps.append(Step("Check that the screen kept its automatic profile", call=lambda: restore_automatic_profile(s),
+                        shown=RESTORE_LINES))
 
 
 # --- development, applications and virtualization ----------------------------------------------
@@ -2696,26 +2986,19 @@ def check_topgrade(s: System, result: Check) -> Check:
     return Check(State.DONE, "installed and configured")
 
 
-def write_topgrade_conf() -> None:
-    if TOPGRADE_CONF.exists():
-        return
-    TOPGRADE_CONF.parent.mkdir(parents=True, exist_ok=True)
-    TOPGRADE_CONF.write_text(TOPGRADE_TEXT, encoding="utf-8")
-
-
-def remove_topgrade_conf() -> None:
-    if TOPGRADE_CONF.exists() and read_text(TOPGRADE_CONF) == TOPGRADE_TEXT.strip():  # one you edited stays
-        TOPGRADE_CONF.unlink()
-
-
 def on_topgrade(s: System, p: Plan) -> None:
     if not TOPGRADE_CONF.exists():
-        p.steps.append(Step("Write ~/.config/topgrade.toml (skip firmware, use paru)", call=write_topgrade_conf))
+        conf = shlex.quote(str(TOPGRADE_CONF))
+        p.steps.append(shell_step("Write ~/.config/topgrade.toml (skip firmware, use paru)",
+                                  f"mkdir -p {shlex.quote(str(TOPGRADE_CONF.parent))}\n"
+                                  f"[ -e {conf} ] || cat > {conf} <<'ZEPHYRUS_EOF'\n{TOPGRADE_TEXT}ZEPHYRUS_EOF"))
 
 
 def off_topgrade(s: System, p: Plan) -> None:
-    p.steps.append(Step("Remove ~/.config/topgrade.toml if it is still the one this script wrote",
-                        call=remove_topgrade_conf))
+    conf = shlex.quote(str(TOPGRADE_CONF))  # one you edited stays
+    p.steps.append(shell_step("Remove ~/.config/topgrade.toml if it is still the one this script wrote",
+                              f"if cmp -s - {conf} <<'ZEPHYRUS_EOF'\n{TOPGRADE_TEXT}ZEPHYRUS_EOF\n"
+                              f"then rm -f {conf}; fi"))
 
 
 def check_vscode(s: System, result: Check) -> Check:
@@ -2803,8 +3086,10 @@ def on_kvm(s: System, p: Plan) -> None:
 
 
 def off_kvm(s: System, p: Plan) -> None:
-    p.add_root("Stop libvirt and take your account out of the libvirt group",
-               f"systemctl disable --now libvirtd || true\n"
+    p.add_root("Stop libvirt, its default network and take your account out of the libvirt group",
+               "virsh net-autostart --disable default || true\n"
+               "virsh net-destroy default || true\n"
+               "systemctl disable --now libvirtd || true\n"
                f"gpasswd -d {shlex.quote(s.user)} libvirt || true", early=True)
     if s.unit_active("ufw.service"):
         p.add_root("Take the VM rules out of ufw again", ufw_forget(
@@ -2897,7 +3182,13 @@ def download_archi() -> Path:
 def on_archi(s: System, p: Plan) -> None:
     staged = CACHE_DIR / f"Archi-Linux64-{ARCHI_VERSION}.tgz"
     p.steps.append(Step(f"Download Archi {ARCHI_VERSION} (about 180 MB) and check it against the published SHA-256",
-                        call=download_archi, early=True, network=True))
+                        call=download_archi, early=True, network=True,
+                        shown=["# quicksetup.py does this itself (download_archi), and it amounts to:",
+                               f"curl -fsSL {ARCHI_URLS[0]} -o {shlex.quote(str(staged))}",
+                               f"# ^ the project has renamed its release tags before, so {', '.join(ARCHI_TAGS)} are "
+                               "tried in that order",
+                               f"echo {shlex.quote(ARCHI_SHA256 + '  ' + str(staged))} | sha256sum -c -",
+                               "# ^ nothing is installed unless this matches"]))
     desktop = ("[Desktop Entry]\nVersion=1.0\nType=Application\nName=Archi\nComment=ArchiMate Modelling Tool\n"
                "Exec=/opt/Archi/Archi\nIcon=__ICON__\nTerminal=false\nCategories=Development;IDE;\n"
                "StartupWMClass=Archi\n")
@@ -2907,7 +3198,7 @@ def on_archi(s: System, p: Plan) -> None:
                "ln -sfn /opt/Archi/Archi /usr/local/bin/archi\n"
                "icon=$(find /opt/Archi/plugins -name app-128.png | head -1)\n"
                f"printf %s {shlex.quote(desktop)} | sed \"s|__ICON__|$icon|\" > /usr/share/applications/archi.desktop")
-    p.steps.append(Step("Remove the downloaded archive", call=lambda: staged.unlink(missing_ok=True)))
+    p.steps.append(Step("Remove the downloaded archive", ["rm", "-f", str(staged)]))
 
 
 def off_archi(s: System, p: Plan) -> None:
@@ -3047,7 +3338,8 @@ def build_items(catalog: ExtensionCatalog) -> list[Item]:
     add(Item("amdgpu-psr", "gpu", "Disable AMD Panel Self Refresh",
              "Only if the system still freezes with an external monitor over USB-C or Thunderbolt. The bug was mostly "
              "on kernels 6.15 to 6.18", "known-issues", check_psr, group="AMD",
-             manual=lambda s: PSR_MANUAL.get(s.bootloader(), []), advanced=True, hardware="g16", guide_only=True))
+             manual=lambda s: PSR_MANUAL.get(s.bootloader(), []),
+             manual_off=lambda s: PSR_REVERT.get(s.bootloader(), []), advanced=True, hardware="g16", guide_only=True))
 
     # Display: the live color modes have a page of their own, the profiles are an item
     add(Item("display-color-profiles", "display", "ASUS color profiles",
@@ -3058,11 +3350,7 @@ def build_items(catalog: ExtensionCatalog) -> list[Item]:
     # Network
     add(Item("wifi-mt7925", "network", "Wi-Fi throughput tuning (MT7925)",
              "No PCIe ASPM, no Wi-Fi power saving, a bigger AQL queue: about double the speed",
-             "networking/mt7925-wifi-performance", check_mt7925,
-             lambda s, p: plan_tool(p, "Apply the Wi-Fi tuning with mt7925-tune.py", "mt7925-tune.py", "enable",
-                                    reboot="PCIe ASPM"),
-             lambda s, p: plan_tool(p, "Revert the Wi-Fi tuning with mt7925-tune.py", "mt7925-tune.py", "disable",
-                                    reboot="reverting the PCIe ASPM override"),
+             "networking/mt7925-wifi-performance", check_mt7925, on_mt7925, off_mt7925,
              group="Wi-Fi", recommended=True, hardware="mt7925"))
     add(Item("eduroam-saxion", "network", "eduroam at Saxion",
              "Connects to eduroam with the right pinned certificates. Saxion only",
@@ -3136,7 +3424,8 @@ def build_items(catalog: ExtensionCatalog) -> list[Item]:
                      "open until that works",
                      "Lock the screen with Super+L and touch the key to unlock it"]))
     add(package_item("sbctl", "security", "sbctl", "The tool that creates and enrolls your own Secure Boot keys",
-                     "cachyos/secure-boot", group="Secure Boot", pacman=("sbctl",), advanced=True))
+                     "cachyos/secure-boot", group="Secure Boot", pacman=("sbctl",), advanced=True,
+                     off_blocker=sbctl_off_blocker))
     add(Item("secure-boot", "security", "Secure Boot with your own keys",
              "Keys, firmware setup and signing the boot files: a mistake can stop the machine from booting, so it "
              "stays manual", "cachyos/secure-boot", check_secure_boot, group="Secure Boot", guide_only=True,
@@ -3145,7 +3434,13 @@ def build_items(catalog: ExtensionCatalog) -> list[Item]:
                      "sudo sbctl create-keys", "sudo sbctl enroll-keys --microsoft",
                      "Sign the boot files: sbctl-batch-sign for systemd-boot, limine-enroll-config and limine-update "
                      "for Limine",
-                     "Enable Secure Boot in the UEFI again, then check with: sudo sbctl status"]))
+                     "Enable Secure Boot in the UEFI again, then check with: sudo sbctl status"],
+             manual_off=["Reboot into the ASUS UEFI (systemctl reboot --firmware-setup) and set Secure Boot Control "
+                         "to Disabled, under Security > Secure Boot. The machine boots as before",
+                         "Optional: your own keys do no harm while Secure Boot is off. Put the firmware's default keys "
+                         "back under Key Management only if you want them gone",
+                         "Optional: untick sbctl in this window to remove the tool and its pacman hook, which "
+                         "re-signs new kernels"]))
 
     # Development
     add(package_item("git-github-cli", "dev", "Git and GitHub CLI", "git plus gh for pull requests and issues",
@@ -3400,22 +3695,21 @@ def root_script(plan: Plan) -> str:
     and the rest goes on; a failing install stops the script, because what comes after may need those packages.
     """
     lines = [ROOT_HEADER]
-    for desc, snippet in plan.root_early:
-        lines.append(f"run_step {shlex.quote(desc)} {shlex.quote(snippet)}")
+    for snippet in plan.root_early:
+        lines.append(f"run_step {shlex.quote(snippet.desc)} {shlex.quote(snippet.script)}")
     if plan.pacman:
-        names = " ".join(shlex.quote(p) for p in plan.pacman)
         lines.append(f"echo {shlex.quote('==> pacman: installing ' + ', '.join(plan.pacman))}")
-        lines.append(f"if ! pacman -S --needed --noconfirm --noprogressbar {names}; then\n"
+        lines.append(f"if ! {shlex.join([*PACMAN_INSTALL, *plan.pacman])}; then\n"
                      "  echo '[FAILED] pacman could not install the packages. Nothing after this step was run.'\n"
                      "  echo 'If it says a package was not found or a download failed (404), update the system first "
                      "with: sudo pacman -Syu'\n  exit 1\nfi")
-    for desc, snippet in plan.root:
-        lines.append(f"run_step {shlex.quote(desc)} {shlex.quote(snippet)}")
+    for snippet in plan.root:
+        lines.append(f"run_step {shlex.quote(snippet.desc)} {shlex.quote(snippet.script)}")
     if plan.remove_pacman:
         names = " ".join(shlex.quote(p) for p in plan.remove_pacman)
         lines.append(f"echo {shlex.quote('==> pacman: removing ' + ', '.join(plan.remove_pacman))}")
         lines.append(f'for pkg in {names}; do\n'
-                     '  if pacman -Rs --noconfirm --noprogressbar "$pkg"; then echo "removed $pkg";\n'
+                     f'  if {shlex.join(PACMAN_REMOVE)} "$pkg"; then echo "removed $pkg";\n'
                      '  else echo "kept $pkg: something else still needs it"; fi\ndone')
     lines.append('if [ "${#failed[@]}" -gt 0 ]; then\n  echo\n  echo "These steps failed:"\n'
                  '  printf " - %s\\n" "${failed[@]}"\n  exit 1\nfi')
@@ -3445,38 +3739,83 @@ class Built:
         return not self.blockers
 
 
-def render_plan(built: Built, commands: bool = True) -> str:
-    """The plan as plain text. With commands=True the root snippets are printed in full."""
-    plan = built.plan
-    lines: list[str] = []
+@dataclass(frozen=True)
+class Command:
+    """One piece of a run, written the way a shell would show it. The review and the site list a run this way."""
+    phase: str      # when in the run it happens, a key of PHASE_TITLES
+    who: str        # root, terminal (you, in a terminal window) or you
+    desc: str       # what it is for, one line
+    text: str       # the command or commands, as many lines as it takes
+    diff: str = ""  # for a file that gets edited: the change, as a unified diff
+
+
+PHASE_TITLES = {
+    "early": "As you, first",
+    "root": "As root, one password prompt for all of it",
+    "aur": "As you, in a terminal window",
+    "flatpak": "As you, from Flathub",
+    "steps": "As you",
+}
+
+
+def plan_commands(plan: Plan) -> list[Command]:
+    """
+    Everything a run does, as the commands themselves, in the order they run (Executor.run does it in this order).
+    The package manager lines come from the same constants as root_script() and the Executor, so this listing cannot
+    say one thing while the run does another.
+    """
+    def step_command(phase: str, step: Step) -> Command:
+        return Command(phase, "terminal" if step.interactive else "you", step.desc, "\n".join(step.commands()))
+
+    def snippet_command(snippet: Snippet) -> Command:
+        return Command("root", "root", snippet.desc, snippet.script, snippet.diff)
+
+    commands = [step_command("early", step) for step in plan.steps if step.early]
+    commands += [snippet_command(snippet) for snippet in plan.root_early]
     if plan.pacman:
-        lines.append("Packages from the repositories (pacman):  " + " ".join(plan.pacman))
-    if plan.aur:
-        lines.append("Packages from the AUR (paru, in a terminal window, you review each PKGBUILD):  "
-                     + " ".join(plan.aur))
-    if plan.flatpak:
-        lines.append("Flatpaks from Flathub:  " + " ".join(plan.flatpak))
+        commands.append(Command("root", "root", "Install packages from the repositories",
+                                shell_line([*PACMAN_INSTALL, *plan.pacman])))
+    commands += [snippet_command(snippet) for snippet in plan.root]
     if plan.remove_pacman:
-        lines.append("Packages removed (pacman; one that something else still needs is kept):  "
-                     + " ".join(plan.remove_pacman))
+        removals = "\n".join(shell_line([*PACMAN_REMOVE, name]) for name in plan.remove_pacman)
+        commands.append(Command("root", "root",
+                                "Remove packages, one at a time (one that something else still needs is kept)",
+                                removals))
+    if plan.aur:
+        commands.append(Command("aur", "terminal",
+                                "Install from the AUR: paru shows each PKGBUILD, and you read it before it builds",
+                                shell_line([*PARU_INSTALL, *plan.aur])))
+    if plan.flatpak:
+        commands.append(Command("flatpak", "you", "Install from Flathub",
+                                shell_line([*FLATPAK_INSTALL, *plan.flatpak])))
     if plan.remove_flatpak:
-        lines.append("Flatpaks removed:  " + " ".join(plan.remove_flatpak))
-    snippets = [*plan.root_early, *plan.root]
-    if snippets:
-        lines.append("As root, in the same single password prompt:")
-        for desc, snippet in snippets:
-            lines.append(f"  - {desc}")
-            if commands:
-                lines += [f"      {line}" for line in snippet.splitlines() if line.strip()][:12]
-    if plan.steps:
-        lines.append("As you:")
-        for step in plan.steps:
-            shown = " ".join(step.argv) if step.argv else ""
-            command = f"   $ {shown}" if shown and step.desc != shown and commands else ""
-            lines.append(f"  - {step.desc}{command}")
-    if not lines:
-        lines.append("Nothing to run.")
-    return "\n".join(lines) + "\n"
+        commands.append(Command("flatpak", "you", "Remove Flatpaks",
+                                shell_line([*FLATPAK_REMOVE, *plan.remove_flatpak])))
+    commands += [step_command("steps", step) for step in plan.steps if not step.early]
+    return commands
+
+
+def render_commands(commands: list[Command]) -> str:
+    """The commands as plain text, grouped by when they run. Nothing is cut short: this is what runs."""
+    lines: list[str] = []
+    for phase, title in PHASE_TITLES.items():
+        group = [command for command in commands if command.phase == phase]
+        if not group:
+            continue
+        lines += [f"{title}:", ""]
+        for command in group:
+            lines.append(f"  # {command.desc}")
+            lines += [f"  {line}".rstrip() for line in command.text.splitlines()]
+            if command.diff:
+                lines.append("  # the change to the file, as a diff:")
+                lines += [f"  {line}".rstrip() for line in command.diff.splitlines()]
+            lines.append("")
+    return "\n".join(lines).rstrip() + "\n" if lines else "Nothing to run.\n"
+
+
+def render_plan(built: Built) -> str:
+    """The plan as plain text: every command a run would start, in full."""
+    return render_commands(plan_commands(built.plan))
 
 
 class Backend:
@@ -3653,8 +3992,8 @@ class Backend:
             if not s.has_cmd("flatpak"):
                 plan.add_pacman(["flatpak"])
             if not s.has_flathub():
-                plan.root.insert(0, ("Add the Flathub remote",
-                                     f"flatpak remote-add --if-not-exists flathub {shlex.quote(FLATHUB_REPO)}"))
+                plan.root.insert(0, Snippet("Add the Flathub remote",
+                                            f"flatpak remote-add --if-not-exists flathub {shlex.quote(FLATHUB_REPO)}"))
         if plan.aur and not s.has_cmd("paru"):
             plan.add_pacman(["paru"])
         needs_root = bool(plan.pacman or plan.root or plan.root_early or plan.remove_pacman)
@@ -3683,11 +4022,40 @@ class Backend:
             built.warnings.append(f"Your package databases are {age:.0f} days old. If a download fails with a 404, run "
                                   "a full update first: sudo pacman -Syu")
 
+    def direction(self, item: Item, want: bool, check: Check) -> list[str]:
+        """
+        What turning an item on or off would run on this machine, as lines of text. A blocker is listed first and the
+        commands still follow it, so you can read what an untick runs even while another row stands in its way.
+        """
+        if want and check.state is State.DONE:
+            return ["Nothing: it is already set up. The reference on the site lists what it runs on a machine "
+                    "that is not."]
+        if not want and check.state in (State.TODO, State.NA, State.UNKNOWN):
+            return ["Nothing: it is not set up."]
+        built = self.build_plan({item.id: want})
+        lines = [f"Not possible right now: {b}" for b in built.blockers]
+        if built.included:
+            lines.append("Also included, because something needs it: " + ", ".join(built.included))
+        if not built.plan.empty:
+            if built.blockers:
+                lines.append("Once that is sorted out, it runs:")
+            lines += ["", *render_plan(built).splitlines()]
+        facts = [f"Note: {note}" for note in built.plan.notes]
+        if built.plan.reboot_for:
+            facts.append("Needs a reboot: " + ", ".join(built.plan.reboot_for))
+        if built.plan.relogin_for:
+            facts.append("Needs logging out and back in: " + ", ".join(built.plan.relogin_for))
+        return [*lines, "", *facts] if facts and not built.plan.empty else [*lines, *facts]
+
     def describe(self, item: Item) -> str:
-        """Everything about one item as text: status, what ticking and unticking it would do, and its link."""
+        """
+        Everything about one item as text: its status, its links, and the exact commands that ticking and unticking
+        it would run on this machine, with a diff for every file they edit. Both directions are always listed.
+        """
         check = self.check(item)
         lines = [item.title, "", item.summary, "", f"Status: {check.state.value}"
-                 + (f" ({check.detail})" if check.detail else ""), f"Guide:  {item.url}"]
+                 + (f" ({check.detail})" if check.detail else ""), f"Guide:  {item.url}",
+                 f"Exact commands, with the way back: {item.reference_url}"]
         reason = item.not_applicable(self.s) or (item.unavailable(self.s) if item.unavailable else None)
         if reason:
             lines += ["", f"Not available: {reason}"]
@@ -3698,20 +4066,18 @@ class Backend:
             lines.append("Advanced: left out of 'Select recommended'")
         if item.requires:
             lines.append("Needs: " + ", ".join(self.by_id[i].title for i in item.requires))
-        if item.toggleable and not reason and not self.read_only:
-            for want, label in ((True, "Ticking it would"), (False, "Unticking it would")):
-                if (want and check.state is State.DONE) or (not want and check.state in (State.TODO, State.UNKNOWN)):
-                    continue
-                built = self.build_plan({item.id: want})
-                lines += ["", f"{label}:"]
-                if built.blockers:
-                    lines += [f"  Not possible now: {b}" for b in built.blockers]
-                else:
-                    lines += render_plan(built, commands=False).splitlines()
-                    lines += [f"  Note: {n}" for n in built.plan.notes]
-        steps = item.manual_steps(self.s)
-        if steps:
-            lines += ["", "By hand:", *[f"  {n}. {step}" for n, step in enumerate(steps, 1)]]
+        if item.toggleable and not reason:
+            if self.read_only:
+                lines += ["", f"Not worked out here: {self.read_only}"]
+            else:
+                for want, label in ((True, "Ticking it runs"), (False, "Unticking it runs")):
+                    lines += ["", f"{label}:", *[f"  {line}".rstrip() for line in self.direction(item, want, check)]]
+        for steps, label in ((item.manual_steps(self.s), "By hand, to set it up" if item.guide_only
+                              else "Left for you after ticking it"),
+                             (item.manual_off_steps(self.s), "By hand, to undo it" if item.guide_only
+                              else "Left for you after unticking it")):
+            if steps:
+                lines += ["", f"{label}:", *[f"  {n}. {step}" for n, step in enumerate(steps, 1)]]
         return "\n".join(lines) + "\n"
 
 
@@ -3785,7 +4151,7 @@ class Executor:
         if plan.aur and not root_failed:
             self.phase("AUR packages")
             self.emit("==> AUR packages with paru, in a terminal window")
-            command = ["paru", "-S", "--needed", *plan.aur]
+            command = [*PARU_INSTALL, *plan.aur]
             code = self._terminal(command, "AUR packages: review each PKGBUILD before you let it build")
             if code is None:
                 failures.append("The AUR packages need a terminal window, and none could be opened. Run this yourself: "
@@ -3798,12 +4164,12 @@ class Executor:
         if plan.flatpak:
             self.phase("Flatpaks")
             self.emit("==> Flatpaks from Flathub")
-            code = stream(["flatpak", "install", "-y", "flathub", *plan.flatpak], self.emit)
+            code = stream([*FLATPAK_INSTALL, *plan.flatpak], self.emit)
             if code != 0:
                 failures.append(f"flatpak exited with code {code} for: {' '.join(plan.flatpak)}")
         if plan.remove_flatpak:
             self.emit("==> Removing Flatpaks")
-            code = stream(["flatpak", "uninstall", "-y", *plan.remove_flatpak], self.emit)
+            code = stream([*FLATPAK_REMOVE, *plan.remove_flatpak], self.emit)
             if code != 0:
                 failures.append(f"flatpak exited with code {code} for: {' '.join(plan.remove_flatpak)}")
 
@@ -3956,7 +4322,7 @@ class ItemRow:
         guide.add_css_class("flat")
         guide.connect("clicked", lambda _b: window.open_url(item.url))
         details = Gtk.Button(icon_name=icon_or("help-about-symbolic", "dialog-information-symbolic"),
-                             valign=Gtk.Align.CENTER, tooltip_text="What ticking and unticking it does")
+                             valign=Gtk.Align.CENTER, tooltip_text="The exact commands for ticking and unticking it")
         details.add_css_class("flat")
         details.connect("clicked", lambda _b: window.show_details(item))
         self.row.add_suffix(details)
@@ -4137,6 +4503,18 @@ class ColorSection:
         row.add_suffix(more)
         return row
 
+    def _runs_row(self, info: ColorInfo) -> "Adw.ActionRow":
+        row = Adw.ActionRow(title="What a switch runs", use_markup=False, subtitle_lines=0, title_lines=0,
+                            subtitle="The two calls behind it, and the way back")
+        show = Gtk.Button(label="Show", valign=Gtk.Align.CENTER)
+        show.add_css_class("flat")
+        connector = info.panel.connector if info.panel else "the built-in screen"
+        show.connect("clicked", lambda _b: self.window.show_text(
+            "What a color switch runs", color_runs(connector),
+            [("Exact description on the site", reference_url("display", "color-mode"))]))
+        row.add_suffix(show)
+        return row
+
     def _build(self, info: ColorInfo) -> None:
         for row in self.group_rows:
             self.group.remove(row)
@@ -4160,6 +4538,7 @@ class ColorSection:
         if info.compositor_ok:
             self._add_row(self._swatch_row())
         self._add_row(self._why_row())
+        self._add_row(self._runs_row(info))
         notes = []
         if not info.compositor_ok:
             notes.append(info.compositor_note or "The sRGB color mode is not available here.")
@@ -4618,17 +4997,37 @@ class SetupWindow(_Window):
 
     # --- details ------------------------------------------------------------
 
+    def link_bar(self, text: str, links: list[tuple[str, str]]) -> "Gtk.Box":
+        """The buttons under a dialog full of commands: the pages that explain them, and a copy of the text."""
+        bar = Gtk.Box(spacing=8, halign=Gtk.Align.END, margin_top=8, margin_bottom=10, margin_end=12)
+        for label, url in links:
+            button = Gtk.Button(label=label)
+            button.connect("clicked", lambda _b, link=url: self.open_url(link))
+            bar.append(button)
+        copy = Gtk.Button(label="Copy")
+        copy.connect("clicked", lambda _b: self.copy_text(text))
+        bar.append(copy)
+        return bar
+
+    def show_text(self, title: str, text: str, links: list[tuple[str, str]]) -> None:
+        dialog, view = dialog_shell(title, 700, 560)
+        view.set_content(scrolled(text_view(text)))
+        view.add_bottom_bar(self.link_bar(text, links))
+        dialog.present(self)
+
     @guarded
     def show_details(self, item: Item) -> None:
-        dialog, view = dialog_shell(item.title, 700, 620)
+        dialog, view = dialog_shell(item.title, 780, 700)
         spinner = Adw.StatusPage(title="Working it out", child=Gtk.Spinner(spinning=True, width_request=32,
                                                                            height_request=32))
         view.set_content(spinner)
         dialog.present(self)
 
         def done(text: object, error: Exception | None) -> None:
-            body = text if error is None else f"Could not work this out: {error}"
-            view.set_content(scrolled(text_view(str(body))))
+            body = str(text) if error is None else f"Could not work this out: {error}"
+            view.set_content(scrolled(text_view(body)))
+            view.add_bottom_bar(self.link_bar(body, [("Open the guide", item.url),
+                                                     ("Exact commands on the site", item.reference_url)]))
 
         background(lambda: self.backend.describe(item), done)
 
@@ -4692,14 +5091,18 @@ class SetupWindow(_Window):
                 info_row(title, "\n".join(f"{n}. {s}" for n, s in enumerate(steps, 1)), "document-edit-symbolic")
                 for title, steps in built.manual]))
         commands = Adw.PreferencesGroup()
-        expander = Adw.ExpanderRow(title="Show the exact commands",
-                                   subtitle="Everything that will run, root steps included")
-        label = Gtk.Label(label=render_plan(built).rstrip(), selectable=True, xalign=0, wrap=True, margin_top=10,
-                          margin_bottom=10, margin_start=12, margin_end=12)
-        label.add_css_class("zs-log")
-        holder = Gtk.ListBoxRow(activatable=False, selectable=False, child=label)
-        expander.add_row(holder)
-        commands.add(expander)
+        commands.add(self._command_expander("Show the exact commands",
+                                            "Everything that will run, in order, nothing cut short",
+                                            render_plan(built)))
+        if plan.pacman or plan.root or plan.root_early or plan.remove_pacman:
+            commands.add(self._command_expander("Show the root script, word for word",
+                                                "The one script that goes to pkexec, as it is passed on",
+                                                root_script(plan)))
+        reference = Adw.ActionRow(title="Every item with its commands and the way back", use_markup=False,
+                                  activatable=True, subtitle="The reference on the site")
+        reference.add_suffix(Gtk.Image(icon_name=icon_or("adw-external-link-symbolic", "web-browser-symbolic")))
+        reference.connect("activated", lambda _r: self.open_url(f"{SITE}/docs/setup-script/reference/"))
+        commands.add(reference)
         page.add(commands)
         view.set_content(page)
         bar = Gtk.Box(spacing=8, halign=Gtk.Align.END, margin_top=8, margin_bottom=10, margin_end=12)
@@ -4712,6 +5115,18 @@ class SetupWindow(_Window):
         bar.append(apply_button)
         view.add_bottom_bar(bar)
         dialog.present(self)
+
+    def _command_expander(self, title: str, subtitle: str, text: str) -> "Adw.ExpanderRow":
+        """A row that unfolds into commands you can select, with a button that copies all of them."""
+        expander = Adw.ExpanderRow(title=title, subtitle=subtitle)
+        label = Gtk.Label(label=text.rstrip(), selectable=True, xalign=0, wrap=True, margin_top=10,
+                          margin_bottom=10, margin_start=12, margin_end=12)
+        label.add_css_class("zs-log")
+        expander.add_row(Gtk.ListBoxRow(activatable=False, selectable=False, child=label))
+        copy = Gtk.Button(label="Copy", halign=Gtk.Align.END, margin_top=4, margin_bottom=8, margin_end=12)
+        copy.connect("clicked", lambda _b: self.copy_text(text))
+        expander.add_row(Gtk.ListBoxRow(activatable=False, selectable=False, child=copy))
+        return expander
 
     def _apply(self, built: Built) -> None:
         self.busy = True

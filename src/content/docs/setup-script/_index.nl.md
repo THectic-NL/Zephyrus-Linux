@@ -15,11 +15,11 @@ Het verandert je systeem. Er gebeurt niets voordat je het plan hebt gelezen en o
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/quicksetup.py
-echo "bf60bf040e93068fbfb84dd9c0f2e93a6886cd59d6e1d11609067fc473acb85e  quicksetup.py" | sha256sum -c
+echo "f85b85d303f495d401e40aee790485462e9727759875a5e1131562117a1899fe  quicksetup.py" | sha256sum -c
 python3 quicksetup.py
 ```
 
-Bron: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `bf60bf040e93068fbfb84dd9c0f2e93a6886cd59d6e1d11609067fc473acb85e`.
+Bron: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `f85b85d303f495d401e40aee790485462e9727759875a5e1131562117a1899fe`.
 
 Je hebt Python 3.14 of nieuwer nodig en de GTK 4-bindings. Een standaard CachyOS-GNOME-installatie heeft die al. Zo niet: `sudo pacman -S python-gobject gtk4 libadwaita`.
 
@@ -29,17 +29,32 @@ Er zijn geen opdrachten of opties, het script opent gewoon een venster. Het bren
 
 Links staan de secties, rechts één rij per onderdeel. Een aangevinkt vakje betekent dat het onderdeel op deze machine klaar is, een streepje dat het gedeeltelijk klaar is. Vink een vakje aan om iets aan te zetten, haal het vinkje weg om het weer uit te zetten.
 
-- De twee kleine knoppen op een rij openen de handleiding en laten zien wat aan- en uitvinken zou doen.
+- De twee kleine knoppen op een rij tonen de exacte opdrachten die aan- en uitvinken draaien, en openen de handleiding.
 - `AUR` markeert rijen die een pakket uit de AUR nodig hebben. `Advanced`-rijen blijven buiten **Select recommended**.
 - Als je iets aanvinkt, vinkt het venster ook aan wat daarvoor nodig is, en vermeldt dat erbij. Een rij die op deze machine niet van toepassing is, is grijs, met de reden erbij.
 - GNOME-extensies komen van extensions.gnome.org, dus je hebt geen browserplug-in nodig. Een extensie zonder build voor jouw GNOME-versie zegt dat, bijvoorbeeld "No build for GNOME 51 yet".
 - In het menu staan **Select recommended**, **Check again** en het logbestand.
 
-Er verandert niets voordat je op **Review and apply** drukt. Die controle toont de pakketten, wat als root draait, wat een herstart of opnieuw inloggen nodig heeft en wat er voor jou overblijft. **Show the exact commands** toont elke opdracht volledig. Als er iets mis is, blijft Apply grijs en staat de reden bovenaan.
+Er verandert niets voordat je op **Review and apply** drukt. Die controle toont de pakketten, wat als root draait, wat een herstart of opnieuw inloggen nodig heeft en wat er voor jou overblijft. Als er iets mis is, blijft Apply grijs en staat de reden bovenaan.
+
+## Precies wat er draait
+
+Niets in het venster is een black box. Elke opdracht staat op het scherm voordat er iets gebeurt, en op deze site:
+
+- De **infoknop** op een rij toont, voor jouw machine, de exacte opdrachten die aanvinken draait en die uitvinken draait, met een diff voor elk bestand dat ze bewerken. Hij verwijst naar de handleiding en naar de regel van het onderdeel in de [referentie]({{< relref "/docs/setup-script/reference" >}}).
+- In de controle toont **Show the exact commands** alles wat de run start, op volgorde, en er wordt niets afgekapt. **Show the root script, word for word** toont het ene script dat naar `pkexec` gaat. Beide zijn te kopiëren.
+- De [referentie]({{< relref "/docs/setup-script/reference" >}}) heeft voor elk onderdeel een regel: de opdrachten voor beide richtingen, de diffs en links naar de exacte regels van het script erachter. Ze wordt uit het script zelf gegenereerd, dus er kan niets op staan wat het venster niet doet.
+- Een stap die Python is in plaats van een opdracht moet als opdrachten zeggen waar hij op neerkomt. Het script weigert een stap te bouwen die dat niet doet.
+
+## De weg terug
+
+Uitvinken is de weg terug. Het venster toont wat het draait voordat het dat doet, en de referentie toont het voor elk onderdeel. Het haalt weg wat aanvinken installeerde, zet instellingen terug naar de GNOME-standaard en zet een bewerkt bestand terug uit de back-up die gemaakt is. Je eigen bestanden en instellingen blijven staan, en een pakket dat iets anders nog nodig heeft ook.
+
+Twee rijen hebben geen vinkje, omdat een fout in hun stappen ervoor kan zorgen dat de machine niet meer opstart: de AMD-fix tegen schermvastlopers en Secure Boot. Hun regels in de referentie noemen de stappen om ze in te richten en om ze met de hand terug te draaien. Het venster verwijdert `sbctl` niet zolang Secure Boot aan staat, omdat dat elke nieuwe kernel ondertekent.
 
 ## Kleurstanden
 
-De sectie Display heeft een schakelaar die meteen werkt, zonder toepassen: **Native**, de levendige, en **sRGB**. G-Helper heeft er op Windows nog twee, DCI-P3 en Display P3, maar op Linux zouden die hetzelfde beeld tonen als Native, dus ze zijn er niet. De pagina [Kleurprofielen voor het scherm]({{< relref "/docs/hardware/color-profiles" >}}) legt dat uit, en waarom een ander profiel kiezen in de GNOME-instellingen niets doet.
+De sectie Display heeft een schakelaar die meteen werkt, zonder toepassen: **Native**, de levendige, en **sRGB**. De rij **What a switch runs** daar toont de twee aanroepen erachter. G-Helper heeft er op Windows nog twee, DCI-P3 en Display P3, maar op Linux zouden die hetzelfde beeld tonen als Native, dus ze zijn er niet. De pagina [Kleurprofielen voor het scherm]({{< relref "/docs/hardware/color-profiles" >}}) legt dat uit, en waarom een ander profiel kiezen in de GNOME-instellingen niets doet.
 
 ## Wat het controleert en wat het met rust laat
 
@@ -84,4 +99,4 @@ Ik volg upstream waar upstream een mening heeft. De handleiding achter elk onder
 
 ## Een onderdeel toevoegen of aanpassen
 
-Elk onderdeel is één regel in `build_items()` in het script: een id, een sectie, een korte samenvatting, de handleiding waar het naar linkt, een functie die zijn status bepaalt en een functie die zegt wat aanvinken doet. Een set pakketten is een one-liner. Pas je het script aan, draai dan `.github/scripts/check-doc-checksums.sh --apply` zodat de hashes in het script en op deze pagina worden bijgewerkt.
+Elk onderdeel is één regel in `build_items()` in het script: een id, een sectie, een korte samenvatting, de handleiding waar het naar linkt, een functie die zijn status bepaalt, een functie die zegt wat aanvinken doet en een voor wat uitvinken doet. Een set pakketten is een one-liner. Pas je het script aan, draai dan `.github/scripts/check-doc-checksums.sh --apply` zodat de hashes in het script en op deze pagina worden bijgewerkt, en daarna `.github/scripts/generate-setup-reference.py` zodat de [referentie]({{< relref "/docs/setup-script/reference" >}}) meegaat. De kwaliteitscontroles falen totdat allebei zijn gedaan.

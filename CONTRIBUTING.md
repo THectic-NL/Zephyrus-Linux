@@ -93,6 +93,28 @@ Commit the content change along with the script. A pull request that leaves them
 
 ---
 
+## The setup reference
+
+`src/content/docs/setup-script/reference/` lists, for every item of the setup script, the exact commands that ticking it runs and that unticking it runs to put things back, with a diff for every file they edit and a link to the code behind them. Nothing in it is written by hand (except its `_index` pages). It is generated from `quicksetup.py`: the script is imported and every item's own builders run on a described machine, so the pages cannot say anything the window does not do.
+
+After changing `quicksetup.py`, a dedicated script or a color profile, run both commands, in this order:
+
+```bash
+.github/scripts/check-doc-checksums.sh --apply
+.github/scripts/generate-setup-reference.py
+```
+
+The pages quote line numbers and the pinned hashes of the dedicated scripts, so even a change that only moves code needs the second command. The `Check the setup reference is current` step fails until it has been run, and prints what differs.
+
+When you add or change an item:
+
+- Give it an `off` as well. The generator refuses an item without a way back, or one whose `on` or `off` runs nothing.
+- A `Step` that is a Python function has to say what it amounts to as commands (`shown=`), and the script refuses to build one that does not. Prefer a plain command: `shell_step()` runs the script you show, word for word.
+- A dedicated script is described by the `changes=` lines next to its `plan_tool()` call. Keep them in step with what the script does.
+- If a builder reads the machine in a new way, teach the stand-in machine in `generate-setup-reference.py` (`Machine` and `STOCK`). The generator fails loudly instead of guessing.
+
+---
+
 ## Language
 
 This site is bilingual (EN + NL). When updating content:

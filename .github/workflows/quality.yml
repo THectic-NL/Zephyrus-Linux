@@ -240,3 +240,13 @@ jobs:
       - name: Check published script checksums
         if: ${{ !cancelled() }}
         run: .github/scripts/check-doc-checksums.sh
+
+      # The reference of the setup script on the site is generated from
+      # quicksetup.py: the script is imported and every item's own builders run
+      # on a described machine, so the pages cannot say anything the window
+      # does not do. A change to the script that is not carried over into them
+      # fails here, with the diff and the command that rewrites them. Needs
+      # nothing installed: PyGObject is optional for an import.
+      - name: Check the setup reference is current
+        if: ${{ !cancelled() }}
+        run: python3 .github/scripts/generate-setup-reference.py --check
