@@ -23,7 +23,7 @@ The pages are generated from the script each time the site is built: [`quicksetu
 ## How to read an entry
 
 - **Turning it on** and **Turning it off (the way back)** list what the window runs, in the order it runs it. The comment headings say who runs it: *As root* is one script behind one password prompt, *As you* is your own user, and *As you, in a terminal window* is for the AUR, where you read each PKGBUILD before it builds.
-- A file that gets edited comes with its diff, made on the file a fresh Arch install ships. The window makes it against your own file and shows it in the review. Root installs the prepared file only while its SHA-256 still matches (the `sha256sum -c` line), so nothing can swap it while the password prompt is open.
+- A file that already exists and gets changed comes with its diff, made on the file a fresh Arch install ships. The window makes it against your own file and shows it in the review. A file that gets created is written out in the command itself. Root installs the prepared file only while its SHA-256 still matches (the `sha256sum -c` line), so nothing can swap it while the password prompt is open.
 - **Source** links to the exact lines of the script, at the commit this site was built from.
 - `your-username` stands for your login name. The window leaves out what is already in place, while an entry shows everything an item can run. A package from the AUR is a `paru` line, unless a repository you use has the package: then it is the `pacman` line.
 - The commands and their descriptions are what the window shows, so they are in English on every language of this site.

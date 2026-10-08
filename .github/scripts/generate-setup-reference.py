@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 """
 Write the reference of the setup script: for every item, the exact commands that ticking it runs and that unticking
-it runs to put things back, a diff for every file they edit, and a link to the code behind them.
+it runs to put things back, a diff for every existing file they change, and a link to the code behind them.
 
     .github/scripts/generate-setup-reference.py
 
@@ -66,7 +66,8 @@ TEXT = {
                  "item runs, and what unticking it runs to put things back. Generated from "
                  "[`quicksetup.py`]({source}), so it cannot say anything the window does not do. "
                  "[How to read this page]({reference}).",
-        "on": "Turning it on", "off": "Turning it off (the way back)", "also": "Ticking it also ticks what it needs.",
+        "on": "Turning it on", "off": "Turning it off (the way back)",
+        "also": "Ticking it also ticks what it needs, so the commands below include theirs.",
         "guide": "Guide", "needs": "Needs", "conflicts": "Cannot be on together with", "only": "Only on",
         "source": "Source", "entry": "the entry", "diff": "The edit, as a diff:",
         "reboot": "Needs a reboot", "relogin": "Needs logging out and back in",
@@ -88,7 +89,7 @@ TEXT = {
                  "[`quicksetup.py`]({source}), dus er kan niets op staan wat het venster niet doet. "
                  "[Zo lees je deze pagina]({reference}).",
         "on": "Aanzetten", "off": "Uitzetten (het terugdraaien)",
-        "also": "Aanvinken vinkt ook aan wat het nodig heeft.",
+        "also": "Aanvinken vinkt ook aan wat het nodig heeft, dus de opdrachten daarvan staan hieronder ook.",
         "guide": "Handleiding", "needs": "Vereist", "conflicts": "Kan niet tegelijk aan met", "only": "Alleen op",
         "source": "Bron", "entry": "de regel", "diff": "De wijziging, als diff:",
         "reboot": "Herstart nodig", "relogin": "Opnieuw inloggen nodig",
@@ -154,8 +155,13 @@ def build_recipes(q, workdir: Path):
     swaps = [(str(home), f"/home/{USER}"), (str(workdir / "fresh"), ""), (str(workdir / "configured"), "")]
     items = q.build_items(q.ExtensionCatalog())
     aur = {name for item in items for name in item.aur}
+    by_id = {item.id: item for item in items}
     recipes = {item.id: Recipe() for item in items}
     panel = q.Panel("eDP-1", "1002", q.Edid("SHP", "104D", "158E", "", None, None))
+
+    def needs(item):
+        """The item and everything it needs: the window ticks those too, and plans them in catalogue order."""
+        return {item.id}.union(*(needs(by_id[other]) for other in item.requires))
 
     def run_all(way, who, root, git, copies):
         """One direction of every item, with the script's own constants and probes pointed at a stand-in root."""
@@ -173,9 +179,10 @@ def build_recipes(q, workdir: Path):
                     continue
                 if getattr(item, way) is None:
                     sys.exit(f"{item.id}: there is no way to turn it {way}")
-                plan = q.Plan()
+                plan, wanted = q.Plan(), needs(item) if way == "on" else {item.id}
                 try:
-                    getattr(item, way)(who, plan)
+                    for part in (other for other in items if other.id in wanted):
+                        getattr(part, way)(who, plan)
                 except Exception as exc:  # whatever it is, the person fixing it needs to know which item it was
                     sys.exit(f"{item.id}: turning it {way} fails on the stand-in machine: {type(exc).__name__}: {exc}")
                 if plan.empty:
@@ -255,7 +262,7 @@ def tidy(text: str, swaps: list) -> str:
 
 
 def direction(ctx, plan, text: dict) -> list:
-    """One direction of one item: its commands as the window lists them, the diff of every file it edits, and notes."""
+    """One direction of one item: its commands as the window lists them, the diffs of the files it changes, notes."""
     commands = ctx.q.plan_commands(plan)
     lines = []
     for phase, title in ctx.q.PHASE_TITLES.items():

@@ -95,7 +95,7 @@ Commit the content change along with the script. A pull request that leaves them
 
 ## The setup reference
 
-`src/content/docs/setup-script/reference/` lists, for every item of the setup script, the exact commands that ticking it runs and that unticking it runs to put things back, with a diff for every file they edit and a link to the code behind them. Its pages are not in the repository (except the `_index` pages): `.github/scripts/generate-setup-reference.py` writes them from `quicksetup.py` each time the site is built, so they cannot say anything the window does not do. To read them from a checkout, run the generator before `hugo server`.
+`src/content/docs/setup-script/reference/` lists, for every item of the setup script, the exact commands that ticking it runs and that unticking it runs to put things back, with a diff for every existing file they change and a link to the code behind them. Its pages are not in the repository (except the `_index` pages): `.github/scripts/generate-setup-reference.py` writes them from `quicksetup.py` each time the site is built, so they cannot say anything the window does not do. To read them from a checkout, run the generator before `hugo server`.
 
 When you add or change an item:
 

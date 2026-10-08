@@ -23,7 +23,7 @@ De pagina's worden bij elke build van de site uit het script gegenereerd: [`quic
 ## Zo lees je een regel
 
 - **Aanzetten** en **Uitzetten (het terugdraaien)** tonen wat het venster draait, in de volgorde waarin het dat doet. De commentaarkoppen zeggen wie het draait: *As root* is één script achter één wachtwoordprompt, *As you* is je eigen gebruiker, en *As you, in a terminal window* is voor de AUR, waar je elke PKGBUILD leest voordat hij wordt gebouwd.
-- Een bestand dat wordt bewerkt heeft zijn diff erbij, gemaakt op het bestand dat een verse Arch-installatie meelevert. Het venster maakt hem tegen je eigen bestand en toont hem in de controle. Root installeert het voorbereide bestand alleen zolang de SHA-256 nog klopt (de `sha256sum -c`-regel), zodat niets het kan vervangen terwijl de wachtwoordprompt openstaat.
+- Een bestaand bestand dat wordt gewijzigd heeft zijn diff erbij, gemaakt op het bestand dat een verse Arch-installatie meelevert. Het venster maakt hem tegen je eigen bestand en toont hem in de controle. Een bestand dat wordt aangemaakt staat in het commando zelf. Root installeert het voorbereide bestand alleen zolang de SHA-256 nog klopt (de `sha256sum -c`-regel), zodat niets het kan vervangen terwijl de wachtwoordprompt openstaat.
 - **Bron** linkt naar de exacte regels van het script, op de commit waarmee deze site is gebouwd.
 - `your-username` staat voor je inlognaam. Het venster laat weg wat al klaar is, terwijl een regel alles toont wat een onderdeel kan draaien. Een pakket uit de AUR is een `paru`-regel, tenzij een repository die je gebruikt het pakket heeft: dan is het de `pacman`-regel.
 - De opdrachten en hun beschrijvingen zijn wat het venster toont, dus ze zijn op elke taal van deze site Engels.

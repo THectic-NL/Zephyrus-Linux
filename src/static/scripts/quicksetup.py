@@ -2722,7 +2722,8 @@ def register_lines(names: list[str]) -> list[str]:
               for name in names],
             "colormgr device-add-profile <Built-in Screen> <profile>   # each of them, unless the screen lists it",
             "# the factory profile then becomes the default, but only if just the automatic profile was in charge",
-            "colormgr device-make-profile-default <Built-in Screen> <factory profile>"]
+            "colormgr device-make-profile-default <Built-in Screen> <factory profile>",
+            f"rm -rf {shlex.quote(str(STAGE_DIR))}"]
 
 
 def release_lines(names: list[str]) -> list[str]:
@@ -3797,10 +3798,12 @@ class Backend:
 
     # --- planning ------------------------------------------------------------
 
-    def build_plan(self, wanted: dict[str, bool]) -> Built:
+    def build_plan(self, wanted: dict[str, bool], dry: bool = False) -> Built:
         """
         Turn a set of wanted changes (item id -> on or off) into a plan, adding what a change needs and refusing what
         cannot be done safely. Nothing is changed on the machine, though a plan may prepare files in your cache.
+        With dry=True an item that refuses itself (its own on_blocker or off_blocker) is still worked out, and the
+        refusal stays in the blockers: that is for showing what it would run, and the plan can never be applied.
         """
         s, built = self.s, Built()
         changes: dict[str, bool] = {}
@@ -3850,7 +3853,8 @@ class Backend:
             problem = blocker(s) if blocker else None
             if problem:
                 built.blockers.append(f"{item.title}: {problem}")
-                continue
+                if not dry:
+                    continue
             action = item.on if on else item.off
             if action is None:
                 built.skipped.append(f"{item.title}: this setup cannot do that one for you, see its details")
@@ -3924,7 +3928,7 @@ class Backend:
                     "that is not."]
         if not want and check.state in (State.TODO, State.NA, State.UNKNOWN):
             return ["Nothing: it is not set up."]
-        built = self.build_plan({item.id: want})
+        built = self.build_plan({item.id: want}, dry=True)
         lines = [f"Not possible right now: {b}" for b in built.blockers]
         if built.included:
             lines.append("Also included, because something needs it: " + ", ".join(built.included))
@@ -3942,7 +3946,7 @@ class Backend:
     def describe(self, item: Item) -> str:
         """
         Everything about one item as text: its status, its links, and the exact commands that ticking and unticking
-        it would run on this machine, with a diff for every file they edit. Both directions are always listed.
+        it would run on this machine, with a diff for every existing file they change. Both directions are listed.
         """
         check = self.check(item)
         lines = [item.title, "", item.summary, "", f"Status: {check.state.value}"

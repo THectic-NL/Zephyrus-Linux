@@ -15,11 +15,11 @@ Het verandert je systeem. Er gebeurt niets voordat je het plan hebt gelezen en o
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/quicksetup.py
-echo "0f0173347eefa17fdfd8affb0179a78fbc9753e7580fe9993faec57b8cfc5011  quicksetup.py" | sha256sum -c
+echo "d0b2272c7120884a5ee84bc544e2778e58cef850cafefc5257676e3bdb4141c1  quicksetup.py" | sha256sum -c
 python3 quicksetup.py
 ```
 
-Bron: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `0f0173347eefa17fdfd8affb0179a78fbc9753e7580fe9993faec57b8cfc5011`.
+Bron: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `d0b2272c7120884a5ee84bc544e2778e58cef850cafefc5257676e3bdb4141c1`.
 
 Je hebt Python 3.14 of nieuwer nodig en de GTK 4-bindings. Een standaard CachyOS-GNOME-installatie heeft die al. Zo niet: `sudo pacman -S python-gobject gtk4 libadwaita`.
 
@@ -41,7 +41,7 @@ Er verandert niets voordat je op **Review and apply** drukt. Die controle toont 
 
 Niets in het venster is een black box. Elke opdracht staat op het scherm voordat er iets gebeurt, en op deze site:
 
-- De **infoknop** op een rij toont, voor jouw machine, de exacte opdrachten die aanvinken draait en die uitvinken draait, met een diff voor elk bestand dat ze bewerken. Hij verwijst naar de handleiding en naar de regel van het onderdeel in de [referentie]({{< relref "/docs/setup-script/reference" >}}).
+- De **infoknop** op een rij toont, voor jouw machine, de exacte opdrachten die aanvinken draait en die uitvinken draait, met een diff voor elk bestaand bestand dat ze wijzigen (een bestand dat ze aanmaken staat in het commando zelf). Hij verwijst naar de handleiding en naar de regel van het onderdeel in de [referentie]({{< relref "/docs/setup-script/reference" >}}).
 - In de controle toont **Show the exact commands** alles wat de run start, op volgorde, en er wordt niets afgekapt. **Show the root script, word for word** toont het ene script dat naar `pkexec` gaat.
 - De [referentie]({{< relref "/docs/setup-script/reference" >}}) heeft voor elk onderdeel een regel: de opdrachten voor beide richtingen, de diffs en links naar de exacte regels van het script erachter. Ze wordt uit het script zelf gegenereerd, dus er kan niets op staan wat het venster niet doet.
 - Een stap die Python is in plaats van een opdracht moet als opdrachten zeggen waar hij op neerkomt. Het script weigert een stap te bouwen die dat niet doet.

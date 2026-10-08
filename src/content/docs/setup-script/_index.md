@@ -15,11 +15,11 @@ It changes your system. Nothing happens until you have read the plan and pressed
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/quicksetup.py
-echo "0f0173347eefa17fdfd8affb0179a78fbc9753e7580fe9993faec57b8cfc5011  quicksetup.py" | sha256sum -c
+echo "d0b2272c7120884a5ee84bc544e2778e58cef850cafefc5257676e3bdb4141c1  quicksetup.py" | sha256sum -c
 python3 quicksetup.py
 ```
 
-Source: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `0f0173347eefa17fdfd8affb0179a78fbc9753e7580fe9993faec57b8cfc5011`.
+Source: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `d0b2272c7120884a5ee84bc544e2778e58cef850cafefc5257676e3bdb4141c1`.
 
 You need Python 3.14 or newer and the GTK 4 bindings. A stock CachyOS GNOME install has them. If not: `sudo pacman -S python-gobject gtk4 libadwaita`.
 
@@ -41,7 +41,7 @@ Nothing changes until you press **Review and apply**. The review lists the packa
 
 Nothing in the window is a black box. Every command is on screen before anything happens, and on this site:
 
-- The **info button** on a row lists, for your machine, the exact commands that ticking it runs and that unticking it runs, with a diff for every file they edit. It links to the guide and to the item's entry in the [reference]({{< relref "/docs/setup-script/reference" >}}).
+- The **info button** on a row lists, for your machine, the exact commands that ticking it runs and that unticking it runs, with a diff for every existing file they change (a file they create is written out in the command itself). It links to the guide and to the item's entry in the [reference]({{< relref "/docs/setup-script/reference" >}}).
 - In the review, **Show the exact commands** lists everything the run starts, in order, and nothing is cut short. **Show the root script, word for word** prints the one script that goes to `pkexec`.
 - The [reference]({{< relref "/docs/setup-script/reference" >}}) has an entry for every item: the commands for both directions, the diffs, and links to the exact lines of the script behind them. It is generated from the script itself, so it cannot say anything the window does not do.
 - A step that is Python rather than a command has to say what it amounts to, as commands. The script refuses to build a step that does not.
