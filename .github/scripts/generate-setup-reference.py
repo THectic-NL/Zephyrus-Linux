@@ -125,7 +125,7 @@ def machine(home, installed=(), aur=(), flatpaks=(), settings=None, loader="limi
         has_flathub=lambda: True, has_cmd=lambda name: True, bootloader=lambda: loader,
         unit_state=lambda unit: "enabled", unit_active=lambda unit: True, out=lambda cmd: "",
         gsettings=lambda schema, key: settings.get((schema, key)), kernel_package=lambda: "linux-cachyos",
-        shell_version=lambda: (51, "51.0"), shell_extensions=lambda: set(), in_group=lambda group: False,
+        shell_version=lambda: (51, "51.0"), shell_extensions=set, in_group=lambda group: False,
         refresh=lambda: None)
 
 
