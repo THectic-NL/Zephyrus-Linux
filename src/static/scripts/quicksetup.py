@@ -2721,8 +2721,8 @@ def register_lines(names: list[str]) -> list[str]:
             *[f"colormgr find-profile-by-filename {COLORD_STORE / name}   # retried for up to 10 seconds"
               for name in names],
             "colormgr device-add-profile <Built-in Screen> <profile>   # each of them, unless the screen lists it",
-            "colormgr device-make-profile-default <Built-in Screen> <factory profile>   # only if just the automatic "
-            "profile was in charge"]
+            "# the factory profile then becomes the default, but only if just the automatic profile was in charge",
+            "colormgr device-make-profile-default <Built-in Screen> <factory profile>"]
 
 
 def release_lines(names: list[str]) -> list[str]:
@@ -3334,11 +3334,11 @@ def build_items(catalog: ExtensionCatalog) -> list[Item]:
                      "for Limine",
                      "Enable Secure Boot in the UEFI again, then check with: sudo sbctl status"],
              manual_off=["Reboot into the ASUS UEFI (systemctl reboot --firmware-setup) and set Secure Boot Control "
-                         "to Disabled, under Security > Secure Boot. The machine boots as before",
+                         + "to Disabled, under Security > Secure Boot. The machine boots as before",
                          "Optional: your own keys do no harm while Secure Boot is off. Put the firmware's default keys "
-                         "back under Key Management only if you want them gone",
+                         + "back under Key Management only if you want them gone",
                          "Optional: untick sbctl in this window to remove the tool and its pacman hook, which "
-                         "re-signs new kernels"]))
+                         + "re-signs new kernels"]))
 
     # Development
     add(package_item("git-github-cli", "dev", "Git and GitHub CLI", "git plus gh for pull requests and issues",
