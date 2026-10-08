@@ -440,6 +440,9 @@ class State(enum.Enum):
 class Check:
     state: State
     detail: str = ""
+    # Only partly done because the next step is yours (a key to create, a login to repeat), not because something
+    # went wrong. The overview at the end of a run counts that as left for you, not as a problem.
+    by_hand: bool = False
 
 
 def read_os_release() -> dict[str, str]:
@@ -1576,7 +1579,7 @@ def check_wsf(s: System) -> Check:
     if "enabled: yes" in status and "gnome-shell library mapped: yes" in status:
         return Check(State.DONE, "active in gnome-shell")
     if "enabled: yes" in status:
-        return Check(State.PARTIAL, "enabled, but gnome-shell has not loaded it: log out and back in")
+        return Check(State.PARTIAL, "enabled, but gnome-shell has not loaded it: log out and back in", by_hand=True)
     return Check(State.PARTIAL, "installed, not enabled yet")
 
 
@@ -2844,7 +2847,7 @@ def check_git_signing(s: System, result: Check) -> Check:
     if key and commits and tags:
         return Check(State.DONE, f"commits and tags are signed with {key}")
     if not key:
-        return Check(State.PARTIAL, "Kleopatra is installed, but git has no signing key yet")
+        return Check(State.PARTIAL, "Kleopatra is installed, but git has no signing key yet", by_hand=True)
     return Check(State.PARTIAL, f"commit signing: {'on' if commits else 'off'}, tag signing: {'on' if tags else 'off'}")
 
 
@@ -2903,7 +2906,7 @@ def off_topgrade(s: System, p: Plan) -> None:
 def check_vscode(s: System, result: Check) -> Check:
     if result.state is State.DONE and "code" in s.pacman_installed():
         return Check(State.PARTIAL, "the Microsoft build is installed, and so is Code - OSS: remove it with "
-                     "'sudo pacman -R code' (see the guide)")
+                     "'sudo pacman -R code' (see the guide)", by_hand=True)
     return result
 
 
@@ -3984,7 +3987,7 @@ class Outcome:
     item: Item
     wanted: bool
     check: Check
-    state: str      # ok, partial or failed
+    state: str      # ok, waiting (the rest is yours), partial or failed
 
 
 @dataclass
@@ -3994,15 +3997,33 @@ class RunReport:
     stopped: bool = False
 
     @property
-    def ok(self) -> bool:
-        return not self.failures and all(o.state == "ok" for o in self.outcomes)
+    def problems(self) -> bool:
+        """Something failed, or an item is half done for a reason that is not up to you."""
+        return bool(self.failures) or any(o.state in ("partial", "failed") for o in self.outcomes)
+
+    @property
+    def waiting(self) -> list[Outcome]:
+        """The items that are as done as this window can make them: what is left is yours."""
+        return [o for o in self.outcomes if o.state == "waiting"]
 
 
-def judge(state: State, wanted: bool) -> str:
-    """Did a change end up the way it was asked? 'ok', 'partial' or 'failed'."""
+def judge(check: Check, wanted: bool) -> str:
+    """Did a change end up the way it was asked? 'ok', 'waiting' (the rest is yours), 'partial' or 'failed'."""
+    if check.state is State.PARTIAL and check.by_hand:
+        return "waiting"
     if wanted:
-        return {State.DONE: "ok", State.PARTIAL: "partial"}.get(state, "failed")
-    return {State.TODO: "ok", State.NA: "ok", State.UNKNOWN: "ok", State.PARTIAL: "partial"}.get(state, "failed")
+        return {State.DONE: "ok", State.PARTIAL: "partial"}.get(check.state, "failed")
+    return {State.TODO: "ok", State.NA: "ok", State.UNKNOWN: "ok",
+            State.PARTIAL: "partial"}.get(check.state, "failed")
+
+
+def verdict(report: RunReport) -> str:
+    """The line above the overview: what the run came to. 'Problems' is for what went wrong, not for what is yours."""
+    if report.problems:
+        return "Done, with problems"
+    if report.waiting:
+        return f"Done, {plural(len(report.waiting), 'thing is', 'things are')} left for you"
+    return "Done"
 
 
 class Executor:
@@ -4077,7 +4098,7 @@ class Executor:
         for items, wanted in ((built.turn_on, True), (built.turn_off, False)):
             for item in items:
                 check = self.b.check(item)
-                report.outcomes.append(Outcome(item, wanted, check, judge(check.state, wanted)))
+                report.outcomes.append(Outcome(item, wanted, check, judge(check, wanted)))
         return report
 
     def _step(self, step: Step) -> str | None:
@@ -4581,12 +4602,17 @@ class ProgressDialog:
                                  button_label="Stop waiting", revealed=False)
         self.banner.connect("button-clicked", lambda _b: on_stop_waiting())
         body.append(self.banner)
-        self.result = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12, visible=False)
-        body.append(self.result)
+        # The overview scrolls on its own (a preferences page, like the review) and sits next to the live output in a
+        # stack, so how tall the dialog has to be never depends on how many items were ticked.
         self.log_view = text_view(monospace=True)
         self.log_view.add_css_class("zs-log")
-        frame = Gtk.Frame(child=scrolled(self.log_view), vexpand=True)
-        body.append(frame)
+        self.result = Adw.PreferencesPage()
+        self.pages = Gtk.Stack(vexpand=True)
+        self.pages.add_titled(Gtk.Frame(child=scrolled(self.log_view)), "output", "Output")
+        self.pages.add_titled(self.result, "result", "Result")
+        self.switcher = Gtk.StackSwitcher(stack=self.pages, valign=Gtk.Align.CENTER, visible=False)
+        head.append(self.switcher)
+        body.append(self.pages)
         buttons = Gtk.Box(spacing=8, halign=Gtk.Align.END)
         self.log_button = Gtk.Button(label="Open the log file", sensitive=LOG_FILE.exists())
         self.log_button.connect("clicked", lambda _b: window.open_url(LOG_FILE.as_uri()))
@@ -4627,21 +4653,13 @@ class ProgressDialog:
             return
         if report is None:
             return
-        self.phase_label.set_label("Done" if report.ok else "Done, with problems")
-        groups: list["Gtk.Widget"] = []
-        rows = []
-        for outcome in report.outcomes:
-            icon = {"ok": "emblem-ok-symbolic",
-                    "partial": "dialog-warning-symbolic"}.get(outcome.state, "dialog-error-symbolic")
-            verb = "On" if outcome.wanted else "Off"
-            rows.append(info_row(outcome.item.title, f"{verb}: {outcome.check.state.value}"
-                                 + (f" ({outcome.check.detail})" if outcome.check.detail else ""), icon))
-        if rows:
-            groups.append(rows_group("Result", rows))
+        self.phase_label.set_label(verdict(report))
+        # What needs you comes first: with 28 items ticked, a problem must not be row 14.
+        groups: list["Adw.PreferencesGroup"] = []
         if report.failures:
             groups.append(rows_group("What went wrong", [info_row(f, icon="dialog-error-symbolic")
                                                          for f in report.failures]))
-        follow = []
+        follow = [info_row(o.item.title, o.check.detail, "document-edit-symbolic") for o in report.waiting]
         if built.plan.reboot_for:
             follow.append(info_row("Reboot to finish", ", ".join(built.plan.reboot_for), "system-reboot-symbolic"))
         if built.plan.relogin_for:
@@ -4652,9 +4670,24 @@ class ProgressDialog:
                                    "document-edit-symbolic"))
         if follow:
             groups.append(rows_group("Still to do", follow))
+        rows = []
+        for outcome in report.outcomes:
+            icon = {"ok": "emblem-ok-symbolic", "waiting": "document-edit-symbolic",
+                    "partial": "dialog-warning-symbolic"}.get(outcome.state, "dialog-error-symbolic")
+            verb = "On" if outcome.wanted else "Off"
+            status = "left for you" if outcome.state == "waiting" else outcome.check.state.value
+            rows.append(info_row(outcome.item.title, f"{verb}: {status}"
+                                 + (f" ({outcome.check.detail})" if outcome.check.detail else ""), icon))
+        if rows:
+            groups.append(rows_group("Result", rows))
+        if built.plan.notes:    # the review showed these before the run, and nothing else would repeat them
+            groups.append(rows_group("Notes", [info_row(n, icon="dialog-information-symbolic")
+                                               for n in built.plan.notes]))
         for group in groups:
-            self.result.append(group)
-        self.result.set_visible(bool(groups))
+            self.result.add(group)
+        if groups:
+            self.pages.set_visible_child_name("result")
+            self.switcher.set_visible(True)
 
 
 # --- the window -----------------------------------------------------------------------------------
