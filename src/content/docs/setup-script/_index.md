@@ -5,7 +5,7 @@ weight: 1
 
 I got tired of redoing the same setup after every reinstall, so now it lives in one window. You tick what you want, read the plan and apply it. The window also shows what is already set up on your machine, and every item links to the guide that explains it.
 
-It sets up my idea of a good machine. It is built and tested on the Zephyrus G16 (GA605WV), but only a few items care about the model: the ASUS tools, the brightness fix, the Wi-Fi tuning and the color profiles. The rest, the GNOME settings, extensions, apps and virtual machines, works on any laptop.
+It sets up my idea of a good machine. It is built and tested on the Zephyrus G16 (GA605WV), but only a few items care about the model: the ASUS tools, the brightness fix, the Wi-Fi tuning and the color profile. The rest, the GNOME settings, extensions, apps and virtual machines, works on any laptop.
 
 {{< callout type="warning" >}}
 It changes your system. Nothing happens until you have read the plan and pressed Apply. Like everything else here, it is at your own risk.
@@ -15,11 +15,11 @@ It changes your system. Nothing happens until you have read the plan and pressed
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/quicksetup.py
-echo "89eb3332e25fdf0a8c3b4f3b52f3c41716ba2a88f403201639b167d7c7900b19  quicksetup.py" | sha256sum -c
+echo "54f8e6bda510003ca310617e56b4439958c1bccfe958f015bd584b3248a8eed5  quicksetup.py" | sha256sum -c
 python3 quicksetup.py
 ```
 
-Source: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `89eb3332e25fdf0a8c3b4f3b52f3c41716ba2a88f403201639b167d7c7900b19`.
+Source: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `54f8e6bda510003ca310617e56b4439958c1bccfe958f015bd584b3248a8eed5`.
 
 You need Python 3.14 or newer and the GTK 4 bindings. A stock CachyOS GNOME install has them. If not: `sudo pacman -S python-gobject gtk4 libadwaita`.
 
@@ -52,14 +52,14 @@ Unticking is the way back. The window lists what it runs before it does it, and 
 
 Two rows have no checkbox, because a mistake in their steps can stop the machine from booting: the AMD display freeze fix and Secure Boot. Their entries in the reference list the steps for setting them up and for undoing them by hand. The window will not remove `sbctl` while Secure Boot is on, because it is what signs every new kernel.
 
-## Color modes
+## Color profile
 
-The Display section has a switch that works right away, without applying: **Native**, which is vivid, and **sRGB**. The **What a switch runs** row there lists the two calls behind it. G-Helper has two more on Windows, DCI-P3 and Display P3, but on Linux they would show the same picture as Native, so they are not here. The [Display Color Profiles]({{< relref "/docs/hardware/color-profiles" >}}) page explains that, and why picking another profile in GNOME's Settings does nothing.
+The Display section has one item, **ASUS factory color profile**. It puts the factory profile of your panel in colord, for color-managed apps. GNOME does not apply a profile to the screen itself, and the screen already shows its native, vivid colors, so nothing changes on screen. **Select recommended** leaves it out. An earlier version of the window also had a Native and sRGB switch there. It changed nothing you could see, so it is gone. The [Display Color Profiles]({{< relref "/docs/hardware/color-profiles" >}}) page explains where the profiles come from and why they do not do more yet.
 
 ## What it checks and what it leaves alone
 
 - **One password prompt.** Everything that needs root runs as one script through `pkexec`. AUR packages are built by `paru` in a terminal window, so you can read each PKGBUILD first.
-- **Downloads are checked where that is possible.** The dedicated scripts, the color profiles and Archi are compared with a SHA-256 built into the script, and a file that does not match is never used. An extension zip is checked before it is unpacked. pacman and Flatpak verify their own packages. The VirtIO ISO has no fixed hash, because Fedora replaces it with every release, so it only gets a size check.
+- **Downloads are checked where that is possible.** The dedicated scripts, the color profile and Archi are compared with a SHA-256 built into the script, and a file that does not match is never used. An extension zip is checked before it is unpacked. pacman and Flatpak verify their own packages. The VirtIO ISO has no fixed hash, because Fedora replaces it with every release, so it only gets a size check.
 - **Checks before it starts.** Packages from the repositories have to exist and install together, which it tests with a dry run. It warns when pacman is busy, when you are offline and when your package databases are old.
 - **Unticking is careful.** Packages are removed one by one, and one that something else still needs is kept. Settings go back to the GNOME default, but only if they still have the value the script gave them. Packages the system or the window itself needs are never removed. Your own files stay.
 - **Some things stay manual.** Kernel parameters and Secure Boot keys can stop the machine from booting when they go wrong, so the AMD PSR fix and Secure Boot are guides without a checkbox. The brightness fix is the exception: it runs its own script, which keeps a backup and puts it back when you untick it. The YubiKey is the other exception, and the only PAM edit the window makes: it adds one `sufficient` line, keeps the old file, checks the result and puts the old file back when the check fails. The [YubiKey page]({{< relref "/docs/security/yubikey" >}}) has the details.
@@ -77,7 +77,6 @@ The Display section has a switch that works right away, without applying: **Nati
 | Brightness in every GPU mode | The brightness fix, needs a reboot |
 | NVIDIA suspend and resume services | Only for a driver that does not save video memory itself, so not `nvidia-open` |
 | prime-run | Runs a program on the RTX 4060 |
-| ASUS color profiles | The factory profile of your panel and the ASUS sRGB profile |
 | Wi-Fi throughput tuning | For the MT7925 card |
 | Minimize and maximize buttons | GNOME only shows the close button |
 | New windows come to the front | Together with Just Perfection |
@@ -93,7 +92,7 @@ I follow upstream wherever upstream has an opinion. The guide behind each item h
 
 - **ASUS tools and power profiles:** the [Open Gaming Collective's asusctl documentation](https://opengamingcollective.github.io/asusctl/) and its [manual](https://github.com/OpenGamingCollective/asusctl/blob/main/MANUAL.md). Masking `power-profiles-daemon` is what its [Arch](https://opengamingcollective.github.io/asusctl/distributions/arch.html) and [Bazzite](https://opengamingcollective.github.io/asusctl/distributions/bazzite.html) guides say. The [asusctl page]({{< relref "/docs/hardware/asusctl-rog-control" >}}) explains why older guides tell you the opposite.
 - **NVIDIA suspend and `nvidia-powerd`:** NVIDIA's driver README on [power management](https://download.nvidia.com/XFree86/Linux-x86_64/615.71.09/README/powermanagement.html) and [Dynamic Boost](https://download.nvidia.com/XFree86/Linux-x86_64/615.71.09/README/dynamicboost.html). `nvidia-open` saves video memory itself, so it skips the suspend units. The [NVIDIA page]({{< relref "/docs/cachyos/nvidia" >}}) has the details.
-- **Color modes:** [G-Helper](https://github.com/seerge/g-helper), which lists the ASUS panel profiles on Windows.
+- **The color profile:** the files come from ASUS's own Windows driver package, which [G-Helper](https://github.com/seerge/g-helper) also lists on Windows.
 - **Autologin and the YubiKey:** the [GNOME System Administrator's Guide](https://help.gnome.org/admin/system-admin-guide/stable/login-automatic.html.en) and the [pam-u2f README](https://github.com/Yubico/pam-u2f).
 - **The brightness fix:** worked out on this laptop, see [Known Issues]({{< relref "/docs/known-issues" >}}).
 

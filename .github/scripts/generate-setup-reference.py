@@ -79,9 +79,6 @@ TEXT = {
                      "nvidia": "a machine with an NVIDIA GPU",
                      "mt7925": "a machine with the MediaTek MT7925 Wi-Fi card"},
         "packages": "From the AUR unless a repository you use carries the package: then it is the `pacman` line.",
-        "color_title": "Color mode",
-        "color": "The Native and sRGB switch in the Display section works right away, without an apply step. There is "
-                 "no checkbox to untick: switching to the other mode is the way back.",
     },
     "nl": {
         "intro": "De exacte commando's achter de sectie **{title}** van het [setup-script]({setup}): wat aanvinken "
@@ -101,9 +98,6 @@ TEXT = {
                      "nvidia": "een machine met een NVIDIA-GPU",
                      "mt7925": "een machine met de MediaTek MT7925 Wi-Fi-kaart"},
         "packages": "Uit de AUR, tenzij een repository die je gebruikt het pakket heeft: dan is het de `pacman`-regel.",
-        "color_title": "Kleurstand",
-        "color": "De schakelaar tussen Native en sRGB in de sectie Display werkt meteen, zonder toepassen. Er is geen "
-                 "vinkje om weg te halen: overschakelen naar de andere stand is de weg terug.",
     },
 }
 
@@ -158,7 +152,7 @@ def build_recipes(q, workdir: Path):
     aur = {name for item in items for name in item.aur}
     by_id = {item.id: item for item in items}
     recipes = {item.id: Recipe() for item in items}
-    panel = q.Panel("eDP-1", "1002", q.Edid("SHP", "104D", "158E", "", None, None))
+    panel = q.Panel("eDP-1", "1002", q.Edid("SHP", "104D", "158E", ""))
 
     def needs(item):
         """The item and everything it needs: the window ticks those too, and plans them in catalogue order."""
@@ -208,7 +202,7 @@ def build_recipes(q, workdir: Path):
     done = machine(home, {name for plan in plans for name in (*plan.pacman, *plan.aur)}, aur,
                    {name for plan in plans for name in plan.flatpak}, settings)
     git = {"user.signingkey": "<your key id>", "commit.gpgsign": "true", "tag.gpgsign": "true"}
-    run_all("off", done, workdir / "configured", git, [q.COLORD_STORE / name for _, name in q.profile_set(done, panel)])
+    run_all("off", done, workdir / "configured", git, [q.COLORD_STORE / q.factory_file(done, panel)])
 
     # The steps left for you can depend on the boot loader, so they are worked out for each one.
     for item in items:
@@ -340,9 +334,6 @@ def section_page(ctx, key: str, title: str, weight: int, lang: str) -> str:
            "<!-- markdownlint-disable MD010 -->", "",  # the stock PAM files in the diffs are indented with tabs
            text["intro"].format(title=title, source=ctx.source, setup='{{< relref "/docs/setup-script" >}}',
                                 reference='{{< relref "/docs/setup-script/reference" >}}'), ""]
-    if key == "display":
-        out += [f"## {text['color_title']} {{#color-mode}}", "", text["color"], "",
-                fence("text", ctx.q.color_runs("eDP-1")), ""]
     groups = {}
     for item in ctx.items:
         if item.section == key:

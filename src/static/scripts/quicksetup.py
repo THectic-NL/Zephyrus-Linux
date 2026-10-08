@@ -98,7 +98,6 @@ TOOL_SHA256 = {
     "saxion-eduroam.py": "c037f0fc7e282b8e9126e7646d87b5b50069d69e60053d22d4792c88b5bb89a8",
 }
 PROFILE_SHA256 = {
-    "ASUS_sRGB.icm": "5ce1af74f5345876385cc56f98b363c3cd91f73ea2c5176fffab3f61ed7cc428",
     "GA605WV_1002_104D158E_CMDEF.icm": "c0efca6aab2734b940dc660ff9e09aaf5478808789488e352891b801d4868474",
     "GA605WV_1002_834C41AE_CMDEF.icm": "89626535ed7a1a9b8739e34c9ab0d8ae1aa9354daa9626e58a895266f5da2519",
     "GA605WV_1002_E5090C19_CMDEF.icm": "5c1c60a4020c1fab8b7cb8eeb1d9d33987e2ea6b67b67736fd6080dbcfd69427",
@@ -269,7 +268,7 @@ def curl_bytes(url: str, limit: int = 300_000_000) -> bytes:
     raise SetupError(f"could not download {url}: {why}")
 
 
-# --- EDID, ICC profiles and gamut -----------------------------------------------------
+# --- EDID and ICC profiles ----------------------------------------------------------
 
 @dataclass(frozen=True)
 class Edid:
@@ -277,9 +276,6 @@ class Edid:
     maker: str                 # the same two bytes the way ASUS writes them in file names, e.g. 104D
     product: str               # the product code, e.g. 158E
     name: str                  # the monitor name from its descriptors, empty when it has none
-    # red x/y, green x/y, blue x/y, white x/y in CIE 1931, or None when the panel does not report them
-    primaries: tuple[float, float, float, float, float, float, float, float] | None
-    gamma: float | None
 
     @property
     def panel_id(self) -> str:
@@ -287,7 +283,7 @@ class Edid:
 
 
 def parse_edid(data: bytes) -> Edid | None:
-    """The identity and the primaries of a display from its EDID, or None when this is not an EDID."""
+    """The identity of a display from its EDID, or None when this is not an EDID."""
     if len(data) < 128 or data[:8] != bytes.fromhex("00ffffffffffff00"):
         return None
     code = (data[8] << 8) | data[9]
@@ -301,64 +297,7 @@ def parse_edid(data: bytes) -> Edid | None:
         if block[:3] == b"\0\0\0" and block[3] == 0xFC:
             name = block[5:].split(b"\n")[0].decode("ascii", errors="replace").strip()
             break
-    low1, low2 = data[25], data[26]
-
-    def ten(high: int, low: int) -> float:
-        return ((high << 2) | low) / 1024
-
-    values = (ten(data[27], (low1 >> 6) & 3), ten(data[28], (low1 >> 4) & 3),
-              ten(data[29], (low1 >> 2) & 3), ten(data[30], low1 & 3),
-              ten(data[31], (low2 >> 6) & 3), ten(data[32], (low2 >> 4) & 3),
-              ten(data[33], (low2 >> 2) & 3), ten(data[34], low2 & 3))
-    primaries = values if all(0 < v < 1 for v in values) else None
-    gamma = (data[23] + 100) / 100 if data[23] != 0xFF else None
-    return Edid(pnp, maker, product, name, primaries, gamma)
-
-
-Point = tuple[float, float]
-SRGB_PRIMARIES: tuple[Point, Point, Point] = ((0.640, 0.330), (0.300, 0.600), (0.150, 0.060))
-P3_PRIMARIES: tuple[Point, Point, Point] = ((0.680, 0.320), (0.265, 0.690), (0.150, 0.060))
-
-
-def polygon_area(points: list[Point]) -> float:
-    """Signed area: positive when the points run counter-clockwise."""
-    return sum(x1 * y2 - x2 * y1 for (x1, y1), (x2, y2) in zip(points, points[1:] + points[:1])) / 2
-
-
-def clip_polygon(subject: list[Point], window: list[Point]) -> list[Point]:
-    """The part of a polygon inside a convex one (Sutherland-Hodgman)."""
-    if polygon_area(window) < 0:
-        window = window[::-1]
-    result = subject
-    for (x1, y1), (x2, y2) in zip(window, window[1:] + window[:1]):
-        def inside(p: Point) -> bool:
-            return (x2 - x1) * (p[1] - y1) - (y2 - y1) * (p[0] - x1) >= 0
-
-        def cross(p: Point, q: Point) -> Point:
-            d1 = (x2 - x1) * (p[1] - y1) - (y2 - y1) * (p[0] - x1)
-            d2 = (x2 - x1) * (q[1] - y1) - (y2 - y1) * (q[0] - x1)
-            t = d1 / (d1 - d2)
-            return p[0] + t * (q[0] - p[0]), p[1] + t * (q[1] - p[1])
-
-        source, result = result, []
-        for index, current in enumerate(source):
-            previous = source[index - 1]
-            if inside(current):
-                if not inside(previous):
-                    result.append(cross(previous, current))
-                result.append(current)
-            elif inside(previous):
-                result.append(cross(previous, current))
-        if not result:
-            break
-    return result
-
-
-def gamut_coverage(panel: Iterable[Point], reference: Iterable[Point]) -> float:
-    """How much of the reference triangle (in CIE xy) the panel's triangle covers, from 0 to 1."""
-    panel_tri, ref_tri = list(panel), list(reference)
-    overlap = clip_polygon(ref_tri, panel_tri)
-    return abs(polygon_area(overlap)) / abs(polygon_area(ref_tri)) if len(overlap) >= 3 else 0.0
+    return Edid(pnp, maker, product, name)
 
 
 def icc_check(data: bytes) -> None:
@@ -2079,30 +2018,23 @@ def check_secure_boot(s: System) -> Check:
 
 # --- color: what the built-in screen is --------------------------------------------------------
 #
-# How this fits together, and what is and is not possible on Linux:
+# What is and is not possible on Linux, which is why this is one item that puts a profile in colord and nothing more:
 #
 # * G-Helper on Windows asks ASUS's AsusSplendid.exe to switch the gamut. The .icm files only decide which modes
 #   G-Helper lists, and they describe the panel after that switch. Linux has no such switch.
 # * A color profile assigned in colord (what Settings > Color does) tells color-managed apps what the screen does.
 #   GNOME's compositor reads only the gamma table (vcgt) out of it, and none of the ASUS profiles has one, so
-#   switching profiles alone changes nothing you can see. mutter 51 builds the output color state from the color
-#   mode only; applying the ICC profile itself is upstream work for GNOME 52 (mutter !5177, issue #4597).
-# * What does change the picture is GNOME's own color mode (mutter 50 and newer, 'sdr-native'): the compositor
-#   converts sRGB content to the panel's real primaries, read from its EDID. That is a real sRGB mode, and the
-#   only compositor switch there is: 'default' treats the panel as sRGB, which on a wide gamut screen is vivid.
-# * The panel natively covers about Display P3, so the DCI-P3 and Display P3 modes of G-Helper would show exactly
-#   the picture of Native, while telling color-managed apps something that is not true. They are not offered.
-#
-# So a mode here is two layers kept in step: the compositor color mode, and the colord profile that describes the
-# resulting screen: the factory profile for Native, an sRGB profile for sRGB.
+#   adding a profile changes nothing you can see. mutter 51 builds the output color state from the color mode
+#   only; applying the ICC profile itself is upstream work for GNOME 52 (mutter !5177, issue #4597).
+# * By default the screen already shows its native, vivid colors. An earlier version of this window had a
+#   Native/sRGB switch on top of GNOME's color mode. It changed nothing you could see, so it is gone, and so are
+#   the profiles of the modes that only looked like Native.
 
 GPU_VENDORS = {"0x1002": "1002", "0x10de": "10DE"}
 COLORD_STORE = Path("/var/lib/colord/icc")
 # An earlier version of this script put copies here. They share a colord ID with the ones in colord's own folder.
 OLD_ICC_DIR = Path.home() / ".local" / "share" / "icc"
 STAGE_DIR = CACHE_DIR / "icc"
-
-MUTTER_DEFAULT, MUTTER_BT2100, MUTTER_SDR_NATIVE = 0, 1, 2
 
 
 @dataclass(frozen=True)
@@ -2130,30 +2062,15 @@ def internal_panel() -> Panel | None:
     return None
 
 
-@dataclass(frozen=True)
-class ColorMode:
-    key: str
-    title: str
-    summary: str
-    profile_title: str     # what GNOME's Color settings call the profile
-    file: str | None       # None: the panel's own factory profile
-    compositor: int        # the GNOME color mode this one uses
+# What GNOME's Color settings call the factory profile.
+FACTORY_TITLE = "ASUS Native (factory calibrated)"
+# Profiles that earlier versions installed, for modes this window no longer has or that only looked the same as
+# Native. Cleaned up, never installed.
+RETIRED_PROFILES = {"ASUS_sRGB.icm": "ASUS sRGB", "ASUS_DCIP3.icm": "ASUS DCI-P3",
+                    "ASUS_DisplayP3.icm": "ASUS Display P3"}
 
 
-# The two G-Helper gamut modes that mean something on Linux. They also make sense on a laptop with no ASUS profiles.
-COLOR_MODES = (
-    ColorMode("native", "Native", "Vivid. The panel as it comes, with its whole wide gamut, so sRGB content is "
-              "stretched to it.", "ASUS Native (factory calibrated)", None, MUTTER_DEFAULT),
-    ColorMode("srgb", "sRGB", "GNOME maps colors onto the panel's real primaries, so sRGB content looks the way it "
-              "was made. Fullscreen apps can no longer skip the compositor.", "ASUS sRGB", "ASUS_sRGB.icm",
-              MUTTER_SDR_NATIVE),
-)
-# Profiles an earlier version installed for modes that only looked the same as Native. Cleaned up, never installed.
-RETIRED_PROFILES = {"ASUS_DCIP3.icm": "ASUS DCI-P3", "ASUS_DisplayP3.icm": "ASUS Display P3"}
-MUTTER_MODE_NAMES = {MUTTER_DEFAULT: "default", MUTTER_BT2100: "bt2100", MUTTER_SDR_NATIVE: "sdr-native"}
-
-
-def native_file(s: System, panel: Panel | None) -> str | None:
+def factory_file(s: System, panel: Panel | None) -> str | None:
     """The factory profile of this panel, named the way ASUS names it, when this repository ships it."""
     if panel is None or not s.model:
         return None
@@ -2161,12 +2078,10 @@ def native_file(s: System, panel: Panel | None) -> str | None:
     return name if name in PROFILE_SHA256 else None
 
 
-def profile_set(s: System, panel: Panel | None) -> list[tuple[ColorMode, str]]:
-    """(mode, file name) for every mode that has a color profile on this machine. Empty without the ASUS set."""
-    native = native_file(s, panel)
-    if native is None:
-        return []
-    return [(mode, mode.file or native) for mode in COLOR_MODES]
+def profile_names(s: System) -> list[str]:
+    """The profile files this window installs or has installed for this panel: the factory one, then the retired."""
+    factory = factory_file(s, internal_panel())
+    return [*([factory] if factory else []), *RETIRED_PROFILES]
 
 
 def profile_source(name: str) -> bytes:
@@ -2269,362 +2184,12 @@ class Colord:
             raise SetupError(f"colord would not make the profile active: {res.text or 'no reason given'}")
 
 
-# --- color: GNOME's display service ------------------------------------------------------------------
-
-MUTTER_NAME = "org.gnome.Mutter.DisplayConfig"
-MUTTER_PATH = "/org/gnome/Mutter/DisplayConfig"
-APPLY_SIGNATURE = "(uua(iiduba(ssa{sv}))a{sv})"
-
-
-@dataclass
-class MutterMonitor:
-    connector: str
-    builtin: bool
-    current_mode: str | None
-    color_mode: int | None
-    supported_modes: list[int]
-    rgb_range: int | None
-    underscanning: bool
-    properties: dict[str, object] = field(default_factory=dict)      # everything GNOME reports, for the details
-
-
-@dataclass
-class MutterLogical:
-    x: int
-    y: int
-    scale: float
-    transform: int
-    primary: bool
-    connectors: list[str]
-
-
-@dataclass
-class MutterState:
-    serial: int
-    monitors: dict[str, MutterMonitor]
-    logicals: list[MutterLogical]
-    layout_mode: int | None
-    can_change_layout_mode: bool
-
-
-def parse_mutter_state(reply: tuple) -> MutterState:
-    """Read the answer of GetCurrentState (already unpacked into plain Python values)."""
-    serial, monitors, logicals, props = reply
-    parsed: dict[str, MutterMonitor] = {}
-    for spec, modes, mprops in monitors:
-        current = next((m[0] for m in modes if m[6].get("is-current")), None)
-        parsed[spec[0]] = MutterMonitor(
-            connector=spec[0], builtin=bool(mprops.get("is-builtin")) or spec[0].startswith(("eDP", "LVDS", "DSI")),
-            current_mode=current, color_mode=mprops.get("color-mode"),
-            supported_modes=list(mprops.get("supported-color-modes") or []), rgb_range=mprops.get("rgb-range"),
-            underscanning=bool(mprops.get("is-underscanning")), properties=dict(mprops))
-    layouts = [MutterLogical(lx, ly, scale, transform, bool(primary), [m[0] for m in members])
-               for lx, ly, scale, transform, primary, members, _ in logicals]
-    return MutterState(serial, parsed, layouts, props.get("layout-mode"),
-                       bool(props.get("supports-changing-layout-mode")))
-
-
-class DisplayConfig:
-    """GNOME's display service (mutter), the same one Settings and gdctl talk to."""
-
-    def __init__(self) -> None:
-        self._proxy = None
-
-    def _call(self, method: str, params):
-        import gi
-        gi.require_version("Gio", "2.0")
-        from gi.repository import Gio, GLib
-        try:
-            if self._proxy is None:
-                self._proxy = Gio.DBusProxy.new_for_bus_sync(
-                    Gio.BusType.SESSION,
-                    Gio.DBusProxyFlags.DO_NOT_LOAD_PROPERTIES | Gio.DBusProxyFlags.DO_NOT_AUTO_START, None,
-                    MUTTER_NAME, MUTTER_PATH, MUTTER_NAME, None)
-            return self._proxy.call_sync(method, params, Gio.DBusCallFlags.NO_AUTO_START, 8000, None)
-        except GLib.Error as exc:
-            self._proxy = None
-            if any(text in exc.message for text in ("without an owner", "ServiceUnknown", "not provided by any")):
-                raise SetupError("GNOME's display service is not running here. "
-                                 "This needs a GNOME session on Wayland.") from None
-            raise SetupError(f"GNOME's display service did not answer ({exc.message})") from None
-
-    def state(self) -> MutterState:
-        return parse_mutter_state(self._call("GetCurrentState", None).unpack())
-
-    def builtin(self, state: MutterState | None = None) -> MutterMonitor | None:
-        state = state or self.state()
-        return next((m for m in state.monitors.values() if m.builtin and m.current_mode), None)
-
-    def set_color_mode(self, connector: str, mode: int) -> None:
-        """
-        Change the color mode of one screen and keep everything else exactly as it is: the same layout, scale,
-        resolution and refresh rate. The change is saved, so it survives a restart, like a change in Settings.
-        """
-        from gi.repository import GLib
-        for attempt in (1, 2):
-            state = self.state()
-            target = state.monitors.get(connector)
-            if target is None or target.current_mode is None:
-                raise SetupError(f"the screen {connector} is not active")
-            if mode not in target.supported_modes:
-                raise SetupError("this screen does not offer that color mode")
-            logicals = []
-            for logical in state.logicals:
-                members = []
-                for name in logical.connectors:
-                    monitor = state.monitors[name]
-                    options: dict[str, object] = {}
-                    wanted = mode if name == connector else monitor.color_mode
-                    if wanted is not None:
-                        options["color-mode"] = GLib.Variant("u", wanted)
-                    if monitor.rgb_range is not None:
-                        options["rgb-range"] = GLib.Variant("u", monitor.rgb_range)
-                    if monitor.underscanning:
-                        options["underscanning"] = GLib.Variant("b", True)
-                    members.append((name, monitor.current_mode, options))
-                logicals.append((logical.x, logical.y, logical.scale, logical.transform, logical.primary, members))
-            properties = {}
-            if state.can_change_layout_mode and state.layout_mode is not None:
-                properties["layout-mode"] = GLib.Variant("u", state.layout_mode)
-            try:
-                self._call("ApplyMonitorsConfig",
-                           GLib.Variant(APPLY_SIGNATURE, (state.serial, 2, logicals, properties)))
-                return
-            except SetupError as exc:
-                if attempt == 2 or "stale" not in str(exc).lower():
-                    raise
-
-
-# --- color: both layers together ------------------------------------------------------------------
-
-@dataclass
-class ColorInfo:
-    model: str
-    bios: str
-    panel: Panel | None
-    native: str | None                    # the factory profile this panel would use
-    coverage_srgb: float | None
-    coverage_p3: float | None
-    modes: list[ColorMode]
-    profiles_installed: bool
-    compositor_ok: bool
-    compositor_note: str
-    colord_ok: bool
-    current: str | None
-    current_detail: str
-    compositor_mode: str = ""                                    # what GNOME uses now: default, sdr-native, bt2100
-    compositor_offers: list[str] = field(default_factory=list)   # the color modes GNOME offers for this screen
-    active_profile: str = ""                                     # the profile colord has active on the screen
-    extra: dict[str, str] = field(default_factory=dict)          # more for the details: GNOME version, session, ...
-
-
-class ColorController:
-    """Reads and switches the two layers behind a color mode. Blocking: call it from a worker thread."""
-
-    def __init__(self, system: System, display: DisplayConfig | None = None, colord: Colord | None = None) -> None:
-        self.s = system
-        self.display = display or DisplayConfig()
-        self.colord = colord or Colord()
-
-    def info(self) -> ColorInfo:
-        panel = internal_panel()
-        files = profile_set(self.s, panel)
-        coverage = (None, None)
-        if panel and panel.edid.primaries:
-            p = panel.edid.primaries
-            tri = [(p[0], p[1]), (p[2], p[3]), (p[4], p[5])]
-            coverage = (gamut_coverage(tri, SRGB_PRIMARIES), gamut_coverage(tri, P3_PRIMARIES))
-        compositor_ok, note, monitor = False, "", None
-        try:
-            monitor = self.display.builtin()
-            if monitor is None:
-                note = "GNOME does not report a built-in screen"
-            elif MUTTER_SDR_NATIVE not in monitor.supported_modes:
-                note = self._why_no_srgb()
-            else:
-                compositor_ok = True
-        except SetupError as exc:
-            note = str(exc)
-        colord_ok = self.s.has_cmd("colormgr")
-        device = self.colord.display_device() if colord_ok else None
-        listed = self.colord.profiles(device) if device else []
-        active = Path(listed[0][1]).name if listed else ""
-        installed = bool(files) and device is not None and all(
-            profile_id(COLORD_STORE / name) in [pid for pid, _ in listed] for _, name in files)
-        current, detail = self._current(files, monitor, active, compositor_ok)
-        mode_name = offers = None
-        if monitor is not None:
-            mode_name = MUTTER_MODE_NAMES.get(monitor.color_mode, str(monitor.color_mode)) \
-                if monitor.color_mode is not None else "default"
-            offers = [MUTTER_MODE_NAMES.get(m, str(m)) for m in monitor.supported_modes]
-        extra = self._extra(panel, monitor, device, listed)
-        return ColorInfo(self.s.model, self.s.bios, panel, native_file(self.s, panel), coverage[0], coverage[1],
-                         list(COLOR_MODES), installed, compositor_ok, note, colord_ok, current, detail,
-                         mode_name or "", offers or [], active, extra)
-
-    def _why_no_srgb(self) -> str:
-        shell = self.s.shell_version()
-        if shell is not None and shell[0] < 50:
-            return f"GNOME {shell[0]} does not have the sRGB color mode. It needs GNOME 50 or newer on Wayland."
-        return ("GNOME offers the sRGB color mode only for a screen whose EDID lists its primaries, white point and "
-                "gamma. Either this screen's does not, or this is not GNOME 50 or newer on Wayland.")
-
-    def _extra(self, panel: Panel | None, monitor: MutterMonitor | None, device: str | None,
-               listed: list[tuple[str, str]]) -> dict[str, str]:
-        """What a bug report about colors needs, beyond what the window already shows."""
-        shell = self.s.shell_version()
-        extra = {"GNOME Shell": shell[1] if shell else "not running", "Session": self.s.session_type or "unknown"}
-        if panel is not None and panel.edid.primaries:
-            p = panel.edid.primaries
-            extra["EDID primaries"] = (f"R {p[0]:.3f} {p[1]:.3f}, G {p[2]:.3f} {p[3]:.3f}, B {p[4]:.3f} {p[5]:.3f}, "
-                                       f"white {p[6]:.3f} {p[7]:.3f}")
-            extra["EDID gamma"] = f"{panel.edid.gamma:.2f}" if panel.edid.gamma else "not given"
-        if monitor is not None:
-            extra["GNOME monitor properties"] = ", ".join(sorted(monitor.properties)) or "none"
-        extra["colord device"] = device or "not found"
-        extra["colord profiles"] = ", ".join(Path(f).name for _, f in listed) or "none"
-        return extra
-
-    def report(self, info: ColorInfo) -> str:
-        """Everything worth pasting into a bug report about colors, as plain text."""
-        panel = info.panel
-        lines = ["Zephyrus Setup, color details", ""]
-        lines.append(f"Model: {info.model or 'unknown'} (BIOS {info.bios or 'unknown'})")
-        if panel is not None:
-            edid = panel.edid
-            lines.append(f"Panel: {edid.name or edid.pnp}, {panel.connector}, EDID {edid.panel_id}, GPU {panel.gpu}")
-        if info.coverage_srgb is not None and info.coverage_p3 is not None:
-            lines.append(f"Gamut from the EDID: {info.coverage_srgb * 100:.0f}% of sRGB, "
-                         f"{info.coverage_p3 * 100:.0f}% of DCI-P3")
-        lines.append(f"Factory profile for this panel: {info.native or 'none published'}")
-        lines.append(f"Profiles installed on the screen: {'yes' if info.profiles_installed else 'no'}")
-        lines.append(f"GNOME color mode: {info.compositor_mode or 'unknown'}"
-                     f" (offered: {', '.join(info.compositor_offers) or 'unknown'})")
-        if info.compositor_note:
-            lines.append(f"Note: {info.compositor_note}")
-        lines.append(f"Active color profile in colord: {info.active_profile or 'none'}")
-        if info.current:
-            lines.append(f"This window thinks the mode is: {info.current}")
-        else:
-            lines.append("This window thinks the mode is: neither"
-                         + (f" ({info.current_detail})" if info.current_detail else ""))
-        lines += [f"{key}: {value}" for key, value in info.extra.items()]
-        return "\n".join(lines) + "\n"
-
-    def _current(self, files: list[tuple[ColorMode, str]], monitor: MutterMonitor | None, active: str,
-                 compositor_ok: bool) -> tuple[str | None, str]:
-        if monitor is not None and monitor.color_mode == MUTTER_BT2100:
-            return None, "HDR is on, and HDR has its own color mode"
-        if compositor_ok and monitor is not None:
-            sdr = monitor.color_mode == MUTTER_SDR_NATIVE
-            if sdr and (not files or active in ("", "ASUS_sRGB.icm") or active.startswith("edid-")):
-                return "srgb", ""
-            if sdr:
-                return None, f"GNOME uses sRGB mode, but the active profile is {active}"
-            for mode, name in files:
-                if mode.compositor == MUTTER_DEFAULT and name == active:
-                    return mode.key, ""
-            if not active or active.startswith("edid-") or not files:
-                return "native", ""
-            if active in RETIRED_PROFILES:
-                return None, f"the active profile is {active}, from a mode that only looked like Native. Pick Native"
-            return None, f"the active profile is {active}, which is not one of these"
-        for mode, name in files:
-            if name == active:
-                return mode.key, ""
-        return ("native", "") if not active or active.startswith("edid-") else (None, f"the active profile is {active}")
-
-    def switch(self, key: str, info: ColorInfo | None = None) -> list[str]:
-        """
-        Switch to a mode and check that it took. Returns notes for the person (what was and was not changed).
-        If the second layer fails after the first changed, the first is put back.
-        """
-        info = info or self.info()
-        mode = next((m for m in info.modes if m.key == key), None)
-        if mode is None:
-            raise SetupError("that color mode is not available on this machine")
-        log.info("color: switching to %s; GNOME is on %s and offers %s; colord has %s active", key,
-                 info.compositor_mode or "?", ",".join(info.compositor_offers) or "?", info.active_profile or "nothing")
-        notes: list[str] = []
-        files = dict((m.key, name) for m, name in profile_set(self.s, info.panel))
-        previous_compositor = None
-        monitor = None
-        if info.compositor_ok:
-            monitor = self.display.builtin()
-            if monitor is not None and monitor.color_mode != mode.compositor:
-                previous_compositor = monitor.color_mode if monitor.color_mode is not None else MUTTER_DEFAULT
-                if monitor.color_mode == MUTTER_BT2100:
-                    notes.append("HDR was on and is off now. You can turn it on again in Settings, under Displays.")
-                self.display.set_color_mode(monitor.connector, mode.compositor)
-                if not self._wait_for_compositor(mode.compositor):
-                    raise SetupError("GNOME accepted the change but is not using the new color mode")
-        elif mode.compositor != MUTTER_DEFAULT:
-            notes.append(info.compositor_note or "The screen's color mode could not be changed.")
-        try:
-            notes += self._set_profile(mode, files.get(key), info)
-        except SetupError:
-            if previous_compositor is not None and monitor is not None:
-                try:
-                    self.display.set_color_mode(monitor.connector, previous_compositor)
-                except SetupError as exc:
-                    log.warning("could not put the compositor color mode back: %s", exc)
-            raise
-        log.info("color: %s is set. %s", key, " ".join(notes) or "Both layers took it.")
-        return notes
-
-    def _wait_for_compositor(self, wanted: int) -> bool:
-        for _ in range(12):
-            monitor = self.display.builtin()
-            if monitor is not None and monitor.color_mode == wanted:
-                return True
-            time.sleep(0.25)
-        return False
-
-    def _set_profile(self, mode: ColorMode, name: str | None, info: ColorInfo) -> list[str]:
-        if name is None:
-            return []
-        if not info.colord_ok:
-            return ["colord (colormgr) is not installed, so color-managed apps were not told."]
-        device = self.colord.display_device()
-        if device is None:
-            return ["colord does not know the built-in screen yet: run this inside the GNOME session."]
-        path = COLORD_STORE / name
-        if profile_id(path) not in [pid for pid, _ in self.colord.profiles(device)]:
-            return ["The ASUS color profiles are not on the screen yet: tick 'ASUS color profiles' below and apply, "
-                    "then color-managed apps will be told too."]
-        profile = self.colord.find_profile(path)
-        if profile is None:
-            raise SetupError(f"colord does not know {name}")
-        # A display can list a profile colord has since dropped and read again. Adding it first puts it back.
-        self.colord.add(device, profile)
-        self.colord.make_default(device, profile)
-        listed = self.colord.profiles(device)
-        if not listed or listed[0][0] != profile_id(path):
-            raise SetupError("colord accepted the profile but did not make it the active one")
-        return []
-
-
-def color_runs(connector: str) -> str:
-    """What switching a color mode does, in plain text: the two calls the window makes, and the way back."""
-    return (
-        "A switch needs no root and downloads nothing. It makes two calls, as you:\n\n"
-        f"1. GNOME's display service, the call Settings > Displays makes: D-Bus {MUTTER_NAME},\n"
-        f"   {MUTTER_PATH}, ApplyMonitorsConfig (persistent) for {connector} only,\n"
-        "   with color-mode 0 (default) for Native or 2 (sdr-native) for sRGB. The layout, scale, resolution,\n"
-        "   refresh rate and every other screen are sent back as they are.\n"
-        "2. colord, for color-managed apps, once 'ASUS color profiles' is ticked: colormgr device-add-profile and\n"
-        "   device-make-profile-default <Built-in Screen> <profile>. Native uses the panel's factory profile,\n"
-        "   sRGB uses ASUS_sRGB.icm.\n\n"
-        "When the second call fails, the first is put back. The way back: pick the other mode, or press Undo in\n"
-        "the message that shows for a few seconds after a switch. The code: ColorController.switch.\n")
-
-
 # --- color: installing the profiles (an item in the list) --------------------------------------------
 
 def check_color_profiles(s: System) -> Check:
     panel = internal_panel()
-    files = profile_set(s, panel)
-    if not files:
+    name = factory_file(s, panel)
+    if name is None:
         if panel is None:
             return Check(State.UNKNOWN, "could not read the built-in screen's panel ID")
         return Check(State.UNKNOWN, f"no factory profile is published for this panel ({s.model}_{panel.gpu}_"
@@ -2633,66 +2198,59 @@ def check_color_profiles(s: System) -> Check:
         return Check(State.UNKNOWN, "colormgr (colord) is not installed")
     colord = Colord()
     device = colord.display_device()
-    in_store = [name for mode, name in files if (COLORD_STORE / name).exists()
-                and icc_description((COLORD_STORE / name).read_bytes()) == mode.profile_title]
-    on_display = []
-    if device:
-        ids = [pid for pid, _ in colord.profiles(device)]
-        on_display = [name for _, name in files if profile_id(COLORD_STORE / name) in ids]
-    old_copies = [name for name in (*(n for _, n in files), *RETIRED_PROFILES) if (OLD_ICC_DIR / name).exists()]
+    stored = COLORD_STORE / name
+    in_store = stored.exists() and icc_description(stored.read_bytes()) == FACTORY_TITLE
+    on_display = device is not None and profile_id(stored) in [pid for pid, _ in colord.profiles(device)]
+    old_copies = [n for n in (name, *RETIRED_PROFILES) if (OLD_ICC_DIR / n).exists()]
     retired = system_color_copies(s, retired_only=True)
-    if len(in_store) == len(files) and len(on_display) == len(files) and not retired:
-        return Check(State.DONE, "both profiles are on the built-in screen")
+    if in_store and on_display and not retired:
+        return Check(State.DONE, "the factory profile is on the built-in screen")
     if in_store or on_display or old_copies or retired:
         extra = ", an older copy is in your home folder" if old_copies else ""
         if retired:
-            extra += ", profiles of two modes that no longer exist are still installed"
-        return Check(State.PARTIAL,
-                     f"{len(in_store)} of {len(files)} installed, {len(on_display)} on the screen{extra}")
-    return Check(State.TODO, "the ASUS color profiles are not installed")
+            extra += ", profiles of modes that no longer exist are still installed"
+        return Check(State.PARTIAL, f"{'installed' if in_store else 'not installed'}, "
+                                    f"{'on the screen' if on_display else 'not on the screen yet'}{extra}")
+    return Check(State.TODO, "the factory profile is not installed")
 
 
-def stage_profiles(s: System) -> list[tuple[Path, str, str]]:
+def stage_profile(s: System) -> tuple[Path, str, str]:
     """
-    Prepare the profiles under readable names in a folder only you can read: checked against their SHA-256, with the
-    description rewritten to the name GNOME shows. Returns (staged file, its SHA-256, name in colord's folder).
+    Prepare the factory profile under a readable name in a folder only you can read: checked against its SHA-256,
+    with the description rewritten to the name GNOME shows. Returns (staged file, its SHA-256, name in colord's folder).
     """
-    files = profile_set(s, internal_panel())
-    if not files:
-        raise SetupError("no factory profiles are published for this panel")
+    name = factory_file(s, internal_panel())
+    if name is None:
+        raise SetupError("no factory profile is published for this panel")
     STAGE_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
-    staged = []
-    for mode, name in files:
-        data = icc_with_description(profile_source(name), mode.profile_title)
-        icc_check(data)
-        path = STAGE_DIR / name
-        path.write_bytes(data)
-        staged.append((path, sha256_of(data), name))
-    return staged
+    data = icc_with_description(profile_source(name), FACTORY_TITLE)
+    icc_check(data)
+    path = STAGE_DIR / name
+    path.write_bytes(data)
+    return path, sha256_of(data), name
 
 
 def on_color_profiles(s: System, p: Plan) -> None:
-    staged = stage_profiles(s)
-    copies = "\n".join(
-        f"echo {shlex.quote(digest + '  ' + str(path))} | sha256sum -c --quiet -\n"
-        f"cmp -s {shlex.quote(str(path))} {shlex.quote(str(COLORD_STORE / name))} || "
-        f"install -m 644 -o colord -g colord {shlex.quote(str(path))} {shlex.quote(str(COLORD_STORE / name))}"
-        for path, digest, name in staged)
+    path, digest, name = stage_profile(s)
+    target = shlex.quote(str(COLORD_STORE / name))
     # A file that is already there with the same contents is left alone: colord drops a profile when its file is
     # overwritten and does not always read it again. So nothing here ever touches a profile that is already in place.
-    p.add_root("Put the profiles in colord's own profile folder, where it reads them reliably",
-               "# prepared in your cache folder by this setup: the files published in the repository (the copy in this "
+    p.add_root("Put the profile in colord's own profile folder, where it reads it reliably",
+               "# prepared in your cache folder by this setup: the file published in the repository (the copy in this "
                "checkout,\n"
                f"# or else {RAW_BASE}/src/static/icc-profiles/), checked against the SHA-256 built into the setup, "
                "with the\n"
-               "# description rewritten to the name GNOME shows. Root installs them only while their SHA-256 still "
+               "# description rewritten to the name GNOME shows. Root installs it only while its SHA-256 still "
                "matches.\n"
-               f"install -d -m 755 -o colord -g colord {shlex.quote(str(COLORD_STORE))}\n{copies}")
+               f"install -d -m 755 -o colord -g colord {shlex.quote(str(COLORD_STORE))}\n"
+               f"echo {shlex.quote(digest + '  ' + str(path))} | sha256sum -c --quiet -\n"
+               f"cmp -s {shlex.quote(str(path))} {target} || install -m 644 -o colord -g colord "
+               f"{shlex.quote(str(path))} {target}")
     if retired := system_color_copies(s, retired_only=True):
-        p.add_root("Remove the DCI-P3 and Display P3 profiles that an earlier version put there",
+        p.add_root("Remove the sRGB, DCI-P3 and Display P3 profiles that an earlier version put there",
                    "rm -f -- " + " ".join(shlex.quote(str(path)) for path in retired), early=True)
-    p.steps.append(Step("Add the profiles to the Built-in Screen in colord", call=lambda: register_color_profiles(s),
-                        shown=register_lines([name for _, _, name in staged])))
+    p.steps.append(Step("Add the profile to the Built-in Screen in colord", call=lambda: register_color_profiles(s),
+                        shown=register_lines([name])))
     p.note("After switching GPU mode (Hybrid, Integrated, Ultimate), tick this again: each mode has its own display "
            "and its own profile.")
 
@@ -2703,7 +2261,7 @@ def register_lines(names: list[str]) -> list[str]:
             "colormgr get-devices-by-kind display   # the Built-in Screen is the display colord marks as embedded",
             *[f"colormgr find-profile-by-filename {COLORD_STORE / name}   # retried for up to 10 seconds"
               for name in names],
-            "colormgr device-add-profile <Built-in Screen> <profile>   # each of them, unless the screen lists it",
+            "colormgr device-add-profile <Built-in Screen> <profile>   # unless the screen lists it already",
             "# the factory profile then becomes the default, but only if just the automatic profile was in charge",
             "colormgr device-make-profile-default <Built-in Screen> <factory profile>",
             f"rm -rf {shlex.quote(str(STAGE_DIR))}"]
@@ -2718,27 +2276,25 @@ def release_lines(names: list[str]) -> list[str]:
 
 
 def register_color_profiles(s: System) -> None:
-    """Give the built-in screen every profile, so Settings > Color lists them, the way G-Helper lists its modes."""
+    """Give the built-in screen its factory profile, so Settings > Color lists it and color-managed apps are told."""
     colord = Colord()
     device = colord.display_device()
     if device is None:
         raise SetupError("colord does not know the built-in screen. Run this inside the GNOME session.")
+    name = factory_file(s, internal_panel())
+    if name is None:
+        raise SetupError("no factory profile is published for this panel")
     before = colord.profiles(device)
-    registered = []
-    for mode, name in profile_set(s, internal_panel()):
-        path = COLORD_STORE / name
-        found = colord.wait_for_profile(path, mode.profile_title)
-        if found is None:
-            raise SetupError(f"colord did not pick up {path} within 10 seconds")
-        registered.append((mode, found))
-        # Asked again for every mode: colord changes the display's list as it reads the files.
-        if profile_id(path) not in [pid for pid, _ in colord.profiles(device)]:
-            colord.add(device, found)
-    # Native becomes the active profile, but only when nothing but the automatic EDID profile was in charge.
+    path = COLORD_STORE / name
+    found = colord.wait_for_profile(path, FACTORY_TITLE)
+    if found is None:
+        raise SetupError(f"colord did not pick up {path} within 10 seconds")
+    if profile_id(path) not in [pid for pid, _ in colord.profiles(device)]:
+        colord.add(device, found)
+    # It becomes the active profile, but only when nothing but the automatic EDID profile was in charge.
     active = before[0][1] if before else ""
     if not active or Path(active).name.startswith("edid-"):
-        native = next(found for mode, found in registered if mode.key == "native")
-        colord.make_default(device, native)
+        colord.make_default(device, found)
     shutil.rmtree(STAGE_DIR, ignore_errors=True)
 
 
@@ -2748,7 +2304,7 @@ def release_color_profiles(s: System) -> None:
     device = colord.display_device()
     if device is None:
         raise SetupError("colord does not know the built-in screen. Run this inside the GNOME session.")
-    names = [name for _, name in profile_set(s, internal_panel())] + list(RETIRED_PROFILES)
+    names = profile_names(s)
     ours = {pid for pid in (profile_id(COLORD_STORE / name) for name in names) if pid}
     listed = colord.profiles(device)
     if listed and listed[0][0] in ours:
@@ -2780,8 +2336,8 @@ def system_color_copies(s: System, retired_only: bool = False) -> list[Path]:
     With retired_only, just the ones an earlier version installed for modes that no longer exist.
     """
     titles = set(RETIRED_PROFILES.values())
-    if not retired_only:
-        titles |= {mode.profile_title for mode, _ in profile_set(s, internal_panel())}
+    if not retired_only and factory_file(s, internal_panel()):
+        titles.add(FACTORY_TITLE)
     found = []
     for path in sorted(COLORD_STORE.glob("*.ic*")):
         try:
@@ -2793,7 +2349,7 @@ def system_color_copies(s: System, retired_only: bool = False) -> list[Path]:
 
 
 def off_color_profiles(s: System, p: Plan) -> None:
-    names = [name for _, name in profile_set(s, internal_panel())] + list(RETIRED_PROFILES)
+    names = profile_names(s)
     p.steps.append(Step("Switch the screen back to its automatic profile and remove older copies",
                         call=lambda: release_color_profiles(s), early=True, shown=release_lines(names)))
     if copies := system_color_copies(s):
@@ -3160,7 +2716,7 @@ def off_vmware_keyboard(s: System, p: Plan) -> None:
 SECTIONS = [
     ("hardware", "ASUS hardware", "computer-symbolic", "asusctl, battery limit, power profiles, brightness"),
     ("gpu", "Graphics", "preferences-system-symbolic", "NVIDIA services, PRIME offload, display freezes"),
-    ("display", "Display", "video-display-symbolic", "color modes and the factory color profiles"),
+    ("display", "Display", "video-display-symbolic", "the factory color profile of the built-in screen"),
     ("network", "Network", "network-wireless-symbolic", "Wi-Fi tuning, eduroam"),
     ("desktop", "GNOME desktop", "preferences-desktop-appearance-symbolic",
      "window buttons, shortcuts, extensions, touchpad"),
@@ -3223,11 +2779,11 @@ def build_items() -> list[Item]:
                                    for step in PSR_MANUAL.get(s.bootloader(), [])],
              advanced=True, hardware="g16", guide_only=True))
 
-    # Display: the live color modes have a page of their own, the profiles are an item
-    add(Item("display-color-profiles", "display", "ASUS color profiles",
-             "The panel's factory profile and the ASUS sRGB profile, on the built-in screen "
-             "in colord, for color-managed apps", "hardware/color-profiles", check_color_profiles, on_color_profiles,
-             off_color_profiles, group="Color profiles", recommended=True, hardware="g16", needs_gnome=True))
+    # Display: one item. GNOME does not apply a profile to the display yet, so there is nothing to switch.
+    add(Item("display-color-profiles", "display", "ASUS factory color profile",
+             "Puts the panel's factory profile on the built-in screen in colord. GNOME does not apply profiles to the "
+             "display yet, so nothing changes on screen", "hardware/color-profiles", check_color_profiles,
+             on_color_profiles, off_color_profiles, group="Color profiles", hardware="g16", needs_gnome=True))
 
     # Network
     add(Item("wifi-mt7925", "network", "Wi-Fi throughput tuning (MT7925)",
@@ -4124,12 +3680,6 @@ CSS = """
 .zs-pill.add { color: @accent_color; background: alpha(@accent_color, 0.15); }
 .zs-pill.remove { color: @error_color; background: alpha(@error_color, 0.14); }
 .zs-log { font-family: monospace; font-size: 0.92em; }
-.zs-swatch { min-width: 34px; min-height: 26px; border-radius: 6px; }
-.zs-swatch.red { background-color: #ff0000; }
-.zs-swatch.green { background-color: #00ff00; }
-.zs-swatch.blue { background-color: #0000ff; }
-.zs-swatch.yellow { background-color: #ffff00; }
-.zs-swatch.skin { background-color: #f1c8a8; }
 """
 
 
@@ -4314,214 +3864,6 @@ class ItemRow:
         self.window.fail(heading, body)
 
 
-# --- the color mode section ---------------------------------------------------------------------
-
-COLOR_INTRO = "Switches right away, no apply step. It is saved, so it survives a restart."
-
-
-class ColorSection:
-    """The live color mode switch, G-Helper style, plus what we know about this screen."""
-
-    def __init__(self, window: "SetupWindow") -> None:
-        self.window = window
-        self.controller = ColorController(window.backend.s)
-        self.info: ColorInfo | None = None
-        self.checks: dict[str, "Gtk.CheckButton"] = {}
-        self.rows: dict[str, "Adw.ActionRow"] = {}
-        self.group_rows: list["Adw.ActionRow"] = []
-        self.group = Adw.PreferencesGroup(title="Color mode", description=COLOR_INTRO)
-        self.status = Adw.ActionRow(title="Reading this screen", use_markup=False, subtitle_lines=0)
-        self.spinner = Gtk.Spinner(spinning=True, valign=Gtk.Align.CENTER)
-        self.status.add_prefix(self.spinner)
-        self.group.add(self.status)
-        self.facts = Adw.PreferencesGroup(title="This screen")
-        self.facts.set_visible(False)
-        self.fact_rows: list["Adw.ActionRow"] = []
-        self._guard = False
-        self._busy = False
-
-    def widgets(self) -> list["Adw.PreferencesGroup"]:
-        return [self.group, self.facts]
-
-    def load(self) -> None:
-        if not self.window.backend.s.is_gnome:
-            self._elsewhere()
-            return
-        background(self.controller.info, self._loaded)
-
-    def _elsewhere(self) -> None:
-        """The switch talks to GNOME's compositor, so under any other desktop there is nothing to switch."""
-        desktop = self.window.backend.s.desktop
-        self.spinner.set_visible(False)
-        self.facts.set_visible(False)
-        self.status.set_visible(True)
-        self.status.set_title("The color switch needs GNOME")
-        note = f" This session runs {desktop}." if desktop else ""
-        self.status.set_subtitle("It talks to GNOME's compositor." + note)
-
-    def _loaded(self, info: ColorInfo | None, error: Exception | None) -> None:
-        self.spinner.set_visible(False)
-        if error is not None or info is None:
-            self.status.set_title("Could not read this screen")
-            self.status.set_subtitle(str(error))
-            return
-        self.info = info
-        self.status.set_visible(False)
-        self._build(info)
-
-    def _add_row(self, row: "Adw.ActionRow") -> None:
-        self.group.add(row)
-        self.group_rows.append(row)
-
-    def _swatch_row(self) -> "Adw.ActionRow":
-        """Saturated colors to look at while switching: the window itself goes through the color mode."""
-        row = Adw.ActionRow(title="Compare the colors", use_markup=False, subtitle_lines=0,
-                            subtitle="Switch modes and watch these. In sRGB the reds and greens should look calmer.")
-        swatches = Gtk.Box(spacing=6, valign=Gtk.Align.CENTER)
-        for name in ("red", "green", "blue", "yellow", "skin"):
-            swatch = Gtk.Box()
-            swatch.add_css_class("zs-swatch")
-            swatch.add_css_class(name)
-            swatches.append(swatch)
-        row.add_suffix(swatches)
-        return row
-
-    def _why_row(self) -> "Adw.ActionRow":
-        row = Adw.ActionRow(title="Why no DCI-P3 or Display P3?", use_markup=False, subtitle_lines=0, title_lines=0,
-                            subtitle="Native already shows everything this panel can do, so a P3 mode would look "
-                                     "the same. On Windows those two switch a mode that Linux does not have.")
-        more = Gtk.Button(label="Read more", valign=Gtk.Align.CENTER)
-        more.add_css_class("flat")
-        more.connect("clicked",
-                     lambda _b: self.window.open_url(doc_url("hardware/color-profiles#why-no-dci-p3-or-display-p3")))
-        row.add_suffix(more)
-        return row
-
-    def _runs_row(self, info: ColorInfo) -> "Adw.ActionRow":
-        row = Adw.ActionRow(title="What a switch runs", use_markup=False, subtitle_lines=0, title_lines=0,
-                            subtitle="The two calls behind it, and the way back")
-        show = Gtk.Button(label="Show", valign=Gtk.Align.CENTER)
-        show.add_css_class("flat")
-        connector = info.panel.connector if info.panel else "the built-in screen"
-        show.connect("clicked", lambda _b: self.window.show_text(
-            "What a color switch runs", color_runs(connector),
-            [("Exact description on the site", reference_url("display", "color-mode"))]))
-        row.add_suffix(show)
-        return row
-
-    def _build(self, info: ColorInfo) -> None:
-        for row in self.group_rows:
-            self.group.remove(row)
-        self.group_rows.clear()
-        self.rows.clear()
-        self.checks.clear()
-        first = None
-        for mode in info.modes:
-            row = Adw.ActionRow(title=mode.title, subtitle=mode.summary, use_markup=False, subtitle_lines=0)
-            check = Gtk.CheckButton(valign=Gtk.Align.CENTER)
-            if first is None:
-                first = check
-            else:
-                check.set_group(first)
-            row.add_prefix(check)
-            row.set_activatable_widget(check)
-            check.connect("toggled", self._picked, mode.key)
-            self._add_row(row)
-            self.rows[mode.key], self.checks[mode.key] = row, check
-        self._select(info.current)
-        if info.compositor_ok:
-            self._add_row(self._swatch_row())
-        self._add_row(self._why_row())
-        self._add_row(self._runs_row(info))
-        notes = []
-        if not info.compositor_ok:
-            notes.append(info.compositor_note or "The sRGB color mode is not available here.")
-        if not info.colord_ok:
-            notes.append("colord (colormgr) is not installed, so color-managed apps are not told.")
-        elif info.native and not info.profiles_installed:
-            notes.append("Tick 'ASUS color profiles' below to also tell color-managed apps which profile is active.")
-        if info.current is None and info.current_detail:
-            notes.append(f"Right now: {info.current_detail}.")
-        self.group.set_description("\n".join([COLOR_INTRO, *notes]))
-        self._facts(info)
-
-    def _select(self, key: str | None) -> None:
-        self._guard = True
-        for name, check in self.checks.items():
-            check.set_active(name == key)
-        self._guard = False
-
-    def _facts(self, info: ColorInfo) -> None:
-        for row in self.fact_rows:
-            self.facts.remove(row)
-        self.fact_rows.clear()
-        rows = []
-        model = info.model or "unknown"
-        rows.append(("Model", model, f"from the BIOS version {info.bios}" if info.bios else ""))
-        if info.panel:
-            edid = info.panel.edid
-            rows.append(("Panel", edid.name or edid.pnp, f"{info.panel.connector}, EDID {edid.panel_id}"))
-            rows.append(("Graphics", {"1002": "AMD", "10DE": "NVIDIA"}.get(info.panel.gpu, info.panel.gpu),
-                         "the GPU this screen hangs off right now"))
-        if info.coverage_srgb is not None and info.coverage_p3 is not None:
-            rows.append(("Gamut", f"{info.coverage_srgb * 100:.0f}% of sRGB, {info.coverage_p3 * 100:.0f}% of DCI-P3",
-                         "from the primaries the panel reports in its EDID"))
-        rows.append(("Profiles", info.native or "none for this panel", "the factory profile this setup would use"))
-        offered = ", ".join(info.compositor_offers) or "none"
-        rows.append(("GNOME color mode", info.compositor_mode or "unknown", f"GNOME offers: {offered}"))
-        rows.append(("Active profile", info.active_profile or "none", "in colord, for color-managed apps"))
-        for title, value, subtitle in rows:
-            row = Adw.ActionRow(title=title, subtitle=subtitle, use_markup=False)
-            label = Gtk.Label(label=value, wrap=True, xalign=1, selectable=True, valign=Gtk.Align.CENTER)
-            label.add_css_class("dim-label")
-            row.add_suffix(label)
-            self.facts.add(row)
-            self.fact_rows.append(row)
-        copy = Adw.ActionRow(title="Copy details", use_markup=False, activatable=True,
-                             subtitle="For a bug report: everything above plus the GNOME and colord state")
-        copy.add_suffix(Gtk.Image(icon_name=icon_or("edit-copy-symbolic", "document-save-symbolic")))
-        copy.connect("activated", lambda _r: self.window.copy_text(self.controller.report(info)))
-        self.facts.add(copy)
-        self.fact_rows.append(copy)
-        self.facts.set_visible(True)
-
-    @guarded
-    def _picked(self, check: "Gtk.CheckButton", key: str) -> None:
-        if self._guard or not check.get_active() or self._busy or self.info is None:
-            return
-        previous = self.info.current
-        self._busy = True
-        self.group.set_sensitive(False)
-        mode = next(m for m in self.info.modes if m.key == key)
-        background(lambda: self.controller.switch(key, self.info),
-                   lambda notes, error: self._switched(mode, previous, notes, error))
-
-    def _switched(self, mode: ColorMode, previous: str | None, notes: list[str] | None,
-                  error: Exception | None) -> None:
-        self._busy = False
-        self.group.set_sensitive(True)
-        if error is not None:
-            self._select(previous)
-            self.window.fail(f"Could not switch to {mode.title}", str(error))
-            return
-        if self.info is not None:
-            self.info.current = mode.key
-        toast = Adw.Toast(title=f"Switched to {mode.title}", timeout=8, button_label="Undo" if previous else None)
-        if previous:
-            toast.connect("button-clicked", lambda _t: self._undo(previous))
-        self.window.toasts.add_toast(toast)
-        if notes:
-            self.group.set_description("\n".join([COLOR_INTRO, *notes]))
-
-    def _undo(self, key: str) -> None:
-        check = self.checks.get(key)
-        if check is not None:
-            check.set_active(True)
-
-    def fail(self, heading: str, body: str) -> None:
-        self.window.fail(heading, body)
-
-
 # --- dialogs --------------------------------------------------------------------------------------
 
 def dialog_shell(title: str, width: int = 760, height: int = 680,
@@ -4686,7 +4028,6 @@ class SetupWindow(_Window):
         self.pages: dict[str, "Adw.NavigationPage"] = {}
         self.busy = False
         self._stop_waiting = False
-        self.color: ColorSection | None = None
         self.toasts = Adw.ToastOverlay()
         self.set_content(self.toasts)
         self.set_size_request(360, 400)
@@ -4767,15 +4108,9 @@ class SetupWindow(_Window):
             self.banner.set_title("This is not a GNOME session, so the items that need GNOME are switched off.")
             self.banner.set_revealed(True)
         self.sidebar.select_row(self.sidebar.get_row_at_index(0))
-        if self.color is not None:
-            self.color.load()
 
     def _add_section(self, key: str, title: str, icon: str, about: str) -> None:
         page = Adw.PreferencesPage()
-        if key == "display":
-            self.color = ColorSection(self)
-            for group in self.color.widgets():
-                page.add(group)
         groups: dict[str, "Adw.PreferencesGroup"] = {}
         for item in self.backend.items_in(key):
             group = groups.get(item.group)
@@ -4875,17 +4210,11 @@ class SetupWindow(_Window):
             self.update_bar()
             selected = self.sidebar.get_selected_row()
             self.stack.set_visible_child_name(selected.key if selected else SECTIONS[0][0])
-            if self.color is not None:
-                self.color.load()
 
         background(self.backend.check_all, done)
 
     def toast(self, text: str) -> None:
         self.toasts.add_toast(Adw.Toast(title=text, timeout=4))
-
-    def copy_text(self, text: str) -> None:
-        self.get_clipboard().set(text)
-        self.toast("Copied to the clipboard")
 
     def open_url(self, url: str) -> None:
         try:
@@ -4908,12 +4237,6 @@ class SetupWindow(_Window):
             button.connect("clicked", lambda _b, link=url: self.open_url(link))
             bar.append(button)
         return bar
-
-    def show_text(self, title: str, text: str, links: list[tuple[str, str]]) -> None:
-        dialog, view = dialog_shell(title, 700, 560)
-        view.set_content(scrolled(text_view(text)))
-        view.add_bottom_bar(self.link_bar(links))
-        dialog.present(self)
 
     @guarded
     def show_details(self, item: Item) -> None:
