@@ -131,7 +131,8 @@ def machine(home, installed=(), aur=(), flatpaks=(), settings=None, loader="limi
         has_flathub=lambda: True, has_cmd=lambda name: True, bootloader=lambda: loader,
         unit_state=lambda unit: "enabled", unit_active=lambda unit: True, out=lambda cmd: "",
         gsettings=lambda schema, key: settings.get((schema, key)), kernel_package=lambda: "linux-cachyos",
-        shell_version=lambda: (51, "51.0"), in_group=lambda group: False, refresh=lambda: None)
+        shell_version=lambda: (51, "51.0"), shell_extensions=lambda: set(), in_group=lambda group: False,
+        refresh=lambda: None)
 
 
 @dataclass
@@ -153,7 +154,7 @@ def build_recipes(q, workdir: Path):
     """Run every builder of every item on the two stand-in machines. Returns the items, recipes and path swaps."""
     home = Path(os.environ["HOME"])
     swaps = [(str(home), f"/home/{USER}"), (str(workdir / "fresh"), ""), (str(workdir / "configured"), "")]
-    items = q.build_items(q.ExtensionCatalog())
+    items = q.build_items()
     aur = {name for item in items for name in item.aur}
     by_id = {item.id: item for item in items}
     recipes = {item.id: Recipe() for item in items}

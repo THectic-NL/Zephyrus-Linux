@@ -15,11 +15,11 @@ Het verandert je systeem. Er gebeurt niets voordat je het plan hebt gelezen en o
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/quicksetup.py
-echo "06eef0882dcf2ee7ccc3bbaf659abd17a5d36eff5d8bc26bc5d56fa9180e65b6  quicksetup.py" | sha256sum -c
+echo "69ddba17a168ae1b4d852e86c7652529e7567cab502198b37877fe44927ec338  quicksetup.py" | sha256sum -c
 python3 quicksetup.py
 ```
 
-Bron: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `06eef0882dcf2ee7ccc3bbaf659abd17a5d36eff5d8bc26bc5d56fa9180e65b6`.
+Bron: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `69ddba17a168ae1b4d852e86c7652529e7567cab502198b37877fe44927ec338`.
 
 Je hebt Python 3.14 of nieuwer nodig en de GTK 4-bindings. Een standaard CachyOS-GNOME-installatie heeft die al. Zo niet: `sudo pacman -S python-gobject gtk4 libadwaita`.
 
@@ -32,7 +32,7 @@ Links staan de secties, rechts één rij per onderdeel. Een aangevinkt vakje bet
 - De twee kleine knoppen op een rij tonen de exacte opdrachten die aan- en uitvinken draaien, en openen de handleiding.
 - `AUR` markeert rijen die een pakket uit de AUR nodig hebben. `Advanced`-rijen blijven buiten **Select recommended**.
 - Als je iets aanvinkt, vinkt het venster ook aan wat daarvoor nodig is, en vermeldt dat erbij. Een rij die op deze machine niet van toepassing is, is grijs, met de reden erbij.
-- GNOME-extensies komen van extensions.gnome.org, dus je hebt geen browserplug-in nodig. Een extensie zonder build voor jouw GNOME-versie zegt dat, bijvoorbeeld "No build for GNOME 51 yet".
+- GNOME-extensies komen van extensions.gnome.org, dus je hebt geen browserplug-in nodig. Heeft een extensie nog geen build voor jouw GNOME-versie, dan wordt toch de nieuwste geïnstalleerd en markeert GNOME Shell hem als verouderd totdat de maker bijwerkt. GNOME Shell zoekt alleen naar extensies als hij opstart, dus een net geïnstalleerde verschijnt pas nadat je uit- en weer inlogt, en het venster zegt dat erbij.
 - In het menu staan **Select recommended**, **Check again** en het logbestand.
 
 Er verandert niets voordat je op **Review and apply** drukt. Die controle toont de pakketten, wat als root draait, wat een herstart of opnieuw inloggen nodig heeft en wat er voor jou overblijft. Als er iets mis is, blijft Apply grijs en staat de reden bovenaan.

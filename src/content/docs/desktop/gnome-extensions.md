@@ -5,13 +5,13 @@ prev: docs/hardware/color-profiles
 next: docs/desktop/astra-monitor
 ---
 
-GNOME Shell extensions are how this desktop gets the things it doesn't do out of the box: picture-in-picture windows that stay where you put them, on top, a system monitor in the panel, window behaviour fixes. This page covers installing them in general. Extensions with enough moving parts to need their own instructions get a dedicated page, linked below.
+GNOME Shell extensions are how this desktop gets the things it doesn't do out of the box: picture-in-picture windows that stay where you put them, on top, a dock, a system monitor in the panel, window behaviour fixes. This page covers installing them in general. Extensions with enough moving parts to need their own instructions get a dedicated page, linked below.
 
 ## Installing extensions
 
 extensions.gnome.org wants a browser add-on plus a native host connector before it lets you install anything from the website. If that's not set up, or you can't be bothered, skip it and use **Extension Manager** instead. It talks to GNOME Shell directly and has its own Browse tab with the same catalog.
 
-The [setup window]({{< relref "/docs/setup-script" >}}) can do the same for the extensions on this page: it installs them from extensions.gnome.org, switches them on and off, and tells you when there is no build for your GNOME version yet.
+The [setup window]({{< relref "/docs/setup-script" >}}) can do the same for the extensions on this page: it installs them from extensions.gnome.org and switches them on and off. GNOME Shell only looks for extensions when it starts, so one installed this way shows up in Extension Manager after you log out and back in. The window tells you.
 
 {{< tabs >}}
 {{< tab name="CachyOS" >}}
@@ -45,6 +45,13 @@ Extensions installed this way live in `~/.local/share/gnome-shell/extensions/`, 
 - [extensions.gnome.org](https://extensions.gnome.org/extension/8692/in-picture/)
 - [Source on Codeberg](https://codeberg.org/filiprund/in-picture)
 
+### Dash to Dock
+
+[Dash to Dock](https://extensions.gnome.org/extension/307/dash-to-dock/) by micheleg moves the dash out of the overview and turns it into a dock, on the side or the bottom of the screen, so you can launch apps and switch between windows without opening the overview. Its newest build supports GNOME 45 through 51.
+
+- [extensions.gnome.org](https://extensions.gnome.org/extension/307/dash-to-dock/)
+- [Project website](https://micheleg.github.io/dash-to-dock/)
+
 ### Astra Monitor
 
 CPU, memory, disk, network and GPU readouts in the panel, both the Radeon 890M and the RTX 4060 side by side. It has optional dependencies depending on what you want to monitor, so it gets its own page: [Astra Monitor]({{< relref "/docs/desktop/astra-monitor" >}}).
@@ -69,4 +76,4 @@ GNOME 51 ("A Coruña") brings several core desktop improvements that affect dail
 - **Wayland background blur protocol:** Support for `ext-background-effect-v1` allows blur effects without custom compositor hacks.
 - **Display auto-rotation and alignment:** Refined display layout snapping with center alignment in Settings.
 
-Most extensions documented below (including In Picture, Astra Monitor, and Just Perfection) are confirmed compatible with GNOME 51. The notable exception is the **Smile complementary extension**, which currently stops at GNOME 50 and will be rejected as out of date by GNOME Shell until its upstream author publishes a 51 build (Smile itself remains functional for copying emojis to the clipboard).
+Most extensions documented below (including In Picture, Astra Monitor, Dash to Dock, and Just Perfection) are confirmed compatible with GNOME 51. The notable exception is the **Smile complementary extension**, which currently stops at GNOME 50 and will be rejected as out of date by GNOME Shell until its upstream author publishes a 51 build (Smile itself remains functional for copying emojis to the clipboard). The setup window does not hold it back: it installs the newest build there is and leaves the rest to GNOME Shell.

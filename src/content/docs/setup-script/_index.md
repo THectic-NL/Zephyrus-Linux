@@ -15,11 +15,11 @@ It changes your system. Nothing happens until you have read the plan and pressed
 
 ```bash
 curl -LO https://zephyrus-linux.thectic.nl/scripts/quicksetup.py
-echo "06eef0882dcf2ee7ccc3bbaf659abd17a5d36eff5d8bc26bc5d56fa9180e65b6  quicksetup.py" | sha256sum -c
+echo "69ddba17a168ae1b4d852e86c7652529e7567cab502198b37877fe44927ec338  quicksetup.py" | sha256sum -c
 python3 quicksetup.py
 ```
 
-Source: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `06eef0882dcf2ee7ccc3bbaf659abd17a5d36eff5d8bc26bc5d56fa9180e65b6`.
+Source: [quicksetup.py](/scripts/quicksetup.py). SHA-256 `69ddba17a168ae1b4d852e86c7652529e7567cab502198b37877fe44927ec338`.
 
 You need Python 3.14 or newer and the GTK 4 bindings. A stock CachyOS GNOME install has them. If not: `sudo pacman -S python-gobject gtk4 libadwaita`.
 
@@ -32,7 +32,7 @@ The sections are on the left, one row per item on the right. A ticked box means 
 - The two small buttons on a row show the exact commands that ticking and unticking it run, and open the guide.
 - `AUR` marks rows that need a package from the AUR. `Advanced` rows stay out of **Select recommended**.
 - Ticking an item ticks what it needs, and the window says so. A row that does not apply here is greyed out with the reason.
-- GNOME extensions come from extensions.gnome.org, so you do not need a browser add-on. An extension without a build for your GNOME version says so, for example "No build for GNOME 51 yet".
+- GNOME extensions come from extensions.gnome.org, so you do not need a browser add-on. If an extension has no build for your GNOME version yet, the newest one is installed anyway and GNOME Shell marks it out of date until its author catches up. GNOME Shell only looks for extensions when it starts, so a freshly installed one shows up after you log out and back in, and the window says so.
 - The menu has **Select recommended**, **Check again** and the log file.
 
 Nothing changes until you press **Review and apply**. The review lists the packages, what runs as root, what needs a reboot or a new login and what is left for you to do. If something is wrong, Apply stays greyed out and the reason is at the top.

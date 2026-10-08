@@ -481,6 +481,8 @@ class System:
         self._lspci: str | None = None
         self._in_repos: dict[str, bool] = {}
         self._shell: tuple[int, str] | None = None
+        self._shell_extensions: set[str] | None = None
+        self._shell_asked = False
 
     def _model_code(self) -> str:
         """
@@ -497,6 +499,7 @@ class System:
         with self._lock:
             self._pacman = None
             self._flatpaks = None
+            self._shell_asked = False
 
     # --- running commands ---------------------------------------------------
 
@@ -626,6 +629,18 @@ class System:
                 match = re.search(r"(\d+)(?:\.[\w.]+)?", self.out(["gnome-shell", "--version"]))
                 self._shell = (int(match.group(1)), match.group(0)) if match else (0, "")
             return self._shell if self._shell[0] else None
+
+    def shell_extensions(self) -> set[str] | None:
+        """
+        The extensions the running GNOME Shell knows, or None when it does not answer. The shell looks for them once,
+        when it starts, so one that was unpacked since then is not in this list until the next login.
+        """
+        with self._lock:
+            if not self._shell_asked:
+                res = run(["gnome-extensions", "list"])
+                self._shell_extensions = set(res.out.split()) if res.ok else None
+                self._shell_asked = True
+            return self._shell_extensions
 
     def nvidia_handles_suspend(self) -> str | None:
         """
@@ -799,9 +814,6 @@ class Item:
     # Reasons to refuse right now (a login that still depends on it, a package that clashes), or None.
     on_blocker: Callable[[System], str | None] | None = None
     off_blocker: Callable[[System], str | None] | None = None
-    # A reason it cannot be turned on today even though the machine is fine, e.g. an extension that does not
-    # support this GNOME yet.
-    unavailable: Callable[[System], str | None] | None = None
     recommended: bool = False
     advanced: bool = False
     # asus, g16, nvidia, mt7925 or empty
@@ -1325,8 +1337,9 @@ def off_smile_shortcut(s: System, p: Plan) -> None:
 
 # --- GNOME Shell extensions -----------------------------------------------------------------------
 #
-# Installed from extensions.gnome.org without a browser add-on: the site publishes, per extension, which GNOME
-# Shell versions each build supports, so the window can say "not on GNOME 51 yet" before anything is downloaded.
+# Installed from extensions.gnome.org without a browser add-on: the build for your GNOME Shell when the site has one,
+# else the newest there is. Whether that build runs is for GNOME Shell and the author to settle (the shell marks a
+# build that is too old as out of date), so nothing is held back here on a guess about a GNOME version.
 
 EGO = "https://extensions.gnome.org"
 EXT_USER_DIR = Path.home() / ".local" / "share" / "gnome-shell" / "extensions"
@@ -1350,6 +1363,9 @@ EXTENSIONS = (
     ExtensionSpec("just-perfection", "Just Perfection", "just-perfection-desktop@just-perfection", 3843,
                   "Tweaks the shell. Its 'Window Demands Attention Focus' fixes apps that open in the background",
                   "applications/#gnome-window-focus-apps-opening-in-the-background", recommended=True),
+    ExtensionSpec("dash-to-dock", "Dash to Dock", "dash-to-dock@micxgx.gmail.com", 307,
+                  "A dock on the side or the bottom of the screen, to launch apps and switch between windows",
+                  "desktop/gnome-extensions#dash-to-dock"),
     ExtensionSpec("astra-monitor", "Astra Monitor", "monitor@astraext.github.io", 6682,
                   "CPU, memory, disk, network and both GPUs in the top bar", "desktop/astra-monitor"),
     ExtensionSpec("in-picture", "In Picture", "in-picture@filiprund.cz", 8692,
@@ -1394,27 +1410,22 @@ def set_extension_enabled(uuid: str, on: bool) -> None:
         run(["gnome-extensions", "enable", uuid])  # makes it live right away when the shell already knows it
 
 
-@dataclass(frozen=True)
-class EgoBuild:
-    """What extensions.gnome.org says about one extension for one GNOME Shell version."""
-    compatible: bool
-    tag: int | None
-    newest_supported: str
-
-
-def parse_ego_info(info: dict, shell_major: int) -> EgoBuild:
+def parse_ego_info(info: dict, shell_major: int) -> int:
     """
-    Read an extension-info answer. The site answers 200 even for a Shell version nobody supports, with the newest
-    build, so compatibility comes from shell_version_map and never from the status code.
+    The download tag of the build to install: the one for this GNOME Shell, or the newest the author has published
+    when there is none for it yet. The site answers 200 even for a Shell version nobody supports, so what it lists in
+    shell_version_map decides, never the status code.
     """
     versions = info.get("shell_version_map") or {}
-    newest = max((v for v in versions if v.isdigit()), key=int, default="")
-    build = versions.get(str(shell_major))
-    tag = build.get("pk") if isinstance(build, dict) else None
-    return EgoBuild(isinstance(tag, int), tag if isinstance(tag, int) else None, newest)
+    newest_first = sorted((int(v) for v in versions if v.isdigit()), reverse=True)
+    for shell in dict.fromkeys([shell_major, *newest_first]):
+        build = versions.get(str(shell))
+        if isinstance(build, dict) and isinstance(build.get("pk"), int):
+            return build["pk"]
+    raise SetupError("extensions.gnome.org lists no build of this extension")
 
 
-def fetch_ego_build(spec: ExtensionSpec, shell_major: int) -> EgoBuild:
+def fetch_ego_tag(spec: ExtensionSpec, shell_major: int) -> int:
     raw = curl_bytes(f"{EGO}/extension-info/?pk={spec.pk}&shell_version={shell_major}", limit=2_000_000)
     try:
         info = json.loads(raw)
@@ -1455,16 +1466,12 @@ def install_extension(spec: ExtensionSpec) -> None:
     shell = s.shell_version()
     if shell is None:
         raise SetupError("GNOME Shell is not running here, so the extension cannot be installed")
-    build = fetch_ego_build(spec, shell[0])
-    if not build.compatible or build.tag is None:
-        raise SetupError(f"{spec.name} does not support GNOME {shell[0]} yet "
-                         f"(newest supported: {build.newest_supported})")
-    data = curl_bytes(f"{EGO}/download-extension/{spec.uuid}.shell-extension.zip?version_tag={build.tag}",
-                      limit=20_000_000)
+    tag = fetch_ego_tag(spec, shell[0])
+    data = curl_bytes(f"{EGO}/download-extension/{spec.uuid}.shell-extension.zip?version_tag={tag}", limit=20_000_000)
     check_extension_zip(data, spec.uuid)
     folder = CACHE_DIR / "extensions"
     folder.mkdir(parents=True, exist_ok=True, mode=0o700)
-    target = folder / f"{spec.key}-{build.tag}.zip"
+    target = folder / f"{spec.key}-{tag}.zip"
     target.write_bytes(data)
     res = run(["gnome-extensions", "install", "--force", str(target)], timeout=60)
     if not res.ok:
@@ -1489,6 +1496,7 @@ def install_lines(spec: ExtensionSpec) -> list[str]:
     archive = f"{CACHE_DIR / 'extensions' / spec.key}-<build>.zip"
     return [
         "# quicksetup.py does this itself (install_extension), and it amounts to:",
+        "# the build for your GNOME Shell, else the newest one the author has published:",
         f"curl -fsSL '{EGO}/extension-info/?pk={spec.pk}&shell_version=<your GNOME Shell version>'   # which build",
         f"curl -fsSL -o {archive} '{EGO}/download-extension/{spec.uuid}.shell-extension.zip?version_tag=<build>'",
         "# ^ refused unless it is a sane zip: no path out of its folder, no symlink, under 60 MB, this UUID's metadata",
@@ -1508,46 +1516,18 @@ def remove_lines(spec: ExtensionSpec) -> list[str]:
     ]
 
 
-class ExtensionCatalog:
-    """What extensions.gnome.org says per extension for the running GNOME Shell. Fetched in the background once."""
-
-    def __init__(self) -> None:
-        self._builds: dict[str, EgoBuild | str] = {}
-        self._lock = threading.Lock()
-
-    def refresh(self, s: System) -> None:
-        shell = s.shell_version()
-        if shell is None:
-            return
-        for spec in EXTENSIONS:
-            try:
-                result: EgoBuild | str = fetch_ego_build(spec, shell[0])
-            except SetupError as exc:
-                result = str(exc)
-            with self._lock:
-                self._builds[spec.key] = result
-
-    def reason_unavailable(self, s: System, spec: ExtensionSpec) -> str | None:
-        shell = s.shell_version()
-        with self._lock:
-            build = self._builds.get(spec.key)
-        if shell is None or not isinstance(build, EgoBuild) or build.compatible:
-            return None
-        newest = f" (the newest build supports up to {build.newest_supported})" if build.newest_supported else ""
-        return f"No build for GNOME {shell[0]} yet{newest}"
-
-    def known(self, spec: ExtensionSpec) -> bool:
-        with self._lock:
-            return spec.key in self._builds
-
-
-def extension_item(spec: ExtensionSpec, catalog: ExtensionCatalog) -> Item:
+def extension_item(spec: ExtensionSpec) -> Item:
     def check(s: System) -> Check:
         if not s.has_cmd("gnome-extensions"):
             return Check(State.UNKNOWN, "gnome-extensions is not available")
         where = extension_location(spec.uuid)
         enabled = spec.uuid in enabled_extensions(s)
         if where and enabled:
+            known = s.shell_extensions()
+            if known is not None and spec.uuid not in known:
+                # GNOME Shell looks for extensions once, when it starts: one unpacked since then is not known to it.
+                return Check(State.PARTIAL, "installed and switched on, but gnome-shell has not loaded it yet: "
+                             "log out and back in", by_hand=True)
             return Check(State.DONE, "installed and switched on" + (" (from a package)" if where == "system" else ""))
         if where:
             return Check(State.PARTIAL, "installed, but switched off")
@@ -1558,7 +1538,8 @@ def extension_item(spec: ExtensionSpec, catalog: ExtensionCatalog) -> Item:
     def on(s: System, p: Plan) -> None:
         p.steps.append(Step(f"Install {spec.name} from extensions.gnome.org and switch it on",
                             call=lambda: install_extension(spec), network=True, shown=install_lines(spec)))
-        p.relogin_for.append(f"{spec.name} (only if it does not show up by itself)")
+        if spec.uuid not in (s.shell_extensions() or ()):
+            p.relogin_for.append(spec.name)     # the running shell does not know it, and only looks when it starts
 
     def off(s: System, p: Plan) -> None:
         p.steps.append(Step(f"Switch {spec.name} off and remove it", call=lambda: remove_extension(spec),
@@ -1566,8 +1547,7 @@ def extension_item(spec: ExtensionSpec, catalog: ExtensionCatalog) -> Item:
         p.note("Settings of a removed extension stay in your home folder, so installing it again brings them back.")
 
     return Item(f"ext-{spec.key}", "desktop", spec.name, spec.summary, spec.doc, check, on, off, group="Extensions",
-                recommended=spec.recommended, needs_gnome=True, requires=spec.requires,
-                unavailable=lambda s: catalog.reason_unavailable(s, spec))
+                recommended=spec.recommended, needs_gnome=True, requires=spec.requires)
 
 
 # --- touchpad scroll speed --------------------------------------------------------------------------
@@ -3192,7 +3172,7 @@ SECTIONS = [
 ]
 
 
-def build_items(catalog: ExtensionCatalog) -> list[Item]:
+def build_items() -> list[Item]:
     items: list[Item] = []
     add = items.append
     asus_doc = "hardware/asusctl-rog-control"
@@ -3297,7 +3277,7 @@ def build_items(catalog: ExtensionCatalog) -> list[Item]:
                      "Install and manage GNOME Shell extensions without a browser add-on", "desktop/gnome-extensions",
                      group="Extensions", pacman=("extension-manager",), recommended=True, needs_gnome=True))
     for spec in EXTENSIONS:
-        add(extension_item(spec, catalog))
+        add(extension_item(spec))
     add(package_item("astra-monitor-deps", "desktop", "Astra Monitor extras",
                      "libgtop, amdgpu_top and nethogs for more accurate readouts", "desktop/astra-monitor",
                      group="Extensions", pacman=("libgtop", "amdgpu_top", "nethogs"), needs_gnome=True,
@@ -3719,8 +3699,7 @@ class Backend:
 
     def __init__(self, system: System | None = None) -> None:
         self.s = system or System()
-        self.catalog = ExtensionCatalog()
-        self.items = build_items(self.catalog)
+        self.items = build_items()
         self.by_id = {item.id: item for item in self.items}
         self._checks: dict[str, Check] = {}
         self.lock = threading.RLock()
@@ -3759,9 +3738,6 @@ class Backend:
         for item in self.items:
             self.check(item)
 
-    def refresh_extensions(self) -> None:
-        self.catalog.refresh(self.s)
-
     def items_in(self, section: str) -> list[Item]:
         return [i for i in self.items if i.section == section]
 
@@ -3782,8 +3758,6 @@ class Backend:
             return check.detail
         if check.state is State.UNKNOWN and not item.toggleable:
             return check.detail
-        if item.unavailable is not None and check.state is not State.DONE:
-            return item.unavailable(self.s)
         return None
 
     def baseline(self, item: Item) -> bool | None:
@@ -3955,7 +3929,7 @@ class Backend:
         lines = [item.title, "", item.summary, "", f"Status: {check.state.value}"
                  + (f" ({check.detail})" if check.detail else ""), f"Guide:  {item.url}",
                  f"Exact commands, with the way back: {reference_url(item.section, item.id)}"]
-        reason = item.not_applicable(self.s) or (item.unavailable(self.s) if item.unavailable else None)
+        reason = item.not_applicable(self.s)
         if reason:
             lines += ["", f"Not available: {reason}"]
         if item.aur:
@@ -4788,12 +4762,6 @@ class SetupWindow(_Window):
         self.sidebar.select_row(self.sidebar.get_row_at_index(0))
         if self.color is not None:
             self.color.load()
-        background(self.backend.refresh_extensions, self._extensions_known)
-
-    def _extensions_known(self, _result: object, _error: Exception | None) -> None:
-        for spec in EXTENSIONS:
-            if (row := self.rows.get(f"ext-{spec.key}")) is not None:
-                row.refresh(keep=True)
 
     def _add_section(self, key: str, title: str, icon: str, about: str) -> None:
         page = Adw.PreferencesPage()
@@ -4902,7 +4870,6 @@ class SetupWindow(_Window):
             self.stack.set_visible_child_name(selected.key if selected else SECTIONS[0][0])
             if self.color is not None:
                 self.color.load()
-            background(self.backend.refresh_extensions, self._extensions_known)
 
         background(self.backend.check_all, done)
 
