@@ -1581,7 +1581,7 @@ def on_wsf(s: System, p: Plan) -> None:
                         when=lambda: shutil.which("wsf") is not None and not wsf_config_exists()))
     p.steps.append(Step("Enable wayland-scroll-factor", ["wsf", "enable"],
                         when=lambda: shutil.which("wsf") is not None and not wsf_enabled()))
-    p.relogin_for.append("wayland-scroll-factor")
+    p.relogin_for.append("Touchpad scroll speed")
 
 
 def off_wsf(s: System, p: Plan) -> None:
@@ -3991,12 +3991,15 @@ def judge(check: Check, wanted: bool) -> str:
             State.PARTIAL: "partial"}.get(check.state, "failed")
 
 
-def verdict(report: RunReport) -> str:
-    """The line above the overview: what the run came to. 'Problems' is for what went wrong, not for what is yours."""
+def verdict(report: RunReport, to_do: int = 0) -> str:
+    """
+    The line above the overview: what the run came to. 'Problems' is for what went wrong, not for what is yours.
+    to_do is the number of rows under 'Still to do', where a reboot, a login or a step by hand count as well.
+    """
     if report.problems:
         return "Done, with problems"
-    if report.waiting:
-        return f"Done, {plural(len(report.waiting), 'thing is', 'things are')} left for you"
+    if report.waiting or to_do:
+        return "Done, with things left for you"
     return "Done"
 
 
@@ -4627,33 +4630,37 @@ class ProgressDialog:
             return
         if report is None:
             return
-        self.phase_label.set_label(verdict(report))
-        # What needs you comes first: with 28 items ticked, a problem must not be row 14.
-        groups: list["Adw.PreferencesGroup"] = []
-        if report.failures:
-            groups.append(rows_group("What went wrong", [info_row(f, icon="dialog-error-symbolic")
-                                                         for f in report.failures]))
-        follow = [info_row(o.item.title, o.check.detail, "document-edit-symbolic") for o in report.waiting]
-        if built.plan.reboot_for:
-            follow.append(info_row("Reboot to finish", ", ".join(built.plan.reboot_for), "system-reboot-symbolic"))
-        if built.plan.relogin_for:
-            follow.append(info_row("Log out and back in to finish", ", ".join(built.plan.relogin_for),
-                                   "system-log-out-symbolic"))
-        for title, steps in built.manual:
-            follow.append(info_row(f"By hand: {title}", "\n".join(f"{n}. {s}" for n, s in enumerate(steps, 1)),
-                                   "document-edit-symbolic"))
-        if follow:
-            groups.append(rows_group("Still to do", follow))
-        rows = []
-        for outcome in report.outcomes:
+
+        def result_row(outcome: Outcome) -> "Adw.ActionRow":
             icon = {"ok": "emblem-ok-symbolic", "waiting": "document-edit-symbolic",
                     "partial": "dialog-warning-symbolic"}.get(outcome.state, "dialog-error-symbolic")
             verb = "On" if outcome.wanted else "Off"
             status = "left for you" if outcome.state == "waiting" else outcome.check.state.value
-            rows.append(info_row(outcome.item.title, f"{verb}: {status}"
-                                 + (f" ({outcome.check.detail})" if outcome.check.detail else ""), icon))
-        if rows:
-            groups.append(rows_group("Result", rows))
+            return info_row(outcome.item.title, f"{verb}: {status}"
+                            + (f" ({outcome.check.detail})" if outcome.check.detail else ""), icon)
+
+        # What needs you comes first: with 28 items ticked, a problem must not be row 14.
+        wrong = [info_row(f, icon="dialog-error-symbolic") for f in report.failures]
+        wrong += [result_row(o) for o in report.outcomes if o.state in ("partial", "failed")]
+        follow = [info_row(o.item.title, o.check.detail, "document-edit-symbolic") for o in report.waiting]
+        if built.plan.reboot_for:
+            follow.append(info_row("Reboot to finish", ", ".join(built.plan.reboot_for), "system-reboot-symbolic"))
+        # An item that waits for a login says so itself above, so it is not named again here.
+        waiting_titles = {o.item.title for o in report.waiting}
+        relogin = [name for name in built.plan.relogin_for if name not in waiting_titles]
+        if relogin:
+            follow.append(info_row("Log out and back in to finish", ", ".join(relogin), "system-log-out-symbolic"))
+        for title, steps in built.manual:
+            follow.append(info_row(f"By hand: {title}", "\n".join(f"{n}. {s}" for n, s in enumerate(steps, 1)),
+                                   "document-edit-symbolic"))
+        self.phase_label.set_label(verdict(report, len(follow)))
+        groups: list["Adw.PreferencesGroup"] = []
+        if wrong:
+            groups.append(rows_group("What went wrong", wrong))
+        if follow:
+            groups.append(rows_group("Still to do", follow))
+        if report.outcomes:
+            groups.append(rows_group("Result", [result_row(o) for o in report.outcomes]))
         if built.plan.notes:    # the review showed these before the run, and nothing else would repeat them
             groups.append(rows_group("Notes", [info_row(n, icon="dialog-information-symbolic")
                                                for n in built.plan.notes]))
