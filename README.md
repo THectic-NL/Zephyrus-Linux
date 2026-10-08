@@ -14,7 +14,7 @@ curl -LO https://zephyrus-linux.thectic.nl/scripts/quicksetup.py
 python3 quicksetup.py
 ```
 
-It opens a window: tick what you want, read the plan, apply it. It shows what is already done on your machine and links every item to its guide. It also switches the built-in screen between Native (vivid) and sRGB, like G-Helper does on Windows. Nothing changes until you have seen the plan and pressed Apply. Check the SHA-256 on [the script's page](https://zephyrus-linux.thectic.nl/docs/setup-script/) before you run it. Changes are made on CachyOS and other Arch-based systems with GNOME. Elsewhere the window is read-only.
+It opens a window: tick what you want, read the plan, apply it. It shows what is already done on your machine and links every item to its guide. It also switches the built-in screen between Native (vivid) and sRGB, like G-Helper does on Windows. Nothing changes until you have seen the plan and pressed Apply, and every item lists the exact commands it runs and the way back, in the window and in [the reference](https://zephyrus-linux.thectic.nl/docs/setup-script/reference/). Check the SHA-256 on [the script's page](https://zephyrus-linux.thectic.nl/docs/setup-script/) before you run it. Changes are made on CachyOS and other Arch-based systems with GNOME. Elsewhere the window is read-only.
 
 
 ## What is in here
@@ -103,6 +103,7 @@ for f in *.png; do avifenc -q 80 -s 6 "$f" "${f%.png}.avif" && rm "$f"; done
 This project wouldn't exist without the work of these people and communities:
 
 - **[ASUS Linux community](https://asus-linux.org/)**: The project behind `asusctl` and `rog-control-center`, now maintained under the [Open Gaming Collective](https://github.com/OpenGamingCollective/asusctl). Luke Jones has been a major driving force, and numerous contributors have submitted kernel patches, many of which are now merged into mainline Linux, making modern ASUS ROG laptops genuinely usable on Linux.
+- **[WinUtil](https://github.com/ChrisTitusTech/winutil)**: The Windows tool that lists, for every tweak, the exact script that applies it and the one that undoes it, generated from the same file the tool runs. The model for the setup reference.
 - **[G-Helper](https://github.com/seerge/g-helper)**: The Windows tool whose way of handling ASUS color profiles (a per-model zip from ASUS's CDN, offered as Native, sRGB, DCI-P3 and Display P3) is the model for the color switch in the setup window, which keeps the two modes that mean something on Linux.
 - **[CachyOS](https://cachyos.org/)**: An Arch-based distribution with extensive hardware-specific tuning: an improved scheduler (BORE/EEVDF), better power management, dynamic refresh rate support, and built-in drivers for both the AMD iGPU and NVIDIA dGPU, including integrated GPU switching. One of the two distributions these guides cover.
 - **[Bazzite / Universal Blue](https://universal-blue.org/)**: The people who make the atomic Fedora images this laptop runs well on, and who have contributed many of the patches that make it perform better. The other distribution these guides cover.

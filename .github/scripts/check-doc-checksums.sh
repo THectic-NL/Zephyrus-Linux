@@ -144,6 +144,9 @@ echo
 # A page is only checked when it names one of the scripts, so an unrelated
 # 64-character hex string elsewhere in the documentation is left alone. Within
 # such a page every hash has to match one of the scripts that page mentions.
+#
+# The pages under setup-script/reference/ are left out: they are generated from
+# quicksetup.py at build time, hashes included.
 
 checked=0
 
@@ -183,7 +186,7 @@ while IFS= read -r -d '' page; do
                 echo "::error file=$page,line=$line::Published SHA-256 matches none of the scripts this page references"
         fi
     done < <(grep -Eno '\b[a-f0-9]{64}\b' "$page" || true)
-done < <(find "$CONTENT_DIR" -type f -name '*.md' -print0)
+done < <(find "$CONTENT_DIR" -type f -name '*.md' -not -path '*/setup-script/reference/*' -print0)
 
 echo
 if [[ $stale -eq 0 ]]; then

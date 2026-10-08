@@ -93,6 +93,18 @@ Commit the content change along with the script. A pull request that leaves them
 
 ---
 
+## The setup reference
+
+`src/content/docs/setup-script/reference/` lists, for every item of the setup script, the exact commands that ticking it runs and that unticking it runs to put things back, with a diff for every existing file they change and a link to the code behind them. Its pages are not in the repository (except the `_index` pages): `.github/scripts/generate-setup-reference.py` writes them from `quicksetup.py` each time the site is built, so they cannot say anything the window does not do. To read them from a checkout, run the generator before `hugo server`.
+
+When you add or change an item:
+
+- Give it an `off` as well. The generator, and with it the site build, fails on an item without a way back, or one whose `on` or `off` runs nothing.
+- A `Step` that is a Python function has to say what it amounts to as commands (`shown=`), and the script refuses to build one that does not. Prefer a plain command: `shell_step()` runs the script you show, word for word.
+- If a builder reads the machine in a new way, teach the stand-in machine in the generator (`machine()` and `STOCK`). It fails loudly instead of guessing.
+
+---
+
 ## Language
 
 This site is bilingual (EN + NL). When updating content:

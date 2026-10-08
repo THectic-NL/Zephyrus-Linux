@@ -4,3 +4,7 @@
 src/.hugo_build.lock
 /.claude
 __pycache__/
+
+# The setup reference is generated from quicksetup.py by the site build; see .github/scripts/generate-setup-reference.py
+/src/content/docs/setup-script/reference/*.md
+!/src/content/docs/setup-script/reference/_index*.md
