@@ -6,6 +6,7 @@
   "timezone": "Europe/Amsterdam",
   "forkProcessing": "enabled",
   "pinDigests": true,
+  "platformAutomerge": true,
   "gitIgnoredAuthors": [
     "github-actions[bot]@users.noreply.github.com",
     "41898282+github-actions[bot]@users.noreply.github.com"
@@ -81,11 +82,9 @@
   "automergeType": "pr",
   "semanticCommits": "enabled",
   "assignees": [
-    "Stensel8",
-    "AdiH1310"
+    "Stensel8"
   ],
   "reviewers": [
-    "Stensel8",
-    "AdiH1310"
+    "Stensel8"
   ]
 }
