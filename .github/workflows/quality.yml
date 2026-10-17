@@ -193,7 +193,7 @@ jobs:
         if: ${{ !cancelled() }}
         env:
           # renovate: datasource=pypi depName=zizmor
-          ZIZMOR_VERSION: "1.31.0"
+          ZIZMOR_VERSION: "1.31.1"
         run: pipx install "zizmor==${ZIZMOR_VERSION}"
 
       - name: Run zizmor
