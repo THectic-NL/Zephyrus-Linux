@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 # Copyright (C) 2026 Sten Tijhuis
 # SPDX-License-Identifier: MIT
-"""Watch what Saxion publishes about its eduroam network.
+"""Watch Saxion's eduroam setup and the certificate chain under it.
 
 saxion-eduroam.py hard-codes Saxion's eduroam setup: PEAP with MSCHAPv2
-inside, the RADIUS server name, the realm. Saxion can change any of that
-without telling anyone, and until now the first sign was a reader whose
-connection stopped working. Issue #109 went exactly like that.
+inside, the RADIUS server name, the realm, and the four HARICA roots it
+trusts. Saxion can change any of that without telling anyone, and until now
+the first sign was a reader whose connection stopped working. Issue #109 went
+exactly like that.
 
-Two public sources say what Saxion publishes today:
+Public sources say what Saxion publishes today:
 
   1. discovery.eduroam.app, the feed the geteduroam apps read. It lists every
      profile an institution offers. A profile with "oauth": true is
@@ -19,39 +20,56 @@ Two public sources say what Saxion publishes today:
   2. cat.eduroam.org, Saxion's CAT profile: the EAP methods, server names and
      CA certificates the official installers are built from, plus the date
      the profile was last edited.
+  3. Certificate Transparency, through Cert Spotter: every publicly trusted
+     certificate is logged when it is issued, the RADIUS server's included.
+     This checks who issued the unexpired ones, and whether that issuer sits
+     under a root the script pins. A certificate from another CA shows up
+     here when it is issued, which is usually before Saxion deploys it. In
+     #109 this would have been the warning.
+  4. CCADB, the database behind Mozilla's root store: whether the pinned
+     roots are still trusted or have a distrust date set, and the GEANT
+     intermediates and cross-certificates under them. That is where a HARICA
+     problem, or a new intermediate for Saxion's next certificate, shows up.
 
-Both are compared with saxion-eduroam-baseline.json, which is itself checked
-against the constants in saxion-eduroam.py. A change on Saxion's side fails
+All of it is compared with saxion-eduroam-baseline.json, which is itself
+checked against the constants in saxion-eduroam.py. A change upstream fails
 this check. So does a script edit that leaves the baseline describing
 something the script no longer does.
+
+A renewed server certificate from the same intermediate is not a change: the
+script pins roots, not the certificate, and renewals come every few months.
 
 The CA certificates in the CAT profile are not the ones the script trusts.
 The profile still pins the pre-migration USERTrust chain (#109). They are
 watched anyway: the day Saxion corrects them, the guide's explanation of why
 the official installers fail is out of date.
 
-What this cannot see is the certificate the RADIUS server itself presents.
-That only shows up in an EAP handshake on campus, not from a CI runner.
+What this cannot see is which certificate the RADIUS server actually
+presents. That only shows up in an EAP handshake on campus, not from a CI
+runner. The logs say what exists, not what is deployed.
 
 Usage:
-  check-eduroam-profile.py                  # compare, exit 1 on a difference
-  check-eduroam-profile.py --apply          # rewrite the baseline from live data
-  check-eduroam-profile.py --report FILE    # also write the findings as Markdown
+  check-saxion-eduroam.py                   # compare, exit 1 on a difference
+  check-saxion-eduroam.py --apply           # rewrite the baseline from live data
+  check-saxion-eduroam.py --report FILE     # also write the findings as Markdown
 
 Exit status: 0 nothing changed, 1 something changed or the baseline and the
 script disagree, 2 a source could not be fetched or read. The workflow opens
-an issue only on 1, so an outage at CAT does not open one.
+an issue only on 1, so an outage at a source does not open one.
 """
 from __future__ import annotations
 
 import argparse
 import ast
 import base64
+import csv
 import gzip
 import hashlib
 import io
 import json
+import os
 import pathlib
+import re
 import shutil
 import ssl
 import subprocess
@@ -70,11 +88,18 @@ SCRIPT = ROOT / "src" / "static" / "scripts" / "saxion-eduroam.py"
 
 DISCOVERY_URL = "https://discovery.eduroam.app/v1/discovery.json"
 CAT_API = "https://cat.eduroam.org/user/API.php"
+CERTSPOTTER_URL = "https://api.certspotter.com/v1/issuances"
+CCADB_REPORTS = "https://ccadb.my.salesforce-sites.com/mozilla/"
+CCADB_ROOTS = CCADB_REPORTS + "IncludedCACertificateReportPEMCSV"
+CCADB_INTERMEDIATES = CCADB_REPORTS + "PublicAllIntermediateCertsWithPEMCSV"
+CCADB_REVOKED = CCADB_REPORTS + "PublicIntermediateCertsRevokedWithPEMCSV"
 USER_AGENT = "Zephyrus-Linux eduroam watch (+https://github.com/THectic-NL/Zephyrus-Linux)"
 
-# The discovery feed is about 2 MB unpacked. Anything far beyond that is not
-# the file we think it is.
+# The discovery feed is about 2 MB unpacked, CCADB's reports 6 to 8 MB.
+# Anything far beyond that is not the file we think it is.
 MAX_BYTES = 32 * 1024 * 1024
+# CCADB's reports carry every certificate as PEM in one column.
+csv.field_size_limit(MAX_BYTES)
 
 # Saxion's identity provider in CAT. The baseline holds everything else.
 CAT_IDP = 2446
@@ -95,12 +120,12 @@ class FetchError(Exception):
 
 # ── Reading the sources ──────────────────────────────────────────────────────
 
-def fetch(url: str) -> bytes:
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+def fetch(url: str, timeout: int = 30, headers: dict[str, str] | None = None) -> bytes:
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **(headers or {})})
     for attempt in range(3):
         try:
             # Fixed https:// URLs only, never one read from a response.
-            with urllib.request.urlopen(request, timeout=30) as response:  # nosec B310
+            with urllib.request.urlopen(request, timeout=timeout) as response:  # nosec B310
                 body = response.read(MAX_BYTES + 1)
             break
         except OSError as error:  # URLError, HTTPError, timeouts, resets
@@ -120,14 +145,25 @@ def fetch(url: str) -> bytes:
     return body
 
 
-def fetch_json(url: str) -> dict:
+def fetch_json(url: str, kind: type = dict, headers: dict[str, str] | None = None):
     try:
-        data = json.loads(fetch(url))
+        data = json.loads(fetch(url, headers=headers))
     except ValueError as error:
         raise FetchError(f"{url}: not JSON ({error})") from error
-    if not isinstance(data, dict):
-        raise FetchError(f"{url}: expected a JSON object")
+    if not isinstance(data, kind):
+        raise FetchError(f"{url}: expected a JSON {kind.__name__}")
     return data
+
+
+def fetch_csv(url: str, columns: tuple[str, ...]) -> list[dict]:
+    """A CCADB report. These are generated on request, hence the long timeout."""
+    try:
+        rows = list(csv.DictReader(io.StringIO(fetch(url, timeout=180).decode("utf-8-sig"))))
+    except (UnicodeDecodeError, csv.Error) as error:
+        raise FetchError(f"{url}: not a CSV report ({error})") from error
+    if not rows or any(column not in rows[0] for column in columns):
+        raise FetchError(f"{url}: empty, or the report no longer has the columns {', '.join(columns)}")
+    return rows
 
 
 def cat_url(**params: str | int) -> str:
@@ -224,14 +260,163 @@ def text(element: ET.Element) -> str:
     return (element.text or "").strip()
 
 
-def read_live(baseline: dict, ders: dict[str, bytes]) -> dict:
+# ── Reading the certificate chain ────────────────────────────────────────────
+
+INTERMEDIATE_COLUMNS = ("Parent Name", "Certificate Name", "Certificate Subject Common Name",
+                        "Certificate Subject Organization", "SHA-256 Fingerprint", "Valid To [GMT]")
+
+
+def read_root_store(pinned: dict[str, bytes], previous: list[dict]) -> list[dict]:
+    """Mozilla's view of each pinned root: trusted for what, distrusted from when."""
+    rows = {r["SHA-256 Fingerprint"].lower(): r
+            for r in fetch_csv(CCADB_ROOTS, ("SHA-256 Fingerprint", "Common Name or Certificate Name",
+                                             "Trust Bits", "Distrust for TLS After Date"))}
+    # A root that leaves the store leaves the report, and its name with it.
+    known = {r["sha256"]: r["name"] for r in previous}
+    roots = []
+    for digest in sorted(pinned):
+        row = rows.get(digest)
+        roots.append({
+            "sha256": digest,
+            "name": row["Common Name or Certificate Name"] if row else known.get(digest),
+            "mozilla": None if row is None else {
+                "trust_bits": row["Trust Bits"],
+                "distrust_tls_after": row["Distrust for TLS After Date"] or None,
+            },
+        })
+    return roots
+
+
+def read_server_certificates(domain: str, rows: list[dict], pinned_names: set[str]) -> tuple[dict, list[dict]]:
+    """Who issued the unexpired certificates for the RADIUS server, per the CT logs.
+
+    Also returns the CCADB rows of those issuers, so they get watched too.
+    """
+    # Cert Spotter answers a few queries an hour without a key, counted per IP,
+    # and GitHub's runners share theirs. A key, if the repository has one,
+    # takes that out of the equation.
+    token = os.environ.get("CERTSPOTTER_TOKEN")
+    headers = {"Authorization": f"Bearer {token}"} if token else None
+    issuances: list[dict] = []
+    after = None
+    for _ in range(20):
+        params = [("domain", domain), ("expand", "issuer"), ("expand", "revocation")]
+        params += [("after", after)] if after else []
+        page = fetch_json(f"{CERTSPOTTER_URL}?{urllib.parse.urlencode(params)}", list, headers)
+        if not page:
+            break
+        issuances += page
+        after = page[-1].get("id")
+    else:
+        raise FetchError(f"{CERTSPOTTER_URL}: more than 20 pages of certificates for {domain}")
+
+    by_subject: dict[str, list[dict]] = {}
+    by_name: dict[str, list[dict]] = {}
+    for row in rows:
+        by_subject.setdefault(row["Certificate Subject Common Name"], []).append(row)
+        by_name.setdefault(row["Certificate Name"], []).append(row)
+
+    issuers: dict[tuple, dict] = {}
+    revoked, matched = set(), []
+    for issuance in issuances:
+        issuer = issuance.get("issuer") or {}
+        name, key = str(issuer.get("name")), str(issuer.get("pubkey_sha256"))
+        if (name, key) not in issuers:
+            candidates = by_subject.get(dn_field(name, "CN") or "", [])
+            # Narrow by organisation where that leaves anything; names repeat across CAs.
+            candidates = [r for r in candidates
+                          if r["Certificate Subject Organization"] == dn_field(name, "O")] or candidates
+            matched += candidates
+            issuers[(name, key)] = {"name": name, "pubkey_sha256": key, "in_ccadb": bool(candidates),
+                                    "under_pinned_roots": roots_above(name, candidates, by_name, pinned_names)}
+        if issuance.get("revoked"):
+            revoked.add(str(issuance.get("cert_sha256")))
+    certificates = {"name": domain,
+                    "issuers": sorted(issuers.values(), key=lambda i: (i["name"], i["pubkey_sha256"])),
+                    "revoked": sorted(revoked)}
+    return certificates, matched
+
+
+def dn_field(dn: str, field: str) -> str | None:
+    """One attribute of a name like "C=GR, O=Hellenic ... CA, CN=GEANT TLS RSA 1"."""
+    for part in re.split(r",\s*(?=[A-Za-z0-9.]+=)", dn):
+        key, _, value = part.partition("=")
+        if key.strip().upper() == field:
+            return value.strip()
+    return None
+
+
+def roots_above(issuer: str, candidates: list[dict], by_name: dict[str, list[dict]],
+                pinned_names: set[str]) -> list[str]:
+    """The pinned roots an issuer chains up to, walking CCADB's parent names."""
+    reached = {dn_field(issuer, "CN")} & pinned_names
+    seen: set[str] = set()
+    frontier = list(candidates)
+    while frontier:
+        parent = frontier.pop()["Parent Name"]
+        if parent in pinned_names:
+            reached.add(parent)
+        elif parent not in seen:
+            seen.add(parent)
+            frontier += by_name.get(parent, [])
+    return sorted(reached)
+
+
+def read_intermediates(rows: list[dict], pinned_names: set[str], matched: list[dict],
+                       previous: list[dict]) -> list[dict]:
+    """The intermediates Saxion's certificate comes, or could come, from.
+
+    That is the GEANT intermediates and the cross-certificates directly under
+    the pinned roots, plus whatever issued the server's current certificates.
+    HARICA's other sub-CAs (EV, QWAC, S/MIME, ...) are left out: a new one of
+    those says nothing about Saxion. Once watched, an intermediate stays
+    watched for as long as CCADB lists it.
+    """
+    def entry(row: dict) -> dict:
+        return {"name": row["Certificate Name"], "parent": row["Parent Name"],
+                "sha256": row["SHA-256 Fingerprint"].lower(), "valid_to": row["Valid To [GMT]"], "revoked": None}
+
+    listed = {row["SHA-256 Fingerprint"].lower(): row for row in rows}
+    tracked = {}
+    for digest, row in listed.items():
+        name = row["Certificate Name"]
+        if row["Parent Name"] in pinned_names and ("GEANT" in name.upper() or name in pinned_names):
+            tracked[digest] = entry(row)
+    for row in matched:
+        tracked.setdefault(row["SHA-256 Fingerprint"].lower(), entry(row))
+    for old in previous:
+        if old["sha256"] in listed:
+            tracked.setdefault(old["sha256"], entry(listed[old["sha256"]]))
+
+    gone = [old for old in previous if old["sha256"] not in listed]
+    if gone:
+        # CCADB moves a revoked certificate out of the report above, into one of its own.
+        revoked = {r["SHA-256 Fingerprint"].lower(): r
+                   for r in fetch_csv(CCADB_REVOKED, ("SHA-256 Fingerprint", "Revocation Status",
+                                                      "Date of Revocation"))}
+        for old in gone:
+            row = revoked.get(old["sha256"])
+            if row is not None:
+                reason = row.get("RFC 5280 Revocation Reason Code") or row["Revocation Status"]
+                tracked[old["sha256"]] = {**old, "revoked": f"{row['Date of Revocation']}, {reason}"}
+    return sorted(tracked.values(), key=lambda e: (e["parent"], e["name"], e["sha256"]))
+
+
+def read_live(baseline: dict, script: dict, ders: dict[str, bytes]) -> dict:
     discovery = read_discovery()
     profile = baseline["cat"]["profile"]
     listed = {p["id"] for i in discovery for p in i["profiles"]}
     # A profile that is gone from the feed is gone from CAT too, and CAT
     # answers for it with a bare 500. Report the first, do not fail on the second.
     cat = read_cat(profile, ders) if f"cat_{profile}" in listed else None
-    return {"discovery": discovery, "cat": cat}
+
+    roots = read_root_store(script["pinned"], baseline.get("root_store", []))
+    pinned_names = {r["name"] for r in roots if r["name"]}
+    rows = fetch_csv(CCADB_INTERMEDIATES, INTERMEDIATE_COLUMNS)
+    certificates, matched = read_server_certificates(script["SERVER_DOMAIN"], rows, pinned_names)
+    intermediates = read_intermediates(rows, pinned_names, matched, baseline.get("intermediates", []))
+    return {"discovery": discovery, "cat": cat, "server_certificates": certificates,
+            "root_store": roots, "intermediates": intermediates}
 
 
 def read_script() -> dict:
@@ -320,17 +505,27 @@ def certificate_name(der: bytes) -> str | None:
     return "; ".join(line.strip() for line in result.stdout.decode(errors="replace").splitlines())
 
 
-def compare(old: dict, new: dict, script: dict, ders: dict[str, bytes]) -> list[str]:
+def compare(old: dict, new: dict, script: dict, ders: dict[str, bytes]) -> dict[str, list[str]]:
+    """What changed, per source. Only sections with findings are returned."""
     ders = {**script["pinned"], **ders}
-    findings = []
-    findings += compare_discovery(old["discovery"], new["discovery"])
+    eduroam = compare_discovery(old["discovery"], new["discovery"])
     if new["cat"] is None:
-        findings.append(
+        eduroam.append(
             f"**CAT profile {old['cat']['profile']} is no longer listed.** The script's parameters came "
             "from it. Find out where Saxion's eduroam configuration lives now.")
     else:
-        findings += compare_cat(old["cat"], new["cat"], script, ders)
-    return findings
+        eduroam += compare_cat(old["cat"], new["cat"], script, ders)
+    pinned_names = {r["name"] for r in new["root_store"] if r["name"]}
+    sections = {
+        "geteduroam and CAT": eduroam,
+        "The server's certificate (Certificate Transparency)":
+            compare_certificates(old.get("server_certificates"), new["server_certificates"]),
+        "HARICA and Mozilla's root store (CCADB)":
+            compare_roots(old.get("root_store", []), new["root_store"])
+            + compare_intermediates(old.get("intermediates", []), new["intermediates"],
+                                    new["server_certificates"], pinned_names),
+    }
+    return {title: findings for title, findings in sections.items() if findings}
 
 
 def compare_discovery(old: list[dict], new: list[dict]) -> list[str]:
@@ -421,8 +616,122 @@ def compare_cat(old: dict, new: dict, script: dict, ders: dict[str, bytes]) -> l
     return findings
 
 
+def compare_certificates(old: dict | None, new: dict) -> list[str]:
+    old = old or {"issuers": [], "revoked": []}
+    findings = []
+    domain = code(new["name"])
+    if not new["issuers"] and old["issuers"]:
+        findings.append(
+            f"**No unexpired certificate for {domain} is in the CT logs any more.** It expired without a "
+            "renewal, or Saxion moved to a certificate that is not publicly logged, such as one from its "
+            "own CA. saxion-eduroam.py trusts neither.")
+    known = {(i["name"], i["pubkey_sha256"]): i for i in old["issuers"]}
+    for issuer in new["issuers"]:
+        was = known.get((issuer["name"], issuer["pubkey_sha256"]))
+        if was is not None and was["under_pinned_roots"] == issuer["under_pinned_roots"]:
+            continue
+        name = code(dn_field(issuer["name"], "CN") or issuer["name"])
+        if issuer["under_pinned_roots"]:
+            findings.append(
+                f"**{domain} has a certificate from {name}**, under {code(', '.join(issuer['under_pinned_roots']))}, "
+                "which saxion-eduroam.py pins. The script keeps working, but the chain the server sends "
+                "changes once Saxion deploys it.")
+        else:
+            findings.append(
+                f"**{domain} has a certificate from {name}, which is not under any root saxion-eduroam.py "
+                "pins.** Once Saxion deploys it, the script rejects the server, as in #109. Pin that CA's "
+                f"root in `SAXION_CA_PEM` before then. Full issuer: {code(issuer['name'])}."
+                + ("" if issuer.get("in_ccadb", True) else " CCADB does not list this issuer, so it is "
+                   "new, or not publicly trusted at all."))
+    current = {(i["name"], i["pubkey_sha256"]) for i in new["issuers"]}
+    for key, issuer in known.items():
+        if key not in current and new["issuers"]:
+            findings.append(f"{code(dn_field(issuer['name'], 'CN') or issuer['name'])} no longer has an "
+                            f"unexpired certificate for {domain}.")
+    for digest in new["revoked"]:
+        if digest not in old["revoked"]:
+            findings.append(
+                f"**A certificate for {domain} was revoked** ({code(digest[:16] + '…')}). That usually means "
+                "a replacement is coming, or the key leaked.")
+    return findings
+
+
+def compare_roots(old: list[dict], new: list[dict]) -> list[str]:
+    findings = []
+    known = {r["sha256"]: r for r in old}
+    for root in new:
+        was = known.get(root["sha256"])
+        if was is None:
+            continue  # a newly pinned root; check_script asks for --apply
+        name = code(root["name"] or root["sha256"][:16] + "…")
+        now, then = root["mozilla"], was["mozilla"]
+        if now is None and then is not None:
+            findings.append(
+                f"**{name} is no longer in Mozilla's root store.** saxion-eduroam.py still trusts it, but "
+                "GÉANT will not keep issuing under a root the browsers drop, so Saxion's certificate is "
+                "going to come from another CA. Find out which, and pin its root before the switch.")
+        elif now is not None and then is None:
+            findings.append(f"{name} is back in Mozilla's root store.")
+        elif now is not None and then is not None:
+            if now["distrust_tls_after"] != then["distrust_tls_after"]:
+                if now["distrust_tls_after"]:
+                    findings.append(
+                        f"**Mozilla distrusts {name} for TLS certificates issued after "
+                        f"{code(now['distrust_tls_after'])}.** That is how a CA gets wound down. Saxion's "
+                        "certificate is going to come from elsewhere; find out where, and pin its root "
+                        "before then.")
+                else:
+                    findings.append(f"Mozilla lifted the TLS distrust date of {name}.")
+            if now["trust_bits"] != then["trust_bits"]:
+                findings.append(
+                    f"Mozilla's trust bits for {name}: {code(then['trust_bits'])} → {code(now['trust_bits'])}."
+                    + (" It is no longer trusted for TLS." if "Websites" not in now["trust_bits"] else ""))
+    return findings
+
+
+def compare_intermediates(old: list[dict], new: list[dict], certificates: dict,
+                          pinned_names: set[str]) -> list[str]:
+    findings = []
+    known = {e["sha256"]: e for e in old}
+    in_use = {dn_field(i["name"], "CN") for i in certificates["issuers"]}
+    for entry in new:
+        was = known.get(entry["sha256"])
+        name = code(entry["name"])
+        if entry["revoked"] and not (was and was["revoked"]):
+            findings.append(
+                f"**{name} was revoked** ({code(entry['revoked'])}). Certificates under it no longer "
+                "validate wherever revocation is checked."
+                + (" Saxion's current certificate is one of them." if entry["name"] in in_use else ""))
+        elif was is None:
+            findings.append(
+                f"New intermediate {name} under {code(entry['parent'])}. Saxion's next certificate may come "
+                "from it."
+                + (" Its parent is pinned, so the script keeps working." if entry["parent"] in pinned_names
+                   else ""))
+        elif entry["valid_to"] != was["valid_to"]:
+            findings.append(f"{name} now runs until {code(entry['valid_to'])}, was {code(was['valid_to'])}.")
+    current = {e["sha256"] for e in new}
+    for digest, entry in known.items():
+        if digest not in current:
+            findings.append(f"{code(entry['name'])} ({code(digest[:16] + '…')}) is no longer listed in "
+                            "CCADB, not even as revoked.")
+    return findings
+
+
 def check_script(baseline: dict, script: dict) -> list[str]:
     """Whether the baseline still describes what saxion-eduroam.py does."""
+    problems = []
+    certificates = baseline.get("server_certificates") or {}
+    if certificates.get("name") != script["SERVER_DOMAIN"]:
+        problems.append(f"saxion-eduroam.py validates {code(script['SERVER_DOMAIN'])}, but the baseline "
+                        f"watches the certificates of {code(certificates.get('name'))}.")
+    if {r["sha256"] for r in baseline.get("root_store", [])} != set(script["pinned"]):
+        problems.append("`SAXION_CA_PEM` in saxion-eduroam.py and the baseline's root store name different "
+                        "roots. Run `--apply` after changing the pinned roots.")
+    return problems + check_script_method(baseline, script)
+
+
+def check_script_method(baseline: dict, script: dict) -> list[str]:
     problems = []
     cat = baseline.get("cat") or {}
     used = SCRIPT_METHODS.get((script["eap"], script["phase2"]))
@@ -449,21 +758,24 @@ def check_script(baseline: dict, script: dict) -> list[str]:
 
 # ── Output ───────────────────────────────────────────────────────────────────
 
-def render(findings: list[str], problems: list[str]) -> str:
-    profile_page = "https://cat.eduroam.org/?idp=" + str(CAT_IDP)
+def render(sections: dict[str, list[str]], problems: list[str], domain: str) -> str:
     lines = []
-    if findings:
-        lines += ["## Saxion's published eduroam configuration changed", ""]
-        lines += [f"- {f}" for f in findings]
-        lines += ["", "Read what changed against the eduroam guide and `saxion-eduroam.py`. Once it is "
+    if sections:
+        lines += ["## Saxion's eduroam setup or its certificate chain changed", ""]
+        for title, findings in sections.items():
+            lines += [f"### {title}", ""] + [f"- {f}" for f in findings] + [""]
+        lines += ["Read what changed against the eduroam guide and `saxion-eduroam.py`. Once it is "
                   "understood, and the script follows where it has to, record the new state:", "",
-                  "```bash", "python3 .github/scripts/check-eduroam-profile.py --apply", "```", "",
+                  "```bash", "python3 .github/scripts/check-saxion-eduroam.py --apply", "```", "",
                   "and commit `.github/scripts/saxion-eduroam-baseline.json`.", ""]
     if problems:
         lines += ["## The baseline and saxion-eduroam.py disagree", ""]
         lines += [f"- {p}" for p in problems]
         lines += [""]
-    lines += [f"Sources: [geteduroam discovery]({DISCOVERY_URL}), [Saxion on CAT]({profile_page})."]
+    lines += [f"Sources: [geteduroam discovery]({DISCOVERY_URL}), "
+              f"[Saxion on CAT](https://cat.eduroam.org/?idp={CAT_IDP}), "
+              f"[certificates for {domain}](https://crt.sh/?q={urllib.parse.quote(domain)}), "
+              "[CCADB](https://www.ccadb.org/resources)."]
     body = "\n".join(lines) + "\n"
     # Lets the workflow tell this report from one it already posted.
     return body + f"\n<!-- eduroam-watch:{hashlib.sha256(body.encode()).hexdigest()} -->\n"
@@ -479,7 +791,7 @@ def main() -> int:
     ders: dict[str, bytes] = {}
     try:
         script = read_script()
-        live = read_live(baseline, ders)
+        live = read_live(baseline, script, ders)
     except FetchError as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
@@ -491,18 +803,18 @@ def main() -> int:
             return 1
         BASELINE.write_text(json.dumps(live, indent=2) + "\n", encoding="utf-8")
         print(f"Wrote {BASELINE.relative_to(ROOT)}.")
-        baseline, findings = live, []
+        baseline, sections = live, {}
     else:
-        findings = compare(baseline, live, script, ders)
+        sections = compare(baseline, live, script, ders)
 
     problems = check_script(baseline, script)
-    report = render(findings, problems)
+    report = render(sections, problems, script["SERVER_DOMAIN"])
     if args.report:
         args.report.write_text(report, encoding="utf-8")
-    if findings or problems:
+    if sections or problems:
         print(report)
         return 1
-    print("Saxion's published eduroam configuration matches the baseline and saxion-eduroam.py.")
+    print("Saxion's eduroam setup and its certificate chain match the baseline and saxion-eduroam.py.")
     return 0
 
 

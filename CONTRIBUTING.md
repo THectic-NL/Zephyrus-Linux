@@ -95,12 +95,18 @@ Commit the content change along with the script. A pull request that leaves them
 
 ## Saxion's eduroam configuration
 
-`saxion-eduroam.py` hard-codes what Saxion publishes about its eduroam network. The `eduroam watch` workflow compares that every week with Saxion's CAT profile and its entry in the geteduroam discovery feed, through `.github/scripts/saxion-eduroam-baseline.json`, and opens an issue when something changed. The same check runs on every pull request that touches the script, and fails when the baseline no longer describes what the script does.
+`saxion-eduroam.py` hard-codes what Saxion publishes about its eduroam network, and the HARICA roots it trusts. The `eduroam watch` workflow checks that every week, through `.github/scripts/saxion-eduroam-baseline.json`, against:
+
+- Saxion's CAT profile and its entry in the geteduroam discovery feed (EAP method, server name, realm, a move to geteduroam with certificates)
+- the Certificate Transparency logs for `ise.infra.saxion.net`: who issues the server's certificate, and whether that is still under a pinned root
+- CCADB: whether Mozilla still trusts the pinned roots, and the GEANT intermediates and cross-certificates under them
+
+It opens an issue when something changed. A renewed server certificate from the same intermediate does not count. The same check runs on every pull request that touches the script, and fails when the baseline no longer describes what the script does.
 
 Once a change is understood, and the script follows where it has to, record it:
 
 ```bash
-python3 .github/scripts/check-eduroam-profile.py --apply
+python3 .github/scripts/check-saxion-eduroam.py --apply
 ```
 
 Commit the baseline along with any script change. The issue stays open until you close it.

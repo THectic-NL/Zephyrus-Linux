@@ -50,7 +50,7 @@ Dit script is Saxion-specifiek en valideert tegen `ise.infra.saxion.net`. Voor e
 Dit is een persoonlijke, reverse-engineerde herschrijving van de officiële installer. Ik beheer het eduroam-netwerk noch Saxion's infrastructuur, en ik geef geen garantie dat het blijft werken als Saxion iets aan hun configuratie wijzigt. Gebruik op eigen risico.
 {{< /callout >}}
 
-Een wekelijkse controle in deze repository vergelijkt wat Saxion publiceert, het CAT-profiel en de vermelding in de geteduroam-app, met wat het script aanneemt, en opent een issue zodra die uit elkaar lopen. Het certificaat dat de RADIUS-server zelf laat zien ziet die controle niet. Dat komt alleen op de campus boven, dus een wijziging zoals [#109](https://github.com/THectic-NL/Zephyrus-Linux/issues/109) merk je nog steeds eerst aan een mislukte verbinding.
+Een wekelijkse controle in deze repository vergelijkt wat het script aanneemt met wat publiek is, en opent een issue zodra die uit elkaar lopen: het CAT-profiel van Saxion en de vermelding in de geteduroam-app, de openbare Certificate Transparency-logs voor het certificaat van de server, en de root store van Mozilla voor de vastgelegde HARICA-roots. Een certificaat van een CA die het script niet vastlegt staat in die logs zodra het is uitgegeven, meestal voordat Saxion het in gebruik neemt. Dat is de waarschuwing die [#109](https://github.com/THectic-NL/Zephyrus-Linux/issues/109) niet kreeg. Welk certificaat de server echt laat zien, zie je alleen op de campus.
 
 ## Als de server niet gevalideerd kan worden
 

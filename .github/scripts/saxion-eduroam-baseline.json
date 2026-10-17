@@ -43,5 +43,83 @@
     "consortium_oids": [
       "001bc50460"
     ]
-  }
+  },
+  "server_certificates": {
+    "name": "ise.infra.saxion.net",
+    "issuers": [
+      {
+        "name": "C=GR, O=Hellenic Academic and Research Institutions CA, CN=GEANT TLS RSA 1",
+        "pubkey_sha256": "a2138538babecf3f0d007c8cbd6b3313636f111712cafd7decb83c54753c45a7",
+        "in_ccadb": true,
+        "under_pinned_roots": [
+          "HARICA TLS RSA Root CA 2021"
+        ]
+      }
+    ],
+    "revoked": []
+  },
+  "root_store": [
+    {
+      "sha256": "3f99cc474acfce4dfed58794665e478d1547739f2e780f1bb4ca9b133097d401",
+      "name": "HARICA TLS ECC Root CA 2021",
+      "mozilla": {
+        "trust_bits": "Websites",
+        "distrust_tls_after": null
+      }
+    },
+    {
+      "sha256": "44b545aa8a25e65a73ca15dc27fc36d24c1cb9953a066539b11582dc487b4833",
+      "name": "Hellenic Academic and Research Institutions ECC RootCA 2015",
+      "mozilla": {
+        "trust_bits": "Websites;Email",
+        "distrust_tls_after": null
+      }
+    },
+    {
+      "sha256": "a040929a02ce53b4acf4f2ffc6981ce4496f755e6d45fe0b2a692bcd52523f36",
+      "name": "Hellenic Academic and Research Institutions RootCA 2015",
+      "mozilla": {
+        "trust_bits": "Websites;Email",
+        "distrust_tls_after": null
+      }
+    },
+    {
+      "sha256": "d95d0e8eda79525bf9beb11b14d2100d3294985f0c62d9fabd9cd999eccb7b1d",
+      "name": "HARICA TLS RSA Root CA 2021",
+      "mozilla": {
+        "trust_bits": "Websites",
+        "distrust_tls_after": null
+      }
+    }
+  ],
+  "intermediates": [
+    {
+      "name": "GEANT TLS ECC 1",
+      "parent": "HARICA TLS ECC Root CA 2021",
+      "sha256": "6cdf0ba1711e856d228ba00ca04c5c1c3d79944c037b713b155a4ee4b47ec53c",
+      "valid_to": "2039 Dec 31",
+      "revoked": null
+    },
+    {
+      "name": "GEANT TLS RSA 1",
+      "parent": "HARICA TLS RSA Root CA 2021",
+      "sha256": "5b678dc44095a52895b63b31f27227f4b36c3e347491bf2bfa691837a5fb8c79",
+      "valid_to": "2039 Dec 31",
+      "revoked": null
+    },
+    {
+      "name": "HARICA TLS ECC Root CA 2021",
+      "parent": "Hellenic Academic and Research Institutions ECC RootCA 2015",
+      "sha256": "50e27f90eb6af495b0e6eeb655cc89444c27d3c95b6823fa02abdc95f1636ae1",
+      "valid_to": "2029 Aug 31",
+      "revoked": null
+    },
+    {
+      "name": "HARICA TLS RSA Root CA 2021",
+      "parent": "Hellenic Academic and Research Institutions RootCA 2015",
+      "sha256": "4acd8dc6020a545a858943a553b5e0f3fc5b859aea1746650d69cf1210f956d8",
+      "valid_to": "2029 Aug 31",
+      "revoked": null
+    }
+  ]
 }
