@@ -1,0 +1,133 @@
+# Copyright (C) 2026 Sten Tijhuis
+# SPDX-License-Identifier: MIT
+name: eduroam watch
+
+# saxion-eduroam.py hard-codes what Saxion publishes about its eduroam network,
+# and Saxion changes that without telling anyone (#109). This compares the
+# public sources, the geteduroam discovery feed and Saxion's CAT profile, with
+# a baseline that is checked against the script. What it watches, and why, is
+# in the docstring of .github/scripts/check-eduroam-profile.py.
+#
+# On a schedule a difference opens an issue, or comments on the one already
+# open. On a pull request the red check is the report.
+
+on:
+  # Weekly. CAT profiles change a few times a year at most.
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+  push:
+    branches: [main, development]
+    paths:
+      - '.github/scripts/check-eduroam-profile.py'
+      - '.github/scripts/saxion-eduroam-baseline.json'
+      - '.github/workflows/eduroam-watch.yml'
+      - 'src/static/scripts/saxion-eduroam.py'
+  pull_request:
+    branches: [main, development]
+    paths:
+      - '.github/scripts/check-eduroam-profile.py'
+      - '.github/scripts/saxion-eduroam-baseline.json'
+      - '.github/workflows/eduroam-watch.yml'
+      - 'src/static/scripts/saxion-eduroam.py'
+
+# No token needed; jobs that do ask for one explicitly.
+permissions: {}
+
+concurrency:
+  group: eduroam-watch-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  # Reads from the internet, so it gets no write token. The issue is the job
+  # below's work.
+  check:
+    name: Compare with Saxion's published configuration
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      changed: ${{ steps.compare.outputs.changed }}
+      report: ${{ steps.compare.outputs.report }}
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The same interpreter as the shipped scripts, so ast can parse
+      # saxion-eduroam.py whatever syntax it picks up.
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14'
+
+      # Never fails itself, so the outputs are certain to be written; the step
+      # after it turns the exit status back into a red check.
+      - name: Compare
+        id: compare
+        run: |
+          status=0
+          python3 .github/scripts/check-eduroam-profile.py --report "$RUNNER_TEMP/report.md" || status=$?
+          # A Python traceback also exits 1, but writes no report. That is a
+          # broken check, not a change at Saxion, and opens no issue.
+          if [ "$status" -eq 1 ] && [ ! -s "$RUNNER_TEMP/report.md" ]; then
+            status=2
+          fi
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          if [ "$status" -eq 1 ]; then
+            # Random, so nothing in the report can end the value early.
+            delimiter="REPORT_$(openssl rand -hex 16)"
+            {
+              echo "changed=true"
+              echo "report<<$delimiter"
+              cat "$RUNNER_TEMP/report.md"
+              echo "$delimiter"
+            } >> "$GITHUB_OUTPUT"
+            cat "$RUNNER_TEMP/report.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Fail on a difference
+        if: steps.compare.outputs.status != '0'
+        env:
+          STATUS: ${{ steps.compare.outputs.status }}
+        run: |
+          if [ "$STATUS" -eq 2 ]; then
+            echo "::error::The check could not fetch or read a source, or crashed; see the step above. No issue is opened for this."
+          else
+            echo "::error::Saxion's published eduroam configuration and the baseline differ; see the job summary."
+          fi
+          exit 1
+
+  report:
+    name: Open or update the tracking issue
+    needs: check
+    if: >-
+      always() &&
+      needs.check.outputs.changed == 'true' &&
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write # to open the issue or comment on it, nothing else
+    steps:
+      # One open issue at a time. A report it already holds is not posted
+      # again, so an unresolved change does not comment every week; a new
+      # change does.
+      - name: Open or comment on the issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          REPORT: ${{ needs.check.outputs.report }}
+          TITLE: "eduroam: Saxion's published configuration changed"
+        run: |
+          printf '%s\n' "$REPORT" > "$RUNNER_TEMP/report.md"
+          marker=$(grep -o 'eduroam-watch:[0-9a-f]*' "$RUNNER_TEMP/report.md" | tail -n 1)
+          number=$(gh issue list --state open --search "\"$TITLE\" in:title" --json number,title \
+            --jq 'map(select(.title == env.TITLE)) | .[0].number // empty')
+          if [ -z "$number" ]; then
+            gh issue create --title "$TITLE" --body-file "$RUNNER_TEMP/report.md"
+          elif gh issue view "$number" --json body,comments --jq '.body, .comments[].body' | grep -qF "$marker"; then
+            echo "Issue #$number already has this report."
+          else
+            gh issue comment "$number" --body-file "$RUNNER_TEMP/report.md"
+          fi

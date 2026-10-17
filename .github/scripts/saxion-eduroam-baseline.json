@@ -1,0 +1,47 @@
+{
+  "discovery": [
+    {
+      "id": "cat_2446",
+      "name": "Hogeschool Saxion",
+      "profiles": [
+        {
+          "id": "cat_4233",
+          "name": "eduroam Saxion",
+          "oauth": false
+        }
+      ]
+    }
+  ],
+  "cat": {
+    "profile": 4233,
+    "last_changed": "2026-08-11 14:09:27",
+    "linux_device": {
+      "status": 0,
+      "redirect": 0
+    },
+    "realm": "saxion.nl",
+    "methods": [
+      {
+        "outer": 25,
+        "inner": [
+          "eap:26"
+        ],
+        "server_ids": [
+          "ise.infra.saxion.net"
+        ],
+        "ca_sha256": [
+          "37834fa5ea40fbf7b61196955962e1ca0558872435e4206653d3f620dd8e988e",
+          "e793c9b02fd8aa13e21c31228accb08119643b749c898964b1746d46c3d4cbd2"
+        ],
+        "outer_identity": null,
+        "inner_identity_suffix": "saxion.nl"
+      }
+    ],
+    "ssids": [
+      "eduroam"
+    ],
+    "consortium_oids": [
+      "001bc50460"
+    ]
+  }
+}

@@ -50,6 +50,8 @@ This script is Saxion-specific and validates against `ise.infra.saxion.net`. For
 This is a personal reverse-engineered rewrite of the official installer. I don't manage the eduroam network or Saxion's infrastructure, and I make no guarantee it keeps working if Saxion changes their setup. Use it at your own risk.
 {{< /callout >}}
 
+A weekly check in this repository compares what Saxion publishes, its CAT profile and its entry in the geteduroam app, with what the script assumes, and opens an issue when they drift apart. It cannot see the certificate the RADIUS server itself presents. That only shows up on campus, so a change like [#109](https://github.com/THectic-NL/Zephyrus-Linux/issues/109) still surfaces as a failed connection first.
+
 ## If it can't validate the server
 
 The trusted chain is pinned inside the script, so it breaks the day Saxion changes certificate authority. That is what happened in [#109](https://github.com/THectic-NL/Zephyrus-Linux/issues/109). If the script reports `unknown CA` or fails to authenticate:

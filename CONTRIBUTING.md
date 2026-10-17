@@ -93,6 +93,20 @@ Commit the content change along with the script. A pull request that leaves them
 
 ---
 
+## Saxion's eduroam configuration
+
+`saxion-eduroam.py` hard-codes what Saxion publishes about its eduroam network. The `eduroam watch` workflow compares that every week with Saxion's CAT profile and its entry in the geteduroam discovery feed, through `.github/scripts/saxion-eduroam-baseline.json`, and opens an issue when something changed. The same check runs on every pull request that touches the script, and fails when the baseline no longer describes what the script does.
+
+Once a change is understood, and the script follows where it has to, record it:
+
+```bash
+python3 .github/scripts/check-eduroam-profile.py --apply
+```
+
+Commit the baseline along with any script change. The issue stays open until you close it.
+
+---
+
 ## The setup reference
 
 `src/content/docs/setup-script/reference/` lists, for every item of the setup script, the exact commands that ticking it runs and that unticking it runs to put things back, with a diff for every existing file they change and a link to the code behind them. Its pages are not in the repository (except the `_index` pages): `.github/scripts/generate-setup-reference.py` writes them from `quicksetup.py` each time the site is built, so they cannot say anything the window does not do. To read them from a checkout, run the generator before `hugo server`.
