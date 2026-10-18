@@ -42,6 +42,9 @@
     ],
     "consortium_oids": [
       "001bc50460"
+    ],
+    "min_rsn_proto": [
+      "CCMP"
     ]
   },
   "server_certificates": {
@@ -54,6 +57,13 @@
         "under_pinned_roots": [
           "HARICA TLS RSA Root CA 2021"
         ]
+      }
+    ],
+    "profiles": [
+      {
+        "key": "rsaEncryption 2048 bit",
+        "signature": "sha256WithRSAEncryption",
+        "extended_key_usage": "TLS Web Client Authentication, TLS Web Server Authentication"
       }
     ],
     "revoked": []
@@ -98,6 +108,8 @@
       "parent": "HARICA TLS ECC Root CA 2021",
       "sha256": "6cdf0ba1711e856d228ba00ca04c5c1c3d79944c037b713b155a4ee4b47ec53c",
       "valid_to": "2039 Dec 31",
+      "key": "EC secp384r1",
+      "signature": "ecdsaWithSHA384",
       "revoked": null
     },
     {
@@ -105,6 +117,8 @@
       "parent": "HARICA TLS RSA Root CA 2021",
       "sha256": "5b678dc44095a52895b63b31f27227f4b36c3e347491bf2bfa691837a5fb8c79",
       "valid_to": "2039 Dec 31",
+      "key": "RSA 3072 bits",
+      "signature": "SHA256WithRSA",
       "revoked": null
     },
     {
@@ -112,6 +126,8 @@
       "parent": "Hellenic Academic and Research Institutions ECC RootCA 2015",
       "sha256": "50e27f90eb6af495b0e6eeb655cc89444c27d3c95b6823fa02abdc95f1636ae1",
       "valid_to": "2029 Aug 31",
+      "key": "EC secp384r1",
+      "signature": "ecdsaWithSHA384",
       "revoked": null
     },
     {
@@ -119,6 +135,8 @@
       "parent": "Hellenic Academic and Research Institutions RootCA 2015",
       "sha256": "4acd8dc6020a545a858943a553b5e0f3fc5b859aea1746650d69cf1210f956d8",
       "valid_to": "2029 Aug 31",
+      "key": "RSA 4096 bits",
+      "signature": "SHA256WithRSA",
       "revoked": null
     }
   ]

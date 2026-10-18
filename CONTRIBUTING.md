@@ -97,8 +97,8 @@ Commit the content change along with the script. A pull request that leaves them
 
 `saxion-eduroam.py` hard-codes what Saxion publishes about its eduroam network, and the HARICA roots it trusts. The `eduroam watch` workflow checks that every week, through `.github/scripts/saxion-eduroam-baseline.json`, against:
 
-- Saxion's CAT profile and its entry in the geteduroam discovery feed (EAP method, server name, realm, a move to geteduroam with certificates)
-- the Certificate Transparency logs for `ise.infra.saxion.net`: who issues the server's certificate, and whether that is still under a pinned root
+- Saxion's CAT profile and its entry in the geteduroam discovery feed (EAP method, server name, realm, minimum Wi-Fi cipher, a move to geteduroam with certificates)
+- the Certificate Transparency logs for `ise.infra.saxion.net`: who issues the server's certificate, whether that is still under a pinned root, and its key, signature algorithm and purposes
 - CCADB: whether Mozilla still trusts the pinned roots, and the GEANT intermediates and cross-certificates under them
 
 It opens an issue when something changed. A renewed server certificate from the same intermediate does not count. The same check runs on every pull request that touches the script, and fails when the baseline no longer describes what the script does.

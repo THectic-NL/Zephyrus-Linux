@@ -50,7 +50,7 @@ This script is Saxion-specific and validates against `ise.infra.saxion.net`. For
 This is a personal reverse-engineered rewrite of the official installer. I don't manage the eduroam network or Saxion's infrastructure, and I make no guarantee it keeps working if Saxion changes their setup. Use it at your own risk.
 {{< /callout >}}
 
-A weekly check in this repository compares what the script assumes with what is public, and opens an issue when they drift apart: Saxion's CAT profile and its entry in the geteduroam app, the public Certificate Transparency logs for the server's certificate, and Mozilla's root store for the pinned HARICA roots. A certificate from a CA the script does not pin shows up in those logs when it is issued, usually before Saxion puts it into service. That is the warning [#109](https://github.com/THectic-NL/Zephyrus-Linux/issues/109) did not get. Which certificate the server actually presents only shows on campus.
+A weekly check in this repository compares what the script assumes with what is public, and opens an issue when they drift apart: Saxion's CAT profile and its entry in the geteduroam app, the public Certificate Transparency logs for the server's certificate, and Mozilla's root store for the pinned HARICA roots. That covers a move to another EAP method or a stronger Wi-Fi cipher, and a certificate with other crypto or from a CA the script does not pin. Such a certificate shows up in those logs when it is issued, usually before Saxion puts it into service. That is the warning [#109](https://github.com/THectic-NL/Zephyrus-Linux/issues/109) did not get. Which certificate the server actually presents, and which TLS version and ciphers it negotiates, only shows on campus.
 
 ## If it can't validate the server
 

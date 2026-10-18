@@ -17,13 +17,14 @@ Public sources say what Saxion publishes today:
      issued after a login in the browser. Most Dutch institutions already
      have one. Saxion getting one is the sign that it is moving off
      PEAP/MSCHAPv2, and saxion-eduroam.py cannot follow it there.
-  2. cat.eduroam.org, Saxion's CAT profile: the EAP methods, server names and
-     CA certificates the official installers are built from, plus the date
-     the profile was last edited.
+  2. cat.eduroam.org, Saxion's CAT profile: the EAP methods, server names,
+     CA certificates and minimum Wi-Fi cipher the official installers are
+     built from, plus the date the profile was last edited.
   3. Certificate Transparency, through Cert Spotter: every publicly trusted
      certificate is logged when it is issued, the RADIUS server's included.
-     This checks who issued the unexpired ones, and whether that issuer sits
-     under a root the script pins. A certificate from another CA shows up
+     This checks who issued the unexpired ones, whether that issuer sits
+     under a root the script pins, and the key, signature algorithm and
+     purposes of the certificates themselves. A certificate from another CA shows up
      here when it is issued, which is usually before Saxion deploys it. In
      #109 this would have been the warning.
   4. CCADB, the database behind Mozilla's root store: whether the pinned
@@ -45,8 +46,9 @@ watched anyway: the day Saxion corrects them, the guide's explanation of why
 the official installers fail is out of date.
 
 What this cannot see is which certificate the RADIUS server actually
-presents. That only shows up in an EAP handshake on campus, not from a CI
-runner. The logs say what exists, not what is deployed.
+presents, or which TLS versions and cipher suites it negotiates. That only
+shows up in an EAP handshake on campus, not from a CI runner. The logs say
+what exists, not what is deployed.
 
 Usage:
   check-saxion-eduroam.py                   # compare, exit 1 on a difference
@@ -253,6 +255,8 @@ def parse_eap_config(document: bytes, ders: dict[str, bytes]) -> dict:
         "methods": methods,
         "ssids": sorted(text(e) for e in provider.iter("SSID")),
         "consortium_oids": sorted(text(e) for e in provider.iter("ConsortiumOID")),
+        # The weakest Wi-Fi cipher Saxion allows. CCMP is AES, as in WPA2.
+        "min_rsn_proto": sorted({text(e) for e in provider.iter("MinRSNProto")}),
     }
 
 
@@ -263,7 +267,8 @@ def text(element: ET.Element) -> str:
 # ── Reading the certificate chain ────────────────────────────────────────────
 
 INTERMEDIATE_COLUMNS = ("Parent Name", "Certificate Name", "Certificate Subject Common Name",
-                        "Certificate Subject Organization", "SHA-256 Fingerprint", "Valid To [GMT]")
+                        "Certificate Subject Organization", "SHA-256 Fingerprint", "Valid To [GMT]",
+                        "Public Key Algorithm", "Signature Hash Algorithm")
 
 
 def read_root_store(pinned: dict[str, bytes], previous: list[dict]) -> list[dict]:
@@ -300,7 +305,7 @@ def read_server_certificates(domain: str, rows: list[dict], pinned_names: set[st
     issuances: list[dict] = []
     after = None
     for _ in range(20):
-        params = [("domain", domain), ("expand", "issuer"), ("expand", "revocation")]
+        params = [("domain", domain), ("expand", "issuer"), ("expand", "revocation"), ("expand", "cert")]
         params += [("after", after)] if after else []
         page = fetch_json(f"{CERTSPOTTER_URL}?{urllib.parse.urlencode(params)}", list, headers)
         if not page:
@@ -317,8 +322,15 @@ def read_server_certificates(domain: str, rows: list[dict], pinned_names: set[st
         by_name.setdefault(row["Certificate Name"], []).append(row)
 
     issuers: dict[tuple, dict] = {}
+    profiles: list[dict] = []
     revoked, matched = set(), []
     for issuance in issuances:
+        try:
+            der = base64.b64decode((issuance.get("cert") or {})["data"])
+        except (KeyError, TypeError, ValueError) as error:
+            raise FetchError(f"{CERTSPOTTER_URL}: an issuance without its certificate ({error})") from error
+        if (profile := certificate_profile(der)) not in profiles:
+            profiles.append(profile)
         issuer = issuance.get("issuer") or {}
         name, key = str(issuer.get("name")), str(issuer.get("pubkey_sha256"))
         if (name, key) not in issuers:
@@ -333,8 +345,36 @@ def read_server_certificates(domain: str, rows: list[dict], pinned_names: set[st
             revoked.add(str(issuance.get("cert_sha256")))
     certificates = {"name": domain,
                     "issuers": sorted(issuers.values(), key=lambda i: (i["name"], i["pubkey_sha256"])),
+                    "profiles": sorted(profiles, key=lambda p: json.dumps(p, sort_keys=True)),
                     "revoked": sorted(revoked)}
     return certificates, matched
+
+
+def certificate_profile(der: bytes) -> dict:
+    """The key, signature algorithm and purposes of a certificate, as openssl names them.
+
+    A renewal keeps these, so a change here is a change of crypto: RSA to
+    ECDSA, a post-quantum algorithm, a certificate no longer meant for TLS.
+    """
+    openssl = shutil.which("openssl")
+    if openssl is None:
+        raise FetchError("openssl is needed to read the server's certificates")
+    # Fixed arguments, the certificate on stdin.
+    result = subprocess.run([openssl, "x509", "-inform", "DER", "-noout", "-text"],
+                            input=der, capture_output=True, check=False)
+    if result.returncode != 0:
+        raise FetchError("openssl could not read a certificate from the CT logs")
+    dump = result.stdout.decode(errors="replace")
+
+    def first(pattern: str) -> str | None:
+        match = re.search(pattern, dump)
+        return match.group(1).strip() if match else None
+
+    key = [first(r"Public Key Algorithm: (.+)"), first(r"Public-Key: \((\d+ bit)\)"),
+           first(r"NIST CURVE: (.+)") or first(r"ASN1 OID: (.+)")]
+    return {"key": " ".join(part for part in key if part),
+            "signature": first(r"Signature Algorithm: (.+)"),
+            "extended_key_usage": first(r"Extended Key Usage:[^\n]*\n\s*(.+)")}
 
 
 def dn_field(dn: str, field: str) -> str | None:
@@ -374,7 +414,9 @@ def read_intermediates(rows: list[dict], pinned_names: set[str], matched: list[d
     """
     def entry(row: dict) -> dict:
         return {"name": row["Certificate Name"], "parent": row["Parent Name"],
-                "sha256": row["SHA-256 Fingerprint"].lower(), "valid_to": row["Valid To [GMT]"], "revoked": None}
+                "sha256": row["SHA-256 Fingerprint"].lower(), "valid_to": row["Valid To [GMT]"],
+                "key": row["Public Key Algorithm"], "signature": row["Signature Hash Algorithm"],
+                "revoked": None}
 
     listed = {row["SHA-256 Fingerprint"].lower(): row for row in rows}
     tracked = {}
@@ -603,6 +645,15 @@ def compare_cat(old: dict, new: dict, script: dict, ders: dict[str, bytes]) -> l
             if method[field] != was[field]:
                 findings.append(f"{label} for {name}: {code(was[field])} → {code(method[field])}.")
 
+    if new.get("min_rsn_proto") != old.get("min_rsn_proto"):
+        finding = (f"**The minimum Wi-Fi cipher changed**: {code(', '.join(old.get('min_rsn_proto') or []))} → "
+                   f"{code(', '.join(new['min_rsn_proto']))}.")
+        if any("GCMP" in proto for proto in new["min_rsn_proto"]):
+            finding += (" GCMP points at WPA3-Enterprise, possibly its 192-bit mode. That needs "
+                        "`wifi-sec.key-mgmt wpa-eap-suite-b-192` instead of the script's `wpa-eap`, and that "
+                        "mode allows EAP-TLS only.")
+        findings.append(finding)
+
     for field, label in (("realm", "Realm"), ("ssids", "SSIDs"), ("consortium_oids", "Consortium OIDs"),
                          ("linux_device", "The Linux entry on the CAT page")):
         if new[field] != old[field]:
@@ -648,12 +699,36 @@ def compare_certificates(old: dict | None, new: dict) -> list[str]:
         if key not in current and new["issuers"]:
             findings.append(f"{code(dn_field(issuer['name'], 'CN') or issuer['name'])} no longer has an "
                             f"unexpired certificate for {domain}.")
+    old_profiles = old.get("profiles", [])
+    for profile in new["profiles"]:
+        if profile not in old_profiles:
+            findings.append(describe_profile(domain, profile, old_profiles))
+    for profile in old_profiles:
+        if profile not in new["profiles"] and new["profiles"]:
+            findings.append(f"No unexpired certificate for {domain} has key {code(profile['key'])} with "
+                            f"{code(profile['signature'])} any more.")
     for digest in new["revoked"]:
         if digest not in old["revoked"]:
             findings.append(
                 f"**A certificate for {domain} was revoked** ({code(digest[:16] + '…')}). That usually means "
                 "a replacement is coming, or the key leaked.")
     return findings
+
+
+def describe_profile(domain: str, profile: dict, old_profiles: list[dict]) -> str:
+    usage = profile["extended_key_usage"] or ""
+    finding = (f"**{domain} has a certificate with different crypto**: key {code(profile['key'])}, signed with "
+               f"{code(profile['signature'])}, for {code(usage or 'any purpose')}.")
+    if not profile["key"].startswith(("rsaEncryption", "id-ecPublicKey")):
+        finding += (" That is neither RSA nor ECDSA. wpa_supplicant only accepts it if its OpenSSL knows the "
+                    "algorithm; post-quantum ML-DSA, for one, needs OpenSSL 3.5 or newer.")
+    if usage and "TLS Web Server Authentication" not in usage:
+        finding += " It is no longer marked for TLS servers, and some EAP clients, Windows among them, refuse that."
+    elif "Client Authentication" not in usage and any("Client Authentication" in (p["extended_key_usage"] or "")
+                                                      for p in old_profiles):
+        finding += (" Client Authentication was dropped, as the browser root programs require. That part does "
+                    "not affect saxion-eduroam.py.")
+    return finding
 
 
 def compare_roots(old: list[dict], new: list[dict]) -> list[str]:
@@ -704,8 +779,8 @@ def compare_intermediates(old: list[dict], new: list[dict], certificates: dict,
                 + (" Saxion's current certificate is one of them." if entry["name"] in in_use else ""))
         elif was is None:
             findings.append(
-                f"New intermediate {name} under {code(entry['parent'])}. Saxion's next certificate may come "
-                "from it."
+                f"New intermediate {name} under {code(entry['parent'])}, key {code(entry.get('key'))}, "
+                f"signed with {code(entry.get('signature'))}. Saxion's next certificate may come from it."
                 + (" Its parent is pinned, so the script keeps working." if entry["parent"] in pinned_names
                    else ""))
         elif entry["valid_to"] != was["valid_to"]:
